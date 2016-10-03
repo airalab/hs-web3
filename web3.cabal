@@ -1,0 +1,53 @@
+name:                web3
+version:             0.1.0.0
+synopsis:            JSON-RPC Ethereum API for Haskell
+description:         Please see README.md
+homepage:            https://github.com/akru/web3#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Alexander Krupenkin
+maintainer:          mail@akru.me
+copyright:           Alexander Krupenkin
+category:            Network
+build-type:          Simple
+cabal-version:       >=1.10
+
+source-repository head
+  type:     git
+  location: https://github.com/RoboticsHS/web3
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Network.Ethereum.Web3
+  other-modules:       Network.Ethereum.Web3.Api
+                     , Network.Ethereum.Web3.Types
+                     , Network.Ethereum.Web3.JsonRpc
+  build-depends:       base >= 4.5 && <4.10
+                     , mtl
+                     , text
+                     , aeson
+                     , vector
+                     , bytestring
+                     , http-client
+                     , transformers
+                     , http-client-tls
+                     , data-default-class
+  default-extensions:  OverloadedStrings
+  default-language:    Haskell2010
+
+executable web3hs-exe
+  hs-source-dirs:      app
+  main-is:             Main.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base, web3
+  default-extensions:  OverloadedStrings
+  default-language:    Haskell2010
+
+test-suite web3-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base, web3
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-extensions:  OverloadedStrings
+  default-language:    Haskell2010
