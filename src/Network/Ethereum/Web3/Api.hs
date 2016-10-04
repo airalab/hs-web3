@@ -30,7 +30,7 @@ getBalance = remote "eth_getBalance"
 
 data Filter = Filter
   { filterAddress   :: Maybe Text
-  , filterTopics    :: Maybe Value
+  , filterTopics    :: Maybe [Maybe Text]
   , filterFromBlock :: Maybe Text
   , filterToBlock   :: Maybe Text
   } deriving Show

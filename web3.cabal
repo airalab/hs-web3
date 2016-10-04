@@ -19,7 +19,9 @@ source-repository head
 library
   hs-source-dirs:      src
   exposed-modules:     Network.Ethereum.Web3
+                     , Network.Ethereum.ContractAbi
   other-modules:       Network.Ethereum.Web3.Api
+                     , Network.Ethereum.Web3.Util
                      , Network.Ethereum.Web3.Types
                      , Network.Ethereum.Web3.JsonRpc
   build-depends:       base >= 4.5 && <4.10
@@ -27,6 +29,7 @@ library
                      , text
                      , aeson
                      , vector
+                     , hexstring
                      , bytestring
                      , http-client
                      , transformers
