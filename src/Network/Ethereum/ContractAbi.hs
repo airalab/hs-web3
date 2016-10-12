@@ -42,6 +42,8 @@ data Method = Constructor { conInputs :: [FunctionArg] }
             | Event { eveName      :: Text
                     , eveInputs    :: [EventArg]
                     , eveAnonymous :: Bool }
+
+            | Fallback { falPayable :: Bool }
   deriving Show
 
 $(deriveJSON (defaultOptions {
@@ -54,7 +56,11 @@ type ContractABI = [Method]
 events :: ContractABI -> [Method]
 events = filter (\x -> case x of Event _ _ _ -> True; _ -> False)
 
-eventSignature :: Method -> Text
-eventSignature event = eveName event <> "(" <> args event <> ")"
-  where args = T.init . foldMap (<> ",") . inputTypes
-        inputTypes = fmap eveArgType . filter eveArgIndexed . eveInputs
+signature :: Method -> Text
+
+signature (Function name inputs _) = name <> "(" <> args inputs <> ")"
+  where args = T.dropEnd 1 . foldMap (<> ",") . fmap funArgType
+
+signature (Event name inputs _) = name <> "(" <> args inputs <> ")"
+  where args = T.dropEnd 1 . foldMap (<> ",") . inputTypes
+        inputTypes = fmap eveArgType . filter eveArgIndexed

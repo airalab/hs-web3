@@ -3,8 +3,10 @@ module Network.Ethereum.Web3 (
   , Config
   , runWeb3
   , runWeb3'
-  , module Network.Ethereum.Web3.Api
+  , module Network.Ethereum.Web3.Util
+  , module Network.Ethereum.Web3.Internal
   ) where
 
+import Network.Ethereum.Web3.Internal
 import Network.Ethereum.Web3.Types
-import Network.Ethereum.Web3.Api
+import Network.Ethereum.Web3.Util

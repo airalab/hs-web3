@@ -23,7 +23,7 @@ import Control.Monad.Error.Class (throwError)
 import Data.ByteString.Lazy (ByteString)
 import Control.Monad.Trans.Reader (ask)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad (liftM, (<=<))
+import Control.Monad (liftM, (>=>))
 import Control.Applicative ((<|>))
 import Control.Monad.Trans (lift)
 import qualified Data.Text as T
@@ -57,19 +57,23 @@ class Remote a where
 instance (ToJSON a, Remote b) => Remote (a -> b) where
     remote_ f x = remote_ (\xs -> f (toJSON x : xs))
 
-handleRpcErr :: Either String a -> Web3 a
-handleRpcErr (Right a) = return a
-handleRpcErr (Left e)  = lift $ throwError (def { rpcError = Just e })
+
 
 decodeResponse :: (ToJSON a, FromJSON a) => ByteString -> Web3 a
-decodeResponse = handleRpcErr .
-    (eitherDecode . encode <=< rpcErr . rsResult <=< eitherDecode)
-  where rpcErr (Left e)  = Left (T.unpack (errMsg e))
-        rpcErr (Right a) = Right a
+decodeResponse = tryParse . eitherDecode
+             >=> tryJsonRpc . rsResult
+             >=> tryParse . eitherDecode . encode
+  where tryJsonRpc :: Either RpcError a -> Web3 a
+        tryJsonRpc (Right a) = return a
+        tryJsonRpc (Left e)  = lift $ throwError (JsonRpcFail e)
+        tryParse :: Either String a -> Web3 a
+        tryParse   (Right a) = return a
+        tryParse   (Left e)  = lift $ throwError (ParserFail e)
 
 instance (ToJSON a, FromJSON a) => Remote (Web3 a) where
     remote_ f = decodeResponse =<< f []
 
+-- | JSON-RPC request.
 data Request = Request { rqMethod :: Text
                        , rqId     :: Int
                        , rqParams :: Value }
@@ -80,6 +84,7 @@ instance ToJSON Request where
                          , "params"  .= rqParams rq
                          , "id"      .= rqId rq ]
 
+-- | JSON-RPC response.
 data Response = Response
   { rsResult :: Either RpcError Value
   , rsId     :: Int
@@ -90,15 +95,3 @@ instance FromJSON Response where
                 \v -> Response <$>
                       (Right <$> v .: "result" <|> Left <$> v .: "error") <*>
                       v .: "id"
-
--- | JSON-RPC error.
-data RpcError = RpcError
-  { errCode :: Int
-  , errMsg  :: Text
-  , errData :: Maybe Value
-  } deriving (Show, Eq)
-
-instance FromJSON RpcError where
-    parseJSON (Object v) = RpcError <$> v .: "code"
-                                    <*> v .: "message"
-                                    <*> v .:? "data"
