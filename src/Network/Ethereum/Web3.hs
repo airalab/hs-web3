@@ -1,6 +1,7 @@
 module Network.Ethereum.Web3 (
     Web3
   , Config
+  , Error(..)
   , runWeb3
   , runWeb3'
   , module Network.Ethereum.Web3.Util
