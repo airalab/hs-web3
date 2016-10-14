@@ -24,12 +24,6 @@ import Data.Char (toLower)
 import Data.Text (Text)
 import Data.Aeson.TH
 
-hex2dec :: Integral a => Text -> Web3 a
-hex2dec hex = lift $
-    case hexadecimal hex of
-        Right (num, _) -> return num
-        Left e -> throwError (ParserFail e)
-
 web3_clientVersion :: Web3 Text
 web3_clientVersion = remote "web3_clientVersion"
 
@@ -52,26 +46,26 @@ $(deriveJSON (defaultOptions { fieldLabelModifier =
 -- | Creates a filter object, based on filter options, to notify when the
 -- state changes (logs). To check if the state has changed, call
 -- 'getFilterChanges'.
-eth_newFilter :: Filter -> Web3 Int
-eth_newFilter = remote "eth_newFilter" >=> hex2dec
+eth_newFilter :: Filter -> Web3 Text
+eth_newFilter = remote "eth_newFilter"
 
-data Update = Update
-  { updateLogIndex         :: Text
-  , updateTransactionIndex :: Text
-  , updateTransactionHash  :: Text
-  , updateBlockHash        :: Text
-  , updateBlockNumber      :: Text
-  , updateAddress          :: Text
-  , updateData             :: Text
-  , updateTopics           :: [Text]
+data Change = Change
+  { changeLogIndex         :: Text
+  , changeTransactionIndex :: Text
+  , changeTransactionHash  :: Text
+  , changeBlockHash        :: Text
+  , changeBlockNumber      :: Text
+  , changeAddress          :: Text
+  , changeData             :: Text
+  , changeTopics           :: [Text]
   } deriving Show
 
 $(deriveJSON (defaultOptions { fieldLabelModifier =
-    let f (x : xs) = toLower x : xs in f . drop 6 }) ''Update)
+    let f (x : xs) = toLower x : xs in f . drop 6 }) ''Change)
 
 -- | Polling method for a filter, which returns an array of logs which
 -- occurred since last poll.
-eth_getFilterChanges :: Text -> Web3 [Update]
+eth_getFilterChanges :: Text -> Web3 [Change]
 eth_getFilterChanges = remote "eth_getFilterChanges"
 
 data Call = Call

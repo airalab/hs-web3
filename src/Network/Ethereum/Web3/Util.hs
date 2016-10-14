@@ -12,6 +12,7 @@
 module Network.Ethereum.Web3.Util where
 
 import Network.Ethereum.Web3.Internal (Filter(..), Call(..), web3_sha3)
+import qualified Network.Ethereum.Web3.Address as A (Address, toText)
 import Data.HexString (toText, fromBytes, toBytes, hexString)
 import Network.Ethereum.ContractAbi (Method, signature)
 import Data.Text.Encoding (encodeUtf8, decodeUtf8)
@@ -23,8 +24,6 @@ import qualified Data.Text.Read as T
 import qualified Data.Text as T
 import Data.Monoid ((<>))
 import Data.Text (Text)
-
-type Address = Text
 
 hex :: Text -> Text
 hex = toText . fromBytes . encodeUtf8
@@ -56,10 +55,10 @@ dataText t = do
 sha3_str :: Text -> Web3 Text
 sha3_str = web3_sha3 . ("0x" <>) . hex
 
-eventFilter :: Address -> Method -> Web3 Filter
+eventFilter :: A.Address -> Method -> Web3 Filter
 eventFilter addr event = do
     topic0 <- sha3_str (signature event)
-    return (Filter (Just addr) (Just [Just topic0, Nothing]) Nothing Nothing)
+    return (Filter (Just ("0x" <> A.toText addr)) (Just [Just topic0, Nothing]) Nothing Nothing)
 
 methodId :: Method -> Web3 Text
 methodId = fmap (T.take 10) . sha3_str . signature
