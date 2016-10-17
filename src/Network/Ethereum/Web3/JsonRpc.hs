@@ -23,12 +23,10 @@ import Control.Monad.Error.Class (throwError)
 import Data.ByteString.Lazy (ByteString)
 import Control.Monad.Trans.Reader (ask)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad (liftM, (>=>))
 import Control.Applicative ((<|>))
 import Control.Monad.Trans (lift)
-import qualified Data.Text as T
-import Data.Default.Class (def)
 import Data.Vector (fromList)
+import Control.Monad ((>=>))
 import Data.Text (Text)
 import Data.Aeson
 
@@ -59,7 +57,7 @@ instance (ToJSON a, Remote b) => Remote (a -> b) where
 
 
 
-decodeResponse :: (ToJSON a, FromJSON a) => ByteString -> Web3 a
+decodeResponse :: FromJSON a => ByteString -> Web3 a
 decodeResponse = tryParse . eitherDecode
              >=> tryJsonRpc . rsResult
              >=> tryParse . eitherDecode . encode
@@ -70,7 +68,7 @@ decodeResponse = tryParse . eitherDecode
         tryParse   (Right a) = return a
         tryParse   (Left e)  = lift $ throwError (ParserFail e)
 
-instance (ToJSON a, FromJSON a) => Remote (Web3 a) where
+instance FromJSON a => Remote (Web3 a) where
     remote_ f = decodeResponse =<< f []
 
 -- | JSON-RPC request.
@@ -87,11 +85,9 @@ instance ToJSON Request where
 -- | JSON-RPC response.
 data Response = Response
   { rsResult :: Either RpcError Value
-  , rsId     :: Int
   } deriving (Show)
 
 instance FromJSON Response where
     parseJSON = withObject "JSON-RPC response object" $
                 \v -> Response <$>
-                      (Right <$> v .: "result" <|> Left <$> v .: "error") <*>
-                      v .: "id"
+                      (Right <$> v .: "result" <|> Left <$> v .: "error")

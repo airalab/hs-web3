@@ -10,7 +10,7 @@
 --
 -- Ethereum smart contract utils.
 --
-module Network.Ethereum.ContractAbi where
+module Network.Ethereum.ContractABI where
 
 import qualified Data.Text as T
 import Data.Char (toLower)
@@ -57,6 +57,11 @@ events :: ContractABI -> [Method]
 events = filter (\x -> case x of Event _ _ _ -> True; _ -> False)
 
 signature :: Method -> Text
+
+signature (Constructor inputs) = "(" <> args inputs <> ")"
+  where args = T.dropEnd 1 . foldMap (<> ",") . fmap funArgType
+
+signature (Fallback _) = "()"
 
 signature (Function name inputs _) = name <> "(" <> args inputs <> ")"
   where args = T.dropEnd 1 . foldMap (<> ",") . fmap funArgType

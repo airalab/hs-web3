@@ -12,27 +12,21 @@
 --
 module Network.Ethereum.Web3.Types where
 
+import Network.Ethereum.Web3.Internal (toLowerFirst)
 import Control.Monad.Trans.Reader
 import Control.Monad.Trans.Except
-import Control.Monad.IO.Class
-import Data.Char (toLower)
 import Data.Default.Class
 import Data.Text (Text)
 import Data.Aeson.TH
 import Data.Aeson
 
--- | JSON-RPC error.
-data RpcError = RpcError
-  { errCode     :: Int
-  , errMessage  :: Text
-  , errData     :: Maybe Value
-  } deriving (Show, Eq)
+-- | Main monad type
+type Web3 = ReaderT Config (ExceptT Error IO)
 
-$(deriveJSON (defaultOptions { fieldLabelModifier =
-    let f (x : xs) = toLower x : xs in f . drop 3 }) ''RpcError)
-
+-- | Web3 configuration
 data Config = Config
   { rpcUri :: String
+  -- ^ JSON-RPC node URI
   } deriving (Show, Eq)
 
 instance Default Config where
@@ -42,13 +36,49 @@ data Error = JsonRpcFail RpcError
            | ParserFail String
   deriving (Show, Eq)
 
--- | Main monad type
-type Web3 = ReaderT Config (ExceptT Error IO)
+-- | JSON-RPC error.
+data RpcError = RpcError
+  { errCode     :: Int
+  , errMessage  :: Text
+  , errData     :: Maybe Value
+  } deriving (Show, Eq)
 
--- | Run 'Web3' monad with default config.
-runWeb3 :: MonadIO m => Web3 a -> m (Either Error a)
-runWeb3 = runWeb3' def
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 3 }) ''RpcError)
 
--- | Run 'Web3' monad.
-runWeb3' :: MonadIO m => Config -> Web3 a -> m (Either Error a)
-runWeb3' c = liftIO . runExceptT . flip runReaderT c
+data Filter = Filter
+  { filterAddress   :: Maybe Text
+  , filterTopics    :: Maybe [Maybe Text]
+  , filterFromBlock :: Maybe Text
+  , filterToBlock   :: Maybe Text
+  } deriving Show
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 6 }) ''Filter)
+
+data Change = Change
+  { changeLogIndex         :: Text
+  , changeTransactionIndex :: Text
+  , changeTransactionHash  :: Text
+  , changeBlockHash        :: Text
+  , changeBlockNumber      :: Text
+  , changeAddress          :: Text
+  , changeData             :: Text
+  , changeTopics           :: [Text]
+  } deriving Show
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 6 }) ''Change)
+
+data Call = Call
+  { callFrom    :: Maybe Text
+  , callTo      :: Text
+  , callGas     :: Maybe Text
+  , callPrice   :: Maybe Text
+  , callValue   :: Maybe Text
+  , callData    :: Maybe Text
+  } deriving Show
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 4 }) ''Call)
+

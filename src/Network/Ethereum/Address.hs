@@ -1,4 +1,4 @@
-module Network.Ethereum.Web3.Address (
+module Network.Ethereum.Address (
     Address
   , fromText
   , toText
