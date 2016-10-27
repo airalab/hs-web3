@@ -62,3 +62,11 @@ eventFilter addr event = do
 
 methodId :: Method -> Web3 Text
 methodId = fmap (T.take 10) . sha3_str . signature
+
+-- | Ether to Wei converter
+toWei :: Double -> Integer
+toWei = round . (* 10^18)
+
+-- | Wei to Ether converter
+fromWei :: Integer -> Double
+fromWei = (/ 10^18) . fromIntegral

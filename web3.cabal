@@ -1,5 +1,5 @@
 name:                web3
-version:             0.1.0.0
+version:             0.2.0.0
 synopsis:            JSON-RPC Ethereum API for Haskell
 description:         Please see README.md
 homepage:            https://github.com/akru/web3#readme
@@ -14,7 +14,7 @@ cabal-version:       >=1.10
 
 source-repository head
   type:     git
-  location: https://github.com/RoboticsHS/web3
+  location: https://github.com/akru/web3
 
 library
   hs-source-dirs:      src
