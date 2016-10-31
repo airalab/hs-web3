@@ -15,7 +15,7 @@ import Control.Monad ((<=<))
 import Prelude hiding (null)
 
 newtype Address = Address { unAddress :: Integer }
-  deriving Eq
+  deriving (Eq, Ord)
 
 instance Show Address where
     show = unpack . toText
