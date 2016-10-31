@@ -107,7 +107,7 @@ data Transaction = Transaction
   -- ^ QUANTITY - integer of the transactions index position in the block. null when its pending.
   , txFrom              :: Text
   -- ^ DATA, 20 Bytes - address of the sender.
-  , txTo                :: Text
+  , txTo                :: Maybe Text
   -- ^ DATA, 20 Bytes - address of the receiver. null when its a contract creation transaction.
   , txValue             :: Text
   -- ^ QUANTITY - value transferred in Wei.
