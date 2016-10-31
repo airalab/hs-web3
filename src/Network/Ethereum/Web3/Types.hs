@@ -40,6 +40,7 @@ instance Default Config where
 
 data Error = JsonRpcFail RpcError
            | ParserFail String
+           | UserFail String
   deriving (Show, Eq)
 
 -- | Main monad type
