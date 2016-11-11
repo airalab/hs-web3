@@ -6,16 +6,18 @@
 --
 -- Maintainer  :  mail@akru.me
 -- Stability   :  experimental
--- Portability :  unknown
+-- Portability :  portable
 --
--- Common used types and instances
+-- Common used types and instances.
 --
 module Network.Ethereum.Web3.Types where
 
 import Network.Ethereum.Web3.Internal (toLowerFirst)
-import Control.Monad.Trans.Reader
-import Control.Monad.Trans.Except
-import Data.Default.Class
+import Control.Monad.Trans.Reader (ReaderT)
+import Control.Monad.Trans.Except (ExceptT)
+import Network.Ethereum.Address (Address)
+import Data.Default.Class (Default(..))
+import Data.Text (Text)
 import Data.Text (Text)
 import Data.Aeson.TH
 import Data.Aeson
@@ -33,7 +35,8 @@ instance Default Config where
     def = Config "http://localhost:8545"
 
 data Error = JsonRpcFail RpcError
-           | ParserFail String
+           | ParserFail  String
+           | UserFail    String
   deriving (Show, Eq)
 
 -- | JSON-RPC error.
@@ -47,7 +50,7 @@ $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 3 }) ''RpcError)
 
 data Filter = Filter
-  { filterAddress   :: Maybe Text
+  { filterAddress   :: Maybe Address
   , filterTopics    :: Maybe [Maybe Text]
   , filterFromBlock :: Maybe Text
   , filterToBlock   :: Maybe Text
@@ -62,7 +65,7 @@ data Change = Change
   , changeTransactionHash  :: Text
   , changeBlockHash        :: Text
   , changeBlockNumber      :: Text
-  , changeAddress          :: Text
+  , changeAddress          :: Address
   , changeData             :: Text
   , changeTopics           :: [Text]
   } deriving Show
@@ -71,8 +74,8 @@ $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 6 }) ''Change)
 
 data Call = Call
-  { callFrom    :: Maybe Text
-  , callTo      :: Text
+  { callFrom    :: Maybe Address
+  , callTo      :: Address
   , callGas     :: Maybe Text
   , callPrice   :: Maybe Text
   , callValue   :: Maybe Text
@@ -81,4 +84,3 @@ data Call = Call
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 4 }) ''Call)
-

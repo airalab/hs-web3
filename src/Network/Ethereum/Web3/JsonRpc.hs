@@ -55,8 +55,6 @@ class Remote a where
 instance (ToJSON a, Remote b) => Remote (a -> b) where
     remote_ f x = remote_ (\xs -> f (toJSON x : xs))
 
-
-
 decodeResponse :: FromJSON a => ByteString -> Web3 a
 decodeResponse = tryParse . eitherDecode
              >=> tryJsonRpc . rsResult

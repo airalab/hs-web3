@@ -6,19 +6,33 @@ module Network.Ethereum.Address (
   )where
 
 import Data.Text.Lazy.Builder.Int as B (hexadecimal)
+import Data.Aeson (FromJSON(..), ToJSON(..), Value(..))
 import Data.Text.Lazy.Builder (toLazyText)
 import Data.Text.Read as R (hexadecimal)
+import Data.Text (Text, unpack, pack)
+import Data.String (IsString(..))
 import Data.Text.Lazy (toStrict)
-import Data.Text (Text, unpack)
 import qualified Data.Text as T
 import Control.Monad ((<=<))
-import Prelude hiding (null)
+import Data.Monoid ((<>))
 
 newtype Address = Address { unAddress :: Integer }
   deriving Eq
 
 instance Show Address where
     show = unpack . toText
+
+instance IsString Address where
+    fromString a = case fromText (pack a) of
+        Right address -> address
+        Left e -> error e
+
+instance FromJSON Address where
+    parseJSON (String a) = either fail return (fromText a)
+    parseJSON _ = fail "Address should be a string"
+
+instance ToJSON Address where
+    toJSON = toJSON . ("0x" <>) . toText
 
 fromText :: Text -> Either String Address
 fromText = fmap (Address . fst) . R.hexadecimal <=< check

@@ -9,63 +9,72 @@
 --
 -- Web3 ABI encoding data support.
 --
-module Network.Ethereum.Web3.Encoding where
+module Network.Ethereum.Web3.Encoding (
+    ABIEncoding(..)
+  ) where
 
-import Data.HexString (fromBytes, toBytes)
-import qualified Data.ByteString.Lazy as L
-import Data.ByteString.Lazy (ByteString)
-import Data.ByteString.Lazy.Builder
+import Data.Text.Lazy.Builder (Builder, toLazyText, fromLazyText, fromText)
+import Data.Attoparsec.Text.Lazy (parse, maybeResult, Parser)
+import qualified Network.Ethereum.Address as A
+import qualified Data.Text.Lazy.Encoding as LT
+import Network.Ethereum.Web3.Util (textHex)
+import Network.Ethereum.Address (Address)
+import Data.Text.Lazy.Builder (Builder)
+import Data.Text.Lazy.Builder.Int as B
+import Data.Text.Encoding (encodeUtf8)
+import qualified Data.Text.Lazy as LT
+import qualified Data.Text as T
+import Data.Text.Read as R
+import Data.Text (Text)
 import Data.Monoid ((<>))
-
--- | Make 256bit aligment; (left, right)
-align :: ByteString -> (ByteString, ByteString)
-align v = (v <> zeros, zeros <> v)
-  where zerosLen = 64 - (L.length v `mod` 64)
-        zeros = L.replicate zerosLen 0x30
 
 -- | ABI data encoder/decoder
 class ABIEncoding a where
-    toData         :: a -> ByteString
+    toDataBuilder  :: a -> Builder
     fromDataParser :: Parser a
 
-    fromData :: ByteString -> Maybe a
-    fromData = maybeResult . parse fromDataParser
+    toData :: a -> Text
+    toData = LT.toStrict . toLazyText . toDataBuilder
+
+    fromData :: Text -> Maybe a
+    fromData = maybeResult . parse fromDataParser . LT.fromStrict
 
 instance ABIEncoding Integer where
-    fromData = data2int
-    toData   = int2data
+    toDataBuilder  = int256HexFixed
+    fromDataParser = undefined
 
 instance ABIEncoding Int where
-    fromData = data2int
-    toData   = int2data
+    toDataBuilder  = int256HexFixed
+    fromDataParser = undefined
 
 instance ABIEncoding Word where
-    fromData = data2int
-    toData   = int2data
-
-instance ABIEncoding ByteString where
-    fromData = data2bs
-    toData   = bs2data
+    toDataBuilder  = int256HexFixed
+    fromDataParser = undefined
 
 instance ABIEncoding Text where
-    fromData = decodeUtf8 . fromData
-    toData   = toData . encodeUtf8
+    toDataBuilder  = encodeText
+    fromDataParser = undefined
 
-int2data :: Integral a => a -> ByteString
-int2data = snd . align . toLazyByteString
-         . int64HexFixed . fromIntegral
+instance ABIEncoding Address where
+    fromDataParser = undefined
+    toDataBuilder  = alignR . fromText . A.toText
 
-data2int :: Num a => ByteString -> a
-data2int = fromIntegral . 
+-- | Make 256bit aligment; lazy (left, right)
+align :: Builder -> (Builder, Builder)
+align v = (v <> zeros, zeros <> v)
+  where zerosLen = 64 - (LT.length s `mod` 64)
+        zeros = fromLazyText (LT.replicate zerosLen "0")
+        s = toLazyText v
 
-bs2data :: ByteString -> ByteString
-bs2data s = int2data (L.length s)
-          <> fst (align (fromBytes s))
+alignL, alignR :: Builder -> Builder
+alignL = fst . align
+alignR = snd . align
 
-data2bs :: ByteString -> ByteString
-data2bs d = (\l -> toBytes (L.take l str)) <$> len
-  where len = data2int (L.take 64 d)
-        str = L.drop 64 d
+int256HexFixed :: Integral a => a -> Builder
+int256HexFixed = alignR . B.hexadecimal
+
+encodeText :: Text -> Builder
+encodeText s = int256HexFixed (T.length s) <> alignL (textHex s)
 
 {-
 paddedText :: Text -> Text

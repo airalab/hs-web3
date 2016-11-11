@@ -31,8 +31,8 @@ library
                      , http-client-tls
                      , transformers
                      , http-client
+                     , attoparsec
                      , bytestring
-                     , hexstring
                      , vector
                      , binary
                      , aeson
