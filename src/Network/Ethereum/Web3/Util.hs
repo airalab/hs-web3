@@ -45,7 +45,7 @@ paddedAddr a = T.replicate x "0" <> a
   where x = 64 - (T.length a `mod` 64)   -- 32 byte padding
 
 text2data :: Text -> Text
-text2data t = paddedInt (T.length t) <> paddedText t
+text2data t = paddedInt (T.length (hex t) `div` 2) <> paddedText t
 
 dataText :: Text -> Either String Text
 dataText t = do
