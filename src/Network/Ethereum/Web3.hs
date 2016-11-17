@@ -1,20 +1,30 @@
+-- |
+-- Module      :  Network.Ethereum.Web3
+-- Copyright   :  Alexander Krupenkin 2016
+-- License     :  BSD3
+--
+-- Maintainer  :  mail@akru.me
+-- Stability   :  experimental
+-- Portability :  unknown
+--
+-- Web3 main module.
+--
 module Network.Ethereum.Web3 (
-    Web3
-  , Error(..)
+    module Network.Ethereum.Web3.Contract
   , Config(..)
-  , runWeb3
+  , Error(..)
   , runWeb3'
-  , module Network.Ethereum.Web3.Util
-  , module Network.Ethereum.Web3.API
+  , runWeb3
+  , Web3
   ) where
 
 import Control.Monad.Trans.Except (runExceptT)
 import Control.Monad.Trans.Reader (runReaderT)
+import Control.Monad.IO.Class (MonadIO(..))
+import Network.Ethereum.Web3.Contract
 import Network.Ethereum.Web3.Types
-import Network.Ethereum.Web3.Util
-import Network.Ethereum.Web3.API
+import Network.Ethereum.Web3.Api
 import Data.Default.Class (def)
-import Control.Monad.IO.Class
 
 -- | Run 'Web3' monad with default config.
 runWeb3 :: MonadIO m => Web3 a -> m (Either Error a)

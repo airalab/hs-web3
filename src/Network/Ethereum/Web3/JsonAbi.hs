@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 -- |
--- Module      :  Network.Ethereum.ContractAbi
+-- Module      :  Network.Ethereum.Web3.JsonAbi
 -- Copyright   :  Alexander Krupenkin 2016
 -- License     :  BSD3
 --
@@ -8,9 +8,9 @@
 -- Stability   :  experimental
 -- Portability :  POSIX / WIN32
 --
--- Ethereum smart contract utils.
+-- Ethereum smart contract JSON ABI parser.
 --
-module Network.Ethereum.ContractABI where
+module Network.Ethereum.Web3.JsonAbi where
 
 import qualified Data.Text as T
 import Data.Char (toLower)
@@ -33,39 +33,35 @@ data EventArg = EventArg
 
 $(deriveJSON (defaultOptions { fieldLabelModifier = map toLower . drop 6 }) ''EventArg)
 
-data Method = Constructor { conInputs :: [FunctionArg] }
-
-            | Function { funName      :: Text
-                       , funInputs    :: [FunctionArg]
-                       , funOutputs   :: Maybe [FunctionArg] }
-
-            | Event { eveName      :: Text
-                    , eveInputs    :: [EventArg]
-                    , eveAnonymous :: Bool }
-
-            | Fallback { falPayable :: Bool }
+data Declaration
+  = DConstructor { conInputs :: [FunctionArg] }
+  | DFunction { funName      :: Text
+              , funInputs    :: [FunctionArg]
+              , funOutputs   :: Maybe [FunctionArg] }
+  | DEvent { eveName      :: Text
+           , eveInputs    :: [EventArg]
+           , eveAnonymous :: Bool }
+  | DFallback { falPayable :: Bool }
   deriving Show
 
 $(deriveJSON (defaultOptions {
     sumEncoding = defaultTaggedObject { tagFieldName = "type" }
   , constructorTagModifier = map toLower
-  , fieldLabelModifier = map toLower . drop 3 }) ''Method)
+  , fieldLabelModifier = map toLower . drop 3 }) ''Declaration)
 
-type ContractABI = [Method]
+type ContractABI = [Declaration]
 
-events :: ContractABI -> [Method]
-events = filter (\x -> case x of Event _ _ _ -> True; _ -> False)
+-- | Take a signature by given decl, e.g. foo(uint,string)
+signature :: Declaration -> Text
 
-signature :: Method -> Text
-
-signature (Constructor inputs) = "(" <> args inputs <> ")"
+signature (DConstructor inputs) = "(" <> args inputs <> ")"
   where args = T.dropEnd 1 . foldMap (<> ",") . fmap funArgType
 
-signature (Fallback _) = "()"
+signature (DFallback _) = "()"
 
-signature (Function name inputs _) = name <> "(" <> args inputs <> ")"
+signature (DFunction name inputs _) = name <> "(" <> args inputs <> ")"
   where args = T.dropEnd 1 . foldMap (<> ",") . fmap funArgType
 
-signature (Event name inputs _) = name <> "(" <> args inputs <> ")"
+signature (DEvent name inputs _) = name <> "(" <> args inputs <> ")"
   where args = T.dropEnd 1 . foldMap (<> ",") . inputTypes
         inputTypes = fmap eveArgType . filter eveArgIndexed

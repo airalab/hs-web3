@@ -20,10 +20,10 @@ library
   hs-source-dirs:      src
   exposed-modules:     Network.Ethereum.Web3
                      , Network.Ethereum.Address
-                     , Network.Ethereum.ContractABI
+                     , Network.Ethereum.Web3.JsonAbi
                      , Network.Ethereum.Web3.Encoding
-  other-modules:       Network.Ethereum.Web3.Util
-                     , Network.Ethereum.Web3.Types
+                     , Network.Ethereum.Web3.Contract
+  other-modules:       Network.Ethereum.Web3.Types
                      , Network.Ethereum.Web3.JsonRpc
                      , Network.Ethereum.Web3.Internal
   build-depends:       base >= 4.5 && <4.10
@@ -33,6 +33,8 @@ library
                      , http-client
                      , attoparsec
                      , bytestring
+                     , cryptonite
+                     , hexstring
                      , vector
                      , binary
                      , aeson

@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 -- |
--- Module      :  Network.Ethereum.Web3.Internal
+-- Module      :  Network.Ethereum.Web3.Api
 -- Copyright   :  Alexander Krupenkin 2016
 -- License     :  MIT
 --
@@ -10,7 +10,7 @@
 --
 -- Web3 API methods.
 --
-module Network.Ethereum.Web3.API where
+module Network.Ethereum.Web3.Api where
 
 import Network.Ethereum.Web3.JsonRpc
 import Network.Ethereum.Web3.Types

@@ -1,12 +1,23 @@
+-- |
+-- Module      :  Network.Ethereum.Address
+-- Copyright   :  Alexander Krupenkin 2016
+-- License     :  BSD3
+--
+-- Maintainer  :  mail@akru.me
+-- Stability   :  experimental
+-- Portability :  unknown
+--
+-- Ethereum address renders and parsers.
+--
 module Network.Ethereum.Address (
     Address
   , fromText
   , toText
   , zero
-  )where
+  ) where
 
-import Data.Text.Lazy.Builder.Int as B (hexadecimal)
 import Data.Aeson (FromJSON(..), ToJSON(..), Value(..))
+import Data.Text.Lazy.Builder.Int as B (hexadecimal)
 import Data.Text.Lazy.Builder (toLazyText)
 import Data.Text.Read as R (hexadecimal)
 import Data.Text (Text, unpack, pack)
@@ -17,7 +28,7 @@ import Control.Monad ((<=<))
 import Data.Monoid ((<>))
 
 newtype Address = Address { unAddress :: Integer }
-  deriving Eq
+  deriving (Eq, Ord)
 
 instance Show Address where
     show = unpack . toText

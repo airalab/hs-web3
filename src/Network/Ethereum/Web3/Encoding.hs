@@ -9,55 +9,67 @@
 --
 -- Web3 ABI encoding data support.
 --
-module Network.Ethereum.Web3.Encoding (
-    ABIEncoding(..)
-  ) where
+module Network.Ethereum.Web3.Encoding (ABIEncoding(..)) where
 
-import Data.Text.Lazy.Builder (Builder, toLazyText, fromLazyText, fromText)
+import Data.Text.Lazy.Builder (Builder, toLazyText, fromText, fromLazyText)
 import Data.Attoparsec.Text.Lazy (parse, maybeResult, Parser)
+import Data.Text.Encoding (encodeUtf8, decodeUtf8)
 import qualified Network.Ethereum.Address as A
-import qualified Data.Text.Lazy.Encoding as LT
-import Network.Ethereum.Web3.Util (textHex)
+import qualified Data.Attoparsec.Text as P
 import Network.Ethereum.Address (Address)
 import Data.Text.Lazy.Builder (Builder)
 import Data.Text.Lazy.Builder.Int as B
-import Data.Text.Encoding (encodeUtf8)
 import qualified Data.Text.Lazy as LT
+import qualified Data.Text.Read as R
+import qualified Data.HexString as H
 import qualified Data.Text as T
-import Data.Text.Read as R
-import Data.Text (Text)
 import Data.Monoid ((<>))
+import Data.Text (Text)
+import Data.Bits (Bits)
 
 -- | ABI data encoder/decoder
 class ABIEncoding a where
     toDataBuilder  :: a -> Builder
     fromDataParser :: Parser a
 
+    -- | Encode value into abi-encoding represenation
     toData :: a -> Text
     toData = LT.toStrict . toLazyText . toDataBuilder
 
+    -- | Parse encoded value
     fromData :: Text -> Maybe a
     fromData = maybeResult . parse fromDataParser . LT.fromStrict
 
+instance ABIEncoding Bool where
+    toDataBuilder  = int256HexBuilder . fromEnum
+    fromDataParser = fmap toEnum int256HexParser
+
 instance ABIEncoding Integer where
-    toDataBuilder  = int256HexFixed
-    fromDataParser = undefined
+    toDataBuilder  = int256HexBuilder
+    fromDataParser = int256HexParser
 
 instance ABIEncoding Int where
-    toDataBuilder  = int256HexFixed
-    fromDataParser = undefined
+    toDataBuilder  = int256HexBuilder
+    fromDataParser = int256HexParser
 
 instance ABIEncoding Word where
-    toDataBuilder  = int256HexFixed
-    fromDataParser = undefined
+    toDataBuilder  = int256HexBuilder
+    fromDataParser = int256HexParser
 
 instance ABIEncoding Text where
-    toDataBuilder  = encodeText
-    fromDataParser = undefined
+    toDataBuilder  = textBuilder
+    fromDataParser = textParser
 
 instance ABIEncoding Address where
-    fromDataParser = undefined
     toDataBuilder  = alignR . fromText . A.toText
+    fromDataParser = either error id . A.fromText
+                     <$> (P.take 24 *> P.take 40)
+
+instance ABIEncoding a => ABIEncoding [a] where
+    toDataBuilder x = int256HexBuilder (length x)
+                      <> foldMap toDataBuilder x
+    fromDataParser = do len <- int256HexParser
+                        take len <$> P.many1 fromDataParser
 
 -- | Make 256bit aligment; lazy (left, right)
 align :: Builder -> (Builder, Builder)
@@ -67,30 +79,31 @@ align v = (v <> zeros, zeros <> v)
         s = toLazyText v
 
 alignL, alignR :: Builder -> Builder
+{-# INLINE alignL #-}
 alignL = fst . align
+{-# INLINE alignR #-}
 alignR = snd . align
 
-int256HexFixed :: Integral a => a -> Builder
-int256HexFixed = alignR . B.hexadecimal
+int256HexBuilder :: Integral a => a -> Builder
+int256HexBuilder = alignR . B.hexadecimal
 
-encodeText :: Text -> Builder
-encodeText s = int256HexFixed (T.length s) <> alignL (textHex s)
+int256HexParser :: (Bits a, Integral a) => Parser a
+int256HexParser = do
+    hex <- P.take 64
+    case R.hexadecimal hex of
+        Right (v, "") -> return v
+        _ -> fail ("Broken hexadecimal: `" ++ T.unpack hex ++ "`")
 
-{-
-paddedText :: Text -> Text
-paddedText t = hex t <> T.replicate x "0"
-  where x = 64 - (T.length (hex t) `mod` 64)   -- 32 byte padding
+textBuilder :: Text -> Builder
+textBuilder s = int256HexBuilder (T.length hex `div` 2)
+             <> alignL (fromText hex)
+  where textToHex = H.toText . H.fromBytes . encodeUtf8
+        hex = textToHex s
 
-
-paddedAddr :: Address -> Text
-paddedAddr a = T.replicate x "0" <> A.toText a
-  where x = 64 - (T.length a `mod` 64)   -- 32 byte padding
-
-textData :: Text -> Text
-textData t = paddedInt (T.length t) <> paddedText t
-
-dataText :: Text -> Either String Text
-dataText t = do
-    (x, _) <- T.hexadecimal (T.take 64 t)
-    return (unhex (T.take x (T.drop 64 t)))
--}
+textParser :: Parser Text
+textParser = do
+    len <- int256HexParser
+    let zeroBytes = 32 - (len `mod` 32)
+    str <- P.take (len * 2) <* P.take (zeroBytes * 2)
+    return (hexToText str)
+  where hexToText = decodeUtf8 . H.toBytes . H.hexString . encodeUtf8
