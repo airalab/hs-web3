@@ -11,13 +11,14 @@
 --
 module Network.Ethereum.Web3.Util where
 
-import Network.Ethereum.Web3.Internal (Filter(..), Call(..), web3_sha3)
+import Network.Ethereum.Web3.Internal (Filter(..), Call(..))
 import qualified Network.Ethereum.Web3.Address as A (Address, toText)
 import Data.HexString (toText, fromBytes, toBytes, hexString)
 import Network.Ethereum.ContractAbi (Method, signature)
 import Data.Text.Encoding (encodeUtf8, decodeUtf8)
 import qualified Data.Text.Lazy.Builder.Int as B
 import qualified Data.Text.Lazy.Builder as B
+import Crypto.Hash (hash, Digest, Keccak_256)
 import Network.Ethereum.Web3.Types (Web3)
 import qualified Data.Text.Lazy as LT
 import qualified Data.Text.Read as T
@@ -52,16 +53,18 @@ dataText t = do
     (x, _) <- T.hexadecimal (T.take 64 t)
     return (unhex (T.take x (T.drop 64 t)))
 
-sha3_str :: Text -> Web3 Text
-sha3_str = web3_sha3 . ("0x" <>) . hex
+sha3 :: Text -> Text
+sha3 x = T.pack (show digest)
+  where digest :: Digest Keccak_256
+        digest = hash (encodeUtf8 x)
 
-eventFilter :: A.Address -> Method -> Web3 Filter
-eventFilter addr event = do
-    topic0 <- sha3_str (signature event)
-    return (Filter (Just ("0x" <> A.toText addr)) (Just [Just topic0, Nothing]) Nothing Nothing)
+eventFilter :: A.Address -> Method -> Filter
+eventFilter addr event =
+    Filter (Just ("0x" <> A.toText addr)) (Just [Just topic0, Nothing]) Nothing Nothing
+  where topic0 = "0x" <> sha3 (signature event)
 
-methodId :: Method -> Web3 Text
-methodId = fmap (T.take 10) . sha3_str . signature
+methodId :: Method -> Text
+methodId = ("0x" <>) . T.take 10 . sha3 . signature
 
 -- | Ether to Wei converter
 toWei :: Double -> Integer

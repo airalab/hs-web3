@@ -1,5 +1,5 @@
 name:                web3
-version:             0.2.2.0
+version:             0.2.3.0
 synopsis:            JSON-RPC Ethereum API for Haskell
 description:         Please see README.md
 homepage:            https://github.com/akru/web3#readme
@@ -32,6 +32,7 @@ library
                      , vector
                      , hexstring
                      , bytestring
+                     , cryptonite
                      , http-client
                      , transformers
                      , http-client-tls
