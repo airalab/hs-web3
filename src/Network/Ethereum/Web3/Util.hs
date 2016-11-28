@@ -64,7 +64,7 @@ eventFilter addr event =
   where topic0 = "0x" <> sha3 (signature event)
 
 methodId :: Method -> Text
-methodId = ("0x" <>) . T.take 10 . sha3 . signature
+methodId = ("0x" <>) . T.take 8 . sha3 . signature
 
 -- | Ether to Wei converter
 toWei :: Double -> Integer
