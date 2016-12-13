@@ -10,26 +10,26 @@
 -- Web3 main module.
 --
 module Network.Ethereum.Web3 (
-    module Network.Ethereum.Web3.Contract
-  , Config(..)
-  , Error(..)
+  -- ** Prime monad & runners
+    Web3
   , runWeb3'
   , runWeb3
-  , Web3
+  -- ** Contract manipulation
+  , EventAction(..)
+  , Event(..)
+  , Method(..)
+  -- ** ABI encoding & data types
+  , ABIEncoding(..)
+  , BytesN(..)
+  , BytesD(..)
+  , Address
+  -- ** Web3 monad configuration
+  , Config(..)
+  , Error(..)
   ) where
 
-import Control.Monad.Trans.Except (runExceptT)
-import Control.Monad.Trans.Reader (runReaderT)
-import Control.Monad.IO.Class (MonadIO(..))
 import Network.Ethereum.Web3.Contract
+import Network.Ethereum.Web3.Encoding
+import Network.Ethereum.Web3.Address
 import Network.Ethereum.Web3.Types
-import Network.Ethereum.Web3.Api
-import Data.Default.Class (def)
-
--- | Run 'Web3' monad with default config.
-runWeb3 :: MonadIO m => Web3 a -> m (Either Error a)
-runWeb3 = runWeb3' def
-
--- | Run 'Web3' monad.
-runWeb3' :: MonadIO m => Config -> Web3 a -> m (Either Error a)
-runWeb3' c = liftIO . runExceptT . flip runReaderT c
+import Network.Ethereum.Web3.Bytes

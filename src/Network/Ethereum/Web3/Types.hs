@@ -13,11 +13,16 @@
 module Network.Ethereum.Web3.Types where
 
 import Network.Ethereum.Web3.Internal (toLowerFirst)
-import Control.Monad.Trans.Reader (ReaderT)
-import Control.Monad.Trans.Except (ExceptT)
-import Network.Ethereum.Address (Address)
+import Control.Monad.Trans.Reader (ReaderT, runReaderT)
+import Control.Monad.Trans.Except (ExceptT, runExceptT)
+import Network.Ethereum.Web3.Address (Address)
+import Control.Monad.IO.Class (MonadIO(..))
 import Data.Default.Class (Default(..))
-import Data.Text (Text)
+import qualified Data.Text.Lazy.Builder.Int as B
+import qualified Data.Text.Lazy.Builder     as B
+import qualified Data.Text.Read as R
+import Data.Default.Class (def)
+import Data.Monoid ((<>))
 import Data.Text (Text)
 import Data.Aeson.TH
 import Data.Aeson
@@ -39,6 +44,14 @@ data Error = JsonRpcFail RpcError
            | UserFail    String
   deriving (Show, Eq)
 
+-- | Run 'Web3' monad with default config.
+runWeb3 :: MonadIO m => Web3 a -> m (Either Error a)
+runWeb3 = runWeb3' def
+
+-- | Run 'Web3' monad.
+runWeb3' :: MonadIO m => Config -> Web3 a -> m (Either Error a)
+runWeb3' c = liftIO . runExceptT . flip runReaderT c
+
 -- | JSON-RPC error.
 data RpcError = RpcError
   { errCode     :: Int
@@ -58,6 +71,21 @@ data Filter = Filter
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 6 }) ''Filter)
+
+newtype FilterId = FilterId Int
+  deriving (Show, Eq, Ord)
+
+instance FromJSON FilterId where
+    parseJSON (String v) =
+        case R.hexadecimal v of
+            Right (x, "") -> return (FilterId x)
+            _ -> fail "Unable to parse FilterId!"
+    parseJSON _ = fail "The string is required!"
+
+instance ToJSON FilterId where
+    toJSON (FilterId x) =
+        let hexValue = B.toLazyText (B.hexadecimal x)
+        in  toJSON ("0x" <> hexValue)
 
 data Change = Change
   { changeLogIndex         :: Text
@@ -84,3 +112,12 @@ data Call = Call
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 4 }) ''Call)
+
+data CallMode = Latest | Pending
+  deriving (Show, Eq)
+
+instance ToJSON CallMode where
+    toJSON = toJSON . toLowerFirst . show
+
+-- TODO: Wrap
+type TxHash = Text

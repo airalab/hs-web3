@@ -1,5 +1,5 @@
 -- |
--- Module      :  Network.Ethereum.Address
+-- Module      :  Network.Ethereum.Web3.Address
 -- Copyright   :  Alexander Krupenkin 2016
 -- License     :  BSD3
 --
@@ -9,7 +9,7 @@
 --
 -- Ethereum address renders and parsers.
 --
-module Network.Ethereum.Address (
+module Network.Ethereum.Web3.Address (
     Address
   , fromText
   , toText
