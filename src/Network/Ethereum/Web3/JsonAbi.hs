@@ -30,7 +30,7 @@ import Data.Text (Text)
 import Data.Aeson.TH
 import Data.Aeson
 
-data FunctionArg = FunctionArgs
+data FunctionArg = FunctionArg
   { funArgName :: Text
   , funArgType :: Text
   } deriving (Show, Eq, Ord)
@@ -52,6 +52,7 @@ $(deriveJSON
 data Declaration
   = DConstructor { conInputs :: [FunctionArg] }
   | DFunction { funName      :: Text
+              , funConstant  :: Bool
               , funInputs    :: [FunctionArg]
               , funOutputs   :: Maybe [FunctionArg] }
   | DEvent { eveName      :: Text
@@ -86,17 +87,17 @@ instance ToJSON ContractABI where
 
 showConstructor :: Declaration -> [Text]
 showConstructor x = case x of
-    DConstructor _ -> ["\tConstructor " <> signature x]
+    DConstructor{} -> ["\tConstructor " <> signature x]
     _ -> []
 
 showEvent :: Declaration -> [Text]
 showEvent x = case x of
-    DEvent _ _ _ -> ["\t\t" <> signature x]
+    DEvent{} -> ["\t\t" <> signature x]
     _ -> []
 
 showMethod :: Declaration -> [Text]
 showMethod x = case x of
-    DFunction _ _ _ ->
+    DFunction{} ->
         ["\t\t" <> methodId x <> " " <> signature x]
     _ -> []
 
@@ -108,12 +109,11 @@ signature (DConstructor inputs) = "(" <> args inputs <> ")"
 
 signature (DFallback _) = "()"
 
-signature (DFunction name inputs _) = name <> "(" <> args inputs <> ")"
+signature (DFunction name _ inputs _) = name <> "(" <> args inputs <> ")"
   where args = T.dropEnd 1 . foldMap (<> ",") . fmap funArgType
 
 signature (DEvent name inputs _) = name <> "(" <> args inputs <> ")"
-  where args = T.dropEnd 1 . foldMap (<> ",") . inputTypes
-        inputTypes = fmap eveArgType . filter eveArgIndexed
+  where args = T.dropEnd 1 . foldMap (<> ",") . fmap eveArgType
 
 sha3 :: Text -> Text
 {-# INLINE sha3 #-}

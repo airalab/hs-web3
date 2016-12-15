@@ -29,6 +29,7 @@ _event a f = do
     fid <- let ftyp = snd $ let x = undefined :: Event a => a
                             in  (f x, x)
            in  eth_newFilter (eventFilter ftyp a)
+
     cfg <- ask
     liftIO $ forkIO $
         let loop = do threadDelay 1000000
@@ -52,5 +53,21 @@ _event a f = do
                  (T.drop 2 $ changeData c)
 
 class ABIEncoding a => Method a where
-    sendTransaction :: Address -> a -> Web3 TxHash
+    sendTx :: Address -> a -> Web3 TxHash
+    sendTx = _sendTransaction
+
     call :: ABIEncoding b => Address -> CallMode -> a -> Web3 b
+    call = _call
+
+_sendTransaction :: Method a => Address -> a -> Web3 TxHash
+_sendTransaction to = eth_sendTransaction . txdata
+  where txdata = Call Nothing to Nothing Nothing Nothing . Just . toData
+
+-- TODO: Correct dynamic type parsing
+_call :: (Method a, ABIEncoding b)
+      => Address -> CallMode -> a -> Web3 b
+_call to mode dat = do res <- eth_call txdata mode
+                       case fromData (T.drop 2 res) of
+                           Nothing -> fail "Unable to parse result"
+                           Just x -> return x
+  where txdata = Call Nothing to Nothing Nothing Nothing (Just (toData dat))
