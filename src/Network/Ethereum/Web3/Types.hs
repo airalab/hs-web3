@@ -2,7 +2,7 @@
 -- |
 -- Module      :  Network.Ethereum.Web3.Types
 -- Copyright   :  Alexander Krupenkin 2016
--- License     :  MIT
+-- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
 -- Stability   :  experimental

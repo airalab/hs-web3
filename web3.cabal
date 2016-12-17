@@ -1,5 +1,5 @@
 name:                web3
-version:             0.2.0.0
+version:             0.3.1.0
 synopsis:            JSON-RPC Ethereum API for Haskell
 description:         Please see README.md
 homepage:            https://github.com/akru/web3#readme
@@ -19,6 +19,7 @@ source-repository head
 library
   hs-source-dirs:      src
   exposed-modules:     Network.Ethereum.Web3
+                     , Network.Ethereum.Unit
                      , Network.Ethereum.Web3.TH
                      , Network.Ethereum.Web3.Api
                      , Network.Ethereum.Web3.Bytes
@@ -26,8 +27,8 @@ library
                      , Network.Ethereum.Web3.JsonAbi
                      , Network.Ethereum.Web3.Encoding
                      , Network.Ethereum.Web3.Contract
-  other-modules:       Network.Ethereum.Web3.JsonRpc
-                     , Network.Ethereum.Web3.Types
+  other-modules:       Network.Ethereum.Web3.Types
+                     , Network.Ethereum.Web3.JsonRpc
                      , Network.Ethereum.Web3.Internal
                      , Network.Ethereum.Web3.EncodingUtils
   build-depends:       base >= 4.5 && <4.10
@@ -53,10 +54,7 @@ test-suite web3-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
-  build-depends:       base
-                     , memory
-                     , text
-                     , web3
+  build-depends:       base, memory, text, web3
   ghc-options:         -ddump-splices -threaded -rtsopts -with-rtsopts=-N
   default-extensions:  OverloadedStrings
   default-language:    Haskell2010

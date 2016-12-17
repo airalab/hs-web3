@@ -26,6 +26,8 @@ module Network.Ethereum.Web3 (
   -- ** Web3 monad configuration
   , Config(..)
   , Error(..)
+  -- ** Ethereum unit conversion utils
+  , module Network.Ethereum.Unit
   ) where
 
 import Network.Ethereum.Web3.Contract
@@ -33,3 +35,4 @@ import Network.Ethereum.Web3.Encoding
 import Network.Ethereum.Web3.Address
 import Network.Ethereum.Web3.Types
 import Network.Ethereum.Web3.Bytes
+import Network.Ethereum.Unit
