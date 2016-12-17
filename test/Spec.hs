@@ -17,7 +17,7 @@ main :: IO ()
 main = do
     putStrLn ""
     putStrLn [abiFrom|data/sample.json|]
-    runWeb3 $ event addr (\(Action2 x y) -> print x >> print y >> return TerminateEvent)
-    threadDelay 100000000
-    return ()
+    -- runWeb3 $ event addr (\(Action2 x y) -> print x >> print y >> return TerminateEvent)
+    -- threadDelay 100000000
+    -- return ()
   where Right addr = fromText "0x19EE7966474b31225F71Ef8e36A71378a58a20E1"
