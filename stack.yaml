@@ -1,5 +1,5 @@
 # Resolver to choose a 'specific' stackage snapshot or a compiler version.
-resolver: lts-7.3
+resolver: lts-7.13
 # User packages to be built.
 packages:
 - '.'
