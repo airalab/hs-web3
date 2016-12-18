@@ -66,7 +66,7 @@ instanceD' name insType insDecs =
 dataD' :: Name -> ConQ -> [Name] -> DecQ
 dataD' name rec derive =
 #if MIN_VERSION_template_haskell(2,12,0)
-    dataD (cxt []) name [] Nothing [rec] $ fmap (derivClause Nothing . conT) derive
+    dataD (cxt []) name [] Nothing [rec] $ fmap (derivClause Nothing . pure . conT) derive
 #else
     dataD (cxt []) name [] Nothing [rec] $ cxt (conT <$> derive)
 #endif
