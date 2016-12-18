@@ -9,7 +9,38 @@
 -- Stability   :  experimental
 -- Portability :  unportable
 --
--- Ethereum unit conversion utils.
+-- Ethereum has a metric system of denominations used as units of ether.
+-- Each denomination has its own unique name (some bear the family name
+-- of seminal figures playing a role in evolution of computer science
+-- and cryptoeconomics). The smallest denomination aka base unit of ether
+-- is called 'Wei'. Below is a list of the named denominations and their
+-- value in 'Wei'. Following a common (although somewhat ambiguous) pattern,
+-- ether also designates a unit (of 1e18 or one quintillion 'Wei') of the
+-- currency. Note that the currency is not called Ethereum as many mistakenly
+-- think, nor is Ethereum a unit.
+--
+-- In Haskell the Ethereum unit system presented as set of types: 'Wei',
+-- 'Szabo', 'Finney', etc. They are members of 'Unit' typeclass. Also available
+-- standart 'Show', 'Read', 'Num' operations over Ethereum units.
+--
+-- @
+-- > let x = 1.2 :: Ether
+-- > toWei x
+-- 1200000000000000000
+--
+-- > let y = x + 2
+-- > y
+-- 3.20 ether
+--
+-- > let z = 15 :: Szabo
+-- > y + z
+--
+-- <interactive>:6:5: error:
+--    • Couldn't match type ‘Network.Ethereum.Unit.U4’
+--                    with ‘Network.Ethereum.Unit.U6’
+--      Expected type: Ether
+--      Actual type: Szabo
+-- @
 --
 module Network.Ethereum.Unit (
     Unit(..)
@@ -32,7 +63,7 @@ import Data.Monoid ((<>))
 import GHC.Read
 
 -- | Ethereum value unit
-class Unit a where
+class (UnitSpec a, Fractional a) => Unit a where
     -- | Make a value from integer wei
     fromWei :: Integer -> a
     -- | Convert a value to integer wei
@@ -57,9 +88,13 @@ mkValue = modify res . round . (divider res *)
         modify :: Value a -> Integer -> Value a
         modify _ = MkValue
 
-instance Unit (Value a) where
+instance UnitSpec a => Unit (Value a) where
     fromWei = MkValue
     toWei   = unValue
+
+instance UnitSpec a => UnitSpec (Value a) where
+    divider = divider . (undefined :: Value (Value a) -> Value a)
+    name    = name . (undefined :: Value (Value a) -> Value a)
 
 instance UnitSpec a => Num (Value a) where
    a + b = MkValue (unValue a + unValue b)

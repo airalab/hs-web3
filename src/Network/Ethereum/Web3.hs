@@ -7,25 +7,32 @@
 -- Stability   :  experimental
 -- Portability :  unknown
 --
--- Web3 main module.
+-- An Ethereum node offers a RPC interface. This interface gives Ðapp’s
+-- access to the Ethereum blockchain and functionality that the node provides,
+-- such as compiling smart contract code. It uses a subset of the JSON-RPC 2.0
+-- specification (no support for notifications or named parameters) as serialisation
+-- protocol and is available over HTTP and IPC (unix domain sockets on linux/OSX
+-- and named pipe’s on Windows).
+--
+-- Web3 Haskell library currently use JSON-RPC over HTTP to access node functionality.
 --
 module Network.Ethereum.Web3 (
-  -- ** Prime monad & runners
+  -- ** Web3 monad & runners
     Web3
+  , Config(..)
+  , Error(..)
   , runWeb3'
   , runWeb3
-  -- ** Contract manipulation
+  -- ** Contract actions
   , EventAction(..)
   , Event(..)
   , Method(..)
+  , nopay
   -- ** ABI encoding & data types
   , ABIEncoding(..)
   , BytesN(..)
   , BytesD(..)
   , Address
-  -- ** Web3 monad configuration
-  , Config(..)
-  , Error(..)
   -- ** Ethereum unit conversion utils
   , module Network.Ethereum.Unit
   ) where

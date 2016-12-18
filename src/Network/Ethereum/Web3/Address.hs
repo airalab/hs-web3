@@ -7,7 +7,7 @@
 -- Stability   :  experimental
 -- Portability :  unknown
 --
--- Ethereum address renders and parsers.
+-- Ethereum address type, render and parser.
 --
 module Network.Ethereum.Web3.Address (
     Address
@@ -27,6 +27,7 @@ import qualified Data.Text as T
 import Control.Monad ((<=<))
 import Data.Monoid ((<>))
 
+-- | Ethereum account address
 newtype Address = Address { unAddress :: Integer }
   deriving (Eq, Ord)
 
@@ -45,6 +46,7 @@ instance FromJSON Address where
 instance ToJSON Address where
     toJSON = toJSON . ("0x" <>) . toText
 
+-- | Parse 'Address' from text string
 fromText :: Text -> Either String Address
 fromText = fmap (Address . fst) . R.hexadecimal <=< check
   where check t | T.take 2 t == "0x" = check (T.drop 2 t)
@@ -53,8 +55,10 @@ fromText = fmap (Address . fst) . R.hexadecimal <=< check
                               else Left "This is not seems like address."
         valid = ['0'..'9'] ++ ['a'..'f'] ++ ['A'..'F']
 
+-- | Render 'Address' to text string
 toText :: Address -> Text
 toText = toStrict . toLazyText . B.hexadecimal . unAddress
 
+-- | Null address
 zero :: Address
 zero = Address 0

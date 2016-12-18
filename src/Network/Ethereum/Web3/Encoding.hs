@@ -5,7 +5,7 @@
 --
 -- Maintainer  :  mail@akru.me
 -- Stability   :  experimental
--- Portability :  POSIX / WIN32
+-- Portability :  portable
 --
 -- Web3 ABI encoding data support.
 --
@@ -22,7 +22,7 @@ import Network.Ethereum.Web3.EncodingUtils
 import Data.Monoid ((<>))
 import Data.Text (Text)
 
--- | ABI data encoder/decoder
+-- | Contract ABI data codec
 class ABIEncoding a where
     toDataBuilder  :: a -> Builder
     fromDataParser :: Parser a

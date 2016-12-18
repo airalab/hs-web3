@@ -27,10 +27,10 @@ import Data.Text (Text)
 import Data.Aeson.TH
 import Data.Aeson
 
--- | Main monad type
+-- | Any communication with Ethereum node wrapped with 'Web3' monad
 type Web3 = ReaderT Config (ExceptT Error IO)
 
--- | Web3 configuration
+-- | Ethereum node params
 data Config = Config
   { rpcUri :: String
   -- ^ JSON-RPC node URI
@@ -39,20 +39,24 @@ data Config = Config
 instance Default Config where
     def = Config "http://localhost:8545"
 
+-- | Some peace of error response
 data Error = JsonRpcFail RpcError
+           -- ^ JSON-RPC communication error
            | ParserFail  String
+           -- ^ Error in parser state
            | UserFail    String
+           -- ^ Common head for user errors
   deriving (Show, Eq)
 
--- | Run 'Web3' monad with default config.
+-- | Run 'Web3' monad with default config
 runWeb3 :: MonadIO m => Web3 a -> m (Either Error a)
 runWeb3 = runWeb3' def
 
--- | Run 'Web3' monad.
+-- | Run 'Web3' monad with given configuration
 runWeb3' :: MonadIO m => Config -> Web3 a -> m (Either Error a)
 runWeb3' c = liftIO . runExceptT . flip runReaderT c
 
--- | JSON-RPC error.
+-- | JSON-RPC error message
 data RpcError = RpcError
   { errCode     :: Int
   , errMessage  :: Text
@@ -62,6 +66,7 @@ data RpcError = RpcError
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 3 }) ''RpcError)
 
+-- | Low-level event filter data structure
 data Filter = Filter
   { filterAddress   :: Maybe Address
   , filterTopics    :: Maybe [Maybe Text]
@@ -72,6 +77,7 @@ data Filter = Filter
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 6 }) ''Filter)
 
+-- | Event filder ident
 newtype FilterId = FilterId Int
   deriving (Show, Eq, Ord)
 
@@ -87,6 +93,7 @@ instance ToJSON FilterId where
         let hexValue = B.toLazyText (B.hexadecimal x)
         in  toJSON ("0x" <> hexValue)
 
+-- | Changes pulled by low-level call 'eth_getFilterChanges'
 data Change = Change
   { changeLogIndex         :: Text
   , changeTransactionIndex :: Text
@@ -101,6 +108,7 @@ data Change = Change
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 6 }) ''Change)
 
+-- | The contract call params
 data Call = Call
   { callFrom    :: Maybe Address
   , callTo      :: Address
@@ -113,6 +121,7 @@ data Call = Call
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 4 }) ''Call)
 
+-- | The contract call mode describe used state: latest or pending
 data CallMode = Latest | Pending
   deriving (Show, Eq)
 
@@ -120,4 +129,5 @@ instance ToJSON CallMode where
     toJSON = toJSON . toLowerFirst . show
 
 -- TODO: Wrap
+-- | Transaction hash text string
 type TxHash = Text

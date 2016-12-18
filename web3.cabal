@@ -1,8 +1,8 @@
 name:                web3
-version:             0.3.1.0
-synopsis:            JSON-RPC Ethereum API for Haskell
-description:         Please see README.md
-homepage:            https://github.com/akru/web3#readme
+version:             0.3.2.0
+synopsis:            Ethereum API for Haskell
+description:         Web3 is a Haskell client library for Ethereum
+homepage:            https://github.com/airalab/web3#readme
 license:             BSD3
 license-file:        LICENSE
 author:              Alexander Krupenkin
@@ -12,9 +12,14 @@ category:            Network
 build-type:          Simple
 cabal-version:       >=1.10
 
+extra-source-files:
+  README.md
+  data/sample.json
+  data/sample.sol
+
 source-repository head
   type:     git
-  location: https://github.com/akru/web3
+  location: https://github.com/airalab/web3
 
 library
   hs-source-dirs:      src
@@ -22,13 +27,13 @@ library
                      , Network.Ethereum.Unit
                      , Network.Ethereum.Web3.TH
                      , Network.Ethereum.Web3.Api
+                     , Network.Ethereum.Web3.Types
                      , Network.Ethereum.Web3.Bytes
                      , Network.Ethereum.Web3.Address
                      , Network.Ethereum.Web3.JsonAbi
                      , Network.Ethereum.Web3.Encoding
                      , Network.Ethereum.Web3.Contract
-  other-modules:       Network.Ethereum.Web3.Types
-                     , Network.Ethereum.Web3.JsonRpc
+  other-modules:       Network.Ethereum.Web3.JsonRpc
                      , Network.Ethereum.Web3.Internal
                      , Network.Ethereum.Web3.EncodingUtils
   build-depends:       base >= 4.5 && <4.10

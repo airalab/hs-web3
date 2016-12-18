@@ -6,8 +6,9 @@
 --
 -- Maintainer  :  mail@akru.me
 -- Stability   :  experimental
--- Portability :  POSIX / WIN32
+-- Portability :  portable
 --
+-- Little JSON-RPC 2.0 client.
 -- Functions for implementing the client side of JSON-RPC 2.0.
 -- See <http://www.jsonrpc.org/specification>.
 --

@@ -1,5 +1,29 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes     #-}
+{-# LANGUAGE CPP             #-}
+-- |
+-- Module      :  Network.Ethereum.Web3.TH
+-- Copyright   :  Alexander Krupenkin 2016
+-- License     :  BSD3
+--
+-- Maintainer  :  mail@akru.me
+-- Stability   :  experimental
+-- Portability :  unportable
+--
+-- TemplateHaskell based Ethereum contract ABI
+-- methods & event generator for Haskell native API.
+--
+-- @
+-- [abiFrom|data/sample.json|]
+--
+-- main = do
+--     runWeb3 $ event "0x..." $
+--        \(Action2 n x) -> do print n
+--                             print x
+--     wait
+--   where wait = threadDelay 1000000 >> wait
+-- @
+--
 module Network.Ethereum.Web3.TH (abi, abiFrom) where
 
 import qualified Data.Text.Lazy.Encoding as LT
@@ -41,7 +65,11 @@ instanceD' name insType insDecs =
 -- | Simple data type declaration with one constructor
 dataD' :: Name -> ConQ -> [Name] -> DecQ
 dataD' name rec derive =
+#if MIN_VERSION_template_haskell(2,12,0)
+    dataD (cxt []) name [] Nothing [rec] $ fmap (derivClause Nothing . conT) derive
+#else
     dataD (cxt []) name [] Nothing [rec] $ cxt (conT <$> derive)
+#endif
 
 -- | Simple function declaration
 funD' :: Name -> [PatQ] -> ExpQ -> DecQ
@@ -160,12 +188,13 @@ funTypeWrapper funName args result = sigD funName funType
 
 funWrapper :: Bool -> Name -> Name -> [FunctionArg] -> DecQ
 funWrapper c name dname args = do
-    vars <- sequence $ replicate (length args + 1) (newName "t")
-    let params = appsE ((conE dname) : fmap varE (tail vars))
-    funD' name (fmap varP vars) $
-        case c of
-            True  -> [|call $(varE (head vars)) Latest $(params)|]
-            False -> [|sendTx $(varE (head vars)) $(params)|]
+    (a : b : vars) <- sequence $ replicate (length args + 2) (newName "t")
+    let params = appsE ((conE dname) : fmap varE vars)
+    case c of
+        True  -> funD' name (fmap varP (a : vars)) $
+            [|call $(varE a) Latest $(params)|]
+        False -> funD' name (fmap varP (a : b : vars)) $
+            [|sendTx $(varE a) $(varE b) $(params)|]
 
 -- | Event declarations maker
 mkEvent :: Declaration -> Q [Dec]

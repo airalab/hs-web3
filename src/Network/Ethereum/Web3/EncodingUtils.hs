@@ -27,7 +27,7 @@ import Data.Bits (Bits)
 -- | Make 256bit aligment; lazy (left, right)
 align :: Builder -> (Builder, Builder)
 align v = (v <> zeros, zeros <> v)
-  where zerosLen | LT.length s `mod` 64 == 0 = 0 
+  where zerosLen | LT.length s `mod` 64 == 0 = 0
                  | otherwise = 64 - (LT.length s `mod` 64)
         zeros = fromLazyText (LT.replicate zerosLen "0")
         s = toLazyText v
