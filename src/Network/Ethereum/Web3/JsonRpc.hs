@@ -16,10 +16,10 @@ module Network.Ethereum.Web3.JsonRpc (remote, MethodName) where
 
 import Network.Ethereum.Web3.Types
 
-import Network.HTTP.Client (httpLbs, newManager, requestBody, responseBody,
-                            method, requestHeaders, parseRequest,
+import Network.HTTP.Client (httpLbs, newManager, defaultManagerSettings,
+                            requestBody, responseBody, method,
+                            requestHeaders, parseRequest,
                             RequestBody(RequestBodyLBS))
-import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Control.Monad.Error.Class (throwError)
 import Data.ByteString.Lazy (ByteString)
 import Control.Monad.Trans.Reader (ask)
@@ -41,7 +41,7 @@ remote n = remote_ (call . Array . fromList)
   where connection body = do
             conf <- ask
             liftIO $ do
-                manager <- newManager tlsManagerSettings
+                manager <- newManager defaultManagerSettings
                 request <- parseRequest (rpcUri conf)
                 let request' = request
                              { requestBody = RequestBodyLBS body
