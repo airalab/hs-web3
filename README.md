@@ -3,6 +3,7 @@
 This is the Ethereum compatible Haskell API which implements the [Generic JSON RPC](https://github.com/ethereum/wiki/wiki/JSON-RPC) spec.
 
 [![Build Status](https://travis-ci.org/airalab/hs-web3.svg?branch=master)](https://travis-ci.org/airalab/hs-web3)
+[![Build status](https://ci.appveyor.com/api/projects/status/ly40a39ojsxpv24w?svg=true)](https://ci.appveyor.com/project/akru/hs-web3)
 ![Hackage](https://img.shields.io/hackage/v/web3.svg)
 ![Hackage Dependencies](https://img.shields.io/hackage-deps/v/web3.svg)
 ![Haskell Programming Language](https://img.shields.io/badge/language-Haskell-blue.svg)
@@ -48,13 +49,15 @@ typeclasses and function helpers.
 
 See example of usage.
 
-    import Data.ByteArray (Bytes)
-    import Data.Text (Text)
+```haskell
+import Data.ByteArray (Bytes)
+import Data.Text (Text)
 
-    [abiFrom|data/sample.json|]
+[abiFrom|data/sample.json|]
 
-    main :: IO ()
-    main = do
-        tx <- runWeb3 (runA2 addr nopay "Hello!" 42)
-        print tx
-      where addr = "0x19EE7966474b31225F71Ef8e36A71378a58a20E1"
+main :: IO ()
+main = do
+    tx <- runWeb3 (runA2 addr nopay "Hello!" 42)
+    print tx
+  where addr = "0x19EE7966474b31225F71Ef8e36A71378a58a20E1"
+```
