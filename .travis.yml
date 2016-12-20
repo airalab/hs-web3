@@ -31,49 +31,21 @@ script:
   fi
 
 matrix:
-  fast_finish: true
   include:
-  - env: GHCVER=8.0.1  CABALVER=1.24
-    addons:
-      apt:
-        sources:
-        - hvr-ghc
-        packages:
-        - cabal-install-1.24
-        - ghc-8.0.1
-        - libgmp-dev
-    compiler: ! ': # ghc-8.0.1 cabal-1.24'
-  - env: GHCVER=head   CABALVER=1.24
-    addons:
-      apt:
-        sources:
-        - hvr-ghc
-        packages:
-        - cabal-install-1.24
-        - ghc-head
-        - libgmp-dev
-    compiler: ! ': # ghc-head cabal-1.24'
-  - env: STACK=YES
-    addons:
-      apt:
-        sources:
-        - hvr-ghc
-        packages:
-        - libgmp-dev
-    compiler: ! ': # Stack LTS'
+    - env: GHCVER=8.0.1 CABALVER=1.24
+      addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1], sources: [hvr-ghc]}}
+    - env: GHCVER=head CABALVER=head
+      addons: {apt: {packages: [cabal-install-head,ghc-head], sources: [hvr-ghc]}}
+    - env: STACK=YES
   allow_failures:
-  - env: GHCVER=head CABALVER=1.24
-
-branches:
-  only:
-  - master
+    - env: GHCVER=head CABALVER=head
 
 before_cache:
-- rm -fv $HOME/.cabal/packages/hackage.haskell.org/build-reports.log
-- rm -fv $HOME/.cabal/packages/hackage.haskell.org/00-index.tar
+  - rm -fv $HOME/.cabal/packages/hackage.haskell.org/build-reports.log
+  - rm -fv $HOME/.cabal/packages/hackage.haskell.org/00-index.tar
 
 cache:
   directories:
-  - $HOME/.stack
-  - $HOME/.cabsnap
-  - $HOME/.cabal/packages
+    - $HOME/.stack
+    - $HOME/.cabsnap
+    - $HOME/.cabal/packages
