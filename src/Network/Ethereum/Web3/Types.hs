@@ -131,3 +131,77 @@ instance ToJSON CallMode where
 -- TODO: Wrap
 -- | Transaction hash text string
 type TxHash = Text
+
+-- | Transaction information
+data Transaction = Transaction
+  { txHash              :: TxHash
+  -- ^ DATA, 32 Bytes - hash of the transaction.
+  , txNonce             :: Text
+  -- ^ QUANTITY - the number of transactions made by the sender prior to this one.
+  , txBlockHash         :: Text
+  -- ^ DATA, 32 Bytes - hash of the block where this transaction was in. null when its pending.
+  , txBlockNumber       :: Text
+  -- ^ QUANTITY - block number where this transaction was in. null when its pending.
+  , txTransactionIndex  :: Text
+  -- ^ QUANTITY - integer of the transactions index position in the block. null when its pending.
+  , txFrom              :: Address
+  -- ^ DATA, 20 Bytes - address of the sender.
+  , txTo                :: Maybe Address
+  -- ^ DATA, 20 Bytes - address of the receiver. null when its a contract creation transaction.
+  , txValue             :: Text
+  -- ^ QUANTITY - value transferred in Wei.
+  , txGasPrice          :: Text
+  -- ^ QUANTITY - gas price provided by the sender in Wei.
+  , txGas               :: Text
+  -- ^ QUANTITY - gas provided by the sender.
+  , txInput             :: Text
+  -- ^ DATA - the data send along with the transaction.
+  } deriving Show
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 2 }) ''Transaction)
+
+-- | Block information
+data Block = Block
+  { blockNumber         :: Text
+  -- ^ QUANTITY - the block number. null when its pending block.
+  , blockHash           :: Text
+  -- ^ DATA, 32 Bytes - hash of the block. null when its pending block.
+  , blockParentHash     :: Text
+  -- ^ DATA, 32 Bytes - hash of the parent block.
+  , blockNonce          :: Maybe Text
+  -- ^ DATA, 8 Bytes - hash of the generated proof-of-work. null when its pending block.
+  , blockSha3Uncles     :: Text
+  -- ^ DATA, 32 Bytes - SHA3 of the uncles data in the block.
+  , blockLogsBloom      :: Text
+  -- ^ DATA, 256 Bytes - the bloom filter for the logs of the block. null when its pending block.
+  , blockTransactionsRoot :: Text
+  -- ^ DATA, 32 Bytes - the root of the transaction trie of the block.
+  , blockStateRoot      :: Text
+  -- ^ DATA, 32 Bytes - the root of the final state trie of the block.
+  , blockReceiptRoot    :: Maybe Text
+  -- ^ DATA, 32 Bytes - the root of the receipts trie of the block.
+  , blockMiner          :: Address
+  -- ^ DATA, 20 Bytes - the address of the beneficiary to whom the mining rewards were given.
+  , blockDifficulty     :: Text
+  -- ^ QUANTITY - integer of the difficulty for this block.
+  , blockTotalDifficulty :: Text
+  -- ^ QUANTITY - integer of the total difficulty of the chain until this block.
+  , blockExtraData      :: Text
+  -- ^ DATA - the "extra data" field of this block.
+  , blockSize           :: Text
+  -- ^ QUANTITY - integer the size of this block in bytes.
+  , blockGasLimit       :: Text
+  -- ^ QUANTITY - the maximum gas allowed in this block.
+  , blockGasUsed        :: Text
+  -- ^ QUANTITY - the total used gas by all transactions in this block.
+  , blockTimestamp      :: Text
+  -- ^ QUANTITY - the unix timestamp for when the block was collated.
+  , blockTransactions   :: [Transaction]
+  -- ^ Array of transaction objects.
+  , blockUncles         :: [Text]
+  -- ^ Array - Array of uncle hashes.
+  } deriving Show
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 5 }) ''Block)

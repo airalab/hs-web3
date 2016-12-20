@@ -57,3 +57,15 @@ eth_sendTransaction = remote "eth_sendTransaction"
 -- | Returns a list of addresses owned by client.
 eth_accounts :: Web3 [Address]
 eth_accounts = remote "eth_accounts"
+
+eth_newBlockFilter :: Web3 Text
+eth_newBlockFilter = remote "eth_newBlockFilter"
+
+-- | Polling method for a block filter, which returns an array of block hashes
+-- occurred since last poll.
+eth_getBlockFilterChanges :: Text -> Web3 [Text]
+eth_getBlockFilterChanges = remote "eth_getFilterChanges"
+
+-- | Returns information about a block by hash.
+eth_getBlockByHash :: Text -> Web3 Block
+eth_getBlockByHash = flip (remote "eth_getBlockByHash") True
