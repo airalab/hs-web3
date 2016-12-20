@@ -36,7 +36,7 @@ library
   other-modules:       Network.Ethereum.Web3.JsonRpc
                      , Network.Ethereum.Web3.Internal
                      , Network.Ethereum.Web3.EncodingUtils
-  build-depends:       base >4.8 && <4.10
+  build-depends:       base >4.8 && <4.11
                      , data-default-class
                      , base16-bytestring
                      , template-haskell
