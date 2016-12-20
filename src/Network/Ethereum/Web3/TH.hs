@@ -37,7 +37,8 @@ import Network.Ethereum.Web3.Contract
 import Network.Ethereum.Web3.JsonAbi
 import Network.Ethereum.Web3.Types
 import Data.Text (Text, isPrefixOf)
-import Data.Monoid (mconcat)
+import Data.List (groupBy, sortBy)
+import Data.Monoid (mconcat, (<>))
 import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Lib
 import Language.Haskell.TH
@@ -136,7 +137,7 @@ eventEncodigD eventName args = [ funD' (mkName "toDataBuilder")  [] toDataB
 genABIHeader :: [(Text, Name)] -> [ExpQ]
 genABIHeader vars = fmap go offsetVars
   where offsetVars :: [((Text, Name), Int)]
-        offsetVars = zip vars (fmap ((64 *) . (length vars +)) [0..])
+        offsetVars = zip vars (fmap ((32 *) . (length vars +)) [0..])
         go ((typ, v), o) | isDynType typ = [|toDataBuilder (o :: Int)|]
                          | otherwise     = [|toDataBuilder $(varE v)|]
 
@@ -211,7 +212,7 @@ mkEvent eve@(DEvent name inputs _) = sequence $
 
 -- | Method delcarations maker
 mkFun :: Declaration -> Q [Dec]
-mkFun fun@(DFunction name constant inputs outputs) =
+mkFun fun@(DFunction name constant inputs outputs) = do
     sequence $
         [ dataD' dataName (normalC dataName bangInput) derivingD
         , instanceD' dataName encodingT (funEncodigD dataName inputs mIdent)
@@ -220,12 +221,25 @@ mkFun fun@(DFunction name constant inputs outputs) =
         , funWrapper constant funName dataName inputs
         ]
   where mIdent    = T.unpack (methodId fun)
-        funName  = mkName (toLowerFirst (T.unpack name))
-        dataName = mkName (toUpperFirst (T.unpack name) ++ "Function")
+        dataName  = mkName (toUpperFirst (T.unpack $ name <> "Data"))
+        funName   = mkName (toLowerFirst (T.unpack name))
         bangInput = fmap funBangType inputs
         derivingD = [mkName "Show", mkName "Eq", mkName "Ord"]
         encodingT = conT (mkName "ABIEncoding")
         methodT   = conT (mkName "Method")
+
+escape :: [Declaration] -> [Declaration]
+escape = concat . escapeNames . groupBy fnEq . sortBy fnCompare
+  where fnEq (DFunction n1 _ _ _) (DFunction n2 _ _ _) = n1 == n2
+        fnEq _ _ = False
+        fnCompare (DFunction n1 _ _ _) (DFunction n2 _ _ _) = compare n1 n2
+        fnCompare _ _ = GT
+
+escapeNames :: [[Declaration]] -> [[Declaration]]
+escapeNames = fmap go
+  where go (x : xs) = x : zipWith appendToName xs hats
+        hats = [T.replicate n "'" | n <- [1..]]
+        appendToName dfn addition = dfn { funName = funName dfn <> addition }
 
 -- | Declaration parser
 mkDecl :: Declaration -> Q [Dec]
@@ -237,7 +251,7 @@ mkDecl _ = return []
 quoteAbiDec :: String -> Q [Dec]
 quoteAbiDec abi_string =
     case decode abi_lbs of
-        Just (ContractABI abi) -> concat <$> mapM mkDecl abi
+        Just (ContractABI abi) -> concat <$> mapM mkDecl (escape abi)
         _ -> fail "Unable to parse ABI!"
   where abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
 
