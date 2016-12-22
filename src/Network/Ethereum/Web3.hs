@@ -28,8 +28,7 @@ module Network.Ethereum.Web3 (
   , Event(..)
   , Method(..)
   , nopay
-  -- ** ABI encoding & data types
-  , ABIEncoding(..)
+  -- ** Ethereum data types
   , BytesN(..)
   , BytesD(..)
   , Address
@@ -37,9 +36,10 @@ module Network.Ethereum.Web3 (
   , module Network.Ethereum.Unit
   ) where
 
+import Network.Ethereum.Web3.Encoding.Bytes
+import Network.Ethereum.Web3.Encoding.Tuple
 import Network.Ethereum.Web3.Contract
 import Network.Ethereum.Web3.Encoding
 import Network.Ethereum.Web3.Address
 import Network.Ethereum.Web3.Types
-import Network.Ethereum.Web3.Bytes
 import Network.Ethereum.Unit

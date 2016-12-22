@@ -24,26 +24,41 @@
 --   where wait = threadDelay 1000000 >> wait
 -- @
 --
-module Network.Ethereum.Web3.TH (abi, abiFrom) where
+module Network.Ethereum.Web3.TH (
+  -- ** Quasiquoter's
+    abi
+  , abiFrom
+  -- ** Used by TH data types
+  , Bytes
+  , Text
+  , Singleton(..)
+  , ABIEncoding(..)
+  ) where
 
 import qualified Data.Text.Lazy.Encoding as LT
 import qualified Data.Text.Lazy.Builder  as B
 import qualified Data.Text.Lazy          as LT
 import qualified Data.Attoparsec.Text    as P
 import qualified Data.Text               as T
+
 import Network.Ethereum.Web3.Address (Address)
+import Network.Ethereum.Web3.Encoding.Tuple
+import Network.Ethereum.Web3.Encoding
 import Network.Ethereum.Web3.Internal
 import Network.Ethereum.Web3.Contract
 import Network.Ethereum.Web3.JsonAbi
 import Network.Ethereum.Web3.Types
+import Network.Ethereum.Unit
+
 import Data.Text (Text, isPrefixOf)
 import Data.List (groupBy, sortBy)
 import Data.Monoid (mconcat, (<>))
+import Data.ByteArray (Bytes)
+import Data.Aeson
+
 import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Lib
 import Language.Haskell.TH
-import Control.Arrow
-import Data.Aeson
 
 -- | Read contract ABI from file
 abiFrom :: QuasiQuoter
@@ -108,58 +123,48 @@ isDynType "string" = True
 isDynType x | T.any (== '[') x = True
             | otherwise        = False
 
--- | ABI encoding generator
-abiEncodingParse :: [(Text, Name)] -> [StmtQ]
-abiEncodingParse vars = fmap parseSta vars
-                     ++ fmap (parseVar . snd) dynVars
-  where dynVars = filter (isDynType . fst) vars
-        parseSta (t, v) | isDynType t = noBindS [|P.take 64|]
-                        | otherwise   = parseVar v
-        parseVar v = bindS (varP v) [|fromDataParser|]
-
 eventEncodigD :: Name -> [EventArg] -> [DecQ]
-eventEncodigD eventName args = [ funD' (mkName "toDataBuilder")  [] toDataB
-                               , funD' (mkName "fromDataParser") [] fromDataP ]
-  where toDataB = [|error "Event to data conversion isn't available!"|]
-        indexed = map (eveArgType &&& eveArgIndexed) args
-        genVar (a, b)   = do v <- newName "t"
-                             return (b, (a, v))
-        parseArg (_, v) = bindS (varP v) [|fromDataParser|]
-        fromDataP  = do
-            vars <- mapM genVar indexed
-            let indexedVars   = [v | (ix, v) <- vars, ix]
-                unindexedVars = [v | (ix, v) <- vars, not ix]
-                freeVars      = [varE v | (_, (_, v)) <- vars]
-            doE $ fmap parseArg indexedVars
-               ++ abiEncodingParse unindexedVars
-               ++ [noBindS [|return $(appsE (conE eventName : freeVars))|]]
-
-genABIHeader :: [(Text, Name)] -> [ExpQ]
-genABIHeader vars = fmap go offsetVars
-  where offsetVars :: [((Text, Name), Int)]
-        offsetVars = zip vars (fmap ((32 *) . (length vars +)) [0..])
-        go ((typ, v), o) | isDynType typ = [|toDataBuilder (o :: Int)|]
-                         | otherwise     = [|toDataBuilder $(varE v)|]
-
-genABIData :: [(Text, Name)] -> [ExpQ]
-genABIData = fmap (\(_, v) -> [|toDataBuilder $(varE v)|])
-
-funEncodigD :: Name -> [FunctionArg] -> String -> [DecQ]
-funEncodigD funName args ident =
-    [ funDtoDataB
+eventEncodigD eventName args =
+    [ funD' (mkName "toDataBuilder")  []
+        [|error "Event to data conversion isn't available!"|]
     , funD' (mkName "fromDataParser") [] fromDataP ]
-  where fromDataP = [|error "Function from data conversion isn't available!"|]
-        funDtoDataB = do
-            vars <- sequence $ replicate (length args) (newName "t")
+  where
+    indexed = map eveArgIndexed args
+    newVars = sequence $ replicate (length args) (newName "t")
+
+    parseArg v = bindS (varP v) [|fromDataParser|]
+
+    parseData []   = []
+    parseData [v]  = pure $ bindS (varP v) [|unSingleton <$> fromDataParser|]
+    parseData vars = pure $ bindS (tupP (varP <$> vars)) [|fromDataParser|]
+
+    fromDataP = do
+        vars <- zip indexed <$> newVars
+        let ixVars   = [v | (isIndexed, v) <- vars, isIndexed]
+            noIxVars = [v | (isIndexed, v) <- vars, not isIndexed]
+            expVars  = [varE v | (_, v) <- vars]
+        doE $ fmap parseArg ixVars
+           ++ parseData noIxVars
+           ++ [noBindS [|return $(appsE (conE eventName : expVars))|]]
+
+funEncodigD :: Name -> Int -> String -> [DecQ]
+funEncodigD funName paramLen ident =
+    [ funDtoDataB
+    , funD' (mkName "fromDataParser") []
+        [|error "Function from data conversion isn't available!"|] ]
+  where
+    newVars = sequence $ replicate paramLen (newName "t")
+    sVar    = mkName "a"
+    funDtoDataB
+        | paramLen == 0 = funD' (mkName "toDataBuilder") [conP funName []] [|ident|]
+        | paramLen == 1 = funD' (mkName "toDataBuilder")
+                            [conP funName [varP sVar]]
+                                [|ident <> toDataBuilder (Singleton $(varE sVar))|]
+        | otherwise = do
+            vars <- newVars
             funD' (mkName "toDataBuilder")
-                  [conP funName $ fmap varP vars]
-                  (toDataB $ zip argTypes vars)
-        argTypes  = fmap funArgType args
-        toDataB vars = do
-            let dynamicVars = filter (isDynType . fst) vars
-            appE [|mconcat|] $
-                listE $ [|B.fromText ident|]
-                      : genABIHeader vars ++ genABIData dynamicVars
+              [conP funName $ fmap varP vars]
+              [|ident <> toDataBuilder $(tupE $ fmap varE vars)|]
 
 eventFilterD :: String -> [DecQ]
 eventFilterD topic0 = let addr = mkName "a" in
@@ -171,31 +176,45 @@ eventFilterD topic0 = let addr = mkName "a" in
      |]
   ]
 
-{-
- - TODO
- -
-funTypeWrapper :: Name -> [FunctionArg] -> Maybe [FunctionArg] -> DecQ
-funTypeWrapper funName args result = sigD funName funType
+funWrapper :: Bool
+           -- ^ Is constant?
+           -> Name
+           -- ^ Function name
+           -> Name
+           -- ^ Function data name
+           -> [FunctionArg]
+           -- ^ Parameters
+           -> Maybe [FunctionArg]
+           -- ^ Results
+           -> Q [Dec]
+funWrapper c name dname args result = do
+    a : b : vars <- sequence $ replicate (length args + 2) (newName "t")
+    let params = appsE $ (conE dname) : fmap varE vars
+
+    sequence $ case c of
+        True ->
+          [ sigD name $ arrowing $ [t|Address|] : inputT ++ [outputT]
+          , funD' name (varP <$> a : vars) $
+              case result of
+                Just [_] -> [|unSingleton <$> call $(varE a) Latest $(params)|]
+                _        -> [|call $(varE a) Latest $(params)|]
+          ]
+
+        False ->
+          [ sigD name $ [t|Unit $(varT b) =>
+                            $(arrowing $ [t|Address|] : varT b : inputT ++ [[t|Web3 TxHash|]])
+                          |]
+          , funD' name (varP <$> a : b : vars) $
+                [|sendTx $(varE a) $(varE b) $(params)|] ]
   where
-    funType = foldl appT [t|Address|] $ arrowing (inputT ++ [outputT])
-    arrowing= concat . zipWith (\a b -> [a, b]) (repeat arrowT)
+    arrowing [x]  = x
+    arrowing (x : xs) = [t|$x -> $(arrowing xs)|]
     inputT  = fmap (typeQ . funArgType) args
     outputT = case result of
         Nothing  -> [t|Web3 ()|]
         Just [x] -> [t|Web3 $(typeQ $ funArgType x)|]
         Just xs  -> let outs = fmap (typeQ . funArgType) xs
                     in  [t|Web3 $(foldl appT (tupleT (length xs)) outs)|]
--}
-
-funWrapper :: Bool -> Name -> Name -> [FunctionArg] -> DecQ
-funWrapper c name dname args = do
-    (a : b : vars) <- sequence $ replicate (length args + 2) (newName "t")
-    let params = appsE ((conE dname) : fmap varE vars)
-    case c of
-        True  -> funD' name (fmap varP (a : vars)) $
-            [|call $(varE a) Latest $(params)|]
-        False -> funD' name (fmap varP (a : b : vars)) $
-            [|sendTx $(varE a) $(varE b) $(params)|]
 
 -- | Event declarations maker
 mkEvent :: Declaration -> Q [Dec]
@@ -212,14 +231,13 @@ mkEvent eve@(DEvent name inputs _) = sequence $
 
 -- | Method delcarations maker
 mkFun :: Declaration -> Q [Dec]
-mkFun fun@(DFunction name constant inputs outputs) = do
-    sequence $
+mkFun fun@(DFunction name constant inputs outputs) = (++)
+  <$> funWrapper constant funName dataName inputs outputs
+  <*> sequence
         [ dataD' dataName (normalC dataName bangInput) derivingD
-        , instanceD' dataName encodingT (funEncodigD dataName inputs mIdent)
-        , instanceD' dataName methodT []
-        -- , funTypeWrapper funName inputs outputs
-        , funWrapper constant funName dataName inputs
-        ]
+        , instanceD' dataName encodingT
+            (funEncodigD dataName (length inputs) mIdent)
+        , instanceD' dataName methodT [] ]
   where mIdent    = T.unpack (methodId fun)
         dataName  = mkName (toUpperFirst (T.unpack $ name <> "Data"))
         funName   = mkName (toLowerFirst (T.unpack name))

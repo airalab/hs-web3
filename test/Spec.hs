@@ -3,21 +3,24 @@
 {-# LANGUAGE DataKinds         #-}
 module Main where
 
-import Network.Ethereum.Web3.Address (fromText)
 import Network.Ethereum.Web3.TH
 import Network.Ethereum.Web3
+import Data.Text (unpack)
+import Text.Printf
 
-import Control.Concurrent (threadDelay)
-import Data.ByteArray (Bytes)
-import Data.Text (Text)
-
-[abiFrom|data/sample.json|]
+[abiFrom|data/ERC20.json|]
 
 main :: IO ()
 main = do
     putStrLn ""
-    putStrLn [abiFrom|data/sample.json|]
-    -- runWeb3 $ event addr (\(Action2 x y) -> print x >> print y >> return TerminateEvent)
-    -- threadDelay 100000000
-    -- return ()
-  where Right addr = fromText "0x19EE7966474b31225F71Ef8e36A71378a58a20E1"
+    putStrLn [abiFrom|data/ERC20.json|]
+{-
+    Right s <- runWeb3 $ do
+        n <- name token
+        s <- symbol token
+        d <- decimals token
+        return $ printf "Token %s with symbol %s and decimals %d"
+                        (unpack n) (unpack s) d
+    putStrLn s
+  where token = "0x237D60A8b41aFD2a335305ed458B609D7667D789"
+-}

@@ -1,7 +1,7 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE DataKinds      #-}
 -- |
--- Module      :  Network.Ethereum.Web3.Bytes
+-- Module      :  Network.Ethereum.Web3.Encoding.Bytes
 -- Copyright   :  Alexander Krupenkin 2016
 -- License     :  BSD3
 --
@@ -11,7 +11,7 @@
 --
 -- The type bytes<M> support.
 --
-module Network.Ethereum.Web3.Bytes (
+module Network.Ethereum.Web3.Encoding.Bytes (
     BytesN(..)
   , BytesD(..)
   ) where
@@ -22,7 +22,7 @@ import qualified Data.Text.Lazy.Builder as B
 import qualified Data.Text.Encoding     as T
 import qualified Data.Text              as T
 import qualified Data.ByteArray         as BA
-import Network.Ethereum.Web3.EncodingUtils
+import Network.Ethereum.Web3.Encoding.Internal
 import Network.Ethereum.Web3.Encoding
 import GHC.TypeLits (KnownNat, Nat, natVal)
 import Data.ByteArray (Bytes)
@@ -36,6 +36,10 @@ newtype BytesN (n :: Nat) = BytesN { unBytesN :: Bytes }
 
 update :: BytesN a -> Bytes -> BytesN a
 update _ a = BytesN a
+
+instance KnownNat n => EncodingType (BytesN n) where
+    typeName  = const "bytes[N]"
+    isDynamic = const False
 
 instance KnownNat n => ABIEncoding (BytesN n) where
     toDataBuilder (BytesN bytes) = bytesBuilder bytes
@@ -58,6 +62,10 @@ bytesDecode = BA.convert . fst . BS16.decode . T.encodeUtf8
 -- | Dynamic length byte array
 newtype BytesD = BytesD { unBytesD :: Bytes }
   deriving (Eq, Ord)
+
+instance EncodingType BytesD where
+    typeName  = const "bytes[]"
+    isDynamic = const True
 
 instance ABIEncoding BytesD where
     toDataBuilder (BytesD bytes) = int256HexBuilder (BA.length bytes)

@@ -102,7 +102,8 @@ class ABIEncoding a => Method a where
     call :: ABIEncoding b => Address -> CallMode -> a -> Web3 b
     call = _call
 
-_sendTransaction :: (Method a, Unit b) => Address -> b -> a -> Web3 TxHash
+_sendTransaction :: (Method a, Unit b)
+                 => Address -> b -> a -> Web3 TxHash
 _sendTransaction to value dat = do
     primeAddress <- head <$> eth_accounts
     eth_sendTransaction (txdata primeAddress $ Just $ toData dat)
@@ -112,11 +113,14 @@ _sendTransaction to value dat = do
 -- TODO: Correct dynamic type parsing
 _call :: (Method a, ABIEncoding b)
       => Address -> CallMode -> a -> Web3 b
-_call to mode dat = do res <- eth_call txdata mode
-                       case fromData (T.drop 2 res) of
-                           Nothing -> fail "Unable to parse result"
-                           Just x -> return x
-  where txdata = Call Nothing to Nothing Nothing Nothing (Just (toData dat))
+_call to mode dat = do
+    res <- eth_call txdata mode
+    case fromData (T.drop 2 res) of
+        Nothing -> fail $
+            "Unable to parse result on `" ++ T.unpack res ++ "`"
+        Just x -> return x
+  where
+    txdata = Call Nothing to Nothing Nothing Nothing (Just (toData dat))
 
 -- | Zero value is used to send transaction without money
 nopay :: Wei

@@ -17,8 +17,8 @@ import qualified Network.Ethereum.Web3.Address as A
 import qualified Data.Attoparsec.Text          as P
 import qualified Data.Text.Lazy                as LT
 import qualified Data.Text                     as T
+import Network.Ethereum.Web3.Encoding.Internal
 import Network.Ethereum.Web3.Address (Address)
-import Network.Ethereum.Web3.EncodingUtils
 import Data.Monoid ((<>))
 import Data.Text (Text)
 
