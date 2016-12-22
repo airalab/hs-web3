@@ -14,8 +14,7 @@ cabal-version:       >=1.10
 
 extra-source-files:
   README.md
-  data/sample.json
-  data/sample.sol
+  data/ERC20.json
 
 source-repository head
   type:     git
