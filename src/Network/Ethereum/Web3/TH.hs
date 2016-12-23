@@ -238,7 +238,7 @@ mkFun fun@(DFunction name constant inputs outputs) = (++)
         , instanceD' dataName encodingT
             (funEncodigD dataName (length inputs) mIdent)
         , instanceD' dataName methodT [] ]
-  where mIdent    = T.unpack (methodId fun)
+  where mIdent    = T.unpack (methodId $ fun{funName = T.replace "'" "" name})
         dataName  = mkName (toUpperFirst (T.unpack $ name <> "Data"))
         funName   = mkName (toLowerFirst (T.unpack name))
         bangInput = fmap funBangType inputs
