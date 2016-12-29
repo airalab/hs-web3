@@ -39,9 +39,9 @@ class Provider a where
     rpcUri :: Web3 a String
 
     -- | 'Web3' monad runner
-    runWeb3 :: MonadIO m => Web3 a b -> m (Either Web3Error b)
-    {-# INLINE runWeb3 #-}
-    runWeb3 = liftIO . try . unWeb3
+    runWeb3' :: MonadIO m => Web3 a b -> m (Either Web3Error b)
+    {-# INLINE runWeb3' #-}
+    runWeb3' = liftIO . try . unWeb3
 
     -- | Fork 'Web3' with the same 'Provider'
     forkWeb3 :: Web3 a () -> Web3 a ThreadId
@@ -54,9 +54,9 @@ instance Provider DefaultProvider where
     rpcUri = return "http://localhost:8545"
 
 -- | 'Web3' runner for default provider
-runWeb3' :: MonadIO m => Web3 DefaultProvider b -> m (Either Web3Error b)
-{-# INLINE runWeb3' #-}
-runWeb3' = runWeb3
+runWeb3 :: MonadIO m => Web3 DefaultProvider b -> m (Either Web3Error b)
+{-# INLINE runWeb3 #-}
+runWeb3 = runWeb3'
 
 -- | Some peace of error response
 data Web3Error

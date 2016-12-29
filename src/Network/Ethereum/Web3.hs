@@ -22,7 +22,7 @@ module Network.Ethereum.Web3 (
   , Provider(..)
   , DefaultProvider
   , Web3Error(..)
-  , runWeb3'
+  , runWeb3
   -- ** Contract actions
   , EventAction(..)
   , Event(..)
