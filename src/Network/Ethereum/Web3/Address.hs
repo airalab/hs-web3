@@ -57,7 +57,9 @@ fromText = fmap (Address . fst) . R.hexadecimal <=< check
 
 -- | Render 'Address' to text string
 toText :: Address -> Text
-toText = toStrict . toLazyText . B.hexadecimal . unAddress
+toText = wFix . toStrict . toLazyText . B.hexadecimal . unAddress
+  where wFix x | T.length x < 40 = T.replicate (40 - T.length x) "0" <> x
+               | otherwise       = x
 
 -- | Null address
 zero :: Address
