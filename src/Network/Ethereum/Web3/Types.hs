@@ -1,4 +1,7 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DefaultSignatures          #-}
+{-# LANGUAGE TemplateHaskell            #-}
 -- |
 -- Module      :  Network.Ethereum.Web3.Types
 -- Copyright   :  Alexander Krupenkin 2016
@@ -13,48 +16,59 @@
 module Network.Ethereum.Web3.Types where
 
 import Network.Ethereum.Web3.Internal (toLowerFirst)
-import Control.Monad.Trans.Reader (ReaderT, runReaderT)
-import Control.Monad.Trans.Except (ExceptT, runExceptT)
-import Network.Ethereum.Web3.Address (Address)
-import Control.Monad.IO.Class (MonadIO(..))
-import Data.Default.Class (Default(..))
 import qualified Data.Text.Lazy.Builder.Int as B
 import qualified Data.Text.Lazy.Builder     as B
-import qualified Data.Text.Read as R
-import Data.Default.Class (def)
+import qualified Data.Text.Read             as R
+import Network.Ethereum.Web3.Address (Address)
+import Control.Monad.IO.Class (MonadIO(..))
+import Control.Concurrent (forkIO, ThreadId)
+import Control.Exception (Exception, try)
+import Data.Typeable (Typeable)
 import Data.Monoid ((<>))
 import Data.Text (Text)
 import Data.Aeson.TH
 import Data.Aeson
 
 -- | Any communication with Ethereum node wrapped with 'Web3' monad
-type Web3 = ReaderT Config (ExceptT Error IO)
+newtype Web3 a b = Web3 { unWeb3 :: IO b }
+  deriving (Functor, Applicative, Monad, MonadIO)
 
--- | Ethereum node params
-data Config = Config
-  { rpcUri :: String
-  -- ^ JSON-RPC node URI
-  } deriving (Show, Eq)
+-- | Ethereum node service provider
+class Provider a where
+    -- | JSON-RPC provider URI, default: localhost:8545
+    rpcUri :: Web3 a String
 
-instance Default Config where
-    def = Config "http://localhost:8545"
+    -- | 'Web3' monad runner
+    runWeb3 :: MonadIO m => Web3 a b -> m (Either Web3Error b)
+    {-# INLINE runWeb3 #-}
+    runWeb3 = liftIO . try . unWeb3
+
+    -- | Fork 'Web3' with the same 'Provider'
+    forkWeb3 :: Web3 a () -> Web3 a ThreadId
+    {-# INLINE forkWeb3 #-}
+    forkWeb3 = Web3 . forkIO . unWeb3
+
+-- | Default 'Web3' service provider
+data DefaultProvider
+instance Provider DefaultProvider where
+    rpcUri = return "http://localhost:8545"
+
+-- | 'Web3' runner for default provider
+runWeb3' :: MonadIO m => Web3 DefaultProvider b -> m (Either Web3Error b)
+{-# INLINE runWeb3' #-}
+runWeb3' = runWeb3
 
 -- | Some peace of error response
-data Error = JsonRpcFail RpcError
-           -- ^ JSON-RPC communication error
-           | ParserFail  String
-           -- ^ Error in parser state
-           | UserFail    String
-           -- ^ Common head for user errors
-  deriving (Show, Eq)
+data Web3Error
+  = JsonRpcFail RpcError
+  -- ^ JSON-RPC communication error
+  | ParserFail  String
+  -- ^ Error in parser state
+  | UserFail    String
+  -- ^ Common head for user errors
+  deriving (Typeable, Show, Eq)
 
--- | Run 'Web3' monad with default config
-runWeb3 :: MonadIO m => Web3 a -> m (Either Error a)
-runWeb3 = runWeb3' def
-
--- | Run 'Web3' monad with given configuration
-runWeb3' :: MonadIO m => Config -> Web3 a -> m (Either Error a)
-runWeb3' c = liftIO . runExceptT . flip runReaderT c
+instance Exception Web3Error
 
 -- | JSON-RPC error message
 data RpcError = RpcError

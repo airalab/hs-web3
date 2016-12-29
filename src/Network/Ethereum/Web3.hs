@@ -17,12 +17,12 @@
 -- Web3 Haskell library currently use JSON-RPC over HTTP to access node functionality.
 --
 module Network.Ethereum.Web3 (
-  -- ** Web3 monad & runners
+  -- ** Web3 monad and service provider
     Web3
-  , Config(..)
-  , Error(..)
+  , Provider(..)
+  , DefaultProvider
+  , Web3Error(..)
   , runWeb3'
-  , runWeb3
   -- ** Contract actions
   , EventAction(..)
   , Event(..)

@@ -34,8 +34,7 @@ module Network.Ethereum.Web3.Contract (
 
 import qualified Data.Text.Lazy.Builder.Int as B
 import qualified Data.Text.Lazy.Builder     as B
-import Control.Concurrent (ThreadId, threadDelay, forkIO)
-import Control.Monad.Trans.Reader (ask)
+import Control.Concurrent (ThreadId, threadDelay)
 import Control.Monad.IO.Class (liftIO)
 import Data.Text.Lazy (toStrict)
 import qualified Data.Text as T
@@ -61,30 +60,33 @@ class ABIEncoding a => Event a where
     eventFilter :: a -> Address -> Filter
 
     -- | Start an event listener for given contract 'Address' and callback
-    event :: Address -> (a -> IO EventAction) -> Web3 ThreadId
+    event :: Provider p
+          => Address
+          -- ^ Contract address
+          -> (a -> IO EventAction)
+          -- ^ 'Event' handler
+          -> Web3 p ThreadId
+          -- ^ 'Web3' wrapped event handler spawn ident
     event = _event
 
-_event :: Event a => Address -> (a -> IO EventAction) -> Web3 ThreadId
+_event :: (Provider p, Event a)
+       => Address
+       -> (a -> IO EventAction)
+       -> Web3 p ThreadId
 _event a f = do
     fid <- let ftyp = snd $ let x = undefined :: Event a => a
                             in  (f x, x)
            in  eth_newFilter (eventFilter ftyp a)
 
-    cfg <- ask
-    liftIO $ forkIO $
-        let loop = do threadDelay 1000000
-                      res <- runWeb3' cfg (eth_getFilterChanges fid)
-                      case res of
-                          Left e -> print e
-                          Right [] -> loop
-                          Right changes -> do
-                              acts <- mapM f $
-                                  catMaybes $ fmap parseChange changes
-                              if any (== TerminateEvent) acts
-                              then return ()
-                              else loop
+    forkWeb3 $
+        let loop = do liftIO (threadDelay 1000000)
+                      changes <- fmap parseChange <$> eth_getFilterChanges fid
+                      acts <- mapM (liftIO . f) (catMaybes changes)
+                      if any (== TerminateEvent) acts
+                      then return ()
+                      else loop
         in do loop
-              runWeb3' cfg (eth_uninstallFilter fid)
+              eth_uninstallFilter fid
               return ()
   where
     prepareTopics = fmap (T.drop 2) . drop 1
@@ -95,29 +97,45 @@ _event a f = do
 -- | Contract method caller
 class ABIEncoding a => Method a where
     -- | Send a transaction for given contract 'Address', value and input data
-    sendTx :: Unit b => Address -> b -> a -> Web3 TxHash
+    sendTx :: (Provider p, Unit b)
+           => Address
+           -- ^ Contract address
+           -> b
+           -- ^ Payment value (set 'nopay' to empty value)
+           -> a
+           -- ^ Method data
+           -> Web3 p TxHash
+           -- ^ 'Web3' wrapped result
     sendTx = _sendTransaction
 
     -- | Constant call given contract 'Address' in mode and given input data
-    call :: ABIEncoding b => Address -> CallMode -> a -> Web3 b
+    call :: (Provider p, ABIEncoding b)
+         => Address
+         -- ^ Contract address
+         -> CallMode
+         -- ^ State mode for constant call (latest or pending)
+         -> a
+         -- ^ Method data
+         -> Web3 p b
+         -- ^ 'Web3' wrapped result
     call = _call
 
-_sendTransaction :: (Method a, Unit b)
-                 => Address -> b -> a -> Web3 TxHash
+_sendTransaction :: (Provider p, Method a, Unit b)
+                 => Address -> b -> a -> Web3 p TxHash
 _sendTransaction to value dat = do
     primeAddress <- head <$> eth_accounts
     eth_sendTransaction (txdata primeAddress $ Just $ toData dat)
   where txdata from = Call (Just from) to Nothing Nothing (Just $ toWeiText value)
         toWeiText = ("0x" <>) . toStrict . B.toLazyText . B.hexadecimal . toWei
 
--- TODO: Correct dynamic type parsing
-_call :: (Method a, ABIEncoding b)
-      => Address -> CallMode -> a -> Web3 b
+_call :: (Provider p, Method a, ABIEncoding b)
+      => Address -> CallMode -> a -> Web3 p b
 _call to mode dat = do
     res <- eth_call txdata mode
     case fromData (T.drop 2 res) of
         Nothing -> fail $
-            "Unable to parse result on `" ++ T.unpack res ++ "`"
+            "Unable to parse result on `" ++ T.unpack res
+            ++ "` from `" ++ show to ++ "`"
         Just x -> return x
   where
     txdata = Call Nothing to Nothing Nothing Nothing (Just (toData dat))

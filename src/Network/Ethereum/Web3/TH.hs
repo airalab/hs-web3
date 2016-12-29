@@ -193,7 +193,9 @@ funWrapper c name dname args result = do
 
     sequence $ case c of
         True ->
-          [ sigD name $ arrowing $ [t|Address|] : inputT ++ [outputT]
+          [ sigD name $ [t|Provider $p =>
+                            $(arrowing $ [t|Address|] : inputT ++ [outputT])
+                          |]
           , funD' name (varP <$> a : vars) $
               case result of
                 Just [_] -> [|unSingleton <$> call $(varE a) Latest $(params)|]
@@ -201,20 +203,21 @@ funWrapper c name dname args result = do
           ]
 
         False ->
-          [ sigD name $ [t|Unit $(varT b) =>
-                            $(arrowing $ [t|Address|] : varT b : inputT ++ [[t|Web3 TxHash|]])
+          [ sigD name $ [t|(Provider $p, Unit $(varT b)) =>
+                            $(arrowing $ [t|Address|] : varT b : inputT ++ [[t|Web3 $p TxHash|]])
                           |]
           , funD' name (varP <$> a : b : vars) $
                 [|sendTx $(varE a) $(varE b) $(params)|] ]
   where
-    arrowing [x]  = x
+    p = varT (mkName "p")
+    arrowing [x] = x
     arrowing (x : xs) = [t|$x -> $(arrowing xs)|]
     inputT  = fmap (typeQ . funArgType) args
     outputT = case result of
-        Nothing  -> [t|Web3 ()|]
-        Just [x] -> [t|Web3 $(typeQ $ funArgType x)|]
+        Nothing  -> [t|Web3 $p ()|]
+        Just [x] -> [t|Web3 $p $(typeQ $ funArgType x)|]
         Just xs  -> let outs = fmap (typeQ . funArgType) xs
-                    in  [t|Web3 $(foldl appT (tupleT (length xs)) outs)|]
+                    in  [t|Web3 $p $(foldl appT (tupleT (length xs)) outs)|]
 
 -- | Event declarations maker
 mkEvent :: Declaration -> Q [Dec]

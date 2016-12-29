@@ -24,12 +24,14 @@ This is the Ethereum compatible Haskell API which implements the [Generic JSON R
 Any Ethereum node communication wrapped with `Web3` monadic type.
 
     > :t web3_clientVersion
-    web3_clientVersion :: Web3 Text
+    web3_clientVersion :: Provider a => Web3 a Text
 
 To run this computation used `runWeb3'` or `runWeb3` functions.
 
-    > runWeb3 web3_clientVersion
+    > runWeb3' web3_clientVersion
     Right "Parity//v1.4.5-beta-a028d04-20161126/x86_64-linux-gnu/rustc1.13.0"
+
+> Function `runWeb3'` use default `Web3` provider at `localhost:8545`.
 
 ### TemplateHaskell generator
 
@@ -57,7 +59,7 @@ import Data.Text (Text)
 
 main :: IO ()
 main = do
-    tx <- runWeb3 (runA2 addr nopay "Hello!" 42)
+    tx <- runWeb3' (runA2 addr nopay "Hello!" 42)
     print tx
   where addr = "0x19EE7966474b31225F71Ef8e36A71378a58a20E1"
 ```
