@@ -15,7 +15,7 @@ main = do
     putStrLn ""
     putStrLn [abiFrom|data/ERC20.json|]
 {-
-    Right s <- runWeb3' $ do
+    Right s <- runWeb3 $ do
         n <- name token
         s <- symbol token
         d <- decimals token

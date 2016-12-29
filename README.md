@@ -56,14 +56,19 @@ typeclasses and function helpers.
 See example of usage.
 
 ```haskell
-import Data.ByteArray (Bytes)
-import Data.Text (Text)
+import Data.Text (unpack)
+import Text.Printf
 
-[abiFrom|data/sample.json|]
+[abiFrom|data/ERC20.json|]
 
 main :: IO ()
 main = do
-    tx <- runWeb3 (runA2 addr nopay "Hello!" 42)
-    print tx
-  where addr = "0x19EE7966474b31225F71Ef8e36A71378a58a20E1"
+    Right s <- runWeb3 $ do
+        n <- name token
+        s <- symbol token
+        d <- decimals token
+        return $ printf "Token %s with symbol %s and decimals %d"
+                        (unpack n) (unpack s) d
+    putStrLn s
+  where token = "0x237D60A8b41aFD2a335305ed458B609D7667D789"
 ```
