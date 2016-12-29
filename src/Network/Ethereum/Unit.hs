@@ -54,12 +54,11 @@ module Network.Ethereum.Unit (
   , KEther
   ) where
 
-import Data.Text.Lazy.Builder (toLazyText)
-import Data.Text.Lazy.Builder.RealFloat
 import Text.ParserCombinators.ReadPrec
 import Data.Text.Lazy (Text, unpack)
 import qualified Text.Read.Lex as L
 import Data.Monoid ((<>))
+import Text.Printf
 import GHC.Read
 
 -- | Ethereum value unit
@@ -110,9 +109,8 @@ instance UnitSpec a => Fractional (Value a) where
     fromRational = mkValue
 
 instance UnitSpec a => Show (Value a) where
-    show val = unpack (toLazyText floatValue <> " " <> name val)
+    show val = printf "%F %s" (x / d :: Double) (name val)
       where
-        floatValue = formatRealFloat Fixed (Just 2) (x / d)
         x = fromIntegral (unValue val)
         d = divider val
 
