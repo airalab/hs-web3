@@ -22,6 +22,8 @@ module Network.Ethereum.Web3 (
   , Provider(..)
   , DefaultProvider
   , Web3Error(..)
+  , forkWeb3
+  , runWeb3'
   , runWeb3
   -- ** Contract actions
   , EventAction(..)
@@ -40,6 +42,7 @@ import Network.Ethereum.Web3.Encoding.Bytes
 import Network.Ethereum.Web3.Encoding.Tuple
 import Network.Ethereum.Web3.Contract
 import Network.Ethereum.Web3.Encoding
+import Network.Ethereum.Web3.Provider
 import Network.Ethereum.Web3.Address
 import Network.Ethereum.Web3.Types
 import Network.Ethereum.Unit

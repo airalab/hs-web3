@@ -18,6 +18,7 @@ module Network.Ethereum.Web3.JsonRpc (
   , ServerUri
   ) where
 
+import Network.Ethereum.Web3.Provider
 import Network.Ethereum.Web3.Types
 
 import Network.HTTP.Client (httpLbs, newManager, requestBody,

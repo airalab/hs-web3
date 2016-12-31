@@ -1,6 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DefaultSignatures          #-}
 {-# LANGUAGE TemplateHaskell            #-}
 -- |
 -- Module      :  Network.Ethereum.Web3.Types
@@ -20,9 +19,8 @@ import qualified Data.Text.Lazy.Builder.Int as B
 import qualified Data.Text.Lazy.Builder     as B
 import qualified Data.Text.Read             as R
 import Network.Ethereum.Web3.Address (Address)
-import Control.Monad.IO.Class (MonadIO(..))
-import Control.Concurrent (forkIO, ThreadId)
-import Control.Exception (Exception, try)
+import Control.Monad.IO.Class (MonadIO)
+import Control.Exception (Exception)
 import Data.Typeable (Typeable)
 import Data.Monoid ((<>))
 import Data.Text (Text)
@@ -32,31 +30,6 @@ import Data.Aeson
 -- | Any communication with Ethereum node wrapped with 'Web3' monad
 newtype Web3 a b = Web3 { unWeb3 :: IO b }
   deriving (Functor, Applicative, Monad, MonadIO)
-
--- | Ethereum node service provider
-class Provider a where
-    -- | JSON-RPC provider URI, default: localhost:8545
-    rpcUri :: Web3 a String
-
-    -- | 'Web3' monad runner
-    runWeb3' :: MonadIO m => Web3 a b -> m (Either Web3Error b)
-    {-# INLINE runWeb3' #-}
-    runWeb3' = liftIO . try . unWeb3
-
-    -- | Fork 'Web3' with the same 'Provider'
-    forkWeb3 :: Web3 a () -> Web3 a ThreadId
-    {-# INLINE forkWeb3 #-}
-    forkWeb3 = Web3 . forkIO . unWeb3
-
--- | Default 'Web3' service provider
-data DefaultProvider
-instance Provider DefaultProvider where
-    rpcUri = return "http://localhost:8545"
-
--- | 'Web3' runner for default provider
-runWeb3 :: MonadIO m => Web3 DefaultProvider b -> m (Either Web3Error b)
-{-# INLINE runWeb3 #-}
-runWeb3 = runWeb3'
 
 -- | Some peace of error response
 data Web3Error

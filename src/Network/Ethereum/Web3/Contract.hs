@@ -36,11 +36,13 @@ import qualified Data.Text.Lazy.Builder.Int as B
 import qualified Data.Text.Lazy.Builder     as B
 import Control.Concurrent (ThreadId, threadDelay)
 import Control.Monad.IO.Class (liftIO)
+import Control.Exception (throwIO)
 import Data.Text.Lazy (toStrict)
 import qualified Data.Text as T
 import Data.Maybe (catMaybes)
 import Data.Monoid ((<>))
 
+import Network.Ethereum.Web3.Provider
 import Network.Ethereum.Web3.Encoding
 import Network.Ethereum.Web3.Address
 import Network.Ethereum.Web3.Types
@@ -133,7 +135,7 @@ _call :: (Provider p, Method a, ABIEncoding b)
 _call to mode dat = do
     res <- eth_call txdata mode
     case fromData (T.drop 2 res) of
-        Nothing -> fail $
+        Nothing -> liftIO $ throwIO $ ParserFail $
             "Unable to parse result on `" ++ T.unpack res
             ++ "` from `" ++ show to ++ "`"
         Just x -> return x

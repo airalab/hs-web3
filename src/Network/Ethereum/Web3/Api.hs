@@ -11,6 +11,7 @@
 --
 module Network.Ethereum.Web3.Api where
 
+import Network.Ethereum.Web3.Provider
 import Network.Ethereum.Web3.Address
 import Network.Ethereum.Web3.JsonRpc
 import Network.Ethereum.Web3.Types

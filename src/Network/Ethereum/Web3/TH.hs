@@ -44,6 +44,7 @@ import qualified Data.Text               as T
 import Network.Ethereum.Web3.Address (Address)
 import Network.Ethereum.Web3.Encoding.Tuple
 import Network.Ethereum.Web3.Encoding
+import Network.Ethereum.Web3.Provider
 import Network.Ethereum.Web3.Internal
 import Network.Ethereum.Web3.Contract
 import Network.Ethereum.Web3.JsonAbi
