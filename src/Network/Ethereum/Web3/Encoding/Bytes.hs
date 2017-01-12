@@ -25,8 +25,8 @@ import qualified Data.ByteArray         as BA
 import Network.Ethereum.Web3.Encoding.Internal
 import Network.Ethereum.Web3.Encoding
 import GHC.TypeLits (KnownNat, Nat, natVal)
+import Data.Monoid (Monoid(..), (<>))
 import Data.ByteArray (Bytes)
-import Data.Monoid ((<>))
 
 import Debug.Trace
 
@@ -62,6 +62,10 @@ bytesDecode = BA.convert . fst . BS16.decode . T.encodeUtf8
 -- | Dynamic length byte array
 newtype BytesD = BytesD { unBytesD :: Bytes }
   deriving (Eq, Ord)
+
+instance Monoid BytesD where
+    mempty = BytesD mempty
+    mappend (BytesD a) (BytesD b) = BytesD (mappend a b)
 
 instance EncodingType BytesD where
     typeName  = const "bytes[]"
