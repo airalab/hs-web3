@@ -29,6 +29,7 @@ module Network.Ethereum.Web3 (
   , EventAction(..)
   , Event(..)
   , Method(..)
+  , NoMethod(..)
   , nopay
   -- ** Ethereum data types
   , BytesN(..)

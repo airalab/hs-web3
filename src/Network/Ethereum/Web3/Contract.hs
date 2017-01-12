@@ -29,6 +29,7 @@ module Network.Ethereum.Web3.Contract (
     EventAction(..)
   , Method(..)
   , Event(..)
+  , NoMethod(..)
   , nopay
   ) where
 
@@ -146,3 +147,12 @@ _call to mode dat = do
 nopay :: Wei
 {-# INLINE nopay #-}
 nopay = 0
+
+-- | Dummy method for sending transaction without method call
+data NoMethod = NoMethod
+
+instance ABIEncoding NoMethod where
+    fromDataParser = return NoMethod
+    toDataBuilder  = const ""
+
+instance Method NoMethod
