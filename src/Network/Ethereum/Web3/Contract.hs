@@ -36,11 +36,11 @@ module Network.Ethereum.Web3.Contract (
 import qualified Data.Text.Lazy.Builder.Int as B
 import qualified Data.Text.Lazy.Builder     as B
 import Control.Concurrent (ThreadId, threadDelay)
+import Data.Maybe (catMaybes, listToMaybe)
 import Control.Monad.IO.Class (liftIO)
 import Control.Exception (throwIO)
 import Data.Text.Lazy (toStrict)
 import qualified Data.Text as T
-import Data.Maybe (catMaybes)
 import Data.Monoid ((<>))
 
 import Network.Ethereum.Web3.Provider
@@ -126,22 +126,23 @@ class ABIEncoding a => Method a where
 _sendTransaction :: (Provider p, Method a, Unit b)
                  => Address -> b -> a -> Web3 p TxHash
 _sendTransaction to value dat = do
-    primeAddress <- head <$> eth_accounts
+    primeAddress <- listToMaybe <$> eth_accounts
     eth_sendTransaction (txdata primeAddress $ Just $ toData dat)
-  where txdata from = Call (Just from) to Nothing Nothing (Just $ toWeiText value)
+  where txdata from = Call from to Nothing Nothing (Just $ toWeiText value)
         toWeiText = ("0x" <>) . toStrict . B.toLazyText . B.hexadecimal . toWei
 
 _call :: (Provider p, Method a, ABIEncoding b)
       => Address -> CallMode -> a -> Web3 p b
 _call to mode dat = do
-    res <- eth_call txdata mode
+    primeAddress <- listToMaybe <$> eth_accounts
+    res <- eth_call (txdata primeAddress) mode
     case fromData (T.drop 2 res) of
         Nothing -> liftIO $ throwIO $ ParserFail $
             "Unable to parse result on `" ++ T.unpack res
             ++ "` from `" ++ show to ++ "`"
         Just x -> return x
   where
-    txdata = Call Nothing to Nothing Nothing Nothing (Just (toData dat))
+    txdata from = Call from to Nothing Nothing Nothing (Just (toData dat))
 
 -- | Zero value is used to send transaction without money
 nopay :: Wei
