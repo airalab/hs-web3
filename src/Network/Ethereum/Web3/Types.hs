@@ -100,7 +100,7 @@ data Call = Call
   { callFrom    :: Maybe Address
   , callTo      :: Address
   , callGas     :: Maybe Text
-  , callPrice   :: Maybe Text
+  , callGasPrice:: Maybe Text
   , callValue   :: Maybe Text
   , callData    :: Maybe Text
   } deriving Show
