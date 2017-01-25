@@ -45,9 +45,9 @@
 module Network.Ethereum.Unit (
     Unit(..)
   , Wei
-  , KWei
-  , MWei
-  , GWei
+  , Babbage
+  , Lovelace
+  , Shannon
   , Szabo
   , Finney
   , Ether
@@ -138,26 +138,26 @@ instance UnitSpec U0 where
     divider = const 1
     name    = const "wei"
 
--- | KWei unit type
-type KWei = Value U1
+-- | Babbage unit type
+type Babbage = Value U1
 
 instance UnitSpec U1 where
     divider = const 1e3
-    name    = const "kwei"
+    name    = const "babbage"
 
--- | MWei unit type
-type MWei = Value U2
+-- | Lovelace unit type
+type Lovelace = Value U2
 
 instance UnitSpec U2 where
     divider = const 1e6
-    name    = const "mwei"
+    name    = const "lovelace"
 
--- | GWei unit type
-type GWei = Value U3
+-- | Shannon unit type
+type Shannon = Value U3
 
 instance UnitSpec U3 where
     divider = const 1e9
-    name    = const "gwei"
+    name    = const "shannon"
 
 -- | Szabo unit type
 type Szabo = Value U4
