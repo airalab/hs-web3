@@ -78,10 +78,10 @@ data Request = Request { rqMethod :: Text
                        , rqParams :: Value }
 
 instance ToJSON Request where
-    toJSON rq = object $ [ "jsonrpc" .= String "2.0"
-                         , "method"  .= rqMethod rq
-                         , "params"  .= rqParams rq
-                         , "id"      .= rqId rq ]
+    toJSON rq = object [ "jsonrpc" .= String "2.0"
+                       , "method"  .= rqMethod rq
+                       , "params"  .= rqParams rq
+                       , "id"      .= rqId rq ]
 
 -- | JSON-RPC response.
 data Response = Response
