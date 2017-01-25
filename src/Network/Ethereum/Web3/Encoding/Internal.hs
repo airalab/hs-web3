@@ -74,8 +74,9 @@ alignL = fst . align
 alignR = snd . align
 
 int256HexBuilder :: Integral a => a -> Builder
-int256HexBuilder x | x < 0 = int256HexBuilder (2^256 + fromIntegral x)
-                   | otherwise = alignR (B.hexadecimal x)
+int256HexBuilder x
+  | x < 0 = int256HexBuilder (2^256 + fromIntegral x)
+  | otherwise = alignR (B.hexadecimal x)
 
 int256HexParser :: (Bits a, Integral a) => Parser a
 int256HexParser = do

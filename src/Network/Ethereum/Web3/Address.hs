@@ -50,7 +50,7 @@ instance ToJSON Address where
 fromText :: Text -> Either String Address
 fromText = fmap (Address . fst) . R.hexadecimal <=< check
   where check t | T.take 2 t == "0x" = check (T.drop 2 t)
-                | otherwise = if T.length t == 40 && T.all (flip elem valid) t
+                | otherwise = if T.length t == 40 && T.all (`elem` valid) t
                               then Right t
                               else Left "This is not seems like address."
         valid = ['0'..'9'] ++ ['a'..'f'] ++ ['A'..'F']

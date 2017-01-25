@@ -20,7 +20,7 @@ import Network.Ethereum.Web3.Encoding
 newtype Singleton a = Singleton { unSingleton :: a }
 
 instance (EncodingType a, ABIEncoding a) => ABIEncoding (Singleton a) where
-    toDataBuilder = _serialize (1, []) . unSingleton
+    toDataBuilder  = _serialize (1, []) . unSingleton
     fromDataParser = Singleton <$> (withParser sParser >>= dParser)
       where withParser f = f undefined
 

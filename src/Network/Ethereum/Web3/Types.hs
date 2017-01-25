@@ -33,11 +33,11 @@ newtype Web3 a b = Web3 { unWeb3 :: IO b }
 
 -- | Some peace of error response
 data Web3Error
-  = JsonRpcFail RpcError
+  = JsonRpcFail !RpcError
   -- ^ JSON-RPC communication error
-  | ParserFail  String
+  | ParserFail  !String
   -- ^ Error in parser state
-  | UserFail    String
+  | UserFail    !String
   -- ^ Common head for user errors
   deriving (Typeable, Show, Eq)
 
@@ -45,9 +45,9 @@ instance Exception Web3Error
 
 -- | JSON-RPC error message
 data RpcError = RpcError
-  { errCode     :: Int
-  , errMessage  :: Text
-  , errData     :: Maybe Value
+  { errCode     :: !Int
+  , errMessage  :: !Text
+  , errData     :: !(Maybe Value)
   } deriving (Show, Eq)
 
 $(deriveJSON (defaultOptions
@@ -55,10 +55,10 @@ $(deriveJSON (defaultOptions
 
 -- | Low-level event filter data structure
 data Filter = Filter
-  { filterAddress   :: Maybe Address
-  , filterTopics    :: Maybe [Maybe Text]
-  , filterFromBlock :: Maybe Text
-  , filterToBlock   :: Maybe Text
+  { filterAddress   :: !(Maybe Address)
+  , filterTopics    :: !(Maybe [Maybe Text])
+  , filterFromBlock :: !(Maybe Text)
+  , filterToBlock   :: !(Maybe Text)
   } deriving Show
 
 $(deriveJSON (defaultOptions
@@ -82,14 +82,14 @@ instance ToJSON FilterId where
 
 -- | Changes pulled by low-level call 'eth_getFilterChanges'
 data Change = Change
-  { changeLogIndex         :: Text
-  , changeTransactionIndex :: Text
-  , changeTransactionHash  :: Text
-  , changeBlockHash        :: Text
-  , changeBlockNumber      :: Text
-  , changeAddress          :: Address
-  , changeData             :: Text
-  , changeTopics           :: [Text]
+  { changeLogIndex         :: !Text
+  , changeTransactionIndex :: !Text
+  , changeTransactionHash  :: !Text
+  , changeBlockHash        :: !Text
+  , changeBlockNumber      :: !Text
+  , changeAddress          :: !Address
+  , changeData             :: !Text
+  , changeTopics           :: ![Text]
   } deriving Show
 
 $(deriveJSON (defaultOptions
@@ -97,12 +97,12 @@ $(deriveJSON (defaultOptions
 
 -- | The contract call params
 data Call = Call
-  { callFrom    :: Maybe Address
-  , callTo      :: Address
-  , callGas     :: Maybe Text
-  , callGasPrice:: Maybe Text
-  , callValue   :: Maybe Text
-  , callData    :: Maybe Text
+  { callFrom    :: !(Maybe Address)
+  , callTo      :: !Address
+  , callGas     :: !(Maybe Text)
+  , callGasPrice:: !(Maybe Text)
+  , callValue   :: !(Maybe Text)
+  , callData    :: !(Maybe Text)
   } deriving Show
 
 $(deriveJSON (defaultOptions
@@ -121,27 +121,27 @@ type TxHash = Text
 
 -- | Transaction information
 data Transaction = Transaction
-  { txHash              :: TxHash
+  { txHash              :: !TxHash
   -- ^ DATA, 32 Bytes - hash of the transaction.
-  , txNonce             :: Text
+  , txNonce             :: !Text
   -- ^ QUANTITY - the number of transactions made by the sender prior to this one.
-  , txBlockHash         :: Text
+  , txBlockHash         :: !Text
   -- ^ DATA, 32 Bytes - hash of the block where this transaction was in. null when its pending.
-  , txBlockNumber       :: Text
+  , txBlockNumber       :: !Text
   -- ^ QUANTITY - block number where this transaction was in. null when its pending.
-  , txTransactionIndex  :: Text
+  , txTransactionIndex  :: !Text
   -- ^ QUANTITY - integer of the transactions index position in the block. null when its pending.
-  , txFrom              :: Address
+  , txFrom              :: !Address
   -- ^ DATA, 20 Bytes - address of the sender.
-  , txTo                :: Maybe Address
+  , txTo                :: !(Maybe Address)
   -- ^ DATA, 20 Bytes - address of the receiver. null when its a contract creation transaction.
-  , txValue             :: Text
+  , txValue             :: !Text
   -- ^ QUANTITY - value transferred in Wei.
-  , txGasPrice          :: Text
+  , txGasPrice          :: !Text
   -- ^ QUANTITY - gas price provided by the sender in Wei.
-  , txGas               :: Text
+  , txGas               :: !Text
   -- ^ QUANTITY - gas provided by the sender.
-  , txInput             :: Text
+  , txInput             :: !Text
   -- ^ DATA - the data send along with the transaction.
   } deriving Show
 
@@ -150,43 +150,43 @@ $(deriveJSON (defaultOptions
 
 -- | Block information
 data Block = Block
-  { blockNumber         :: Text
+  { blockNumber           :: !Text
   -- ^ QUANTITY - the block number. null when its pending block.
-  , blockHash           :: Text
+  , blockHash             :: !Text
   -- ^ DATA, 32 Bytes - hash of the block. null when its pending block.
-  , blockParentHash     :: Text
+  , blockParentHash       :: !Text
   -- ^ DATA, 32 Bytes - hash of the parent block.
-  , blockNonce          :: Maybe Text
+  , blockNonce            :: !(Maybe Text)
   -- ^ DATA, 8 Bytes - hash of the generated proof-of-work. null when its pending block.
-  , blockSha3Uncles     :: Text
+  , blockSha3Uncles       :: !Text
   -- ^ DATA, 32 Bytes - SHA3 of the uncles data in the block.
-  , blockLogsBloom      :: Text
+  , blockLogsBloom        :: !Text
   -- ^ DATA, 256 Bytes - the bloom filter for the logs of the block. null when its pending block.
-  , blockTransactionsRoot :: Text
+  , blockTransactionsRoot :: !Text
   -- ^ DATA, 32 Bytes - the root of the transaction trie of the block.
-  , blockStateRoot      :: Text
+  , blockStateRoot        :: !Text
   -- ^ DATA, 32 Bytes - the root of the final state trie of the block.
-  , blockReceiptRoot    :: Maybe Text
+  , blockReceiptRoot      :: !(Maybe Text)
   -- ^ DATA, 32 Bytes - the root of the receipts trie of the block.
-  , blockMiner          :: Address
+  , blockMiner            :: !Address
   -- ^ DATA, 20 Bytes - the address of the beneficiary to whom the mining rewards were given.
-  , blockDifficulty     :: Text
+  , blockDifficulty       :: !Text
   -- ^ QUANTITY - integer of the difficulty for this block.
-  , blockTotalDifficulty :: Text
+  , blockTotalDifficulty  :: !Text
   -- ^ QUANTITY - integer of the total difficulty of the chain until this block.
-  , blockExtraData      :: Text
+  , blockExtraData        :: !Text
   -- ^ DATA - the "extra data" field of this block.
-  , blockSize           :: Text
+  , blockSize             :: !Text
   -- ^ QUANTITY - integer the size of this block in bytes.
-  , blockGasLimit       :: Text
+  , blockGasLimit         :: !Text
   -- ^ QUANTITY - the maximum gas allowed in this block.
-  , blockGasUsed        :: Text
+  , blockGasUsed          :: !Text
   -- ^ QUANTITY - the total used gas by all transactions in this block.
-  , blockTimestamp      :: Text
+  , blockTimestamp        :: !Text
   -- ^ QUANTITY - the unix timestamp for when the block was collated.
-  , blockTransactions   :: [Transaction]
+  , blockTransactions     :: ![Transaction]
   -- ^ Array of transaction objects.
-  , blockUncles         :: [Text]
+  , blockUncles           :: ![Text]
   -- ^ Array - Array of uncle hashes.
   } deriving Show
 

@@ -36,11 +36,12 @@ module Network.Ethereum.Web3.Contract (
 import qualified Data.Text.Lazy.Builder.Int as B
 import qualified Data.Text.Lazy.Builder     as B
 import Control.Concurrent (ThreadId, threadDelay)
-import Data.Maybe (catMaybes, listToMaybe)
+import Data.Maybe (mapMaybe, listToMaybe)
 import Control.Monad.IO.Class (liftIO)
 import Control.Exception (throwIO)
 import Data.Text.Lazy (toStrict)
 import qualified Data.Text as T
+import Control.Monad (when)
 import Data.Monoid ((<>))
 
 import Network.Ethereum.Web3.Provider
@@ -66,7 +67,7 @@ class ABIEncoding a => Event a where
     event :: Provider p
           => Address
           -- ^ Contract address
-          -> (a -> IO EventAction)
+          -> (a -> Web3 p EventAction)
           -- ^ 'Event' handler
           -> Web3 p ThreadId
           -- ^ 'Web3' wrapped event handler spawn ident
@@ -74,7 +75,7 @@ class ABIEncoding a => Event a where
 
 _event :: (Provider p, Event a)
        => Address
-       -> (a -> IO EventAction)
+       -> (a -> Web3 p EventAction)
        -> Web3 p ThreadId
 _event a f = do
     fid <- let ftyp = snd $ let x = undefined :: Event a => a
@@ -83,11 +84,9 @@ _event a f = do
 
     forkWeb3 $
         let loop = do liftIO (threadDelay 1000000)
-                      changes <- fmap parseChange <$> eth_getFilterChanges fid
-                      acts <- mapM (liftIO . f) (catMaybes changes)
-                      if any (== TerminateEvent) acts
-                      then return ()
-                      else loop
+                      changes <- eth_getFilterChanges fid
+                      acts <- mapM f (mapMaybe parseChange changes)
+                      when (TerminateEvent `notElem` acts) loop
         in do loop
               eth_uninstallFilter fid
               return ()

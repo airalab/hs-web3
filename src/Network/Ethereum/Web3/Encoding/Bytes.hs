@@ -35,7 +35,8 @@ newtype BytesN (n :: Nat) = BytesN { unBytesN :: Bytes }
   deriving (Eq, Ord)
 
 update :: BytesN a -> Bytes -> BytesN a
-update _ a = BytesN a
+{-# INLINE update #-}
+update _ = BytesN
 
 instance KnownNat n => EncodingType (BytesN n) where
     typeName  = const "bytes[N]"
@@ -53,10 +54,12 @@ instance KnownNat n => Show (BytesN n) where
     show = show . BS16.encode . BA.convert . unBytesN
 
 bytesBuilder :: Bytes -> B.Builder
+{-# INLINE bytesBuilder #-}
 bytesBuilder = alignL . B.fromText . T.decodeUtf8
              . BS16.encode . BA.convert
 
 bytesDecode :: T.Text -> Bytes
+{-# INLINE bytesDecode #-}
 bytesDecode = BA.convert . fst . BS16.decode . T.encodeUtf8
 
 -- | Dynamic length byte array

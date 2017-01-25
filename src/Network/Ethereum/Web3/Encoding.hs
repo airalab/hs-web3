@@ -29,10 +29,12 @@ class ABIEncoding a where
 
     -- | Encode value into abi-encoding represenation
     toData :: a -> Text
+    {-# INLINE toData #-}
     toData = LT.toStrict . toLazyText . toDataBuilder
 
     -- | Parse encoded value
     fromData :: Text -> Maybe a
+    {-# INLINE fromData #-}
     fromData = maybeResult . parse fromDataParser . LT.fromStrict
 
 instance ABIEncoding Bool where

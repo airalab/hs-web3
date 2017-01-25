@@ -73,9 +73,9 @@ instance (Provider p, FromJSON a) => Remote (Web3 p a) where
     remote_ f = (\u -> Web3 (decodeResponse =<< f u [])) =<< rpcUri
 
 -- | JSON-RPC request.
-data Request = Request { rqMethod :: Text
-                       , rqId     :: Int
-                       , rqParams :: Value }
+data Request = Request { rqMethod :: !Text
+                       , rqId     :: !Int
+                       , rqParams :: !Value }
 
 instance ToJSON Request where
     toJSON rq = object [ "jsonrpc" .= String "2.0"
@@ -85,7 +85,7 @@ instance ToJSON Request where
 
 -- | JSON-RPC response.
 data Response = Response
-  { rsResult :: Either RpcError Value
+  { rsResult :: !(Either RpcError Value)
   } deriving (Show)
 
 instance FromJSON Response where

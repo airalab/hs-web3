@@ -18,8 +18,8 @@
 --
 -- main = do
 --     runWeb3 $ event "0x..." $
---        \(Action2 n x) -> do print n
---                             print x
+--        \(Action2 n x) -> liftIO $ do print n
+--                                      print x
 --     wait
 --   where wait = threadDelay 1000000 >> wait
 -- @
@@ -51,6 +51,8 @@ import Network.Ethereum.Web3.JsonAbi
 import Network.Ethereum.Web3.Types
 import Network.Ethereum.Unit
 
+import Control.Monad (replicateM)
+
 import Data.Text (Text, isPrefixOf)
 import Data.List (groupBy, sortBy)
 import Data.Monoid (mconcat, (<>))
@@ -76,8 +78,8 @@ abi = QuasiQuoter
 
 -- | Instance declaration with empty context
 instanceD' :: Name -> TypeQ -> [DecQ] -> DecQ
-instanceD' name insType insDecs =
-    instanceD (cxt []) (appT insType (conT name)) insDecs
+instanceD' name insType =
+    instanceD (cxt []) (appT insType (conT name))
 
 -- | Simple data type declaration with one constructor
 dataD' :: Name -> ConQ -> [Name] -> DecQ
@@ -131,7 +133,7 @@ eventEncodigD eventName args =
     , funD' (mkName "fromDataParser") [] fromDataP ]
   where
     indexed = map eveArgIndexed args
-    newVars = sequence $ replicate (length args) (newName "t")
+    newVars = replicateM (length args) (newName "t")
 
     parseArg v = bindS (varP v) [|fromDataParser|]
 
@@ -154,7 +156,7 @@ funEncodigD funName paramLen ident =
     , funD' (mkName "fromDataParser") []
         [|error "Function from data conversion isn't available!"|] ]
   where
-    newVars = sequence $ replicate paramLen (newName "t")
+    newVars = replicateM paramLen (newName "t")
     sVar    = mkName "a"
     funDtoDataB
         | paramLen == 0 = funD' (mkName "toDataBuilder") [conP funName []] [|ident|]
@@ -189,11 +191,11 @@ funWrapper :: Bool
            -- ^ Results
            -> Q [Dec]
 funWrapper c name dname args result = do
-    a : b : vars <- sequence $ replicate (length args + 2) (newName "t")
-    let params = appsE $ (conE dname) : fmap varE vars
+    a : b : vars <- replicateM (length args + 2) (newName "t")
+    let params = appsE $ conE dname : fmap varE vars
 
-    sequence $ case c of
-        True ->
+    sequence $ if c
+        then
           [ sigD name $ [t|Provider $p =>
                             $(arrowing $ [t|Address|] : inputT ++ [outputT])
                           |]
@@ -203,7 +205,7 @@ funWrapper c name dname args result = do
                 _        -> [|call $(varE a) Latest $(params)|]
           ]
 
-        False ->
+        else
           [ sigD name $ [t|(Provider $p, Unit $(varT b)) =>
                             $(arrowing $ [t|Address|] : varT b : inputT ++ [[t|Web3 $p TxHash|]])
                           |]
@@ -222,7 +224,7 @@ funWrapper c name dname args result = do
 
 -- | Event declarations maker
 mkEvent :: Declaration -> Q [Dec]
-mkEvent eve@(DEvent name inputs _) = sequence $
+mkEvent eve@(DEvent name inputs _) = sequence
     [ dataD' eventName eventFields derivingD
     , instanceD' eventName encodingT (eventEncodigD eventName inputs)
     , instanceD' eventName eventT    (eventFilterD (T.unpack $ eventId eve))
@@ -265,8 +267,8 @@ escapeNames = fmap go
 
 -- | Declaration parser
 mkDecl :: Declaration -> Q [Dec]
-mkDecl x@(DFunction{}) = mkFun x
-mkDecl x@(DEvent{})    = mkEvent x
+mkDecl x@DFunction{} = mkFun x
+mkDecl x@DEvent{}    = mkEvent x
 mkDecl _ = return []
 
 -- | ABI to declarations converter

@@ -24,6 +24,7 @@ import qualified Data.Attoparsec.Text as P
 import qualified Data.Text.Lazy       as LT
 import Network.Ethereum.Web3.Encoding
 import Data.Attoparsec.Text (Parser)
+import Control.Monad (replicateM)
 import Language.Haskell.TH
 
 -- | Argument offset calculator
@@ -68,10 +69,9 @@ dParser x | isDynamic x = fromDataParser
 -- | Generator for tupleP{N} function signature
 mkTuplePType :: Int -> DecQ
 mkTuplePType n = do
-    vars <- sequence (replicate n $ newName "t")
-    let varsT      = fmap varT vars
-        contextT   = fmap (appT [t|ABIEncoding|]) varsT
-                  ++ fmap (appT [t|EncodingType|]) varsT
+    varsT <- fmap varT <$> replicateM n (newName "t")
+    let contextT   = concat
+            [[[t|ABIEncoding $x|], [t|EncodingType $x|]] | x <- varsT]
         varsTupleT = foldl appT (tupleT n) varsT
     sigD (mkName $ "tupleP" ++ show n)
          (forallT [] (cxt contextT) [t|Parser $(varsTupleT)|])
@@ -79,7 +79,7 @@ mkTuplePType n = do
 -- | Generator for tupleP{N} function
 mkTupleP :: Int -> DecQ
 mkTupleP n = do
-    vars <- sequence (replicate n $ newName "t")
+    vars <- replicateM n (newName "t")
     funD (mkName $ "tupleP" ++ show n) $ pure $
         clause []
                (normalB [|$(varE withPN) $(varE staticPN) >>= $(varE dynamicPN)|])
@@ -127,14 +127,14 @@ eTupleE 12 = [|(,,,,,,,,,,,)|]
 eTupleE 13 = [|(,,,,,,,,,,,,)|]
 eTupleE 14 = [|(,,,,,,,,,,,,,)|]
 eTupleE 15 = [|(,,,,,,,,,,,,,,)|]
-eTupleE _ = error "Unsupported empty tuple"
+eTupleE _ = error "Unsupported tuple size"
 
 mkEncodingInst :: Int -> DecQ
 mkEncodingInst n = do
-    vars <- sequence (replicate n $ newName "t")
+    vars <- replicateM n (newName "t")
     let varsT      = fmap varT vars
-        contextT   = fmap (appT [t|ABIEncoding|]) varsT
-                  ++ fmap (appT [t|EncodingType|]) varsT
+        contextT   = concat
+            [[[t|ABIEncoding $x|], [t|EncodingType $x|]] | x <- varsT]
         varsTupleT = foldl appT (tupleT n) varsT
     instanceD (cxt contextT) (appT [t|ABIEncoding|] varsTupleT)
       [ funD (mkName "toDataBuilder") [
@@ -146,7 +146,7 @@ mkEncodingInst n = do
 
 -- | Make a ABIEncoding tuple instance with given count of arguments
 mkTupleInst :: Int -> Q [Dec]
-mkTupleInst n = sequence $
+mkTupleInst n = sequence
   [ mkTuplePType n
   , mkTupleP n
   , mkEncodingInst n ]
