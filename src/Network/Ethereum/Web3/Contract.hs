@@ -11,7 +11,9 @@
 -- catch all event depend by given callback function type.
 --
 -- @
--- runWeb3 $ event "0x..." (\(MyEvent a b c) -> print (a + b * c))
+-- runWeb3 $ do
+--     event "0x..." $ \(MyEvent a b c) ->
+--         liftIO $ print (a + b * c))
 -- @
 --
 -- In other case 'call' function used for constant calls (without
@@ -21,7 +23,7 @@
 --
 -- @
 -- runweb3 $ do
---   x <- call "0x.." Latest MySelector
+--   x  <- call "0x.." Latest MySelector
 --   tx <- sendTx "0x.." nopay $ MySelector2 (x + 2)
 -- @
 --
@@ -127,8 +129,9 @@ _sendTransaction :: (Provider p, Method a, Unit b)
 _sendTransaction to value dat = do
     primeAddress <- listToMaybe <$> eth_accounts
     eth_sendTransaction (txdata primeAddress $ Just $ toData dat)
-  where txdata from = Call from to Nothing Nothing (Just $ toWeiText value)
-        toWeiText = ("0x" <>) . toStrict . B.toLazyText . B.hexadecimal . toWei
+  where txdata from = Call from to (Just defaultGas) Nothing (Just $ toWeiText value)
+        toWeiText   = ("0x" <>) . toStrict . B.toLazyText . B.hexadecimal . toWei
+        defaultGas  = "0x2DC2DC"
 
 _call :: (Provider p, Method a, ABIEncoding b)
       => Address -> CallMode -> a -> Web3 p b

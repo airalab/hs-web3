@@ -1,5 +1,5 @@
 # Resolver to choose a 'specific' stackage snapshot or a compiler version.
-resolver: lts-7.16
+resolver: lts-8.2
 # User packages to be built.
 packages:
 - '.'
@@ -10,4 +10,5 @@ extra-deps: []
 flags: {}
 # Extra package databases containing global packages
 extra-package-dbs: []
+# Dependencies bounds
 pvp-bounds: both
