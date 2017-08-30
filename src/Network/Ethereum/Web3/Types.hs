@@ -65,7 +65,7 @@ $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 6 }) ''Filter)
 
 -- | Event filder ident
-newtype FilterId = FilterId Int
+newtype FilterId = FilterId Integer
   deriving (Show, Eq, Ord)
 
 instance FromJSON FilterId where
