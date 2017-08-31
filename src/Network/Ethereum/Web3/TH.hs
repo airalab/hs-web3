@@ -169,15 +169,17 @@ funEncodigD funName paramLen ident =
               [conP funName $ fmap varP vars]
               [|ident <> toDataBuilder $(tupE $ fmap varE vars)|]
 
-eventFilterD :: String -> [DecQ]
-eventFilterD topic0 = let addr = mkName "a" in
-  [ funD' (mkName "eventFilter") [wildP, varP addr]
-    [|Filter (Just $(varE addr))
-             (Just [Just topic0, Nothing])
-             Nothing
-             Nothing
-     |]
-  ]
+eventFilterD :: String -> Int -> [DecQ]
+eventFilterD topic0 n =
+  let addr = mkName "a"
+      indexedArgs = replicate n Nothing :: [Maybe String]
+  in [ funD' (mkName "eventFilter") [wildP, varP addr]
+       [|Filter (Just $(varE addr))
+                (Just $ [Just topic0] <> indexedArgs)
+                Nothing
+                Nothing
+       |]
+     ]
 
 funWrapper :: Bool
            -- ^ Is constant?
@@ -227,13 +229,14 @@ mkEvent :: Declaration -> Q [Dec]
 mkEvent eve@(DEvent name inputs _) = sequence
     [ dataD' eventName eventFields derivingD
     , instanceD' eventName encodingT (eventEncodigD eventName inputs)
-    , instanceD' eventName eventT    (eventFilterD (T.unpack $ eventId eve))
+    , instanceD' eventName eventT    (eventFilterD (T.unpack $ eventId eve) indexedFieldsCount)
     ]
   where eventName   = mkName (toUpperFirst (T.unpack name))
         derivingD   = [mkName "Show", mkName "Eq", mkName "Ord"]
         eventFields = normalC eventName (eventBangType <$> inputs)
         encodingT   = conT (mkName "ABIEncoding")
         eventT      = conT (mkName "Event")
+        indexedFieldsCount = length . filter eveArgIndexed $ inputs
 
 -- | Method delcarations maker
 mkFun :: Declaration -> Q [Dec]
