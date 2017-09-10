@@ -1,7 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE TemplateHaskell            #-}
-{-# LANGUAGE TypeFamilies               #-}
 -- |
 -- Module      :  Network.Ethereum.Web3.Types
 -- Copyright   :  Alexander Krupenkin 2016
@@ -89,7 +88,7 @@ data Change a = Change
   , changeBlockHash        :: !Text
   , changeBlockNumber      :: !Text
   , changeAddress          :: !Address
-  , changeData             :: a
+  , changeData             :: !a
   , changeTopics           :: ![Text]
   } deriving Show
 
