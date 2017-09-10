@@ -63,13 +63,13 @@ data EventAction = ContinueEvent
 -- | Contract event listener
 class ABIEncoding a => Event a where
     -- | Event filter structure used by low-level subscription methods
-    eventFilter :: a -> Address -> Filter
+    eventFilter :: Change a -> Address -> Filter
 
     -- | Start an event listener for given contract 'Address' and callback
     event :: Provider p
           => Address
           -- ^ Contract address
-          -> (a -> Web3 p EventAction)
+          -> (Change a -> Web3 p EventAction)
           -- ^ 'Event' handler
           -> Web3 p ThreadId
           -- ^ 'Web3' wrapped event handler spawn ident
@@ -77,10 +77,10 @@ class ABIEncoding a => Event a where
 
 _event :: (Provider p, Event a)
        => Address
-       -> (a -> Web3 p EventAction)
+       -> (Change a -> Web3 p EventAction)
        -> Web3 p ThreadId
 _event a f = do
-    fid <- let ftyp = snd $ let x = undefined :: Event a => a
+    fid <- let ftyp = snd $ let x = undefined :: Event a => Change a
                             in  (f x, x)
            in  eth_newFilter (eventFilter ftyp a)
 
@@ -94,9 +94,10 @@ _event a f = do
               return ()
   where
     prepareTopics = fmap (T.drop 2) . drop 1
-    parseChange c = fromData $
-        T.append (T.concat (prepareTopics $ changeTopics c))
+    parseChange c = do
+      a <- fromData $ T.append (T.concat (prepareTopics $ changeTopics c))
                  (T.drop 2 $ changeData c)
+      return $ c { changeData = a}
 
 -- | Contract method caller
 class ABIEncoding a => Method a where

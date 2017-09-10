@@ -81,14 +81,14 @@ instance ToJSON FilterId where
         in  toJSON ("0x" <> hexValue)
 
 -- | Changes pulled by low-level call 'eth_getFilterChanges'
-data Change = Change
+data Change a = Change
   { changeLogIndex         :: !Text
   , changeTransactionIndex :: !Text
   , changeTransactionHash  :: !Text
   , changeBlockHash        :: !Text
   , changeBlockNumber      :: !Text
   , changeAddress          :: !Address
-  , changeData             :: !Text
+  , changeData             :: !a
   , changeTopics           :: ![Text]
   } deriving Show
 
