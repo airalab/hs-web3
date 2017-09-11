@@ -63,7 +63,7 @@ data EventAction = ContinueEvent
 -- | Contract event listener
 class ABIEncoding a => Event a where
     -- | Event filter structure used by low-level subscription methods
-    eventFilter :: Change a -> Address -> Filter
+    eventFilter :: a -> Address -> Filter
 
     -- | Start an event listener for given contract 'Address' and callback
     event :: Provider p
@@ -82,7 +82,7 @@ _event :: (Provider p, Event a)
 _event a f = do
     fid <- let ftyp = snd $ let x = undefined :: Event a => Change a
                             in  (f x, x)
-           in  eth_newFilter (eventFilter ftyp a)
+           in  eth_newFilter (eventFilter (changeData ftyp) a)
 
     forkWeb3 $
         let loop = do liftIO (threadDelay 1000000)
