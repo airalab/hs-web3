@@ -69,7 +69,7 @@ class ABIEncoding a => Event a where
     event :: Provider p
           => Address
           -- ^ Contract address
-          -> (a -> Web3 p EventAction)
+          -> (Change a -> Web3 p EventAction)
           -- ^ 'Event' handler
           -> Web3 p ThreadId
           -- ^ 'Web3' wrapped event handler spawn ident
@@ -77,12 +77,12 @@ class ABIEncoding a => Event a where
 
 _event :: (Provider p, Event a)
        => Address
-       -> (a -> Web3 p EventAction)
+       -> (Change a -> Web3 p EventAction)
        -> Web3 p ThreadId
 _event a f = do
-    fid <- let ftyp = snd $ let x = undefined :: Event a => a
+    fid <- let ftyp = snd $ let x = undefined :: Event a => Change a
                             in  (f x, x)
-           in  eth_newFilter (eventFilter ftyp a)
+           in  eth_newFilter (eventFilter (changeData ftyp) a)
 
     forkWeb3 $
         let loop = do liftIO (threadDelay 1000000)
@@ -94,9 +94,10 @@ _event a f = do
               return ()
   where
     prepareTopics = fmap (T.drop 2) . drop 1
-    parseChange c = fromData $
-        T.append (T.concat (prepareTopics $ changeTopics c))
+    parseChange c = do
+      a <- fromData $ T.append (T.concat (prepareTopics $ changeTopics c))
                  (T.drop 2 $ changeData c)
+      return $ c { changeData = a}
 
 -- | Contract method caller
 class ABIEncoding a => Method a where

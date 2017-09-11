@@ -41,7 +41,7 @@ eth_newFilter = remote "eth_newFilter"
 
 -- | Polling method for a filter, which returns an array of logs which
 -- occurred since last poll.
-eth_getFilterChanges :: Provider a => FilterId -> Web3 a [Change]
+eth_getFilterChanges :: Provider a => FilterId -> Web3 a [Change Text]
 {-# INLINE eth_getFilterChanges #-}
 eth_getFilterChanges = remote "eth_getFilterChanges"
 
