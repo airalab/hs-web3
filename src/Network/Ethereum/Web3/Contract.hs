@@ -88,19 +88,19 @@ _event a f = do
     forkWeb3 $
         let loop = do liftIO (threadDelay 1000000)
                       changes <- eth_getFilterChanges fid
-                      acts <- forM (mapMaybe pairChange changes) $ \(c, change) ->
-                        runReaderT (f change) c
+                      acts <- forM (mapMaybe pairChange changes) $ \(changeEvent, changeWithMeta) ->
+                        runReaderT (f changeEvent) changeWithMeta
                       when (TerminateEvent `notElem` acts) loop
         in do loop
               eth_uninstallFilter fid
               return ()
   where
     prepareTopics = fmap (T.drop 2) . drop 1
-    pairChange c = do
-      change <- fromData $
-        T.append (T.concat (prepareTopics $ changeTopics c))
-                 (T.drop 2 $ changeData c)
-      return (c, change)
+    pairChange changeWithMeta = do
+      changeEvent <- fromData $
+        T.append (T.concat (prepareTopics $ changeTopics changeWithMeta))
+                 (T.drop 2 $ changeData changeWithMeta)
+      return (changeEvent, changeWithMeta)
 
 -- | Contract method caller
 class ABIEncoding a => Method a where
