@@ -43,7 +43,8 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Exception (throwIO)
 import Data.Text.Lazy (toStrict)
 import qualified Data.Text as T
-import Control.Monad (when)
+import Control.Monad (when, forM)
+import Control.Monad.Trans.Reader (ReaderT(..))
 import Data.Monoid ((<>))
 
 import Network.Ethereum.Web3.Provider
@@ -69,7 +70,7 @@ class ABIEncoding a => Event a where
     event :: Provider p
           => Address
           -- ^ Contract address
-          -> (a -> Web3 p EventAction)
+          -> (a -> ReaderT Change (Web3 p) EventAction)
           -- ^ 'Event' handler
           -> Web3 p ThreadId
           -- ^ 'Web3' wrapped event handler spawn ident
@@ -77,7 +78,7 @@ class ABIEncoding a => Event a where
 
 _event :: (Provider p, Event a)
        => Address
-       -> (a -> Web3 p EventAction)
+       -> (a -> ReaderT Change (Web3 p) EventAction)
        -> Web3 p ThreadId
 _event a f = do
     fid <- let ftyp = snd $ let x = undefined :: Event a => a
@@ -87,16 +88,19 @@ _event a f = do
     forkWeb3 $
         let loop = do liftIO (threadDelay 1000000)
                       changes <- eth_getFilterChanges fid
-                      acts <- mapM f (mapMaybe parseChange changes)
+                      acts <- forM (mapMaybe pairChange changes) $ \(changeEvent, changeWithMeta) ->
+                        runReaderT (f changeEvent) changeWithMeta
                       when (TerminateEvent `notElem` acts) loop
         in do loop
               eth_uninstallFilter fid
               return ()
   where
     prepareTopics = fmap (T.drop 2) . drop 1
-    parseChange c = fromData $
-        T.append (T.concat (prepareTopics $ changeTopics c))
-                 (T.drop 2 $ changeData c)
+    pairChange changeWithMeta = do
+      changeEvent <- fromData $
+        T.append (T.concat (prepareTopics $ changeTopics changeWithMeta))
+                 (T.drop 2 $ changeData changeWithMeta)
+      return (changeEvent, changeWithMeta)
 
 -- | Contract method caller
 class ABIEncoding a => Method a where
