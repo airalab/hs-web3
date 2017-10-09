@@ -5,9 +5,9 @@ This is the Ethereum compatible Haskell API which implements the [Generic JSON R
 [![Build Status](https://travis-ci.org/airalab/hs-web3.svg?branch=master)](https://travis-ci.org/airalab/hs-web3)
 [![Build status](https://ci.appveyor.com/api/projects/status/8ljq93nar8kobk75?svg=true)](https://ci.appveyor.com/project/akru/hs-web3)
 [![Hackage](https://img.shields.io/hackage/v/web3.svg)](http://hackage.haskell.org/package/web3)
-![Hackage Dependencies](https://img.shields.io/hackage-deps/v/web3.svg)
 ![Haskell Programming Language](https://img.shields.io/badge/language-Haskell-blue.svg)
 ![BSD3 License](http://img.shields.io/badge/license-BSD3-brightgreen.svg)
+[![Code Triagers Badge](https://www.codetriage.com/airalab/hs-web3/badges/users.svg)](https://www.codetriage.com/airalab/hs-web3)
 
 ### Installation
 
