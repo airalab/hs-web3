@@ -52,6 +52,7 @@ library
                      , aeson
                      , text
   default-extensions:  OverloadedStrings
+                     , DeriveGeneric
   default-language:    Haskell2010
 
 test-suite web3-test
