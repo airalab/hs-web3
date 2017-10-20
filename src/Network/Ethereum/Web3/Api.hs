@@ -51,6 +51,11 @@ eth_uninstallFilter :: Provider a => FilterId -> Web3 a Bool
 {-# INLINE eth_uninstallFilter #-}
 eth_uninstallFilter = remote "eth_uninstallFilter"
 
+-- | Returns an array of all logs matching a given filter object.
+eth_getLogs :: Provider a => Filter -> Web3 a [Change]
+{-# INLINE eth_getLogs #-}
+eth_getLogs = remote "eth_getLogs"
+
 -- | Executes a new message call immediately without creating a
 -- transaction on the block chain.
 eth_call :: Provider a => Call -> CallMode -> Web3 a Text
@@ -82,3 +87,26 @@ eth_getBlockFilterChanges = remote "eth_getFilterChanges"
 eth_getBlockByHash :: Provider a => Text -> Web3 a Block
 {-# INLINE eth_getBlockByHash #-}
 eth_getBlockByHash = flip (remote "eth_getBlockByHash") True
+
+-- | Returns information about a block by block number.
+eth_getBlockByNumber :: Provider a => Text -> Web3 a Block
+{-# INLINE eth_getBlockByNumber #-}
+eth_getBlockByNumber = flip (remote "eth_getBlockByNumber") True
+
+-- | Returns the number of most recent block.
+eth_blockNumber :: Provider a => Web3 a Text
+{-# INLINE eth_blockNumber #-}
+eth_blockNumber = remote "eth_blockNumber"
+
+-- | Returns the number of transactions in a block matching the
+-- given block number.
+eth_getBlockTransactionCountByNumber :: Provider a => Text
+                                     -> Web3 a Text
+{-# INLINE eth_getBlockTransactionCountByNumber #-}
+eth_getBlockTransactionCountByNumber =
+    remote "eth_getBlockTransactionCountByNumber"
+
+-- | Returns the current price per gas in wei.
+eth_gasPrice :: Provider a => Web3 a Text
+{-# INLINE eth_gasPrice #-}
+eth_gasPrice = remote "eth_gasPrice"
