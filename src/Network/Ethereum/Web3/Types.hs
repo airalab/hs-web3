@@ -1,5 +1,5 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TemplateHaskell            #-}
 -- |
 -- Module      :  Network.Ethereum.Web3.Types
@@ -14,18 +14,18 @@
 --
 module Network.Ethereum.Web3.Types where
 
-import Network.Ethereum.Web3.Internal (toLowerFirst)
-import qualified Data.Text.Lazy.Builder.Int as B
-import qualified Data.Text.Lazy.Builder     as B
-import qualified Data.Text.Read             as R
-import Network.Ethereum.Web3.Address (Address)
-import Control.Monad.IO.Class (MonadIO)
-import Control.Exception (Exception)
-import Data.Typeable (Typeable)
-import Data.Monoid ((<>))
-import Data.Text (Text)
-import Data.Aeson.TH
-import Data.Aeson
+import           Control.Exception              (Exception)
+import           Control.Monad.IO.Class         (MonadIO)
+import           Data.Aeson
+import           Data.Aeson.TH
+import           Data.Monoid                    ((<>))
+import           Data.Text                      (Text)
+import qualified Data.Text.Lazy.Builder         as B
+import qualified Data.Text.Lazy.Builder.Int     as B
+import qualified Data.Text.Read                 as R
+import           Data.Typeable                  (Typeable)
+import           Network.Ethereum.Web3.Address  (Address)
+import           Network.Ethereum.Web3.Internal (toLowerFirst)
 
 -- | Any communication with Ethereum node wrapped with 'Web3' monad
 newtype Web3 a b = Web3 { unWeb3 :: IO b }
@@ -45,9 +45,9 @@ instance Exception Web3Error
 
 -- | JSON-RPC error message
 data RpcError = RpcError
-  { errCode     :: !Int
-  , errMessage  :: !Text
-  , errData     :: !(Maybe Value)
+  { errCode    :: !Int
+  , errMessage :: !Text
+  , errData    :: !(Maybe Value)
   } deriving (Show, Eq)
 
 $(deriveJSON (defaultOptions
@@ -72,7 +72,7 @@ instance FromJSON FilterId where
     parseJSON (String v) =
         case R.hexadecimal v of
             Right (x, "") -> return (FilterId x)
-            _ -> fail "Unable to parse FilterId!"
+            _             -> fail "Unable to parse FilterId!"
     parseJSON _ = fail "The string is required!"
 
 instance ToJSON FilterId where
@@ -97,12 +97,12 @@ $(deriveJSON (defaultOptions
 
 -- | The contract call params
 data Call = Call
-  { callFrom    :: !(Maybe Address)
-  , callTo      :: !Address
-  , callGas     :: !(Maybe Text)
+  { callFrom     :: !(Maybe Address)
+  , callTo       :: !Address
+  , callGas      :: !(Maybe Text)
   , callGasPrice:: !(Maybe Text)
-  , callValue   :: !(Maybe Text)
-  , callData    :: !(Maybe Text)
+  , callValue    :: !(Maybe Text)
+  , callData     :: !(Maybe Text)
   } deriving Show
 
 $(deriveJSON (defaultOptions
@@ -121,27 +121,27 @@ type TxHash = Text
 
 -- | Transaction information
 data Transaction = Transaction
-  { txHash              :: !TxHash
+  { txHash             :: !TxHash
   -- ^ DATA, 32 Bytes - hash of the transaction.
-  , txNonce             :: !Text
+  , txNonce            :: !Text
   -- ^ QUANTITY - the number of transactions made by the sender prior to this one.
-  , txBlockHash         :: !Text
+  , txBlockHash        :: !Text
   -- ^ DATA, 32 Bytes - hash of the block where this transaction was in. null when its pending.
-  , txBlockNumber       :: !Text
+  , txBlockNumber      :: !Text
   -- ^ QUANTITY - block number where this transaction was in. null when its pending.
-  , txTransactionIndex  :: !Text
+  , txTransactionIndex :: !Text
   -- ^ QUANTITY - integer of the transactions index position in the block. null when its pending.
-  , txFrom              :: !Address
+  , txFrom             :: !Address
   -- ^ DATA, 20 Bytes - address of the sender.
-  , txTo                :: !(Maybe Address)
+  , txTo               :: !(Maybe Address)
   -- ^ DATA, 20 Bytes - address of the receiver. null when its a contract creation transaction.
-  , txValue             :: !Text
+  , txValue            :: !Text
   -- ^ QUANTITY - value transferred in Wei.
-  , txGasPrice          :: !Text
+  , txGasPrice         :: !Text
   -- ^ QUANTITY - gas price provided by the sender in Wei.
-  , txGas               :: !Text
+  , txGas              :: !Text
   -- ^ QUANTITY - gas provided by the sender.
-  , txInput             :: !Text
+  , txInput            :: !Text
   -- ^ DATA - the data send along with the transaction.
   } deriving Show
 
@@ -192,3 +192,75 @@ data Block = Block
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 5 }) ''Block)
+
+-- Whisper v6 support
+
+-- | Whisper node information
+data NodeInfo = NodeInfo
+  { nodeInfoMemory       :: !Int
+  -- ^ Memory used by messages in the pool.
+  , nodeInfoTargetMemory :: !Int
+  -- ^ Target memory of the pool.
+  , nodeInfoMessages     :: !Int
+  -- ^ Number of messages in the pool.
+  } deriving Show
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 8 }) ''NodeInfo)
+
+-- | 32-byte local identity.
+type ShhIdentity = Integer
+
+-- | Request to post the message to the whisper network.
+data ShhPost = ShhPost
+  { shhPostTo       :: !(Maybe Text)
+  -- ^ Receiver of the message.
+  , shhPostFrom     :: !(Maybe ShhIdentity)
+  -- ^ Sender of the message.
+  , shhPostTopics   :: ![Text]
+  -- ^ Full topic to identify the message by.
+  , shhPostPayload  :: !Text
+  -- ^ Payload of the message.
+  , shhPostPadding  :: !(Maybe Text)
+  -- ^ Optional padding of the message.
+  , shhPostPriority :: !Int
+  -- ^ Priority of the message.
+  , shhPostTtl      :: !Int
+  -- ^ Time to life ot the message in seconds.
+  } deriving Show
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 7 }) ''ShhPost)
+
+-- | Request for filter or subscription creation
+data ShhFilter = ShhFilter
+  { shhFilterDecryptWith :: !(Maybe ShhIdentity)
+  -- ^ ID of key used for decryption.
+  , shhFilterFrom        :: !(Maybe Text)
+  -- ^ Accept only messages signed by given public key.
+  , shhFilterTopics      :: ![Text]
+  -- ^ Possible topics, cannot be empty if identity is none.
+  } deriving Show
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 9 }) ''ShhFilter)
+
+data ShhMessage = ShhMessage
+  { shhMessageFrom      :: !(Maybe Text)
+  -- ^ Public key that signed this message.
+  , shhMessageRecipient :: !(Maybe ShhIdentity)
+  -- ^ Identity of recipient.
+  , shhMessageTtl       :: !Integer
+  -- ^ Time to live in seconds.
+  , shhMessageTopics    :: ![Text]
+  -- ^ Topics that matched the filter.
+  , shhMessageTimestamp :: !Int
+  -- ^ UNIX timestamp of the message generation.
+  , shhMessagePayload   :: !Text
+  -- ^ Encrypted/Interpreted payload.
+  , shhMessagePadding   :: !(Maybe Text)
+  -- ^ Optional padding data.
+  } deriving Show
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 10 }) ''ShhMessage)

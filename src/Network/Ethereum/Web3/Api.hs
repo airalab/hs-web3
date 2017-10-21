@@ -11,11 +11,11 @@
 --
 module Network.Ethereum.Web3.Api where
 
-import Network.Ethereum.Web3.Provider
-import Network.Ethereum.Web3.Address
-import Network.Ethereum.Web3.JsonRpc
-import Network.Ethereum.Web3.Types
-import Data.Text (Text)
+import           Data.Text                      (Text)
+import           Network.Ethereum.Web3.Address
+import           Network.Ethereum.Web3.JsonRpc
+import           Network.Ethereum.Web3.Provider
+import           Network.Ethereum.Web3.Types
 
 -- | Returns current node version string.
 web3_clientVersion :: Provider a => Web3 a Text
@@ -82,3 +82,25 @@ eth_getBlockFilterChanges = remote "eth_getFilterChanges"
 eth_getBlockByHash :: Provider a => Text -> Web3 a Block
 {-# INLINE eth_getBlockByHash #-}
 eth_getBlockByHash = flip (remote "eth_getBlockByHash") True
+
+-- Whisper v6 support
+
+-- | Returns whisper node information
+shh_info :: Provider a => Web3 a NodeInfo
+{-# INLINE shh_info #-}
+shh_info = remote "shh_info"
+
+-- | Do post whisper message
+shh_post :: Provider a => ShhPost -> Web3 a Bool
+{-# INLINE shh_post #-}
+shh_post = remote "shh_post"
+
+-- | Create whisper message filter
+shh_newMessageFilter :: Provider a => ShhFilter -> Web3 a ShhIdentity
+{-# INLINE shh_newMessageFilter #-}
+shh_newMessageFilter = remote "shh_newMessageFilter"
+
+-- | Get whisper filter messages
+shh_getFilterMessages :: Provider a => ShhIdentity -> Web3 a [ShhMessage]
+{-# INLINE shh_getFilterMessages #-}
+shh_getFilterMessages = remote "shh_getFilterMessages"
