@@ -42,6 +42,11 @@ net_peerCount :: Provider a => Web3 a Text
 {-# INLINE net_peerCount #-}
 net_peerCount = remote "net_peerCount"
 
+-- | Returns the current ethereum protocol version.
+eth_protocolVersion :: Provider a => Web3 a Text
+{-# INLINE eth_protocolVersion #-}
+eth_protocolVersion = remote "eth_protocolVersion"
+
 -- | Returns the client coinbase address.
 eth_coinbase :: Provider a => Web3 a Address
 {-# INLINE eth_coinbase #-}
