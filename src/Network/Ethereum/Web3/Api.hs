@@ -147,16 +147,16 @@ eth_getBlockByNumber :: Provider a => Text -> Web3 a Block
 eth_getBlockByNumber = flip (remote "eth_getBlockByNumber") True
 
 -- | Returns the information about a transaction requested by transaction hash.
-eth_getTransactionByHash :: Provider a => Text -> Web3 a Transaction
+eth_getTransactionByHash :: Provider a => Text -> Web3 a (Maybe Transaction)
 eth_getTransactionByHash = remote "eth_getBlockByHash"
 
 -- | Returns information about a transaction by block hash and transaction index position.
-eth_getTransactionByBlockHashAndIndex :: Provider a => Text -> Text ->  Web3 a Transaction
+eth_getTransactionByBlockHashAndIndex :: Provider a => Text -> Text ->  Web3 a (Maybe Transaction)
 eth_getTransactionByBlockHashAndIndex = remote "eth_getTransactionByBlockHashAndIndex"
 
 -- | Returns information about a transaction by block number and transaction
 -- index position.
-eth_getTransactionByBlockNumberAndIndex :: Provider a => CallMode -> Text ->  Web3 a Transaction
+eth_getTransactionByBlockNumberAndIndex :: Provider a => CallMode -> Text ->  Web3 a (Maybe Transaction)
 eth_getTransactionByBlockNumberAndIndex = remote "eth_getTransactionByBlockNumberAndIndex"
 
 -- | Returns a list of addresses owned by client.
