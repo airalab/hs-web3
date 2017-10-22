@@ -27,6 +27,21 @@ web3_sha3 :: Provider a => Text -> Web3 a Text
 {-# INLINE web3_sha3 #-}
 web3_sha3 = remote "web3_sha3"
 
+-- | Returns the current network id.
+net_version :: Provider a => Web3 a Text
+{-# INLINE net_version #-}
+net_version = remote "net_version"
+
+-- | Returns true if client is actively listening for network connections.
+net_listening :: Provider a => Web3 a Bool
+{-# INLINE net_listening #-}
+net_listening = remote "net_listening"
+
+-- | Returns number of peers currently connected to the client.
+net_peerCount :: Provider a => Web3 a Text
+{-# INLINE net_peerCount #-}
+net_peerCount = remote "net_peerCount"
+
 -- | Returns the client coinbase address.
 eth_coinbase :: Provider a => Web3 a Address
 {-# INLINE eth_coinbase #-}
