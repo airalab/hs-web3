@@ -99,6 +99,11 @@ eth_sign = remote "eth_sign"
 eth_sendTransaction :: Provider a => Call -> Web3 a Text
 eth_sendTransaction = remote "eth_sendTransaction"
 
+-- | Creates new message call transaction or a contract creation for signed
+-- transactions.
+eth_sendRawTransaction :: Provider a => Text -> Web3 a Text
+eth_sendRawTransaction = remote "eth_sendRawTransaction"
+
 -- | Returns the balance of the account of given address.
 eth_getBalance :: Provider a => Address -> CallMode -> Web3 a Text
 eth_getBalance = remote "eth_getBalance"
@@ -179,6 +184,7 @@ eth_gasPrice = remote "eth_gasPrice"
 {-# INLINE eth_sign #-}
 {-# INLINE eth_getCode #-}
 {-# INLINE eth_sendTransaction #-}
+{-# INLINE eth_sendRawTransaction #-}
 {-# INLINE eth_accounts #-}
 {-# INLINE eth_newBlockFilter #-}
 {-# INLINE eth_getBlockFilterChanges #-}
