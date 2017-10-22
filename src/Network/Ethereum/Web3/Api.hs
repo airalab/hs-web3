@@ -53,6 +53,9 @@ eth_mining = remote "eth_mining"
 eth_hashrate :: Provider a => Web3 a Text
 eth_hashrate = remote "eth_hashrate"
 
+eth_getTransactionCount :: Provider a => Address -> CallMode -> Web3 a Text
+eth_getTransactionCount = remote "eth_getTransactionCount"
+
 -- | Returns the balance of the account of given address.
 eth_getBalance :: Provider a => Address -> CallMode -> Web3 a Text
 eth_getBalance = remote "eth_getBalance"
@@ -135,6 +138,7 @@ eth_gasPrice = remote "eth_gasPrice"
 {-# INLINE eth_coinbase #-}
 {-# INLINE eth_mining #-}
 {-# INLINE eth_hashrate #-}
+{-# INLINE eth_getTransactionCount #-}
 {-# INLINE eth_getBalance #-}
 {-# INLINE eth_newFilter #-}
 {-# INLINE eth_getFilterChanges #-}
