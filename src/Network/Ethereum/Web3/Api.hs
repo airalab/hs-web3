@@ -41,6 +41,10 @@ net_peerCount = remote "net_peerCount"
 eth_protocolVersion :: Provider a => Web3 a Text
 eth_protocolVersion = remote "eth_protocolVersion"
 
+-- TODO The return type of this function requires a new type to be created
+-- | Returns an object with data about the sync status or false.
+-- eth_syncing :: Proviver a => Web3 a Text
+
 -- | Returns the client coinbase address.
 eth_coinbase :: Provider a => Web3 a Address
 eth_coinbase = remote "eth_coinbase"
@@ -76,8 +80,24 @@ eth_getBlockTransactionCountByNumber =
 eth_getUncleCountByBlockHash :: Provider a => Text -> Web3 a Text
 eth_getUncleCountByBlockHash = remote "eth_getUncleCountByBlockHash"
 
+-- | Returns the number of uncles in a block from a block matching the given
+-- block number.
 eth_getUncleCountByBlockNumber :: Provider a => Text -> Web3 a Text
 eth_getUncleCountByBlockNumber = remote "eth_getUncleCountByBlockNumber"
+
+-- | Returns code at a given address.
+eth_getCode :: Provider a => Address -> CallMode -> Web3 a Text
+eth_getCode = remote "eth_getCode"
+
+-- | Returns an Ethereum specific signature with:
+-- sign(keccak256("\x19Ethereum Signed Message:\n" + len(message) + message))).
+eth_sign :: Provider a => Address -> Text -> Web3 a Text
+eth_sign = remote "eth_sign"
+
+-- | Creates new message call transaction or a contract creation,
+-- if the data field contains code.
+eth_sendTransaction :: Provider a => Call -> Web3 a Text
+eth_sendTransaction = remote "eth_sendTransaction"
 
 -- | Returns the balance of the account of given address.
 eth_getBalance :: Provider a => Address -> CallMode -> Web3 a Text
@@ -107,20 +127,6 @@ eth_getLogs = remote "eth_getLogs"
 -- transaction on the block chain.
 eth_call :: Provider a => Call -> CallMode -> Web3 a Text
 eth_call = remote "eth_call"
-
--- | Returns an Ethereum specific signature with:
--- sign(keccak256("\x19Ethereum Signed Message:\n" + len(message) + message))).
-eth_sign :: Provider a => Address -> Text -> Web3 a Text
-eth_sign = remote "eth_sign"
-
--- | Returns code at a given address.
-eth_getCode :: Provider a => Address -> CallMode -> Web3 a Text
-eth_getCode = remote "eth_getCode"
-
--- | Creates new message call transaction or a contract creation,
--- if the data field contains code.
-eth_sendTransaction :: Provider a => Call -> Web3 a Text
-eth_sendTransaction = remote "eth_sendTransaction"
 
 -- | Returns a list of addresses owned by client.
 eth_accounts :: Provider a => Web3 a [Address]
