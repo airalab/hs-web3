@@ -148,7 +148,7 @@ eth_getBlockByNumber = flip (remote "eth_getBlockByNumber") True
 
 -- | Returns the information about a transaction requested by transaction hash.
 eth_getTransactionByHash :: Provider a => Text -> Web3 a (Maybe Transaction)
-eth_getTransactionByHash = remote "eth_getBlockByHash"
+eth_getTransactionByHash = remote "eth_getTransactionByHash"
 
 -- | Returns information about a transaction by block hash and transaction index position.
 eth_getTransactionByBlockHashAndIndex :: Provider a => Text -> Text ->  Web3 a (Maybe Transaction)
