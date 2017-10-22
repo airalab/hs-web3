@@ -66,7 +66,7 @@ eth_getTransactionCount :: Provider a => Address -> CallMode -> Web3 a Text
 eth_getTransactionCount = remote "eth_getTransactionCount"
 
 -- | Returns the number of transactions in a block from a block matching the given block hash.
-eth_getBlockTransactionCountByHash :: Provider a => Web3 a Text
+eth_getBlockTransactionCountByHash :: Provider a => Text -> Web3 a Text
 eth_getBlockTransactionCountByHash = remote "eth_getBlockTransactionCountByHash"
 
 -- | Returns the number of transactions in a block matching the
