@@ -27,6 +27,21 @@ web3_sha3 :: Provider a => Text -> Web3 a Text
 {-# INLINE web3_sha3 #-}
 web3_sha3 = remote "web3_sha3"
 
+-- | Returns the client coinbase address.
+eth_coinbase :: Provider a => Web3 a Address
+{-# INLINE eth_coinbase #-}
+eth_coinbase = remote "eth_coinbase"
+
+-- | Returns true if client is actively mining new blocks.
+eth_mining :: Provider a => Web3 a Bool
+{-# INLINE eth_mining #-}
+eth_mining = remote "eth_mining"
+
+-- | Returns the number of hashes per second that the node is mining with.
+eth_hashrate :: Provider a => Web3 a Text
+{-# INLINE eth_hashrate #-}
+eth_hashrate = remote "eth_hashrate"
+
 -- | Returns the balance of the account of given address.
 eth_getBalance :: Provider a => Address -> CallMode -> Web3 a Text
 {-# INLINE eth_getBalance #-}
