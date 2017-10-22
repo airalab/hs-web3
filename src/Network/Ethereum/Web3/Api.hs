@@ -135,7 +135,7 @@ eth_call = remote "eth_call"
 
 -- | Makes a call or transaction, which won't be added to the blockchain and
 -- returns the used gas, which can be used for estimating the used gas.
-eth_estimateGas :: Provider a => Call -> CallMode -> Web3 a Text
+eth_estimateGas :: Provider a => Call -> Web3 a Text
 eth_estimateGas = remote "eth_estimateGas"
 
 -- | Returns information about a block by hash.
@@ -151,13 +151,18 @@ eth_getTransactionByHash :: Provider a => Text -> Web3 a (Maybe Transaction)
 eth_getTransactionByHash = remote "eth_getTransactionByHash"
 
 -- | Returns information about a transaction by block hash and transaction index position.
-eth_getTransactionByBlockHashAndIndex :: Provider a => Text -> Text ->  Web3 a (Maybe Transaction)
+eth_getTransactionByBlockHashAndIndex :: Provider a => Text -> Text -> Web3 a (Maybe Transaction)
 eth_getTransactionByBlockHashAndIndex = remote "eth_getTransactionByBlockHashAndIndex"
 
 -- | Returns information about a transaction by block number and transaction
 -- index position.
-eth_getTransactionByBlockNumberAndIndex :: Provider a => CallMode -> Text ->  Web3 a (Maybe Transaction)
+eth_getTransactionByBlockNumberAndIndex :: Provider a => CallMode -> Text -> Web3 a (Maybe Transaction)
 eth_getTransactionByBlockNumberAndIndex = remote "eth_getTransactionByBlockNumberAndIndex"
+
+-- | Returns the receipt of a transaction by transaction hash.
+-- TODO must create new type, TxReceipt
+-- eth_getTransactionReceipt :: Provider a => Text -> Web3 a TxReceipt
+-- eth_getTransactionReceipt = remote "eth_getTransactionReceipt"
 
 -- | Returns a list of addresses owned by client.
 eth_accounts :: Provider a => Web3 a [Address]
