@@ -62,6 +62,10 @@ eth_call :: Provider a => Call -> CallMode -> Web3 a Text
 {-# INLINE eth_call #-}
 eth_call = remote "eth_call"
 
+eth_sign :: Provider a => Address -> Text -> Web3 a Text
+{-# INLINE eth_sign #-}
+eth_sign = remote "eth_sign"
+
 -- | Creates new message call transaction or a contract creation,
 -- if the data field contains code.
 eth_sendTransaction :: Provider a => Call -> Web3 a Text
