@@ -53,6 +53,7 @@ eth_mining = remote "eth_mining"
 eth_hashrate :: Provider a => Web3 a Text
 eth_hashrate = remote "eth_hashrate"
 
+-- | Returns the number of transactions sent from an address.
 eth_getTransactionCount :: Provider a => Address -> CallMode -> Web3 a Text
 eth_getTransactionCount = remote "eth_getTransactionCount"
 
@@ -85,9 +86,14 @@ eth_getLogs = remote "eth_getLogs"
 eth_call :: Provider a => Call -> CallMode -> Web3 a Text
 eth_call = remote "eth_call"
 
--- TODO make bytes32 concatenation easy! otherwise signatures will be a pain
+-- | Returns an Ethereum specific signature with:
+-- sign(keccak256("\x19Ethereum Signed Message:\n" + len(message) + message))).
 eth_sign :: Provider a => Address -> Text -> Web3 a Text
 eth_sign = remote "eth_sign"
+
+-- | Returns code at a given address.
+eth_getCode :: Provider a => Address -> CallMode -> Web3 a Text
+eth_getCode = remote "eth_getCode"
 
 -- | Creates new message call transaction or a contract creation,
 -- if the data field contains code.
@@ -146,6 +152,7 @@ eth_gasPrice = remote "eth_gasPrice"
 {-# INLINE eth_getLogs #-}
 {-# INLINE eth_call #-}
 {-# INLINE eth_sign #-}
+{-# INLINE eth_getCode #-}
 {-# INLINE eth_sendTransaction #-}
 {-# INLINE eth_accounts #-}
 {-# INLINE eth_newBlockFilter #-}
