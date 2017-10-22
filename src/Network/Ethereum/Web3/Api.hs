@@ -133,6 +133,32 @@ eth_getLogs = remote "eth_getLogs"
 eth_call :: Provider a => Call -> CallMode -> Web3 a Text
 eth_call = remote "eth_call"
 
+-- | Makes a call or transaction, which won't be added to the blockchain and
+-- returns the used gas, which can be used for estimating the used gas.
+eth_estimateGas :: Provider a => Call -> CallMode -> Web3 a Text
+eth_estimateGas = remote "eth_estimateGas"
+
+-- | Returns information about a block by hash.
+eth_getBlockByHash :: Provider a => Text -> Web3 a Block
+eth_getBlockByHash = flip (remote "eth_getBlockByHash") True
+
+-- | Returns information about a block by block number.
+eth_getBlockByNumber :: Provider a => Text -> Web3 a Block
+eth_getBlockByNumber = flip (remote "eth_getBlockByNumber") True
+
+-- | Returns the information about a transaction requested by transaction hash.
+eth_getTransactionByHash :: Provider a => Text -> Web3 a Transaction
+eth_getTransactionByHash = remote "eth_getBlockByHash"
+
+-- | Returns information about a transaction by block hash and transaction index position.
+eth_getTransactionByBlockHashAndIndex :: Provider a => Text -> Text ->  Web3 a Transaction
+eth_getTransactionByBlockHashAndIndex = remote "eth_getTransactionByBlockHashAndIndex"
+
+-- | Returns information about a transaction by block number and transaction
+-- index position.
+eth_getTransactionByBlockNumberAndIndex :: Provider a => CallMode -> Text ->  Web3 a Transaction
+eth_getTransactionByBlockNumberAndIndex = remote "eth_getTransactionByBlockNumberAndIndex"
+
 -- | Returns a list of addresses owned by client.
 eth_accounts :: Provider a => Web3 a [Address]
 eth_accounts = remote "eth_accounts"
@@ -144,14 +170,6 @@ eth_newBlockFilter = remote "eth_newBlockFilter"
 -- occurred since last poll.
 eth_getBlockFilterChanges :: Provider a => Text -> Web3 a [Text]
 eth_getBlockFilterChanges = remote "eth_getFilterChanges"
-
--- | Returns information about a block by hash.
-eth_getBlockByHash :: Provider a => Text -> Web3 a Block
-eth_getBlockByHash = flip (remote "eth_getBlockByHash") True
-
--- | Returns information about a block by block number.
-eth_getBlockByNumber :: Provider a => Text -> Web3 a Block
-eth_getBlockByNumber = flip (remote "eth_getBlockByNumber") True
 
 -- | Returns the number of most recent block.
 eth_blockNumber :: Provider a => Web3 a Text
@@ -181,6 +199,10 @@ eth_gasPrice = remote "eth_gasPrice"
 {-# INLINE eth_uninstallFilter #-}
 {-# INLINE eth_getLogs #-}
 {-# INLINE eth_call #-}
+{-# INLINE eth_estimateGas #-}
+{-# INLINE eth_getTransactionByHash #-}
+{-# INLINE eth_getTransactionByBlockHashAndIndex #-}
+{-# INLINE eth_getTransactionByBlockNumberAndIndex #-}
 {-# INLINE eth_sign #-}
 {-# INLINE eth_getCode #-}
 {-# INLINE eth_sendTransaction #-}
