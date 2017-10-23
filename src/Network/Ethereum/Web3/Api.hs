@@ -58,11 +58,11 @@ eth_hashrate :: Provider a => Web3 a Text
 eth_hashrate = remote "eth_hashrate"
 
 -- | Returns the value from a storage position at a given address.
-eth_getStorageAt :: Provider a => Address -> Text -> CallMode -> Web3 a Text
+eth_getStorageAt :: Provider a => Address -> Text -> DefaultBlock -> Web3 a Text
 eth_getStorageAt = remote "eth_getStorageAt"
 
 -- | Returns the number of transactions sent from an address.
-eth_getTransactionCount :: Provider a => Address -> CallMode -> Web3 a Text
+eth_getTransactionCount :: Provider a => Address -> DefaultBlock -> Web3 a Text
 eth_getTransactionCount = remote "eth_getTransactionCount"
 
 -- | Returns the number of transactions in a block from a block matching the given block hash.
@@ -86,7 +86,7 @@ eth_getUncleCountByBlockNumber :: Provider a => Text -> Web3 a Text
 eth_getUncleCountByBlockNumber = remote "eth_getUncleCountByBlockNumber"
 
 -- | Returns code at a given address.
-eth_getCode :: Provider a => Address -> CallMode -> Web3 a Text
+eth_getCode :: Provider a => Address -> DefaultBlock -> Web3 a Text
 eth_getCode = remote "eth_getCode"
 
 -- | Returns an Ethereum specific signature with:
@@ -105,7 +105,7 @@ eth_sendRawTransaction :: Provider a => Text -> Web3 a Text
 eth_sendRawTransaction = remote "eth_sendRawTransaction"
 
 -- | Returns the balance of the account of given address.
-eth_getBalance :: Provider a => Address -> CallMode -> Web3 a Text
+eth_getBalance :: Provider a => Address -> DefaultBlock -> Web3 a Text
 eth_getBalance = remote "eth_getBalance"
 
 -- | Creates a filter object, based on filter options, to notify when the
@@ -130,7 +130,7 @@ eth_getLogs = remote "eth_getLogs"
 
 -- | Executes a new message call immediately without creating a
 -- transaction on the block chain.
-eth_call :: Provider a => Call -> CallMode -> Web3 a Text
+eth_call :: Provider a => Call -> DefaultBlock -> Web3 a Text
 eth_call = remote "eth_call"
 
 -- | Makes a call or transaction, which won't be added to the blockchain and
@@ -156,7 +156,7 @@ eth_getTransactionByBlockHashAndIndex = remote "eth_getTransactionByBlockHashAnd
 
 -- | Returns information about a transaction by block number and transaction
 -- index position.
-eth_getTransactionByBlockNumberAndIndex :: Provider a => CallMode -> Text -> Web3 a (Maybe Transaction)
+eth_getTransactionByBlockNumberAndIndex :: Provider a => DefaultBlock -> Text -> Web3 a (Maybe Transaction)
 eth_getTransactionByBlockNumberAndIndex = remote "eth_getTransactionByBlockNumberAndIndex"
 
 -- | Returns the receipt of a transaction by transaction hash.

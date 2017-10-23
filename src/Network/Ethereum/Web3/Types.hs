@@ -109,10 +109,10 @@ $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 4 }) ''Call)
 
 -- | The contract call mode describe used state: latest or pending
-data CallMode = BlockNumberHex Text | Earliest | Latest | Pending
+data DefaultBlock = BlockNumberHex Text | Earliest | Latest | Pending
   deriving (Show, Eq)
 
-instance ToJSON CallMode where
+instance ToJSON DefaultBlock where
     toJSON (BlockNumberHex hex) = toJSON hex
     toJSON parameter = toJSON . toLowerFirst . show $ parameter
 

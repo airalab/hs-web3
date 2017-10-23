@@ -120,7 +120,7 @@ class ABIEncoding a => Method a where
     call :: (Provider p, ABIEncoding b)
          => Address
          -- ^ Contract address
-         -> CallMode
+         -> DefaultBlock
          -- ^ State mode for constant call (latest or pending)
          -> a
          -- ^ Method data
@@ -138,7 +138,7 @@ _sendTransaction to value dat = do
         defaultGas  = "0x2DC2DC"
 
 _call :: (Provider p, Method a, ABIEncoding b)
-      => Address -> CallMode -> a -> Web3 p b
+      => Address -> DefaultBlock -> a -> Web3 p b
 _call to mode dat = do
     primeAddress <- listToMaybe <$> eth_accounts
     res <- eth_call (txdata primeAddress) mode
