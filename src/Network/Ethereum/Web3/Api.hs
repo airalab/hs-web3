@@ -184,6 +184,24 @@ eth_blockNumber = remote "eth_blockNumber"
 eth_gasPrice :: Provider a => Web3 a Text
 eth_gasPrice = remote "eth_gasPrice"
 
+-- | Returns information about a uncle of a block by hash and uncle index
+-- position.
+eth_getUncleByBlockHashAndIndex :: Provider a => Text -> Text -> Web3 a Block
+eth_getUncleByBlockHashAndIndex = remote "eth_getUncleByBlockHashAndIndex"
+
+-- | Returns information about a uncle of a block by number and uncle index
+-- position.
+eth_getUncleByBlockNumberAndIndex :: Provider a => DefaultBlock -> Text -> Web3 a Block
+eth_getUncleByBlockNumberAndIndex = remote "eth_getUncleByBlockNumberAndIndex"
+
+-- | Creates a filter in the node, to notify when new pending transactions arrive. To check if the state has changed, call eth_getFilterChanges. Returns a FilterId.
+eth_newPendingTransactionFilter :: Provider a => Web3 a Text
+eth_newPendingTransactionFilter = remote "eth_newPendingTransactionFilter"
+
+-- | Returns an array of all logs matching filter with given id.
+eth_getFilterLogs :: Provider a => Text -> Web3 a [Change]
+eth_getFilterLogs = remote "eth_getFilterLogs"
+
 -- | Returns the hash of the current block, the seedHash, and the boundary
 -- condition to be met ("target").
 eth_getWork :: Provider a => Web3 a [Text]
@@ -240,6 +258,10 @@ eth_submitHashrate = remote "eth_submitHashrate"
 {-# INLINE eth_blockNumber #-}
 {-# INLINE eth_getBlockTransactionCountByNumber #-}
 {-# INLINE eth_gasPrice #-}
+{-# INLINE eth_getUncleByBlockHashAndIndex #-}
+{-# INLINE eth_getUncleByBlockNumberAndIndex #-}
+{-# INLINE eth_newPendingTransactionFilter #-}
+{-# INLINE eth_getFilterLogs #-}
 {-# INLINE eth_getWork #-}
 {-# INLINE eth_submitWork #-}
 {-# INLINE eth_submitHashrate #-}
