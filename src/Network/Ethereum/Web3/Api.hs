@@ -184,6 +184,26 @@ eth_blockNumber = remote "eth_blockNumber"
 eth_gasPrice :: Provider a => Web3 a Text
 eth_gasPrice = remote "eth_gasPrice"
 
+-- | Returns the hash of the current block, the seedHash, and the boundary
+-- condition to be met ("target").
+eth_getWork :: Provider a => Web3 a [Text]
+eth_getWork = remote "eth_getWork"
+
+-- | Used for submitting a proof-of-work solution.
+-- Parameters:
+-- 1. DATA, 8 Bytes - The nonce found (64 bits)
+-- 2. DATA, 32 Bytes - The header's pow-hash (256 bits)
+-- 3. DATA, 32 Bytes - The mix digest (256 bits)
+eth_submitWork :: Provider a => Text -> Text -> Text -> Web3 a Bool
+eth_submitWork = remote "eth_submitWork"
+
+-- | Used for submitting mining hashrate.
+-- Parameters:
+-- 1. Hashrate, a hexadecimal string representation (32 bytes) of the hash rate
+-- 2. ID, String - A random hexadecimal(32 bytes) ID identifying the client
+eth_submitHashrate :: Provider a => Text -> Text -> Web3 a Bool
+eth_submitHashrate = remote "eth_submitHashrate"
+
 {-# INLINE web3_clientVersion #-}
 {-# INLINE web3_sha3 #-}
 {-# INLINE net_version #-}
@@ -220,3 +240,6 @@ eth_gasPrice = remote "eth_gasPrice"
 {-# INLINE eth_blockNumber #-}
 {-# INLINE eth_getBlockTransactionCountByNumber #-}
 {-# INLINE eth_gasPrice #-}
+{-# INLINE eth_getWork #-}
+{-# INLINE eth_submitWork #-}
+{-# INLINE eth_submitHashrate #-}
