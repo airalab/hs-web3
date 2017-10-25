@@ -26,6 +26,7 @@ import Data.Monoid ((<>))
 import Data.Text (Text)
 import Data.Aeson.TH
 import Data.Aeson
+import GHC.Generics
 
 -- | Any communication with Ethereum node wrapped with 'Web3' monad
 newtype Web3 a b = Web3 { unWeb3 :: IO b }
@@ -39,7 +40,7 @@ data Web3Error
   -- ^ Error in parser state
   | UserFail    !String
   -- ^ Common head for user errors
-  deriving (Typeable, Show, Eq)
+  deriving (Typeable, Show, Eq, Generic)
 
 instance Exception Web3Error
 
@@ -48,7 +49,7 @@ data RpcError = RpcError
   { errCode     :: !Int
   , errMessage  :: !Text
   , errData     :: !(Maybe Value)
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 3 }) ''RpcError)
@@ -59,14 +60,14 @@ data Filter = Filter
   , filterTopics    :: !(Maybe [Maybe Text])
   , filterFromBlock :: !(Maybe Text)
   , filterToBlock   :: !(Maybe Text)
-  } deriving Show
+  } deriving (Show, Generic)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 6 }) ''Filter)
 
 -- | Event filder ident
 newtype FilterId = FilterId Integer
-  deriving (Show, Eq, Ord)
+  deriving (Show, Eq, Ord, Generic)
 
 instance FromJSON FilterId where
     parseJSON (String v) =
@@ -90,7 +91,7 @@ data Change = Change
   , changeAddress          :: !Address
   , changeData             :: !Text
   , changeTopics           :: ![Text]
-  } deriving Show
+  } deriving (Show, Generic)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 6 }) ''Change)
@@ -103,14 +104,14 @@ data Call = Call
   , callGasPrice:: !(Maybe Text)
   , callValue   :: !(Maybe Text)
   , callData    :: !(Maybe Text)
-  } deriving Show
+  } deriving (Show, Generic)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 4 }) ''Call)
 
 -- | The contract call mode describe used state: latest or pending
 data CallMode = Latest | Pending
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
 instance ToJSON CallMode where
     toJSON = toJSON . toLowerFirst . show
@@ -143,7 +144,7 @@ data Transaction = Transaction
   -- ^ QUANTITY - gas provided by the sender.
   , txInput             :: !Text
   -- ^ DATA - the data send along with the transaction.
-  } deriving Show
+  } deriving (Show, Generic)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 2 }) ''Transaction)
@@ -188,7 +189,7 @@ data Block = Block
   -- ^ Array of transaction objects.
   , blockUncles           :: ![Text]
   -- ^ Array - Array of uncle hashes.
-  } deriving Show
+  } deriving (Show, Generic)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 5 }) ''Block)
