@@ -10,7 +10,7 @@
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- Common used types and instances.
+-- Commonly used types and instances.
 --
 module Network.Ethereum.Web3.Types where
 
@@ -64,7 +64,7 @@ data Filter = Filter
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 6 }) ''Filter)
 
--- | Event filder ident
+-- | Event filter identifier
 newtype FilterId = FilterId Integer
   deriving (Show, Eq, Ord)
 
@@ -80,7 +80,8 @@ instance ToJSON FilterId where
         let hexValue = B.toLazyText (B.hexadecimal x)
         in  toJSON ("0x" <> hexValue)
 
--- | Changes pulled by low-level call 'eth_getFilterChanges'
+-- | Changes pulled by low-level call 'eth_getFilterChanges', 'eth_getLogs',
+-- and 'eth_getFilterLogs'
 data Change = Change
   { changeLogIndex         :: !Text
   , changeTransactionIndex :: !Text
@@ -110,11 +111,12 @@ $(deriveJSON (defaultOptions
     , omitNothingFields = True }) ''Call)
 
 -- | The contract call mode describe used state: latest or pending
-data CallMode = Latest | Pending
+data DefaultBlock = BlockNumberHex Text | Earliest | Latest | Pending
   deriving (Show, Eq)
 
-instance ToJSON CallMode where
-    toJSON = toJSON . toLowerFirst . show
+instance ToJSON DefaultBlock where
+    toJSON (BlockNumberHex hex) = toJSON hex
+    toJSON parameter = toJSON . toLowerFirst . show $ parameter
 
 -- TODO: Wrap
 -- | Transaction hash text string
