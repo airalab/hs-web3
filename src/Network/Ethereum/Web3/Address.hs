@@ -52,7 +52,7 @@ fromText :: Text -> Either String Address
 fromText = fmap (Address . fst) . R.hexadecimal <=< check
   where check t | T.take 2 t == "0x" = check (T.drop 2 t)
                 | otherwise = do if T.length t == 40 then pure () else lengthError
-                                 if T.all (C.isHexDigit) t then pure () else invalidCharError
+                                 if T.all C.isHexDigit t then pure () else invalidCharError
                                  pure t
         lengthError = Left "Invalid Address: text length not equal to 20"
         invalidCharError = Left "Invalid Address: contains non-hex character"
