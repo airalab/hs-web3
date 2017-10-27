@@ -1,5 +1,7 @@
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE DataKinds      #-}
+{-# LANGUAGE KindSignatures      #-}
+{-# LANGUAGE PolyKinds           #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DataKinds           #-}
 -- |
 -- Module      :  Network.Ethereum.Web3.Encoding.Bytes
 -- Copyright   :  Alexander Krupenkin 2016
@@ -22,6 +24,7 @@ import qualified Data.Text.Lazy.Builder as B
 import qualified Data.Text.Encoding     as T
 import qualified Data.Text              as T
 import qualified Data.ByteArray         as BA
+import Data.Proxy
 import Network.Ethereum.Web3.Encoding.Internal
 import Network.Ethereum.Web3.Encoding
 import GHC.TypeLits (KnownNat, Nat, natVal)
@@ -39,7 +42,7 @@ update :: BytesN a -> Bytes -> BytesN a
 update _ = BytesN
 
 instance KnownNat n => EncodingType (BytesN n) where
-    typeName  = const "bytes[N]"
+    typeName  = const $ "bytes" <> (show . natVal $ (Proxy :: Proxy n))
     isDynamic = const False
 
 instance KnownNat n => ABIEncoding (BytesN n) where

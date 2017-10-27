@@ -106,7 +106,8 @@ data Call = Call
   } deriving Show
 
 $(deriveJSON (defaultOptions
-    { fieldLabelModifier = toLowerFirst . drop 4 }) ''Call)
+    { fieldLabelModifier = toLowerFirst . drop 4
+    , omitNothingFields = True }) ''Call)
 
 -- | The contract call mode describe used state: latest or pending
 data CallMode = Latest | Pending
