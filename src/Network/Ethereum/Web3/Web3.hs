@@ -18,10 +18,10 @@ import Data.Text (Text)
 
 -- | Returns current node version string.
 clientVersion :: Provider a => Web3 a Text
-{-# INLINE web3_clientVersion #-}
+{-# INLINE clientVersion #-}
 clientVersion = remote "web3_clientVersion"
 
 -- | Returns Keccak-256 (not the standardized SHA3-256) of the given data.
 sha3 :: Provider a => Text -> Web3 a Text
-{-# INLINE web3_sha3 #-}
+{-# INLINE sha3 #-}
 sha3 = remote "web3_sha3"
