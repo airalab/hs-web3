@@ -19,14 +19,14 @@ import Data.Text (Text)
 -- | Returns the current network id.
 version :: Provider a => Web3 a Text
 {-# INLINE version #-}
-version = remote "version"
+version = remote "net_version"
 
 -- | Returns true if client is actively listening for network connections.
 listening :: Provider a => Web3 a Bool
 {-# INLINE listening #-}
-listening = remote "listening"
+listening = remote "net_listening"
 
 -- | Returns number of peers currently connected to the client.
 peerCount :: Provider a => Web3 a Text
 {-# INLINE peerCount #-}
-peerCount = remote "peerCount"
+peerCount = remote "net_peerCount"
