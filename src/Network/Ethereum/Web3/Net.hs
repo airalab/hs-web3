@@ -1,5 +1,5 @@
 -- |
--- Module      :  Network.Ethereum.Web3.Api
+-- Module      :  Network.Ethereum.Web3.Net
 -- Copyright   :  Alexander Krupenkin 2016
 -- License     :  BSD3
 --
@@ -7,7 +7,7 @@
 -- Stability   :  experimental
 -- Portability :  unknown
 --
--- Ethereum node JSON-RPC API methods.
+-- Ethereum node JSON-RPC API methods with `net_` prefix.
 --
 module Network.Ethereum.Web3.Net where
 
