@@ -51,7 +51,7 @@ import Network.Ethereum.Web3.Provider
 import Network.Ethereum.Web3.Encoding
 import Network.Ethereum.Web3.Address
 import Network.Ethereum.Web3.Types
-import Network.Ethereum.Web3.Api
+import qualified Network.Ethereum.Web3.Eth as Eth
 import Network.Ethereum.Unit
 
 -- | Event callback control response
@@ -83,16 +83,16 @@ _event :: (Provider p, Event a)
 _event a f = do
     fid <- let ftyp = snd $ let x = undefined :: Event a => a
                             in  (f x, x)
-           in  eth_newFilter (eventFilter ftyp a)
+           in  Eth.newFilter (eventFilter ftyp a)
 
     forkWeb3 $
         let loop = do liftIO (threadDelay 1000000)
-                      changes <- eth_getFilterChanges fid
+                      changes <- Eth.getFilterChanges fid
                       acts <- forM (mapMaybe pairChange changes) $ \(changeEvent, changeWithMeta) ->
                         runReaderT (f changeEvent) changeWithMeta
                       when (TerminateEvent `notElem` acts) loop
         in do loop
-              eth_uninstallFilter fid
+              Eth.uninstallFilter fid
               return ()
   where
     prepareTopics = fmap (T.drop 2) . drop 1
@@ -131,8 +131,8 @@ class ABIEncoding a => Method a where
 _sendTransaction :: (Provider p, Method a, Unit b)
                  => Address -> b -> a -> Web3 p TxHash
 _sendTransaction to value dat = do
-    primeAddress <- listToMaybe <$> eth_accounts
-    eth_sendTransaction (txdata primeAddress $ Just $ toData dat)
+    primeAddress <- listToMaybe <$> Eth.accounts
+    Eth.sendTransaction (txdata primeAddress $ Just $ toData dat)
   where txdata from = Call from to (Just defaultGas) Nothing (Just $ toWeiText value)
         toWeiText   = ("0x" <>) . toStrict . B.toLazyText . B.hexadecimal . toWei
         defaultGas  = "0x2DC2DC"
@@ -140,8 +140,8 @@ _sendTransaction to value dat = do
 _call :: (Provider p, Method a, ABIEncoding b)
       => Address -> DefaultBlock -> a -> Web3 p b
 _call to mode dat = do
-    primeAddress <- listToMaybe <$> eth_accounts
-    res <- eth_call (txdata primeAddress) mode
+    primeAddress <- listToMaybe <$> Eth.accounts
+    res <- Eth.call (txdata primeAddress) mode
     case fromData (T.drop 2 res) of
         Nothing -> liftIO $ throwIO $ ParserFail $
             "Unable to parse result on `" ++ T.unpack res
