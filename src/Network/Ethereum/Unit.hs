@@ -60,6 +60,7 @@ import qualified Text.Read.Lex as L
 import Data.Monoid ((<>))
 import Text.Printf
 import GHC.Read
+import GHC.Generics (Generic)
 
 -- | Ethereum value unit
 class (Read a, Show a, UnitSpec a, Fractional a) => Unit a where
@@ -79,7 +80,7 @@ class UnitSpec a where
 
 -- | Value abstraction
 data Value a = MkValue { unValue :: Integer }
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Generic)
 
 mkValue :: (UnitSpec a, RealFrac b) => b -> Value a
 mkValue = modify res . round . (divider res *)

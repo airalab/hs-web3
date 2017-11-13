@@ -28,9 +28,11 @@ import qualified Data.Text as T
 import Control.Monad ((<=<))
 import Data.Monoid ((<>))
 
+import GHC.Generics (Generic)
+
 -- | Ethereum account address
 newtype Address = Address { unAddress :: Integer }
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Generic)
 
 instance Show Address where
     show = unpack . toText
