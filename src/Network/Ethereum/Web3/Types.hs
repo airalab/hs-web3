@@ -1,6 +1,7 @@
-{-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE DeriveGeneric              #-}
 -- |
 -- Module      :  Network.Ethereum.Web3.Types
 -- Copyright   :  Alexander Krupenkin 2016
@@ -10,22 +11,23 @@
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- Common used types and instances.
+-- Commonly used types and instances.
 --
 module Network.Ethereum.Web3.Types where
 
-import           Control.Exception              (Exception)
-import           Control.Monad.IO.Class         (MonadIO)
-import           Data.Aeson
-import           Data.Aeson.TH
-import           Data.Monoid                    ((<>))
-import           Data.Text                      (Text)
-import qualified Data.Text.Lazy.Builder         as B
-import qualified Data.Text.Lazy.Builder.Int     as B
-import qualified Data.Text.Read                 as R
-import           Data.Typeable                  (Typeable)
-import           Network.Ethereum.Web3.Address  (Address)
-import           Network.Ethereum.Web3.Internal (toLowerFirst)
+import Network.Ethereum.Web3.Internal (toLowerFirst)
+import qualified Data.Text.Lazy.Builder.Int as B
+import qualified Data.Text.Lazy.Builder     as B
+import qualified Data.Text.Read             as R
+import Network.Ethereum.Web3.Address (Address)
+import Control.Monad.IO.Class (MonadIO)
+import Control.Exception (Exception)
+import Data.Typeable (Typeable)
+import Data.Monoid ((<>))
+import Data.Text (Text)
+import Data.Aeson.TH
+import Data.Aeson
+import GHC.Generics
 
 -- | Any communication with Ethereum node wrapped with 'Web3' monad
 newtype Web3 a b = Web3 { unWeb3 :: IO b }
@@ -39,16 +41,16 @@ data Web3Error
   -- ^ Error in parser state
   | UserFail    !String
   -- ^ Common head for user errors
-  deriving (Typeable, Show, Eq)
+  deriving (Typeable, Show, Eq, Generic)
 
 instance Exception Web3Error
 
 -- | JSON-RPC error message
 data RpcError = RpcError
-  { errCode    :: !Int
-  , errMessage :: !Text
-  , errData    :: !(Maybe Value)
-  } deriving (Show, Eq)
+  { errCode     :: !Int
+  , errMessage  :: !Text
+  , errData     :: !(Maybe Value)
+  } deriving (Show, Eq, Generic)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 3 }) ''RpcError)
@@ -59,14 +61,14 @@ data Filter = Filter
   , filterTopics    :: !(Maybe [Maybe Text])
   , filterFromBlock :: !(Maybe Text)
   , filterToBlock   :: !(Maybe Text)
-  } deriving Show
+  } deriving (Show, Generic)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 6 }) ''Filter)
 
--- | Event filder ident
+-- | Event filter identifier
 newtype FilterId = FilterId Integer
-  deriving (Show, Eq, Ord)
+  deriving (Show, Eq, Ord, Generic)
 
 instance FromJSON FilterId where
     parseJSON (String v) =
@@ -80,7 +82,8 @@ instance ToJSON FilterId where
         let hexValue = B.toLazyText (B.hexadecimal x)
         in  toJSON ("0x" <> hexValue)
 
--- | Changes pulled by low-level call 'eth_getFilterChanges'
+-- | Changes pulled by low-level call 'eth_getFilterChanges', 'eth_getLogs',
+-- and 'eth_getFilterLogs'
 data Change = Change
   { changeLogIndex         :: !Text
   , changeTransactionIndex :: !Text
@@ -90,7 +93,7 @@ data Change = Change
   , changeAddress          :: !Address
   , changeData             :: !Text
   , changeTopics           :: ![Text]
-  } deriving Show
+  } deriving (Show, Generic)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 6 }) ''Change)
@@ -101,20 +104,21 @@ data Call = Call
   , callTo       :: !Address
   , callGas      :: !(Maybe Text)
   , callGasPrice:: !(Maybe Text)
-  , callValue    :: !(Maybe Text)
-  , callData     :: !(Maybe Text)
-  } deriving Show
+  , callValue   :: !(Maybe Text)
+  , callData    :: !(Maybe Text)
+  } deriving (Show, Generic)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 4
     , omitNothingFields = True }) ''Call)
 
 -- | The contract call mode describe used state: latest or pending
-data CallMode = Latest | Pending
+data DefaultBlock = BlockNumberHex Text | Earliest | Latest | Pending
   deriving (Show, Eq)
 
-instance ToJSON CallMode where
-    toJSON = toJSON . toLowerFirst . show
+instance ToJSON DefaultBlock where
+    toJSON (BlockNumberHex hex) = toJSON hex
+    toJSON parameter = toJSON . toLowerFirst . show $ parameter
 
 -- TODO: Wrap
 -- | Transaction hash text string
@@ -144,7 +148,7 @@ data Transaction = Transaction
   -- ^ QUANTITY - gas provided by the sender.
   , txInput            :: !Text
   -- ^ DATA - the data send along with the transaction.
-  } deriving Show
+  } deriving (Show, Generic)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 2 }) ''Transaction)
@@ -189,7 +193,7 @@ data Block = Block
   -- ^ Array of transaction objects.
   , blockUncles           :: ![Text]
   -- ^ Array - Array of uncle hashes.
-  } deriving Show
+  } deriving (Show, Generic)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 5 }) ''Block)

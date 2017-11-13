@@ -1,6 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes     #-}
 {-# LANGUAGE CPP             #-}
+{-# LANGUAGE DeriveGeneric   #-}
+
 -- |
 -- Module      :  Network.Ethereum.Web3.TH
 -- Copyright   :  Alexander Krupenkin 2016
@@ -58,6 +60,8 @@ import Data.List (groupBy, sortBy)
 import Data.Monoid (mconcat, (<>))
 import Data.ByteArray (Bytes)
 import Data.Aeson
+
+import GHC.Generics
 
 import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Lib
@@ -232,7 +236,7 @@ mkEvent eve@(DEvent name inputs _) = sequence
     , instanceD' eventName eventT    (eventFilterD (T.unpack $ eventId eve) indexedFieldsCount)
     ]
   where eventName   = mkName (toUpperFirst (T.unpack name))
-        derivingD   = [mkName "Show", mkName "Eq", mkName "Ord"]
+        derivingD   = [mkName "Show", mkName "Eq", mkName "Ord", ''Generic]
         eventFields = normalC eventName (eventBangType <$> inputs)
         encodingT   = conT (mkName "ABIEncoding")
         eventT      = conT (mkName "Event")
@@ -251,7 +255,7 @@ mkFun fun@(DFunction name constant inputs outputs) = (++)
         dataName  = mkName (toUpperFirst (T.unpack $ name <> "Data"))
         funName   = mkName (toLowerFirst (T.unpack name))
         bangInput = fmap funBangType inputs
-        derivingD = [mkName "Show", mkName "Eq", mkName "Ord"]
+        derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''Generic]
         encodingT = conT (mkName "ABIEncoding")
         methodT   = conT (mkName "Method")
 

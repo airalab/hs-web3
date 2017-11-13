@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 -- |
 -- Module      :  Network.Ethereum.Web3.Address
 -- Copyright   :  Alexander Krupenkin 2016
@@ -17,6 +18,7 @@ module Network.Ethereum.Web3.Address (
   ) where
 
 import Data.Aeson (FromJSON(..), ToJSON(..), Value(..))
+import qualified Data.Char as C
 import Data.Text.Lazy.Builder.Int as B (hexadecimal)
 import Data.Text.Lazy.Builder (toLazyText)
 import Data.Text.Read as R (hexadecimal)
@@ -27,9 +29,11 @@ import qualified Data.Text as T
 import Control.Monad ((<=<))
 import Data.Monoid ((<>))
 
+import GHC.Generics (Generic)
+
 -- | Ethereum account address
 newtype Address = Address { unAddress :: Integer }
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Generic)
 
 instance Show Address where
     show = unpack . toText
@@ -50,10 +54,11 @@ instance ToJSON Address where
 fromText :: Text -> Either String Address
 fromText = fmap (Address . fst) . R.hexadecimal <=< check
   where check t | T.take 2 t == "0x" = check (T.drop 2 t)
-                | otherwise = if T.length t == 40 && T.all (`elem` valid) t
-                              then Right t
-                              else Left "This is not seems like address."
-        valid = ['0'..'9'] ++ ['a'..'f'] ++ ['A'..'F']
+                | otherwise = do if T.length t == 40 then pure () else lengthError
+                                 if T.all C.isHexDigit t then pure () else invalidCharError
+                                 pure t
+        lengthError = Left "Invalid Address: text length not equal to 20"
+        invalidCharError = Left "Invalid Address: contains non-hex character"
 
 -- | Render 'Address' to text string
 toText :: Address -> Text
