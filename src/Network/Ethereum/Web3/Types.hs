@@ -1,6 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE DeriveGeneric #-}
 -- |
 -- Module      :  Network.Ethereum.Web3.Types
 -- Copyright   :  Alexander Krupenkin 2016

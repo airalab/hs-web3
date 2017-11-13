@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 -- |
 -- Module      :  Network.Ethereum.Web3.Address
 -- Copyright   :  Alexander Krupenkin 2016

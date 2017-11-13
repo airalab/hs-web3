@@ -1,5 +1,6 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE DeriveGeneric #-}
 -- |
 -- Module      :  Network.Ethereum.Unit
 -- Copyright   :  Alexander Krupenkin 2016
