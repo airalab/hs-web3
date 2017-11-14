@@ -1,5 +1,5 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes     #-}
+{-# LANGUAGE TemplateHaskell #-}
 -- |
 -- Module      :  Network.Ethereum.Web3.Encoding.TupleTH
 -- Copyright   :  Alexander Krupenkin 2016
@@ -18,14 +18,14 @@ module Network.Ethereum.Web3.Encoding.TupleTH (
   , dParser
   ) where
 
-import Data.Text.Lazy.Builder (toLazyText, Builder)
-import Network.Ethereum.Web3.Encoding.Internal
-import qualified Data.Attoparsec.Text as P
-import qualified Data.Text.Lazy       as LT
-import Network.Ethereum.Web3.Encoding
-import Data.Attoparsec.Text (Parser)
-import Control.Monad (replicateM)
-import Language.Haskell.TH
+import           Control.Monad                           (replicateM)
+import           Data.Attoparsec.Text                    (Parser)
+import qualified Data.Attoparsec.Text                    as P
+import qualified Data.Text.Lazy                          as LT
+import           Data.Text.Lazy.Builder                  (Builder, toLazyText)
+import           Language.Haskell.TH
+import           Network.Ethereum.Web3.Encoding
+import           Network.Ethereum.Web3.Encoding.Internal
 
 -- | Argument offset calculator
 offset :: Int
@@ -105,11 +105,11 @@ mkTupleP n = do
 
 mkAppSeq :: [ExpQ] -> ExpQ
 mkAppSeq = infixApps . dollarFirst . sparse
-  where sparse [x] = [x]
+  where sparse [x]      = [x]
         sparse (x : xs) = x : [|(<*>)|] : sparse xs
         dollarFirst (x : _ : xs) = x : [|(<$>)|] : xs
         infixApps (x : xs) = go x xs
-        go acc [] = acc
+        go acc []           = acc
         go acc (f : x : xs) = go (infixApp acc f x) xs
 
 eTupleE :: Int -> ExpQ
@@ -127,7 +127,7 @@ eTupleE 12 = [|(,,,,,,,,,,,)|]
 eTupleE 13 = [|(,,,,,,,,,,,,)|]
 eTupleE 14 = [|(,,,,,,,,,,,,,)|]
 eTupleE 15 = [|(,,,,,,,,,,,,,,)|]
-eTupleE _ = error "Unsupported tuple size"
+eTupleE _  = error "Unsupported tuple size"
 
 mkEncodingInst :: Int -> DecQ
 mkEncodingInst n = do

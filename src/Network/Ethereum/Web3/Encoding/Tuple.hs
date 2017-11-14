@@ -12,9 +12,9 @@
 --
 module Network.Ethereum.Web3.Encoding.Tuple (Singleton(..)) where
 
-import Network.Ethereum.Web3.Encoding.Internal
-import Network.Ethereum.Web3.Encoding.TupleTH
-import Network.Ethereum.Web3.Encoding
+import           Network.Ethereum.Web3.Encoding
+import           Network.Ethereum.Web3.Encoding.Internal
+import           Network.Ethereum.Web3.Encoding.TupleTH
 
 -- | Singleton parameter instance
 newtype Singleton a = Singleton { unSingleton :: a }

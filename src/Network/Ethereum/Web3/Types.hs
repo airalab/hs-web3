@@ -1,7 +1,7 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TemplateHaskell            #-}
-{-# LANGUAGE DeriveGeneric #-}
 -- |
 -- Module      :  Network.Ethereum.Web3.Types
 -- Copyright   :  Alexander Krupenkin 2016
@@ -15,19 +15,19 @@
 --
 module Network.Ethereum.Web3.Types where
 
-import Network.Ethereum.Web3.Internal (toLowerFirst)
-import qualified Data.Text.Lazy.Builder.Int as B
-import qualified Data.Text.Lazy.Builder     as B
-import qualified Data.Text.Read             as R
-import Network.Ethereum.Web3.Address (Address)
-import Control.Monad.IO.Class (MonadIO)
-import Control.Exception (Exception)
-import Data.Typeable (Typeable)
-import Data.Monoid ((<>))
-import Data.Text (Text)
-import Data.Aeson.TH
-import Data.Aeson
-import GHC.Generics
+import           Control.Exception              (Exception)
+import           Control.Monad.IO.Class         (MonadIO)
+import           Data.Aeson
+import           Data.Aeson.TH
+import           Data.Monoid                    ((<>))
+import           Data.Text                      (Text)
+import qualified Data.Text.Lazy.Builder         as B
+import qualified Data.Text.Lazy.Builder.Int     as B
+import qualified Data.Text.Read                 as R
+import           Data.Typeable                  (Typeable)
+import           GHC.Generics
+import           Network.Ethereum.Web3.Address  (Address)
+import           Network.Ethereum.Web3.Internal (toLowerFirst)
 
 -- | Any communication with Ethereum node wrapped with 'Web3' monad
 newtype Web3 a b = Web3 { unWeb3 :: IO b }
@@ -47,9 +47,9 @@ instance Exception Web3Error
 
 -- | JSON-RPC error message
 data RpcError = RpcError
-  { errCode     :: !Int
-  , errMessage  :: !Text
-  , errData     :: !(Maybe Value)
+  { errCode    :: !Int
+  , errMessage :: !Text
+  , errData    :: !(Maybe Value)
   } deriving (Show, Eq, Generic)
 
 $(deriveJSON (defaultOptions
@@ -74,7 +74,7 @@ instance FromJSON FilterId where
     parseJSON (String v) =
         case R.hexadecimal v of
             Right (x, "") -> return (FilterId x)
-            _ -> fail "Unable to parse FilterId!"
+            _             -> fail "Unable to parse FilterId!"
     parseJSON _ = fail "The string is required!"
 
 instance ToJSON FilterId where
@@ -100,12 +100,12 @@ $(deriveJSON (defaultOptions
 
 -- | The contract call params
 data Call = Call
-  { callFrom    :: !(Maybe Address)
-  , callTo      :: !Address
-  , callGas     :: !(Maybe Text)
+  { callFrom     :: !(Maybe Address)
+  , callTo       :: !Address
+  , callGas      :: !(Maybe Text)
   , callGasPrice:: !(Maybe Text)
-  , callValue   :: !(Maybe Text)
-  , callData    :: !(Maybe Text)
+  , callValue    :: !(Maybe Text)
+  , callData     :: !(Maybe Text)
   } deriving (Show, Generic)
 
 $(deriveJSON (defaultOptions
@@ -118,7 +118,7 @@ data DefaultBlock = BlockNumberHex Text | Earliest | Latest | Pending
 
 instance ToJSON DefaultBlock where
     toJSON (BlockNumberHex hex) = toJSON hex
-    toJSON parameter = toJSON . toLowerFirst . show $ parameter
+    toJSON parameter            = toJSON . toLowerFirst . show $ parameter
 
 -- TODO: Wrap
 -- | Transaction hash text string
@@ -126,27 +126,27 @@ type TxHash = Text
 
 -- | Transaction information
 data Transaction = Transaction
-  { txHash              :: !TxHash
+  { txHash             :: !TxHash
   -- ^ DATA, 32 Bytes - hash of the transaction.
-  , txNonce             :: !Text
+  , txNonce            :: !Text
   -- ^ QUANTITY - the number of transactions made by the sender prior to this one.
-  , txBlockHash         :: !Text
+  , txBlockHash        :: !Text
   -- ^ DATA, 32 Bytes - hash of the block where this transaction was in. null when its pending.
-  , txBlockNumber       :: !Text
+  , txBlockNumber      :: !Text
   -- ^ QUANTITY - block number where this transaction was in. null when its pending.
-  , txTransactionIndex  :: !Text
+  , txTransactionIndex :: !Text
   -- ^ QUANTITY - integer of the transactions index position in the block. null when its pending.
-  , txFrom              :: !Address
+  , txFrom             :: !Address
   -- ^ DATA, 20 Bytes - address of the sender.
-  , txTo                :: !(Maybe Address)
+  , txTo               :: !(Maybe Address)
   -- ^ DATA, 20 Bytes - address of the receiver. null when its a contract creation transaction.
-  , txValue             :: !Text
+  , txValue            :: !Text
   -- ^ QUANTITY - value transferred in Wei.
-  , txGasPrice          :: !Text
+  , txGasPrice         :: !Text
   -- ^ QUANTITY - gas price provided by the sender in Wei.
-  , txGas               :: !Text
+  , txGas              :: !Text
   -- ^ QUANTITY - gas provided by the sender.
-  , txInput             :: !Text
+  , txInput            :: !Text
   -- ^ DATA - the data send along with the transaction.
   } deriving (Show, Generic)
 

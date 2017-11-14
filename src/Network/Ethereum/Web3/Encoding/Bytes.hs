@@ -1,7 +1,7 @@
+{-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE PolyKinds           #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE DataKinds           #-}
 -- |
 -- Module      :  Network.Ethereum.Web3.Encoding.Bytes
 -- Copyright   :  Alexander Krupenkin 2016
@@ -18,20 +18,21 @@ module Network.Ethereum.Web3.Encoding.Bytes (
   , BytesD(..)
   ) where
 
-import qualified Data.ByteString.Base16 as BS16 (decode, encode)
-import qualified Data.Attoparsec.Text   as P
-import qualified Data.Text.Lazy.Builder as B
-import qualified Data.Text.Encoding     as T
-import qualified Data.Text              as T
-import qualified Data.ByteArray         as BA
-import Data.Proxy
-import Network.Ethereum.Web3.Encoding.Internal
-import Network.Ethereum.Web3.Encoding
-import GHC.TypeLits (KnownNat, Nat, natVal)
-import Data.Monoid (Monoid(..), (<>))
-import Data.ByteArray (Bytes)
+import qualified Data.Attoparsec.Text                    as P
+import           Data.ByteArray                          (Bytes)
+import qualified Data.ByteArray                          as BA
+import qualified Data.ByteString.Base16                  as BS16 (decode,
+                                                                  encode)
+import           Data.Monoid                             (Monoid (..), (<>))
+import           Data.Proxy
+import qualified Data.Text                               as T
+import qualified Data.Text.Encoding                      as T
+import qualified Data.Text.Lazy.Builder                  as B
+import           GHC.TypeLits                            (KnownNat, Nat, natVal)
+import           Network.Ethereum.Web3.Encoding
+import           Network.Ethereum.Web3.Encoding.Internal
 
-import Debug.Trace
+import           Debug.Trace
 
 -- | Fixed length byte array
 newtype BytesN (n :: Nat) = BytesN { unBytesN :: Bytes }

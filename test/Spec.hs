@@ -1,13 +1,13 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
 {-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes       #-}
 module Main where
 
-import Network.Ethereum.Web3.TH
-import Network.Ethereum.Web3
-import Data.Text (unpack)
-import Text.Printf
+import           Data.Text                (unpack)
+import           Network.Ethereum.Web3
+import           Network.Ethereum.Web3.TH
+import           Text.Printf
 
 [abiFrom|data/ERC20.json|]
 

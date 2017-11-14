@@ -1,6 +1,6 @@
-{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 -- |
 -- Module      :  Network.Ethereum.Unit
 -- Copyright   :  Alexander Krupenkin 2016
@@ -55,13 +55,13 @@ module Network.Ethereum.Unit (
   , KEther
   ) where
 
-import Text.ParserCombinators.ReadPrec
-import Data.Text.Lazy (Text, unpack)
-import qualified Text.Read.Lex as L
-import Data.Monoid ((<>))
-import Text.Printf
-import GHC.Read
-import GHC.Generics (Generic)
+import           Data.Monoid                     ((<>))
+import           Data.Text.Lazy                  (Text, unpack)
+import           GHC.Generics                    (Generic)
+import           GHC.Read
+import           Text.ParserCombinators.ReadPrec
+import           Text.Printf
+import qualified Text.Read.Lex                   as L
 
 -- | Ethereum value unit
 class (Read a, Show a, UnitSpec a, Fractional a) => Unit a where

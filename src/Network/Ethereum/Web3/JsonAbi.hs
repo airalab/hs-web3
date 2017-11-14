@@ -1,5 +1,5 @@
-{-# LANGUAGE OverloadedStrings    #-}
-{-# LANGUAGE TemplateHaskell      #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 -- |
 -- Module      :  Network.Ethereum.Web3.JsonAbi
 -- Copyright   :  Alexander Krupenkin 2016
@@ -21,14 +21,14 @@ module Network.Ethereum.Web3.JsonAbi (
   , eventId
   ) where
 
-import Crypto.Hash (Digest, Keccak_256, hash)
-import qualified Data.Text.Encoding as T
-import qualified Data.Text          as T
-import Network.Ethereum.Web3.Internal
-import Data.Monoid ((<>))
-import Data.Text (Text)
-import Data.Aeson.TH
-import Data.Aeson
+import           Crypto.Hash                    (Digest, Keccak_256, hash)
+import           Data.Aeson
+import           Data.Aeson.TH
+import           Data.Monoid                    ((<>))
+import           Data.Text                      (Text)
+import qualified Data.Text                      as T
+import qualified Data.Text.Encoding             as T
+import           Network.Ethereum.Web3.Internal
 
 -- | Method argument
 data FunctionArg = FunctionArg
@@ -60,10 +60,10 @@ $(deriveJSON
 data Declaration
   = DConstructor { conInputs :: [FunctionArg] }
   -- ^ Contract constructor
-  | DFunction { funName      :: Text
-              , funConstant  :: Bool
-              , funInputs    :: [FunctionArg]
-              , funOutputs   :: Maybe [FunctionArg] }
+  | DFunction { funName     :: Text
+              , funConstant :: Bool
+              , funInputs   :: [FunctionArg]
+              , funOutputs  :: Maybe [FunctionArg] }
   -- ^ Method
   | DEvent { eveName      :: Text
            , eveInputs    :: [EventArg]
@@ -101,12 +101,12 @@ instance ToJSON ContractABI where
 showConstructor :: Declaration -> [Text]
 showConstructor x = case x of
     DConstructor{} -> ["\tConstructor " <> signature x]
-    _ -> []
+    _              -> []
 
 showEvent :: Declaration -> [Text]
 showEvent x = case x of
     DEvent{} -> ["\t\t" <> signature x]
-    _ -> []
+    _        -> []
 
 showMethod :: Declaration -> [Text]
 showMethod x = case x of

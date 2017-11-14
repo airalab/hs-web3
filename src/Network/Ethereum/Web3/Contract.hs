@@ -35,24 +35,24 @@ module Network.Ethereum.Web3.Contract (
   , nopay
   ) where
 
-import qualified Data.Text.Lazy.Builder.Int as B
-import qualified Data.Text.Lazy.Builder     as B
-import Control.Concurrent (ThreadId, threadDelay)
-import Data.Maybe (mapMaybe, listToMaybe)
-import Control.Monad.IO.Class (liftIO)
-import Control.Exception (throwIO)
-import Data.Text.Lazy (toStrict)
-import qualified Data.Text as T
-import Control.Monad (when, forM)
-import Control.Monad.Trans.Reader (ReaderT(..))
-import Data.Monoid ((<>))
+import           Control.Concurrent             (ThreadId, threadDelay)
+import           Control.Exception              (throwIO)
+import           Control.Monad                  (forM, when)
+import           Control.Monad.IO.Class         (liftIO)
+import           Control.Monad.Trans.Reader     (ReaderT (..))
+import           Data.Maybe                     (listToMaybe, mapMaybe)
+import           Data.Monoid                    ((<>))
+import qualified Data.Text                      as T
+import           Data.Text.Lazy                 (toStrict)
+import qualified Data.Text.Lazy.Builder         as B
+import qualified Data.Text.Lazy.Builder.Int     as B
 
-import Network.Ethereum.Web3.Provider
-import Network.Ethereum.Web3.Encoding
-import Network.Ethereum.Web3.Address
-import Network.Ethereum.Web3.Types
-import qualified Network.Ethereum.Web3.Eth as Eth
-import Network.Ethereum.Unit
+import           Network.Ethereum.Unit
+import           Network.Ethereum.Web3.Address
+import           Network.Ethereum.Web3.Encoding
+import qualified Network.Ethereum.Web3.Eth      as Eth
+import           Network.Ethereum.Web3.Provider
+import           Network.Ethereum.Web3.Types
 
 -- | Event callback control response
 data EventAction = ContinueEvent
