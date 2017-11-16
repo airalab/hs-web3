@@ -128,12 +128,12 @@ class ABIEncoding a => Method a where
 
 _sendTransaction :: (Provider p, Method a)
                  => Call -> a -> Web3 p TxHash
-_sendTransaction call dat = Eth.sendTransaction call
+_sendTransaction call dat = Eth.sendTransaction (call { callData = Just $ toData dat })
 
 _call :: (Provider p, Method a, ABIEncoding b)
       => Call -> DefaultBlock -> a -> Web3 p b
 _call call mode dat = do
-    res <- Eth.call call mode
+    res <- Eth.call (call { callData = Just $ toData dat }) mode
     case fromData (T.drop 2 res) of
         Nothing -> liftIO $ throwIO $ ParserFail $
             "Unable to parse result on `" ++ T.unpack res
