@@ -19,6 +19,7 @@ import           Control.Exception              (Exception)
 import           Control.Monad.IO.Class         (MonadIO)
 import           Data.Aeson
 import           Data.Aeson.TH
+import           Data.Default
 import           Data.Monoid                    ((<>))
 import           Data.Text                      (Text)
 import qualified Data.Text.Lazy.Builder         as B
@@ -26,7 +27,7 @@ import qualified Data.Text.Lazy.Builder.Int     as B
 import qualified Data.Text.Read                 as R
 import           Data.Typeable                  (Typeable)
 import           GHC.Generics
-import           Network.Ethereum.Web3.Address  (Address)
+import           Network.Ethereum.Web3.Address  (Address, zero)
 import           Network.Ethereum.Web3.Internal (toLowerFirst)
 
 -- | Any communication with Ethereum node wrapped with 'Web3' monad
@@ -102,15 +103,18 @@ $(deriveJSON (defaultOptions
 data Call = Call
   { callFrom     :: !(Maybe Address)
   , callTo       :: !Address
-  , callGas      :: !(Maybe Text)
-  , callGasPrice:: !(Maybe Text)
-  , callValue    :: !(Maybe Text)
+  , callGas      :: !(Maybe Integer)
+  , callGasPrice :: !(Maybe Integer)
+  , callValue    :: !(Maybe Integer) -- expressed in wei
   , callData     :: !(Maybe Text)
   } deriving (Show, Generic)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 4
     , omitNothingFields = True }) ''Call)
+
+instance Default Call where
+    def = Call Nothing zero (Just 3000000) Nothing (Just 0) Nothing
 
 -- | The contract call mode describe used state: latest or pending
 data DefaultBlock = BlockNumberHex Text | Earliest | Latest | Pending

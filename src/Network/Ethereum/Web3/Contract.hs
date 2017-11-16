@@ -105,11 +105,9 @@ _event a f = do
 -- | Contract method caller
 class ABIEncoding a => Method a where
     -- | Send a transaction for given contract 'Address', value and input data
-    sendTx :: (Provider p, Unit b)
-           => Address
-           -- ^ Contract address
-           -> b
-           -- ^ Payment value (set 'nopay' to empty value)
+    sendTx :: (Provider p)
+           => Call
+           -- ^ Call configuration
            -> a
            -- ^ Method data
            -> Web3 p TxHash
@@ -118,8 +116,8 @@ class ABIEncoding a => Method a where
 
     -- | Constant call given contract 'Address' in mode and given input data
     call :: (Provider p, ABIEncoding b)
-         => Address
-         -- ^ Contract address
+         => Call
+         -- ^ Call configuration
          -> DefaultBlock
          -- ^ State mode for constant call (latest or pending)
          -> a
@@ -128,27 +126,19 @@ class ABIEncoding a => Method a where
          -- ^ 'Web3' wrapped result
     call = _call
 
-_sendTransaction :: (Provider p, Method a, Unit b)
-                 => Address -> b -> a -> Web3 p TxHash
-_sendTransaction to value dat = do
-    primeAddress <- listToMaybe <$> Eth.accounts
-    Eth.sendTransaction (txdata primeAddress $ Just $ toData dat)
-  where txdata from = Call from to (Just defaultGas) Nothing (Just $ toWeiText value)
-        toWeiText   = ("0x" <>) . toStrict . B.toLazyText . B.hexadecimal . toWei
-        defaultGas  = "0x2DC2DC"
+_sendTransaction :: (Provider p, Method a)
+                 => Call -> a -> Web3 p TxHash
+_sendTransaction call dat = Eth.sendTransaction call
 
 _call :: (Provider p, Method a, ABIEncoding b)
-      => Address -> DefaultBlock -> a -> Web3 p b
-_call to mode dat = do
-    primeAddress <- listToMaybe <$> Eth.accounts
-    res <- Eth.call (txdata primeAddress) mode
+      => Call -> DefaultBlock -> a -> Web3 p b
+_call call mode dat = do
+    res <- Eth.call call mode
     case fromData (T.drop 2 res) of
         Nothing -> liftIO $ throwIO $ ParserFail $
             "Unable to parse result on `" ++ T.unpack res
-            ++ "` from `" ++ show to ++ "`"
+            ++ "` from `" ++ show (callTo call) ++ "`"
         Just x -> return x
-  where
-    txdata from = Call from to Nothing Nothing Nothing (Just (toData dat))
 
 -- | Zero value is used to send transaction without money
 nopay :: Wei
