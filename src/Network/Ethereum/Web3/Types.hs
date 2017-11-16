@@ -29,6 +29,7 @@ import           Data.Typeable                  (Typeable)
 import           GHC.Generics
 import           Network.Ethereum.Web3.Address  (Address, zero)
 import           Network.Ethereum.Web3.Internal (toLowerFirst)
+import           Network.Ethereum.Web3.Encoding.Internal (toUInt256HexText)
 
 -- | Any communication with Ethereum node wrapped with 'Web3' monad
 newtype Web3 a b = Web3 { unWeb3 :: IO b }
@@ -99,13 +100,22 @@ data Change = Change
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 6 }) ''Change)
 
+newtype UInt256 = UInt256 { mkUInt256 :: Integer }
+    deriving (Show, Num, Integral, Real, Enum, Eq, Ord, Generic)
+
+instance ToJSON UInt256 where
+    toJSON = String . toUInt256HexText
+
+instance FromJSON UInt256 where
+    parseJSON = undefined
+
 -- | The contract call params
 data Call = Call
   { callFrom     :: !(Maybe Address)
   , callTo       :: !Address
-  , callGas      :: !(Maybe Integer)
-  , callGasPrice :: !(Maybe Integer)
-  , callValue    :: !(Maybe Integer) -- expressed in wei
+  , callGas      :: !(Maybe UInt256)
+  , callGasPrice :: !(Maybe UInt256)
+  , callValue    :: !(Maybe UInt256) -- expressed in wei
   , callData     :: !(Maybe Text)
   } deriving (Show, Generic)
 

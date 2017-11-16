@@ -204,7 +204,7 @@ funWrapper c name dname args result = do
     sequence $ if c
         then
           [ sigD name $ [t|Provider $p =>
-                            $(arrowing $ [t|Address|] : inputT ++ [outputT])
+                            $(arrowing $ [t|Call|] : inputT ++ [outputT])
                           |]
           , funD' name (varP <$> a : vars) $
               case result of
@@ -213,11 +213,11 @@ funWrapper c name dname args result = do
           ]
 
         else
-          [ sigD name $ [t|(Provider $p, Unit $(varT b)) =>
-                            $(arrowing $ [t|Address|] : varT b : inputT ++ [[t|Web3 $p TxHash|]])
+          [ sigD name $ [t|(Provider $p) =>
+                            $(arrowing $ [t|Call|] : inputT ++ [[t|Web3 $p TxHash|]])
                           |]
-          , funD' name (varP <$> a : b : vars) $
-                [|sendTx $(varE a) $(varE b) $(params)|] ]
+          , funD' name (varP <$> a : vars) $
+                [|sendTx $(varE a) $(params)|] ]
   where
     p = varT (mkName "p")
     arrowing [x]      = x
