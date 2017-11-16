@@ -74,8 +74,8 @@ alignL = fst . align
 {-# INLINE alignR #-}
 alignR = snd . align
 
-toUInt256HexText :: Integral a => a -> Text
-toUInt256HexText = T.append "0x" . LT.toStrict . toLazyText . B.hexadecimal
+toQuantityHexText :: Integral a => a -> Text
+toQuantityHexText = T.append "0x" . LT.toStrict . toLazyText . B.hexadecimal
 
 int256HexBuilder :: Integral a => a -> Builder
 int256HexBuilder x

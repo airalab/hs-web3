@@ -29,7 +29,7 @@ import           Data.Typeable                  (Typeable)
 import           GHC.Generics
 import           Network.Ethereum.Web3.Address  (Address, zero)
 import           Network.Ethereum.Web3.Internal (toLowerFirst)
-import           Network.Ethereum.Web3.Encoding.Internal (toUInt256HexText)
+import           Network.Ethereum.Web3.Encoding.Internal (toQuantityHexText)
 
 -- | Any communication with Ethereum node wrapped with 'Web3' monad
 newtype Web3 a b = Web3 { unWeb3 :: IO b }
@@ -56,6 +56,26 @@ data RpcError = RpcError
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 3 }) ''RpcError)
+
+-- | Should be viewed as type to representing QUANTITY in Web3 JSON RPC docs
+--
+--  When encoding QUANTITIES (integers, numbers): encode as hex, prefix with "0x",
+--  the most compact representation (slight exception: zero should be represented as "0x0").
+--  Examples:
+--
+--  0x41 (65 in decimal)
+--  0x400 (1024 in decimal)
+--  WRONG: 0x (should always have at least one digit - zero is "0x0")
+--  WRONG: 0x0400 (no leading zeroes allowed)
+--  WRONG: ff (must be prefixed 0x)
+newtype Quantity = Quantity { mkQuantity :: Integer }
+    deriving (Show, Num, Integral, Real, Enum, Eq, Ord, Generic)
+
+instance ToJSON Quantity where
+    toJSON = String . toQuantityHexText
+
+instance FromJSON Quantity where
+    parseJSON = undefined
 
 -- | Low-level event filter data structure
 data Filter = Filter
@@ -100,22 +120,13 @@ data Change = Change
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 6 }) ''Change)
 
-newtype UInt256 = UInt256 { mkUInt256 :: Integer }
-    deriving (Show, Num, Integral, Real, Enum, Eq, Ord, Generic)
-
-instance ToJSON UInt256 where
-    toJSON = String . toUInt256HexText
-
-instance FromJSON UInt256 where
-    parseJSON = undefined
-
 -- | The contract call params
 data Call = Call
   { callFrom     :: !(Maybe Address)
   , callTo       :: !Address
-  , callGas      :: !(Maybe UInt256)
-  , callGasPrice :: !(Maybe UInt256)
-  , callValue    :: !(Maybe UInt256) -- expressed in wei
+  , callGas      :: !(Maybe Quantity)
+  , callGasPrice :: !(Maybe Quantity)
+  , callValue    :: !(Maybe Quantity) -- expressed in wei
   , callData     :: !(Maybe Text)
   } deriving (Show, Generic)
 
