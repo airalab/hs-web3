@@ -45,6 +45,7 @@
 --
 module Network.Ethereum.Unit (
     Unit(..)
+  , UnitSpec(..)
   , Wei
   , Babbage
   , Lovelace

@@ -70,13 +70,25 @@ $(deriveJSON (defaultOptions
 --  WRONG: 0x0400 (no leading zeroes allowed)
 --  WRONG: ff (must be prefixed 0x)
 newtype Quantity = Quantity { unQuantity :: Integer }
-    deriving (Show, Num, Integral, Real, Enum, Eq, Ord, Generic)
+    deriving (Show, Read, Num, Integral, Real, Enum, Eq, Ord, Generic)
 
 instance ToJSON Quantity where
     toJSON = String . toQuantityHexText
 
 instance FromJSON Quantity where
     parseJSON = undefined
+
+instance Fractional Quantity where
+    (/) a b = Quantity $ div (unQuantity a) (unQuantity b)
+    fromRational = Quantity . floor
+
+instance Unit Quantity where
+    fromWei = Quantity
+    toWei = unQuantity
+
+instance UnitSpec Quantity where
+    divider = const 1
+    name = const "quantity"
 
 -- | Low-level event filter data structure
 data Filter = Filter
@@ -137,10 +149,6 @@ $(deriveJSON (defaultOptions
 
 instance Default Call where
     def = Call Nothing zero (Just 3000000) Nothing (Just 0) Nothing
-
-
-setCallValue :: Unit a => a -> Call -> Call
-setCallValue value call = call { callValue = Just . Quantity $ toWei value }
 
 
 -- | The contract call mode describe used state: latest or pending
