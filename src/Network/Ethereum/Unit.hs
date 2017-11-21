@@ -45,6 +45,7 @@
 --
 module Network.Ethereum.Unit (
     Unit(..)
+  , UnitSpec(..)
   , Wei
   , Babbage
   , Lovelace
@@ -80,7 +81,7 @@ class UnitSpec a where
     name    :: Value a -> Text
 
 -- | Value abstraction
-data Value a = MkValue { unValue :: Integer }
+newtype Value a = MkValue { unValue :: Integer }
   deriving (Eq, Ord, Generic)
 
 mkValue :: (UnitSpec a, RealFrac b) => b -> Value a

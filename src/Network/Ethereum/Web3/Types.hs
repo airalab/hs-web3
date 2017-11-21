@@ -19,6 +19,7 @@ import           Control.Exception              (Exception)
 import           Control.Monad.IO.Class         (MonadIO)
 import           Data.Aeson
 import           Data.Aeson.TH
+import           Data.Default
 import           Data.Monoid                    ((<>))
 import           Data.Text                      (Text)
 import qualified Data.Text.Lazy.Builder         as B
@@ -26,8 +27,10 @@ import qualified Data.Text.Lazy.Builder.Int     as B
 import qualified Data.Text.Read                 as R
 import           Data.Typeable                  (Typeable)
 import           GHC.Generics
-import           Network.Ethereum.Web3.Address  (Address)
+import           Network.Ethereum.Web3.Address  (Address, zero)
 import           Network.Ethereum.Web3.Internal (toLowerFirst)
+import           Network.Ethereum.Web3.Encoding.Internal (toQuantityHexText)
+import           Network.Ethereum.Unit
 
 -- | Any communication with Ethereum node wrapped with 'Web3' monad
 newtype Web3 a b = Web3 { unWeb3 :: IO b }
@@ -54,6 +57,38 @@ data RpcError = RpcError
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 3 }) ''RpcError)
+
+-- | Should be viewed as type to representing QUANTITY in Web3 JSON RPC docs
+--
+--  When encoding QUANTITIES (integers, numbers): encode as hex, prefix with "0x",
+--  the most compact representation (slight exception: zero should be represented as "0x0").
+--  Examples:
+--
+--  0x41 (65 in decimal)
+--  0x400 (1024 in decimal)
+--  WRONG: 0x (should always have at least one digit - zero is "0x0")
+--  WRONG: 0x0400 (no leading zeroes allowed)
+--  WRONG: ff (must be prefixed 0x)
+newtype Quantity = Quantity { unQuantity :: Integer }
+    deriving (Show, Read, Num, Integral, Real, Enum, Eq, Ord, Generic)
+
+instance ToJSON Quantity where
+    toJSON = String . toQuantityHexText
+
+instance FromJSON Quantity where
+    parseJSON = undefined
+
+instance Fractional Quantity where
+    (/) a b = Quantity $ div (unQuantity a) (unQuantity b)
+    fromRational = Quantity . floor
+
+instance Unit Quantity where
+    fromWei = Quantity
+    toWei = unQuantity
+
+instance UnitSpec Quantity where
+    divider = const 1
+    name = const "quantity"
 
 -- | Low-level event filter data structure
 data Filter = Filter
@@ -102,15 +137,19 @@ $(deriveJSON (defaultOptions
 data Call = Call
   { callFrom     :: !(Maybe Address)
   , callTo       :: !Address
-  , callGas      :: !(Maybe Text)
-  , callGasPrice:: !(Maybe Text)
-  , callValue    :: !(Maybe Text)
+  , callGas      :: !(Maybe Quantity)
+  , callGasPrice :: !(Maybe Quantity)
+  , callValue    :: !(Maybe Quantity) -- expressed in wei
   , callData     :: !(Maybe Text)
   } deriving (Show, Generic)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 4
     , omitNothingFields = True }) ''Call)
+
+instance Default Call where
+    def = Call Nothing zero (Just 3000000) Nothing (Just 0) Nothing
+
 
 -- | The contract call mode describe used state: latest or pending
 data DefaultBlock = BlockNumberHex Text | Earliest | Latest | Pending

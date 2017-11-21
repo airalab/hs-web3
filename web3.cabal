@@ -49,6 +49,7 @@ library
                      , attoparsec
                      , bytestring
                      , cryptonite
+                     , data-default
                      , vector
                      , memory
                      , aeson
