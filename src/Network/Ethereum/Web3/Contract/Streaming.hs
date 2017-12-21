@@ -68,15 +68,14 @@ data FilterStreamState = FilterStreamState { fssCurrentBlock  :: BlockNumber
 
 -- | 'playLogs' streams the 'filterStream' and calls eth_getLogs on these
 -- | 'Filter' objects.
-playLogs :: forall p a.
-            Provider p
+playLogs :: forall p a. (Provider p, ABIEncoding a)
          => HaltingMealyT (Web3 p) FilterStreamState [FilterChange a]
 playLogs  = do
   filter <- filterStream
   changes <- arrM . const . lift $ Eth.getLogs filter
   return $ mkFilterChanges changes
 
-pollFilter :: forall p a s. Provider p
+pollFilter :: forall p a s. (Provider p, ABIEncoding a)
            => FilterId
            -> DefaultBlock
            -> HaltingMealyT (Web3 p) s [FilterChange a]
@@ -91,9 +90,9 @@ pollFilter fid stop = MealyT $ \s -> do
     changes <- lift $ Eth.getFilterChanges fid
     return (mkFilterChanges changes, pollFilter fid stop)
 
-mkFilterChanges :: [Change] -> [FilterChange a]
-mkFilterChanges cs = flip mapMaybe cs $ \c -> do
-                       x <- _decodeEvent c
+mkFilterChanges :: ABIEncoding a => [Change] -> [FilterChange a]
+mkFilterChanges cs = flip mapMaybe cs $ \c@Change{..} -> do
+                       x <- fromData changeData
                        return $ FilterChange c x
 
 filterStream :: forall p . Provider p
