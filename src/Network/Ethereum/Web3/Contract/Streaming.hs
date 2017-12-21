@@ -14,7 +14,7 @@ import           Network.Ethereum.Web3.Provider
 import           Network.Ethereum.Web3.Types
 
 import           Control.Concurrent             (threadDelay)
-import           Control.Monad                  (forM)
+import           Control.Monad                  (forM, void)
 import           Control.Monad.Trans.Class      (lift)
 import           Control.Monad.Trans.Maybe      (MaybeT (..))
 import           Control.Monad.Trans.Reader     (ReaderT (..), runReaderT)
@@ -75,7 +75,7 @@ playLogs  = do
   changes <- arrM . const . lift $ Eth.getLogs filter
   return $ mkFilterChanges changes
 
-pollFilter :: forall p a s. (Provider p, ABIEncoding a)
+pollFilter :: forall p a s . (Provider p, ABIEncoding a)
            => FilterId
            -> DefaultBlock
            -> HaltingMealyT (Web3 p) s [FilterChange a]
@@ -108,12 +108,42 @@ filterStream = MealyT $ \FilterStreamState{..} -> do
                     MealyT next = filterStream
                 in (filter', MealyT $ \s -> next s { fssCurrentBlock = succ to' })
 
-      where mkBlockNumber :: (Maybe BlockNumber) -> Web3 p BlockNumber
-            mkBlockNumber (Just toBlock) = return toBlock
-            mkBlockNumber Nothing        = Eth.blockNumber
-
-            succ :: BlockNumber -> BlockNumber
+      where succ :: BlockNumber -> BlockNumber
             succ (BlockNumber bn) = BlockNumber $ bn + 1
 
             newTo :: BlockNumber -> BlockNumber -> Integer -> BlockNumber
             newTo upper (BlockNumber current) window = min upper . BlockNumber $ current + window
+
+
+event' :: (ABIEncoding a, Provider p)
+       => Filter
+       -> Integer
+       -> (a -> ReaderT Change (Web3 p) EventAction)
+       -> Web3 p ()
+event' fltr window handler = do
+  start <- mkBlockNumber $ filterFromBlock fltr
+  let initState = FilterStreamState { fssCurrentBlock = start
+                                    , fssInitialFilter = fltr
+                                    , fssWindowSize = window
+                                    }
+  mLastProcessedFilterState <- reduceEventStream playLogs handler initState
+  case mLastProcessedFilterState of
+    Nothing -> return ()
+    Just lastProcessedFilterState -> do
+      let BlockNumber lastBlock = fssCurrentBlock lastProcessedFilterState
+          pollingFromBlock = BlockNumber $ lastBlock + 1
+          pollTo = case filterToBlock fltr of
+                     Nothing -> Latest
+                     Just bn -> BlockWithNumber bn
+      filterId <- Eth.newFilter fltr { filterFromBlock = Just pollingFromBlock }
+      void $ reduceEventStream (pollFilter filterId pollTo) handler ()
+
+event :: forall p a . (Provider p, ABIEncoding a)
+      => Filter
+      -> (a -> ReaderT Change (Web3 p) EventAction)
+      -> Web3 p ()
+event fltr handler = event' fltr 0 handler
+
+mkBlockNumber :: (Provider p) => (Maybe BlockNumber) -> Web3 p BlockNumber
+mkBlockNumber (Just toBlock) = return toBlock
+mkBlockNumber Nothing        = Eth.blockNumber
