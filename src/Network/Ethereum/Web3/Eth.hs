@@ -185,7 +185,7 @@ getBlockFilterChanges :: Provider a => Text -> Web3 a [Text]
 getBlockFilterChanges = remote "eth_getBlockFilterChanges"
 
 -- | Returns the number of most recent block.
-blockNumber :: Provider a => Web3 a Text
+blockNumber :: Provider a => Web3 a BlockNumber
 {-# INLINE blockNumber #-}
 blockNumber = remote "eth_blockNumber"
 
