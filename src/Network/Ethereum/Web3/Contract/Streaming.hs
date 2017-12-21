@@ -13,6 +13,7 @@ import qualified Network.Ethereum.Web3.Eth      as Eth
 import           Network.Ethereum.Web3.Provider
 import           Network.Ethereum.Web3.Types
 
+import           Control.Concurrent             (threadDelay)
 import           Control.Monad                  (forM)
 import           Control.Monad.Trans.Class      (lift)
 import           Control.Monad.Trans.Maybe      (MaybeT (..))
@@ -20,7 +21,8 @@ import           Control.Monad.Trans.Reader     (ReaderT (..), runReaderT)
 import           Data.Machine                   (Is (Refl), ProcessT,
                                                  Step (Await, Stop, Yield),
                                                  autoT, runMachineT)
-import           Data.Machine.MealyT            (MealyT (..))
+import           Data.Machine.MealyT            (MealyT (..), arrM)
+import           Data.Maybe                     (mapMaybe)
 
 data FilterChange a = FilterChange { filterChangeRawChange :: Change
                                    , filterChangeEvent     :: a
@@ -62,6 +64,37 @@ data FilterStreamState = FilterStreamState { fssCurrentBlock  :: BlockNumber
                                            , fssInitialFilter :: Filter
                                            , fssWindowSize    :: Integer
                                            }
+
+
+-- | 'playLogs' streams the 'filterStream' and calls eth_getLogs on these
+-- | 'Filter' objects.
+playLogs :: forall p a.
+            Provider p
+         => HaltingMealyT (Web3 p) FilterStreamState [FilterChange a]
+playLogs  = do
+  filter <- filterStream
+  changes <- arrM . const . lift $ Eth.getLogs filter
+  return $ mkFilterChanges changes
+
+pollFilter :: forall p a s. Provider p
+           => FilterId
+           -> DefaultBlock
+           -> HaltingMealyT (Web3 p) s [FilterChange a]
+pollFilter fid stop = MealyT $ \s -> do
+  bn <- lift $ Eth.blockNumber
+  if BlockWithNumber bn > stop
+  then do
+    lift $ Eth.uninstallFilter fid
+    MaybeT $ return Nothing
+  else do
+    lift . Web3 $ threadDelay 1000
+    changes <- lift $ Eth.getFilterChanges fid
+    return (mkFilterChanges changes, pollFilter fid stop)
+
+mkFilterChanges :: [Change] -> [FilterChange a]
+mkFilterChanges cs = flip mapMaybe cs $ \c -> do
+                       x <- _decodeEvent c
+                       return $ FilterChange c x
 
 filterStream :: forall p . Provider p
              => HaltingMealyT (Web3 p) FilterStreamState Filter

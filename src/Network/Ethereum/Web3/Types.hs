@@ -21,6 +21,7 @@ import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Default
 import           Data.Monoid                             ((<>))
+import           Data.Ord                                (Down (..))
 import           Data.Text                               (Text)
 import qualified Data.Text.Lazy.Builder                  as B
 import qualified Data.Text.Lazy.Builder.Int              as B
@@ -168,6 +169,17 @@ instance Default Call where
 -- | The contract call mode describe used state: latest or pending
 data DefaultBlock = BlockWithNumber BlockNumber | Earliest | Latest | Pending
   deriving (Show, Eq)
+
+instance Ord DefaultBlock where
+    compare Pending Pending                         = EQ
+    compare Latest Latest                           = EQ
+    compare Earliest Earliest                       = EQ
+    compare (BlockWithNumber a) (BlockWithNumber b) = compare a b
+    compare _ Pending                               = LT
+    compare Pending Latest                          = GT
+    compare _ Latest                                = LT
+    compare Earliest _                              = LT
+    compare a b                                     = compare (Down b) (Down a)
 
 instance ToJSON DefaultBlock where
     toJSON (BlockWithNumber bn) = toJSON bn
