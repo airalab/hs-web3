@@ -10,7 +10,11 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
-module Network.Ethereum.Web3.Encoding.Generic where
+module Network.Ethereum.Web3.Encoding.Generic (
+    genericABIEncode
+  , genericABIDecode
+  , Singleton(..)
+  ) where
 
 import qualified Data.Attoparsec.Text                    as P
 import Data.Attoparsec.Combinator (lookAhead)

@@ -35,24 +35,27 @@ library
                      , Network.Ethereum.Web3.Encoding
                      , Network.Ethereum.Web3.Contract
                      , Network.Ethereum.Web3.Encoding.Bytes
+                     , Network.Ethereum.Web3.Encoding.Event
                      , Network.Ethereum.Web3.Encoding.Generic
   other-modules:       Network.Ethereum.Web3.JsonRpc
                      , Network.Ethereum.Web3.Internal
                      , Network.Ethereum.Web3.Encoding.Internal
   build-depends:       base >4.8 && <4.11
-                     , base16-bytestring
-                     , template-haskell
-                     , http-client-tls
-                     , transformers
-                     , http-client
+
+                     , aeson
                      , attoparsec
+                     , base16-bytestring
                      , bytestring
                      , cryptonite
                      , generics-sop
-                     , vector
+                     , http-client-tls
+                     , http-client
                      , memory
-                     , aeson
+                     , tagged
+                     , template-haskell
                      , text
+                     , transformers
+                     , vector
   default-extensions:  OverloadedStrings
                      , DeriveGeneric
   default-language:    Haskell2010
