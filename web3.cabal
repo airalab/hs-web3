@@ -35,6 +35,7 @@ library
                      , Network.Ethereum.Web3.Encoding
                      , Network.Ethereum.Web3.Contract
                      , Network.Ethereum.Web3.Encoding.Bytes
+                     , Network.Ethereum.Web3.Encoding.Generic
                      , Network.Ethereum.Web3.Encoding.Tuple
   other-modules:       Network.Ethereum.Web3.JsonRpc
                      , Network.Ethereum.Web3.Internal
