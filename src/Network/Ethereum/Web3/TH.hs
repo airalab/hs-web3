@@ -28,14 +28,14 @@
 --
 module Network.Ethereum.Web3.TH (
   -- ** Quasiquoter's
-    abi
-  , abiFrom
-  -- ** Used by TH data types
-  , Bytes
-  , Text
-  , Singleton(..)
-  , ABIEncode(..)
-  , ABIDecode(..)
+--    abi
+--  , abiFrom
+--  -- ** Used by TH data types
+--  , Bytes
+--  , Text
+--  , Singleton(..)
+--  , ABIEncode(..)
+--  , ABIDecode(..)
   ) where
 
 import qualified Data.Text.Lazy.Encoding as LT
@@ -45,7 +45,7 @@ import qualified Data.Attoparsec.Text    as P
 import qualified Data.Text               as T
 
 import Network.Ethereum.Web3.Address (Address)
-import Network.Ethereum.Web3.Encoding.Tuple
+-- import Network.Ethereum.Web3.Encoding.Tuple
 import Network.Ethereum.Web3.Encoding
 import Network.Ethereum.Web3.Provider
 import Network.Ethereum.Web3.Internal
@@ -67,6 +67,8 @@ import GHC.Generics
 import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Lib
 import Language.Haskell.TH
+
+{-
 
 -- | Read contract ABI from file
 abiFrom :: QuasiQuoter
@@ -294,3 +296,4 @@ quoteAbiExp abi_string = stringE $
         Left e    -> "Error: " ++ show e
         Right abi -> show (abi :: ContractABI)
   where abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
+-}

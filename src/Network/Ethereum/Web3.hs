@@ -40,7 +40,6 @@ module Network.Ethereum.Web3 (
   ) where
 
 import Network.Ethereum.Web3.Encoding.Bytes
-import Network.Ethereum.Web3.Encoding.Tuple
 import Network.Ethereum.Web3.Contract
 import Network.Ethereum.Web3.Encoding
 import Network.Ethereum.Web3.Provider

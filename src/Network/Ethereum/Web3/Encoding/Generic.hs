@@ -7,7 +7,8 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE StandaloneDeriving #-}
 
 module Network.Ethereum.Web3.Encoding.Generic where
 
@@ -20,10 +21,12 @@ import qualified Data.List as L
 import Data.Monoid
 import Data.Proxy (Proxy(..))
 import qualified Data.Text as T
-import qualified Data.Text.Lazy as TL
+import qualified Data.Text.Lazy as LT
 import Data.Text.Lazy.Builder (Builder, toLazyText)
 import Data.Attoparsec.Text.Lazy (Parser, maybeResult, parse)
-import Generics.SOP
+import Generics.SOP (Generic(..), NP(..), NS(..), I(..), SOP(..), Rep(..))
+import qualified GHC.Generics as GHC (Generic)
+
 import Network.Ethereum.Web3.Encoding (ABIEncode(..), ABIDecode(..))
 import Network.Ethereum.Web3.Encoding.Internal (EncodingType(..))
 
@@ -68,10 +71,10 @@ combineEncodedValues encodings =
       [] -> reverse acc
       (e : tail) -> case offset e of
         Nothing -> addTailOffsets init (e : acc) tail
-        Just _ -> addTailOffsets init (e : acc) (adjust ((TL.length . toLazyText . encoding $ e) `div` 2) tail)
+        Just _ -> addTailOffsets init (e : acc) (adjust ((LT.length . toLazyText . encoding $ e) `div` 2) tail)
     headsOffset :: Int64
     headsOffset = foldl (\acc e -> case offset e of
-                                Nothing -> acc + ((TL.length . toLazyText . encoding $ e) `div` 2)
+                                Nothing -> acc + ((LT.length . toLazyText . encoding $ e) `div` 2)
                                 Just _ -> acc + 32
                             ) 0 encodings
 
@@ -97,8 +100,6 @@ instance (EncodingType b, ABIEncode b, ABIData (NP I as)) => ABIData (NP I (b :a
                                  , order = 1 + (fromInteger . toInteger . L.length $ encoded)
                                  }
 
--- instance HListRep (NP f as') as => HListRep (NS (NP f) '[as']) as where
-
 instance ABIData (NP f as) => GenericABIEncode (NS (NP f) '[as]) where
   genericToDataBuilder (Z a) = combineEncodedValues $ _serialize [] a
 
@@ -113,6 +114,16 @@ genericABIEncode :: ( Generic a
                  -> Builder
 genericABIEncode = genericToDataBuilder . from
 
+{-
+genericToData :: ( Generic a
+                 , Rep a ~ rep
+                 , GenericABIEncode rep
+                 )
+              => a
+              -> T.Text
+genericToData = LT.toStrict . toLazyText . genericToDataBuilder . from
+
+-}
 
 instance GenericABIDecode (NP f '[]) where
   genericFromDataParser = return Nil
@@ -132,14 +143,15 @@ genericABIDecode :: ( Generic a
                     ) => Parser a
 genericABIDecode = to <$> genericFromDataParser
 
+{-
 genericFromData :: ( Generic a
                    , Rep a ~ rep
                    , GenericABIDecode rep
                    )
                 => T.Text
                 -> Maybe a
-genericFromData = fmap to . maybeResult . parse genericFromDataParser . TL.fromStrict
-
+genericFromData = fmap to . maybeResult . parse genericFromDataParser . LT.fromStrict
+-}
 
 factorParser :: (ABIDecode a, EncodingType a) => Parser a
 factorParser = undefined
@@ -153,3 +165,10 @@ factorParser = undefined
 --  lookAhead $ do
 --    _ <- P.take dataOffset
 --    fromDataParser
+
+
+-- We also need "one-tuples"
+newtype Singleton a = Singleton { unSingleton :: a } deriving GHC.Generic
+
+instance Generic (Singleton a)
+
