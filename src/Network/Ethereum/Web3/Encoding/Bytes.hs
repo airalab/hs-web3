@@ -45,8 +45,10 @@ instance KnownNat n => EncodingType (BytesN n) where
     typeName  = const $ "bytes" <> (show . natVal $ (Proxy :: Proxy n))
     isDynamic = const False
 
-instance KnownNat n => ABIEncoding (BytesN n) where
+instance KnownNat n => ABIEncode (BytesN n) where
     toDataBuilder (BytesN bytes) = bytesBuilder bytes
+
+instance KnownNat n => ABIDecode (BytesN n) where
     fromDataParser = do
         let result   = undefined :: KnownNat n => BytesN n
             len      = fromIntegral (natVal result)
@@ -77,9 +79,10 @@ instance EncodingType BytesD where
     typeName  = const "bytes[]"
     isDynamic = const True
 
-instance ABIEncoding BytesD where
+instance ABIEncode BytesD where
     toDataBuilder (BytesD bytes) = int256HexBuilder (BA.length bytes)
                                 <> bytesBuilder bytes
+instance ABIDecode BytesD where
     fromDataParser = do
         len <- int256HexParser
         if (len :: Integer) > fromIntegral (maxBound :: Int)

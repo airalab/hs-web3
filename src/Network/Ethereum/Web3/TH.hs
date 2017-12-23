@@ -34,7 +34,8 @@ module Network.Ethereum.Web3.TH (
   , Bytes
   , Text
   , Singleton(..)
-  , ABIEncoding(..)
+  , ABIEncode(..)
+  , ABIDecode(..)
   ) where
 
 import qualified Data.Text.Lazy.Encoding as LT

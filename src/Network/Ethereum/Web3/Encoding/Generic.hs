@@ -16,7 +16,7 @@ import qualified Data.Text.Lazy as T
 import Data.Text.Lazy.Builder (Builder, toLazyText)
 import Data.Attoparsec.Text.Lazy (Parser)
 import Generics.SOP
-import Network.Ethereum.Web3.Encoding (ABIEncoding(..))
+import Network.Ethereum.Web3.Encoding (ABIEncode(..), ABIDecode(..))
 import Network.Ethereum.Web3.Encoding.Internal (EncodingType(..))
 
 -- | A class for encoding generically composed datatypes to their abi encoding
@@ -74,7 +74,7 @@ instance ABIData (NP f '[]) where
     _serialize encoded _ = encoded
 
 
-instance (EncodingType b, ABIEncoding b, ABIData (NP I as)) => ABIData (NP I (b :as)) where
+instance (EncodingType b, ABIEncode b, ABIData (NP I as)) => ABIData (NP I (b :as)) where
   _serialize encoded (I b :* a) =
     if isDynamic (undefined :: b)
        then _serialize (dynEncoding  : encoded) a

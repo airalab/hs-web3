@@ -62,7 +62,7 @@ data EventAction = ContinueEvent
   deriving (Show, Eq)
 
 -- | Contract event listener
-class ABIEncoding a => Event a where
+class ABIDecode a => Event a where
     -- | Event filter structure used by low-level subscription methods
     eventFilter :: a -> Address -> Filter
 
@@ -103,7 +103,7 @@ _event a f = do
       return (changeEvent, changeWithMeta)
 
 -- | Contract method caller
-class ABIEncoding a => Method a where
+class ABIEncode a => Method a where
     -- | Send a transaction for given contract 'Address', value and input data
     sendTx :: (Provider p, Unit b)
            => Address
@@ -117,7 +117,7 @@ class ABIEncoding a => Method a where
     sendTx = _sendTransaction
 
     -- | Constant call given contract 'Address' in mode and given input data
-    call :: (Provider p, ABIEncoding b)
+    call :: (Provider p, ABIDecode b)
          => Address
          -- ^ Contract address
          -> DefaultBlock
@@ -137,7 +137,7 @@ _sendTransaction to value dat = do
         toWeiText   = ("0x" <>) . toStrict . B.toLazyText . B.hexadecimal . toWei
         defaultGas  = "0x2DC2DC"
 
-_call :: (Provider p, Method a, ABIEncoding b)
+_call :: (Provider p, Method a, ABIDecode b)
       => Address -> DefaultBlock -> a -> Web3 p b
 _call to mode dat = do
     primeAddress <- listToMaybe <$> Eth.accounts
@@ -158,8 +158,10 @@ nopay = 0
 -- | Dummy method for sending transaction without method call
 data NoMethod = NoMethod
 
-instance ABIEncoding NoMethod where
-    fromDataParser = return NoMethod
+instance ABIEncode NoMethod where
     toDataBuilder  = const ""
+
+instance ABIDecode NoMethod where
+    fromDataParser = return NoMethod
 
 instance Method NoMethod
