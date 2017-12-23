@@ -23,12 +23,13 @@ import Data.Attoparsec.Text.Lazy (Parser)
 import Data.Text.Lazy.Builder.Int as B
 import Language.Haskell.TH
 import Data.Monoid ((<>))
+import Data.Proxy (Proxy(..))
 import Data.Text (Text)
 import Data.Bits (Bits)
 
 class EncodingType a where
-    typeName :: a -> String
-    isDynamic :: a -> Bool
+    typeName :: Proxy a -> String
+    isDynamic :: Proxy a -> Bool
 
 instance EncodingType Bool where
     typeName  = const "bool"

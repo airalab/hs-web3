@@ -6,15 +6,23 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Network.Ethereum.Web3.Encoding.Generic where
+
+import qualified Data.Attoparsec.Text                    as P
+import Data.Attoparsec.Combinator (lookAhead)
+
 
 import Data.Int (Int64)
 import qualified Data.List as L
 import Data.Monoid
-import qualified Data.Text.Lazy as T
+import Data.Proxy (Proxy(..))
+import qualified Data.Text as T
+import qualified Data.Text.Lazy as TL
 import Data.Text.Lazy.Builder (Builder, toLazyText)
-import Data.Attoparsec.Text.Lazy (Parser)
+import Data.Attoparsec.Text.Lazy (Parser, maybeResult, parse)
 import Generics.SOP
 import Network.Ethereum.Web3.Encoding (ABIEncode(..), ABIDecode(..))
 import Network.Ethereum.Web3.Encoding.Internal (EncodingType(..))
@@ -60,10 +68,10 @@ combineEncodedValues encodings =
       [] -> reverse acc
       (e : tail) -> case offset e of
         Nothing -> addTailOffsets init (e : acc) tail
-        Just _ -> addTailOffsets init (e : acc) (adjust ((T.length . toLazyText . encoding $ e) `div` 2) tail)
+        Just _ -> addTailOffsets init (e : acc) (adjust ((TL.length . toLazyText . encoding $ e) `div` 2) tail)
     headsOffset :: Int64
     headsOffset = foldl (\acc e -> case offset e of
-                                Nothing -> acc + ((T.length . toLazyText . encoding $ e) `div` 2)
+                                Nothing -> acc + ((TL.length . toLazyText . encoding $ e) `div` 2)
                                 Just _ -> acc + 32
                             ) 0 encodings
 
@@ -76,7 +84,7 @@ instance ABIData (NP f '[]) where
 
 instance (EncodingType b, ABIEncode b, ABIData (NP I as)) => ABIData (NP I (b :as)) where
   _serialize encoded (I b :* a) =
-    if isDynamic (undefined :: b)
+    if isDynamic (Proxy :: Proxy b)
        then _serialize (dynEncoding  : encoded) a
        else _serialize (staticEncoding : encoded) a
     where
@@ -88,3 +96,60 @@ instance (EncodingType b, ABIEncode b, ABIData (NP I as)) => ABIData (NP I (b :a
                                  , offset = Just 0
                                  , order = 1 + (fromInteger . toInteger . L.length $ encoded)
                                  }
+
+-- instance HListRep (NP f as') as => HListRep (NS (NP f) '[as']) as where
+
+instance ABIData (NP f as) => GenericABIEncode (NS (NP f) '[as]) where
+  genericToDataBuilder (Z a) = combineEncodedValues $ _serialize [] a
+
+instance ABIData (NS (NP f) as) => GenericABIEncode (SOP f as) where
+  genericToDataBuilder (SOP a) = combineEncodedValues $ _serialize [] a
+
+genericABIEncode :: ( Generic a
+                    , Rep a ~ rep
+                    , GenericABIEncode rep
+                    )
+                 => a
+                 -> Builder
+genericABIEncode = genericToDataBuilder . from
+
+
+instance GenericABIDecode (NP f '[]) where
+  genericFromDataParser = return Nil
+
+instance (EncodingType a, ABIDecode a, GenericABIDecode (NP I as)) => GenericABIDecode (NP I (a: as)) where
+  genericFromDataParser = (:*) <$> (I <$> factorParser) <*> genericFromDataParser
+
+instance GenericABIDecode (NP f as) => GenericABIDecode (NS (NP f) '[as]) where
+  genericFromDataParser = Z <$> genericFromDataParser
+
+instance GenericABIDecode (NS (NP f) as) => GenericABIDecode (SOP f as) where
+  genericFromDataParser = SOP <$> genericFromDataParser
+
+genericABIDecode :: ( Generic a
+                    , Rep a ~ rep
+                    , GenericABIDecode rep
+                    ) => Parser a
+genericABIDecode = to <$> genericFromDataParser
+
+genericFromData :: ( Generic a
+                   , Rep a ~ rep
+                   , GenericABIDecode rep
+                   )
+                => T.Text
+                -> Maybe a
+genericFromData = fmap to . maybeResult . parse genericFromDataParser . TL.fromStrict
+
+
+factorParser :: (ABIDecode a, EncodingType a) => Parser a
+factorParser = undefined
+--  | not $ isDynamic (Proxy :: Proxy a) = fromDataParser
+--  | otherwise = undefined
+
+-- | Dynamic argument parser
+--dParser :: ABIDecode a => Parser a
+--dParser = do
+--  dataOffset <- fromDataParser
+--  lookAhead $ do
+--    _ <- P.take dataOffset
+--    fromDataParser
