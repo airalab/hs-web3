@@ -17,13 +17,15 @@ module Network.Ethereum.Web3.Encoding.Event where
 
 import Data.Kind
 import Data.Tagged (Tagged(..))
+import qualified Data.Text as T
 import Data.Proxy (Proxy(..))
 import qualified GHC.Generics as GHC (Generic)
 import Generics.SOP
 import GHC.TypeLits (CmpNat, Nat)
 
 
-
+class ArrayParser a where
+  arrayParser :: [T.Text] -> Maybe a
 
 --------------------------------------------------------------------------------
 -- Event Parsing Internals
