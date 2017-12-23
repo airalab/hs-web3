@@ -1,4 +1,11 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeInType #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Network.Ethereum.Web3.Encoding.Generic where
 
@@ -8,7 +15,9 @@ import Data.Monoid
 import qualified Data.Text.Lazy as T
 import Data.Text.Lazy.Builder (Builder, toLazyText)
 import Data.Attoparsec.Text.Lazy (Parser)
-import Network.Ethereum.Web3.Encoding (toDataBuilder)
+import Generics.SOP
+import Network.Ethereum.Web3.Encoding (ABIEncoding(..))
+import Network.Ethereum.Web3.Encoding.Internal (EncodingType(..))
 
 -- | A class for encoding generically composed datatypes to their abi encoding
 class GenericABIEncode a where
@@ -57,3 +66,25 @@ combineEncodedValues encodings =
                                 Nothing -> acc + ((T.length . toLazyText . encoding $ e) `div` 2)
                                 Just _ -> acc + 32
                             ) 0 encodings
+
+class ABIData a where
+    _serialize :: [EncodedValue] -> a -> [EncodedValue]
+
+instance ABIData (NP f '[]) where
+    _serialize encoded _ = encoded
+
+
+instance (EncodingType b, ABIEncoding b, ABIData (NP I as)) => ABIData (NP I (b :as)) where
+  _serialize encoded (I b :* a) =
+    if isDynamic (undefined :: b)
+       then _serialize (dynEncoding  : encoded) a
+       else _serialize (staticEncoding : encoded) a
+    where
+      staticEncoding = EncodedValue { encoding = toDataBuilder b
+                                    , offset = Nothing
+                                    , order = 1 + (fromInteger . toInteger . L.length $ encoded)
+                                    }
+      dynEncoding = EncodedValue { encoding = toDataBuilder b
+                                 , offset = Just 0
+                                 , order = 1 + (fromInteger . toInteger . L.length $ encoded)
+                                 }

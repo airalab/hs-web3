@@ -50,6 +50,7 @@ library
                      , attoparsec
                      , bytestring
                      , cryptonite
+                     , generics-sop
                      , vector
                      , memory
                      , aeson
