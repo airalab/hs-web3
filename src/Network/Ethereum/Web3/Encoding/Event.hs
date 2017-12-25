@@ -13,8 +13,9 @@
 
 module Network.Ethereum.Web3.Encoding.Event(
     IndexedEvent(..)
-  , ArrayParser(..)
-  , CombineChange(..)
+  , ArrayParser
+  , genericArrayParser
+  , CombineChange
   , decodeEvent
   ) where
 
