@@ -1,3 +1,6 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE PolyKinds #-}
+
 -- |
 -- Module      :  Network.Ethereum.Web3.Encoding.Internal
 -- Copyright   :  Alexander Krupenkin 2016
@@ -11,6 +14,7 @@
 --
 module Network.Ethereum.Web3.Encoding.Internal where
 
+import Data.Tagged (Tagged)
 import Data.Text.Lazy.Builder (Builder, toLazyText, fromText, fromLazyText)
 import qualified Data.ByteString.Base16        as BS16 (decode, encode)
 import qualified Data.Attoparsec.Text          as P
@@ -58,6 +62,10 @@ instance EncodingType Address where
 instance EncodingType a => EncodingType [a] where
     typeName  = const "[]"
     isDynamic = const True
+
+instance EncodingType a => EncodingType (Tagged t a) where
+    typeName _ = typeName (Proxy :: Proxy a)
+    isDynamic _ = isDynamic (Proxy :: Proxy a)
 
 -- | Make 256bit alignment; lazy (left, right)
 align :: Builder -> (Builder, Builder)

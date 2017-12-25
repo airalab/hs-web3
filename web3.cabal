@@ -46,6 +46,7 @@ library
                      , attoparsec
                      , base16-bytestring
                      , bytestring
+                     , constraints
                      , cryptonite
                      , generics-sop
                      , http-client-tls

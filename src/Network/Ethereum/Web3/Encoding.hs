@@ -1,3 +1,5 @@
+{-# LANGUAGE PolyKinds #-}
+
 -- |
 -- Module      :  Network.Ethereum.Web3.Encoding
 -- Copyright   :  Alexander Krupenkin 2016
@@ -11,6 +13,7 @@
 --
 module Network.Ethereum.Web3.Encoding (ABIEncode(..), ABIDecode(..)) where
 
+import Data.Tagged (Tagged(..))
 import Data.Text.Lazy.Builder (Builder, toLazyText, fromText, fromLazyText)
 import Data.Attoparsec.Text.Lazy (parse, maybeResult, Parser)
 import qualified Network.Ethereum.Web3.Address as A
@@ -81,3 +84,9 @@ instance ABIEncode a => ABIEncode [a] where
 instance ABIDecode a => ABIDecode [a] where
     fromDataParser = do len <- int256HexParser
                         take len <$> P.many1 fromDataParser
+
+instance ABIEncode a => ABIEncode (Tagged t a) where
+  toDataBuilder (Tagged a) = toDataBuilder a
+
+instance ABIDecode a => ABIDecode (Tagged t a) where
+  fromDataParser = Tagged <$> fromDataParser

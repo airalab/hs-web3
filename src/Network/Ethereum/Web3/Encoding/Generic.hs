@@ -108,11 +108,8 @@ instance (EncodingType b, ABIEncode b, ABIData (NP I as)) => ABIData (NP I (b :a
                                  , order = 1 + (fromInteger . toInteger . L.length $ encoded)
                                  }
 
-instance ABIData (NP f as) => GenericABIEncode (NS (NP f) '[as]) where
-  genericToDataBuilder (Z a) = combineEncodedValues $ _serialize [] a
-
-instance ABIData (NS (NP f) as) => GenericABIEncode (SOP f as) where
-  genericToDataBuilder (SOP a) = combineEncodedValues $ _serialize [] a
+instance ABIData (NP f as) => GenericABIEncode (SOP f '[as]) where
+  genericToDataBuilder (SOP (Z a)) = combineEncodedValues $ _serialize [] a
 
 genericABIEncode :: ( Generic a
                     , Rep a ~ rep
@@ -137,11 +134,8 @@ instance GenericABIDecode (NP f '[]) where
 instance (EncodingType a, ABIDecode a, GenericABIDecode (NP I as)) => GenericABIDecode (NP I (a: as)) where
   genericFromDataParser = (:*) <$> (I <$> factorParser) <*> genericFromDataParser
 
-instance GenericABIDecode (NP f as) => GenericABIDecode (NS (NP f) '[as]) where
-  genericFromDataParser = Z <$> genericFromDataParser
-
-instance GenericABIDecode (NS (NP f) as) => GenericABIDecode (SOP f as) where
-  genericFromDataParser = SOP <$> genericFromDataParser
+instance GenericABIDecode (NP f as) => GenericABIDecode (SOP f '[as]) where
+  genericFromDataParser = SOP . Z <$> genericFromDataParser
 
 genericABIDecode :: ( Generic a
                     , Rep a ~ rep

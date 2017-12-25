@@ -11,7 +11,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
 
 module Network.Ethereum.Web3.Encoding.Event where
 
@@ -24,7 +23,9 @@ import Generics.SOP
 import GHC.TypeLits (CmpNat, Nat)
 
 import Network.Ethereum.Web3.Encoding (ABIDecode, fromData)
+import Network.Ethereum.Web3.Encoding.Internal
 import Network.Ethereum.Web3.Types (Change(..))
+import Network.Ethereum.Web3.Address (Address)
 import Network.Ethereum.Web3.Encoding.Generic (GenericABIDecode, genericFromData)
 
 class ArrayParser a where
@@ -40,11 +41,8 @@ instance (ArrayParser (NP I as), ABIDecode a) => ArrayParser (NP I (a : as)) whe
     as' <- arrayParser as
     return $ I a' :* as'
 
-instance ArrayParser (NP f as) => ArrayParser (NS (NP f) '[as]) where
-  arrayParser = fmap Z . arrayParser
-
-instance ArrayParser (NS (NP f) as) => ArrayParser (SOP f as) where
-  arrayParser = fmap SOP . arrayParser
+instance ArrayParser (NP f as) => ArrayParser (SOP f '[as]) where
+  arrayParser = fmap (SOP . Z) . arrayParser
 
 genericArrayParser :: ( Generic a
                       , Rep a ~ rep
@@ -81,6 +79,90 @@ parseChange change isAnonymous = do
                else tail $ changeTopics change
     data_ = changeData change
 
+combineChange :: ( Generic i
+                 , Rep i ~ irep
+                 , Generic ni
+                 , Rep ni ~ nirep
+                 , Generic e
+                 , Rep e ~ erep
+                 , HListRep irep hli
+                 , HListRep nirep hlni
+                 , HListMerge hli hlni
+                 , Concat hli hlni ~ all
+                 , Sort all
+                 , Sort' all ~ all'
+                 , UnTag all'
+                 , UnTag' all' ~ hle
+                 , HListRep erep hle
+                 )
+              => Event i ni
+              -> e
+combineChange (Event i ni) =
+  let hli = toHList . from $ i
+      hlni = toHList . from $ ni
+      hle = unTag . sort $ mergeHList hli hlni
+  in to . fromHList $ hle
+
+class IndexedEvent e  where
+  type IndexedArgs e :: *
+  type NonIndexedArgs e :: *
+  isAnonymous :: Proxy e -> Bool
+
+-- example
+
+data TransferIndexed = TransferIndexed (Tagged 1 Address) (Tagged 2 Address) deriving (GHC.Generic)
+
+instance Generic TransferIndexed
+
+data TransferNonIndexed = TransferNonIndexed (Tagged 3 Integer) deriving (GHC.Generic)
+
+instance Generic TransferNonIndexed
+
+data Transfer = Transfer Address Address Integer deriving (GHC.Generic)
+
+instance Generic Transfer
+
+instance IndexedEvent Transfer where
+  type IndexedArgs Transfer = TransferIndexed
+  type NonIndexedArgs Transfer = TransferNonIndexed
+  isAnonymous = const False
+
+transferInstance :: Transfer
+transferInstance = combineChange (undefined :: Event TransferIndexed TransferNonIndexed)
+
+decoded :: Maybe (Event TransferIndexed TransferNonIndexed)
+decoded = parseChange undefined undefined
+
+--
+
+--decodeEvent :: ( IndexedEvent e
+--               , IndexedArgs e ~ i
+--               , Generic i
+--               , Rep i ~ SOP I '[hli]
+--               , NonIndexedArgs e ~ ni
+--               , Generic ni
+--               , Rep ni ~ SOP I '[hlni]
+--               , Generic e
+--               , Rep e ~ erep
+--               , HListRep (Rep i) hli
+--               , HListRep (Rep ni) hlni
+--               , HListMerge hli hlni
+--               , Concat hli hlni ~ all
+--               , Sort all
+--               , Sort' all ~ all'
+--               , UnTag all'
+--               , UnTag' all' ~ hle
+--               , HListRep erep hle
+--               , GenericABIDecode (SOP I '[hlni])
+--               , ArrayParser (SOP I '[hli])
+--               )
+--             => Proxy e
+--             -> Change
+--             -> Maybe e
+--decodeEvent pe change = do
+--  let anonymous = isAnonymous pe
+--  (event :: Event () ni) <- undefined
+--  return $ combineChange event
 
 --------------------------------------------------------------------------------
 -- Event Parsing Internals
@@ -93,7 +175,7 @@ data HList :: [*] -> * where
 infixr 0 :<
 
 -- | Generic representation to HList representation
-class HListRep a xs | a -> xs where
+class HListRep a xs | a -> xs, a -> xs where
   toHList :: a -> HList xs
   fromHList :: HList xs -> a
 
@@ -105,13 +187,9 @@ instance HListRep (NP I as) as => HListRep (NP I (a:as)) (a:as) where
   toHList (I a :* rest) = a :< toHList rest
   fromHList (a :< rest) = I a :* fromHList rest
 
-instance HListRep (NP f as') as => HListRep (NS (NP f) '[as']) as where
-  toHList (Z rep) = toHList rep
-  fromHList = Z . fromHList
-
-instance HListRep (NS (NP f) as') as => HListRep (SOP f as') as where
-  toHList (SOP rep) = toHList rep
-  fromHList = SOP . fromHList
+instance HListRep (NP f as') as => HListRep (SOP f '[as']) as where
+  toHList (SOP (Z rep)) = toHList rep
+  fromHList = SOP . Z . fromHList
 
 -- | Sort a Tagged HList
 class Sort (xs :: [*]) where
@@ -151,13 +229,16 @@ instance Insert x ys => InsertCmp 'GT x y ys where
   insertCmp _ x y ys = y :< insert x ys
 
 -- | Unwrap all the Tagged items in an HList
-class UnTag t ut | t -> ut where
-  unTag :: HList t -> HList ut
+class UnTag t where
+  type UnTag' t :: [*]
+  unTag :: HList t -> HList (UnTag' t)
 
-instance UnTag '[] '[] where
+instance UnTag '[] where
+  type UnTag' '[] = '[]
   unTag a = a
 
-instance UnTag ts uts => UnTag (Tagged n a : ts) (a : uts) where
+instance UnTag ts => UnTag (Tagged n a : ts) where
+  type UnTag' (Tagged n a : as) = a : UnTag' as
   unTag (Tagged a :< ts) = a :< unTag ts
 
 class HListMerge (as :: [*]) (bs :: [*]) where
