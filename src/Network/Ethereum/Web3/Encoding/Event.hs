@@ -23,9 +23,64 @@ import qualified GHC.Generics as GHC (Generic)
 import Generics.SOP
 import GHC.TypeLits (CmpNat, Nat)
 
+import Network.Ethereum.Web3.Encoding (ABIDecode, fromData)
+import Network.Ethereum.Web3.Types (Change(..))
+import Network.Ethereum.Web3.Encoding.Generic (GenericABIDecode, genericFromData)
 
 class ArrayParser a where
   arrayParser :: [T.Text] -> Maybe a
+
+instance ArrayParser (NP f '[]) where
+  arrayParser _ = Just Nil
+
+instance (ArrayParser (NP I as), ABIDecode a) => ArrayParser (NP I (a : as)) where
+  arrayParser [] = Nothing
+  arrayParser (a : as) = do
+    a' <- fromData a
+    as' <- arrayParser as
+    return $ I a' :* as'
+
+instance ArrayParser (NP f as) => ArrayParser (NS (NP f) '[as]) where
+  arrayParser = fmap Z . arrayParser
+
+instance ArrayParser (NS (NP f) as) => ArrayParser (SOP f as) where
+  arrayParser = fmap SOP . arrayParser
+
+genericArrayParser :: ( Generic a
+                      , Rep a ~ rep
+                      , ArrayParser rep
+                      )
+                    => [T.Text]
+                    -> Maybe a
+genericArrayParser = fmap to . arrayParser
+
+
+--------------------------------------------------------------------------------
+-- Event Parsing
+--------------------------------------------------------------------------------
+
+data Event i ni = Event i ni
+
+parseChange :: ( Generic i
+               , Rep i ~ irep
+               , ArrayParser irep
+               , Generic ni
+               , Rep ni ~ nirep
+               , GenericABIDecode nirep
+               )
+             => Change
+             -> Bool -- is anonymous event
+             -> Maybe (Event i ni)
+parseChange change isAnonymous = do
+    i <- genericArrayParser topics
+    ni <- genericFromData data_
+    return $ Event i ni
+  where
+    topics = if isAnonymous
+               then changeTopics change
+               else tail $ changeTopics change
+    data_ = changeData change
+
 
 --------------------------------------------------------------------------------
 -- Event Parsing Internals

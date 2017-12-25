@@ -11,8 +11,12 @@
 {-# LANGUAGE StandaloneDeriving #-}
 
 module Network.Ethereum.Web3.Encoding.Generic (
-    genericABIEncode
+    GenericABIEncode
+  , GenericABIDecode
+  , genericABIEncode
+  , genericToData
   , genericABIDecode
+  , genericFromData
   , Singleton(..)
   ) where
 
@@ -118,7 +122,6 @@ genericABIEncode :: ( Generic a
                  -> Builder
 genericABIEncode = genericToDataBuilder . from
 
-{-
 genericToData :: ( Generic a
                  , Rep a ~ rep
                  , GenericABIEncode rep
@@ -127,7 +130,6 @@ genericToData :: ( Generic a
               -> T.Text
 genericToData = LT.toStrict . toLazyText . genericToDataBuilder . from
 
--}
 
 instance GenericABIDecode (NP f '[]) where
   genericFromDataParser = return Nil
@@ -147,7 +149,6 @@ genericABIDecode :: ( Generic a
                     ) => Parser a
 genericABIDecode = to <$> genericFromDataParser
 
-{-
 genericFromData :: ( Generic a
                    , Rep a ~ rep
                    , GenericABIDecode rep
@@ -155,7 +156,6 @@ genericFromData :: ( Generic a
                 => T.Text
                 -> Maybe a
 genericFromData = fmap to . maybeResult . parse genericFromDataParser . LT.fromStrict
--}
 
 factorParser :: (ABIDecode a, EncodingType a) => Parser a
 factorParser = undefined
