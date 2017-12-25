@@ -1,3 +1,8 @@
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
 -- |
 -- Module      :  Network.Ethereum.Web3.Contract
 -- Copyright   :  Alexander Krupenkin 2016
@@ -35,6 +40,8 @@ module Network.Ethereum.Web3.Contract (
   , nopay
   ) where
 
+
+import Generics.SOP
 import qualified Data.Text.Lazy.Builder.Int as B
 import qualified Data.Text.Lazy.Builder     as B
 import Control.Concurrent (ThreadId, threadDelay)
@@ -46,9 +53,12 @@ import qualified Data.Text as T
 import Control.Monad (when, forM)
 import Control.Monad.Trans.Reader (ReaderT(..))
 import Data.Monoid ((<>))
+import Data.Proxy (Proxy(..))
 
 import Network.Ethereum.Web3.Provider
 import Network.Ethereum.Web3.Encoding
+import Network.Ethereum.Web3.Encoding.Event
+import Network.Ethereum.Web3.Encoding.Generic
 import Network.Ethereum.Web3.Address
 import Network.Ethereum.Web3.Types
 import qualified Network.Ethereum.Web3.Eth as Eth
@@ -62,29 +72,29 @@ data EventAction = ContinueEvent
   deriving (Show, Eq)
 
 -- | Contract event listener
-class ABIDecode a => Event a where
+class Event e where
     -- | Event filter structure used by low-level subscription methods
-    eventFilter :: a -> Address -> Filter
+    eventFilter :: Proxy e -> Address -> Filter
 
-    -- | Start an event listener for given contract 'Address' and callback
-    event :: Provider p
-          => Address
-          -- ^ Contract address
-          -> (a -> ReaderT Change (Web3 p) EventAction)
-          -- ^ 'Event' handler
-          -> Web3 p ThreadId
-          -- ^ 'Web3' wrapped event handler spawn ident
-    event = _event
-
-_event :: (Provider p, Event a)
-       => Address
-       -> (a -> ReaderT Change (Web3 p) EventAction)
+event :: ( Provider p
+         , Event e
+         , IndexedEvent i ni e
+         , Generic i
+         , Rep i ~ SOP I '[hli]
+         , Generic ni
+         , Rep ni ~ SOP I '[hlni]
+         , Generic e
+         , Rep e ~ SOP I '[hle]
+         , CombineChange i ni e
+         , GenericABIDecode (SOP I '[hlni])
+         , ArrayParser (SOP I '[hli])
+         )
+       => Proxy e
+       -> Address
+       -> (e -> ReaderT Change (Web3 p) EventAction)
        -> Web3 p ThreadId
-_event a f = do
-    fid <- let ftyp = snd $ let x = undefined :: Event a => a
-                            in  (f x, x)
-           in  Eth.newFilter (eventFilter ftyp a)
-
+event p a f = do
+    fid <- Eth.newFilter (eventFilter p a)
     forkWeb3 $
         let loop = do liftIO (threadDelay 1000000)
                       changes <- Eth.getFilterChanges fid
@@ -97,9 +107,7 @@ _event a f = do
   where
     prepareTopics = fmap (T.drop 2) . drop 1
     pairChange changeWithMeta = do
-      changeEvent <- fromData $
-        T.append (T.concat (prepareTopics $ changeTopics changeWithMeta))
-                 (T.drop 2 $ changeData changeWithMeta)
+      changeEvent <- decodeEvent p changeWithMeta
       return (changeEvent, changeWithMeta)
 
 -- | Contract method caller

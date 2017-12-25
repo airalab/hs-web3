@@ -3,7 +3,6 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE TypeFamilyDependencies #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE TypeInType #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -12,7 +11,12 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Network.Ethereum.Web3.Encoding.Event where
+module Network.Ethereum.Web3.Encoding.Event(
+    IndexedEvent(..)
+  , ArrayParser(..)
+  , CombineChange(..)
+  , decodeEvent
+  ) where
 
 import Data.Kind
 import Data.Tagged (Tagged(..))
