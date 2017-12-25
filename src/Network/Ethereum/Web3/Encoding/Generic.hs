@@ -24,6 +24,7 @@ import qualified Data.Attoparsec.Text                    as P
 import Data.Attoparsec.Combinator (lookAhead)
 
 
+import Data.Tagged (Tagged(..))
 import Data.Int (Int64)
 import qualified Data.List as L
 import Data.Monoid

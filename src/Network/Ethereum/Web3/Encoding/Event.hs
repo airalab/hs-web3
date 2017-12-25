@@ -79,35 +79,32 @@ parseChange change isAnonymous = do
                else tail $ changeTopics change
     data_ = changeData change
 
-combineChange :: ( Generic i
-                 , Rep i ~ irep
-                 , Generic ni
-                 , Rep ni ~ nirep
-                 , Generic e
-                 , Rep e ~ erep
-                 , HListRep irep hli
-                 , HListRep nirep hlni
-                 , HListMerge hli hlni
-                 , Concat hli hlni ~ all
-                 , Sort all
-                 , Sort' all ~ all'
-                 , UnTag all'
-                 , UnTag' all' ~ hle
-                 , HListRep erep hle
-                 )
-              => Event i ni
-              -> e
-combineChange (Event i ni) =
-  let hli = toHList . from $ i
-      hlni = toHList . from $ ni
-      hle = unTag . sort $ mergeHList hli hlni
-  in to . fromHList $ hle
-
-class IndexedEvent e  where
-  type IndexedArgs e :: *
-  type NonIndexedArgs e :: *
+class IndexedEvent i ni e | e -> i ni where
   isAnonymous :: Proxy e -> Bool
 
+class CombineChange i ni e | e -> i ni where
+  combineChange :: i -> ni -> e
+
+instance ( Generic i
+         , Rep i ~ irep
+         , Generic ni
+         , Rep ni ~ nirep
+         , Generic e
+         , Rep e ~ erep
+         , HListRep irep hli
+         , HListRep nirep hlni
+         , MergeIndexedArguments hli hlni
+         , MergeIndexedArguments' hli hlni ~ hle
+         , HListRep erep hle
+         , IndexedEvent i ni e
+         ) => CombineChange i ni e where
+  combineChange i ni =
+    let hli = toHList . from $ i
+        hlni = toHList . from $ ni
+        hle = mergeIndexedArguments hli hlni
+    in to . fromHList $ hle
+
+{-
 -- example
 
 data TransferIndexed = TransferIndexed (Tagged 1 Address) (Tagged 2 Address) deriving (GHC.Generic)
@@ -122,47 +119,36 @@ data Transfer = Transfer Address Address Integer deriving (GHC.Generic)
 
 instance Generic Transfer
 
-instance IndexedEvent Transfer where
-  type IndexedArgs Transfer = TransferIndexed
-  type NonIndexedArgs Transfer = TransferNonIndexed
+instance IndexedEvent TransferIndexed TransferNonIndexed Transfer where
   isAnonymous = const False
 
+
 transferInstance :: Transfer
-transferInstance = combineChange (undefined :: Event TransferIndexed TransferNonIndexed)
+transferInstance = combineChange undefined undefined
 
 decoded :: Maybe (Event TransferIndexed TransferNonIndexed)
 decoded = parseChange undefined undefined
 
---
+-}
 
---decodeEvent :: ( IndexedEvent e
---               , IndexedArgs e ~ i
---               , Generic i
---               , Rep i ~ SOP I '[hli]
---               , NonIndexedArgs e ~ ni
---               , Generic ni
---               , Rep ni ~ SOP I '[hlni]
---               , Generic e
---               , Rep e ~ erep
---               , HListRep (Rep i) hli
---               , HListRep (Rep ni) hlni
---               , HListMerge hli hlni
---               , Concat hli hlni ~ all
---               , Sort all
---               , Sort' all ~ all'
---               , UnTag all'
---               , UnTag' all' ~ hle
---               , HListRep erep hle
---               , GenericABIDecode (SOP I '[hlni])
---               , ArrayParser (SOP I '[hli])
---               )
---             => Proxy e
---             -> Change
---             -> Maybe e
---decodeEvent pe change = do
---  let anonymous = isAnonymous pe
---  (event :: Event () ni) <- undefined
---  return $ combineChange event
+decodeEvent :: ( IndexedEvent i ni e
+               , Generic i
+               , Rep i ~ SOP I '[hli]
+               , Generic ni
+               , Rep ni ~ SOP I '[hlni]
+               , Generic e
+               , Rep e ~ SOP I '[hle]
+               , CombineChange i ni e
+               , GenericABIDecode (SOP I '[hlni])
+               , ArrayParser (SOP I '[hli])
+               )
+             => Proxy e
+             -> Change
+             -> Maybe e
+decodeEvent pe change = do
+    let anonymous = isAnonymous pe
+    (Event i ni :: Event i ni) <- parseChange change anonymous
+    return $ combineChange i ni
 
 --------------------------------------------------------------------------------
 -- Event Parsing Internals
@@ -252,3 +238,20 @@ instance HListMerge '[] bs where
 instance HListMerge as bs => HListMerge (a : as) bs where
   type Concat (a : as) bs = a : Concat as bs
   mergeHList (a :< as) bs = a :< mergeHList as bs
+
+class HListMergeSort as bs where
+  type MergeSort' as bs :: [*]
+  mergeSortHList :: HList as -> HList bs -> HList (MergeSort' as bs)
+
+instance (HListMerge as bs, Concat as bs ~ cs, Sort cs, Sort' cs ~ cs') => HListMergeSort as bs where
+  type MergeSort' as bs = Sort' (Concat as bs)
+  mergeSortHList as bs = sort $ (mergeHList as bs :: HList cs)
+
+class MergeIndexedArguments as bs where
+  type MergeIndexedArguments' as bs :: [*]
+  mergeIndexedArguments :: HList as -> HList bs -> HList (MergeIndexedArguments' as bs)
+
+instance (HListMergeSort as bs, MergeSort' as bs ~ cs, UnTag cs, UnTag cs' ~ ds) => MergeIndexedArguments as bs where
+  type MergeIndexedArguments' as bs = (UnTag' (MergeSort' as bs))
+  mergeIndexedArguments as bs = unTag $ mergeSortHList as bs
+
