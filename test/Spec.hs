@@ -2,9 +2,11 @@
 {-# LANGUAGE QuasiQuotes       #-}
 {-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 module Main where
 
 import Network.Ethereum.Web3.TH
+import Network.Ethereum.Web3.Encoding.Event
 import Network.Ethereum.Web3
 import Data.Text (unpack)
 import Text.Printf

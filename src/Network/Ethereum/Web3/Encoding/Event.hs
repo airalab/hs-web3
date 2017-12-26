@@ -14,6 +14,7 @@
 module Network.Ethereum.Web3.Encoding.Event(
     DecodeEvent(..)
   , ArrayParser(..)
+  , IndexedEvent(..)
   , genericArrayParser
   ) where
 
@@ -106,33 +107,6 @@ instance ( Generic i
         hlni = toHList . from $ ni
         hle = mergeIndexedArguments hli hlni
     in to . fromHList $ hle
-
-{-
--- example
-
-data TransferIndexed = TransferIndexed (Tagged 1 Address) (Tagged 2 Address) deriving (GHC.Generic)
-
-instance Generic TransferIndexed
-
-data TransferNonIndexed = TransferNonIndexed (Tagged 3 Integer) deriving (GHC.Generic)
-
-instance Generic TransferNonIndexed
-
-data Transfer = Transfer Address Address Integer deriving (GHC.Generic)
-
-instance Generic Transfer
-
-instance IndexedEvent TransferIndexed TransferNonIndexed Transfer where
-  isAnonymous = const False
-
-
-transferInstance :: Transfer
-transferInstance = combineChange undefined undefined
-
-decoded :: Maybe (Event TransferIndexed TransferNonIndexed)
-decoded = parseChange undefined undefined
-
--}
 
 class DecodeEvent i ni e | e -> i ni where
   decodeEvent :: Change -> Maybe e

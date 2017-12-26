@@ -209,27 +209,16 @@ funWrapper c name dname args result = do
         Just xs  -> let outs = fmap (typeQ . funArgType) xs
                     in  [t|Web3 $p $(foldl appT (tupleT (length xs)) outs)|]
 
----- | Event declarations maker
---mkEvent :: Declaration -> Q [Dec]
---mkEvent eve@(DEvent name inputs _) = sequence
---    [ dataD' eventName eventFields derivingD
---    , instanceD' eventName encodingT (eventEncodigD eventName inputs)
---    , instanceD' eventName eventT    (eventFilterD (T.unpack $ eventId eve) indexedFieldsCount)
---    ]
---  where eventName   = mkName (toUpperFirst (T.unpack name))
---        eventFields = normalC eventName (eventBangType <$> inputs)
---        encodingT   = conT (mkName "Decode")
---        eventT      = conT (mkName "Event")
---        indexedFieldsCount = length . filter eveArgIndexed $ inputs
-
 mkEvent :: Declaration -> Q [Dec]
-mkEvent ev@(DEvent name inputs _) = sequence
+mkEvent ev@(DEvent name inputs anonymous) = sequence
     [ dataD' indexedName (normalC indexedName (map (toBang <=< tag) indexedArgs)) derivingD
     , instanceD' indexedName (conT (mkName "Generic")) []
     , dataD' nonIndexedName (normalC nonIndexedName (map (toBang <=< tag) nonIndexedArgs)) derivingD
     , instanceD' nonIndexedName (conT (mkName "Generic")) []
     , dataD' allName (normalC allName (map (toBang <=< typeQ) allArgs)) derivingD
     , instanceD' allName (conT (mkName "Generic")) []
+    , instanceD (cxt []) (return $ (ConT $ mkName "IndexedEvent") `AppT` ConT indexedName `AppT` ConT nonIndexedName `AppT` ConT allName)
+        [funD' (mkName "isAnonymous") [] [|const anonymous|]]
     ]
   where
     toBang ty = bangType (bang sourceNoUnpack sourceStrict) (return ty)
@@ -242,6 +231,7 @@ mkEvent ev@(DEvent name inputs _) = sequence
     allArgs = map eveArgType $ inputs
     allName = mkName $ toUpperFirst (T.unpack name)
     derivingD   = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
+
 
 -- | Method delcarations maker
 mkFun :: Declaration -> Q [Dec]
