@@ -67,11 +67,11 @@ test-suite web3-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
-  other-modules:       Web3.Test.MethodDumpSpec
-                       Web3.Test.SimpleStorageSpec
-                       Web3.Test.ComplexStorageSpec
-                       Web3.Test.ERC20Spec
-                       Web3.Test.Utils
+  other-modules:       Network.Ethereum.Web3.Test.MethodDumpSpec
+                       Network.Ethereum.Web3.Test.SimpleStorageSpec
+                       Network.Ethereum.Web3.Test.ComplexStorageSpec
+                       Network.Ethereum.Web3.Test.ERC20Spec
+                       Network.Ethereum.Web3.Test.Utils
   build-depends:       base
                      , bytestring
                      , data-default

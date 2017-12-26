@@ -1,20 +1,20 @@
 {-# LANGUAGE QuasiQuotes     #-}
 {-# LANGUAGE TemplateHaskell #-}
-module Web3.Test.ComplexStorageSpec where
+module Network.Ethereum.Web3.Test.ComplexStorageSpec where
 
-import           Data.ByteArray              (convert)
-import           Data.ByteString             (ByteString)
+import           Data.ByteArray                   (convert)
+import           Data.ByteString                  (ByteString)
 import           Data.Default
-import           Data.Either                 (isRight)
-import           Data.String                 (fromString)
-import           Network.Ethereum.Web3       hiding (convert)
-import qualified Network.Ethereum.Web3.Eth   as Eth
+import           Data.Either                      (isRight)
+import           Data.String                      (fromString)
+import           Network.Ethereum.Web3            hiding (convert)
+import qualified Network.Ethereum.Web3.Eth        as Eth
+import           Network.Ethereum.Web3.Test.Utils
 import           Network.Ethereum.Web3.TH
-import           Network.Ethereum.Web3.Types (Call (..))
-import           System.Environment          (getEnv)
-import           System.IO.Unsafe            (unsafePerformIO)
+import           Network.Ethereum.Web3.Types      (Call (..))
+import           System.Environment               (getEnv)
+import           System.IO.Unsafe                 (unsafePerformIO)
 import           Test.Hspec
-import           Web3.Test.Utils
 
 [abiFrom|build/contracts/abis/ComplexStorage.json|]
 

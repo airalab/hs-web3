@@ -1,4 +1,4 @@
-module Web3.Test.Utils
+module Network.Ethereum.Web3.Test.Utils
   ( injectExportedEnvironmentVariables
   , runWeb3Configured
   , withAccounts

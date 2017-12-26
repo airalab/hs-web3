@@ -1,33 +1,33 @@
 {-# LANGUAGE KindSignatures  #-}
 {-# LANGUAGE QuasiQuotes     #-}
 {-# LANGUAGE TemplateHaskell #-}
-module Web3.Test.SimpleStorageSpec where
+module Network.Ethereum.Web3.Test.SimpleStorageSpec where
 
-import           Control.Concurrent             (threadDelay)
+import           Control.Concurrent               (threadDelay)
 import           Control.Concurrent.MVar
-import           Control.Monad                  (void)
-import           Control.Monad.IO.Class         (liftIO)
-import           Control.Monad.Trans.Reader     (ask)
-import           Data.ByteString                (ByteString)
+import           Control.Monad                    (void)
+import           Control.Monad.IO.Class           (liftIO)
+import           Control.Monad.Trans.Reader       (ask)
+import           Data.ByteString                  (ByteString)
 import           Data.Default
-import           Data.Either                    (isRight)
-import           Data.List                      (sort)
+import           Data.Either                      (isRight)
+import           Data.List                        (sort)
 import           Data.Proxy
-import           Data.String                    (fromString)
-import qualified Data.Text                      as T
-import           Data.Traversable               (for)
+import           Data.String                      (fromString)
+import qualified Data.Text                        as T
+import           Data.Traversable                 (for)
 import           GHC.TypeLits
-import           Network.Ethereum.Web3          hiding (convert)
-import           Network.Ethereum.Web3.Contract (Event (..))
-import           Network.Ethereum.Web3.Encoding (ABIEncoding (..))
-import qualified Network.Ethereum.Web3.Eth      as Eth
+import           Network.Ethereum.Web3            hiding (convert)
+import           Network.Ethereum.Web3.Contract   (Event (..))
+import           Network.Ethereum.Web3.Encoding   (ABIEncoding (..))
+import qualified Network.Ethereum.Web3.Eth        as Eth
+import           Network.Ethereum.Web3.Test.Utils
 import           Network.Ethereum.Web3.TH
-import           Network.Ethereum.Web3.Types    (Call (..), Change (..), Filter (..))
-import           Numeric                        (showHex)
-import           System.Environment             (getEnv)
-import           System.IO.Unsafe               (unsafePerformIO)
+import           Network.Ethereum.Web3.Types      (Call (..), Change (..), Filter (..))
+import           Numeric                          (showHex)
+import           System.Environment               (getEnv)
+import           System.IO.Unsafe                 (unsafePerformIO)
 import           Test.Hspec
-import           Web3.Test.Utils
 
 [abiFrom|build/contracts/abis/SimpleStorage.json|]
 

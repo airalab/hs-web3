@@ -1,4 +1,4 @@
-module Web3.Test.MethodDumpSpec where
+module Network.Ethereum.Web3.Test.MethodDumpSpec where
 
 import           Control.Monad.IO.Class   (liftIO)
 import           Data.Text                (unpack)

@@ -1,7 +1,7 @@
-module Web3.Test.ERC20Spec where
+module Network.Ethereum.Web3.Test.ERC20Spec where
 
+import           Network.Ethereum.Web3.Test.Utils
 import           Test.Hspec
-import           Web3.Test.Utils
 
 spec :: Spec
 spec = describe "interacting with an ERC20 contract" $ do
