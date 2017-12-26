@@ -2,6 +2,10 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- |
 -- Module      :  Network.Ethereum.Web3.Contract
@@ -34,7 +38,8 @@
 --
 module Network.Ethereum.Web3.Contract (
     EventAction(..)
-  , Method(..)
+  , TxMethod(..)
+  , CallMethod(..)
   , Event(..)
   , NoMethod(..)
   , nopay
@@ -103,9 +108,10 @@ event p a f = do
       return (changeEvent, changeWithMeta)
 
 -- | Contract method caller
-class ABIEncode a => Method a where
+class TxMethod a where
     -- | Send a transaction for given contract 'Address', value and input data
-    sendTx :: (Provider p, Unit b)
+    sendTx :: forall p b .
+              (Provider p, Unit b)
            => Address
            -- ^ Contract address
            -> b
@@ -114,10 +120,11 @@ class ABIEncode a => Method a where
            -- ^ Method data
            -> Web3 p TxHash
            -- ^ 'Web3' wrapped result
-    sendTx = _sendTransaction
 
+class CallMethod a b where
     -- | Constant call given contract 'Address' in mode and given input data
-    call :: (Provider p, ABIDecode b)
+    call :: forall p .
+            Provider p
          => Address
          -- ^ Contract address
          -> DefaultBlock
@@ -126,29 +133,33 @@ class ABIEncode a => Method a where
          -- ^ Method data
          -> Web3 p b
          -- ^ 'Web3' wrapped result
-    call = _call
 
-_sendTransaction :: (Provider p, Method a, Unit b)
-                 => Address -> b -> a -> Web3 p TxHash
-_sendTransaction to value dat = do
+instance ( Generic a
+         , GenericABIEncode (Rep a)
+         ) => TxMethod a where
+  sendTx to value dat = do
     primeAddress <- listToMaybe <$> Eth.accounts
-    Eth.sendTransaction (txdata primeAddress $ Just $ toData dat)
-  where txdata from = Call from to (Just defaultGas) Nothing (Just $ toWeiText value)
-        toWeiText   = ("0x" <>) . toStrict . B.toLazyText . B.hexadecimal . toWei
-        defaultGas  = "0x2DC2DC"
+    Eth.sendTransaction (txdata primeAddress $ Just $ genericToData dat)
+    where txdata from = Call from to (Just defaultGas) Nothing (Just $ toWeiText value)
+          toWeiText   = ("0x" <>) . toStrict . B.toLazyText . B.hexadecimal . toWei
+          defaultGas  = "0x2DC2DC"
 
-_call :: (Provider p, Method a, ABIDecode b)
-      => Address -> DefaultBlock -> a -> Web3 p b
-_call to mode dat = do
+
+instance ( Generic a
+         , GenericABIEncode (Rep a)
+         , Generic b
+         , GenericABIDecode (Rep b)
+         ) => CallMethod a b where
+  call to mode dat = do
     primeAddress <- listToMaybe <$> Eth.accounts
     res <- Eth.call (txdata primeAddress) mode
-    case fromData (T.drop 2 res) of
+    case genericFromData (T.drop 2 res) of
         Nothing -> liftIO $ throwIO $ ParserFail $
             "Unable to parse result on `" ++ T.unpack res
             ++ "` from `" ++ show to ++ "`"
         Just x -> return x
-  where
-    txdata from = Call from to Nothing Nothing Nothing (Just (toData dat))
+    where
+      txdata from = Call from to Nothing Nothing Nothing (Just (genericToData dat))
 
 -- | Zero value is used to send transaction without money
 nopay :: Wei
@@ -164,4 +175,9 @@ instance ABIEncode NoMethod where
 instance ABIDecode NoMethod where
     fromDataParser = return NoMethod
 
-instance Method NoMethod
+instance CallMethod NoMethod b where
+    call = undefined
+
+
+instance TxMethod NoMethod where
+    sendTx = undefined

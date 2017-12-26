@@ -139,9 +139,7 @@ eventEncodigD eventName args =
 
 funEncodigD :: Name -> Int -> String -> [DecQ]
 funEncodigD funName paramLen ident =
-    [ funDtoDataB
-    , funD' (mkName "fromDataParser") []
-        [|error "Function from data conversion isn't available!"|] ]
+    [ funDtoDataB ]
   where
     newVars = replicateM paramLen (newName "t")
     sVar    = mkName "a"
@@ -226,7 +224,12 @@ funWrapper c name dname args result = do
 
 mkEvent :: Declaration -> Q [Dec]
 mkEvent ev@(DEvent name inputs _) = sequence
-    [  dataD' indexedName (normalC indexedName (map (toBang <=< tag) indexedArgs)) derivingD
+    [ dataD' indexedName (normalC indexedName (map (toBang <=< tag) indexedArgs)) derivingD
+    , instanceD' indexedName (conT (mkName "Generic")) []
+    , dataD' nonIndexedName (normalC nonIndexedName (map (toBang <=< tag) nonIndexedArgs)) derivingD
+    , instanceD' nonIndexedName (conT (mkName "Generic")) []
+    , dataD' allName (normalC allName (map (toBang <=< typeQ) allArgs)) derivingD
+    , instanceD' allName (conT (mkName "Generic")) []
     ]
   where
     toBang ty = bangType (bang sourceNoUnpack sourceStrict) (return ty)
@@ -236,7 +239,7 @@ mkEvent ev@(DEvent name inputs _) = sequence
     indexedName = mkName $ toUpperFirst (T.unpack name) <> "Indexed"
     nonIndexedArgs = map (\(n, ea) -> (n, eveArgType ea)) . filter (not . eveArgIndexed . snd) $ labeledArgs
     nonIndexedName = mkName $ toUpperFirst (T.unpack name) <> "NonIndexed"
-    allArgs = return . map toBang =<< (traverse typeQ . map eveArgType $ inputs)
+    allArgs = map eveArgType $ inputs
     allName = mkName $ toUpperFirst (T.unpack name)
     derivingD   = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
 
@@ -246,15 +249,14 @@ mkFun fun@(DFunction name constant inputs outputs) = (++)
   <$> funWrapper constant funName dataName inputs outputs
   <*> sequence
         [ dataD' dataName (normalC dataName bangInput) derivingD
-        , instanceD' dataName encodingT
-            (funEncodigD dataName (length inputs) mIdent)
-        , instanceD' dataName methodT [] ]
+        , instanceD' dataName (conT (mkName "Generic")) []
+        ]
   where mIdent    = T.unpack (methodId $ fun{funName = T.replace "'" "" name})
         dataName  = mkName (toUpperFirst (T.unpack $ name <> "Data"))
         funName   = mkName (toLowerFirst (T.unpack name))
         bangInput = fmap funBangType inputs
         derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
-        encodingT = conT (mkName "ABIEncoding")
+        encodingT = conT (mkName "ABIEncode")
         methodT   = conT (mkName "Method")
 
 escape :: [Declaration] -> [Declaration]

@@ -28,7 +28,8 @@ module Network.Ethereum.Web3 (
   -- ** Contract actions
   , EventAction(..)
   , Event(..)
-  , Method(..)
+  , TxMethod(..)
+  , CallMethod(..)
   , NoMethod(..)
   , nopay
   -- ** Ethereum data types
@@ -40,6 +41,8 @@ module Network.Ethereum.Web3 (
   ) where
 
 import Network.Ethereum.Web3.Encoding.Bytes
+import Network.Ethereum.Web3.Encoding.Generic
+import Network.Ethereum.Web3.Encoding.Event
 import Network.Ethereum.Web3.Contract
 import Network.Ethereum.Web3.Encoding
 import Network.Ethereum.Web3.Provider

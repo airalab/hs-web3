@@ -8,6 +8,9 @@ import Network.Ethereum.Web3.TH
 import Network.Ethereum.Web3
 import Data.Text (unpack)
 import Text.Printf
+import Data.Tagged
+import Generics.SOP
+
 
 [abiFrom|data/ERC20.json|]
 

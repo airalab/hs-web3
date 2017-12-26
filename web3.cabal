@@ -64,7 +64,7 @@ test-suite web3-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
-  build-depends:       base, memory, text, web3
+  build-depends:       base, memory, text, web3, tagged, generics-sop
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   --ghc-options:         -ddump-splices -threaded -rtsopts -with-rtsopts=-N
   default-extensions:  OverloadedStrings

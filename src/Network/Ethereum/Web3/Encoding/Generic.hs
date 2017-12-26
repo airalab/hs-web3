@@ -171,3 +171,8 @@ newtype Singleton a = Singleton { unSingleton :: a } deriving GHC.Generic
 
 instance Generic (Singleton a)
 
+instance ABIEncode a => ABIEncode (Singleton a) where
+  toDataBuilder (Singleton a) = toDataBuilder a
+
+instance ABIDecode a => ABIDecode (Singleton a) where
+  fromDataParser = Singleton <$> fromDataParser
