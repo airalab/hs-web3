@@ -26,8 +26,8 @@ install:
   $HOME/.cabal/bin installplan.txt $HOME/.cabsnap/; fi;
 
 script:
-- if [ $STACK ]; then stack -j2 --no-terminal --install-ghc test; 
-  else cabal configure $CABALCONFOPTS -v2 && cabal build $CABALBUILDOPTS && cabal test;
+- if [ $STACK ]; then stack -j2 --no-terminal --install-ghc test web3:unit;
+  else cabal configure $CABALCONFOPTS -v2 && cabal build $CABALBUILDOPTS && cabal test unit;
   fi
 
 matrix:
