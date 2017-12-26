@@ -38,6 +38,7 @@ module Network.Ethereum.Web3.TH (
   , ABIDecode(..)
   ) where
 
+import Control.Monad ((<=<))
 import qualified Data.Text.Lazy.Encoding as LT
 import qualified Data.Text.Lazy.Builder  as B
 import qualified Data.Text.Lazy          as LT
@@ -46,6 +47,7 @@ import qualified Data.Text               as T
 
 import Network.Ethereum.Web3.Address (Address)
 import Network.Ethereum.Web3.Encoding.Generic
+import Network.Ethereum.Web3.Encoding.Event
 import Network.Ethereum.Web3.Encoding
 import Network.Ethereum.Web3.Provider
 import Network.Ethereum.Web3.Internal
@@ -62,7 +64,7 @@ import Data.Monoid (mconcat, (<>))
 import Data.ByteArray (Bytes)
 import Data.Aeson
 
-import GHC.Generics
+import qualified GHC.Generics as GHC
 
 import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Lib
@@ -133,27 +135,7 @@ isDynType x | T.any (== '[') x = True
 
 eventEncodigD :: Name -> [EventArg] -> [DecQ]
 eventEncodigD eventName args =
-    [ funD' (mkName "toDataBuilder")  []
-        [|error "Event to data conversion isn't available!"|]
-    , funD' (mkName "fromDataParser") [] fromDataP ]
-  where
-    indexed = map eveArgIndexed args
-    newVars = replicateM (length args) (newName "t")
-
-    parseArg v = bindS (varP v) [|fromDataParser|]
-
-    parseData []   = []
-    parseData [v]  = pure $ bindS (varP v) [|unSingleton <$> fromDataParser|]
-    parseData vars = pure $ bindS (tupP (varP <$> vars)) [|fromDataParser|]
-
-    fromDataP = do
-        vars <- zip indexed <$> newVars
-        let ixVars   = [v | (isIndexed, v) <- vars, isIndexed]
-            noIxVars = [v | (isIndexed, v) <- vars, not isIndexed]
-            expVars  = [varE v | (_, v) <- vars]
-        doE $ fmap parseArg ixVars
-           ++ parseData noIxVars
-           ++ [noBindS [|return $(appsE (conE eventName : expVars))|]]
+    [ funD' (mkName "fromDataParser") [] [|decodeEvent|] ]
 
 funEncodigD :: Name -> Int -> String -> [DecQ]
 funEncodigD funName paramLen ident =
@@ -229,19 +211,34 @@ funWrapper c name dname args result = do
         Just xs  -> let outs = fmap (typeQ . funArgType) xs
                     in  [t|Web3 $p $(foldl appT (tupleT (length xs)) outs)|]
 
--- | Event declarations maker
+---- | Event declarations maker
+--mkEvent :: Declaration -> Q [Dec]
+--mkEvent eve@(DEvent name inputs _) = sequence
+--    [ dataD' eventName eventFields derivingD
+--    , instanceD' eventName encodingT (eventEncodigD eventName inputs)
+--    , instanceD' eventName eventT    (eventFilterD (T.unpack $ eventId eve) indexedFieldsCount)
+--    ]
+--  where eventName   = mkName (toUpperFirst (T.unpack name))
+--        eventFields = normalC eventName (eventBangType <$> inputs)
+--        encodingT   = conT (mkName "Decode")
+--        eventT      = conT (mkName "Event")
+--        indexedFieldsCount = length . filter eveArgIndexed $ inputs
+
 mkEvent :: Declaration -> Q [Dec]
-mkEvent eve@(DEvent name inputs _) = sequence
-    [ dataD' eventName eventFields derivingD
-    , instanceD' eventName encodingT (eventEncodigD eventName inputs)
-    , instanceD' eventName eventT    (eventFilterD (T.unpack $ eventId eve) indexedFieldsCount)
+mkEvent ev@(DEvent name inputs _) = sequence
+    [  dataD' indexedName (normalC indexedName (map (toBang <=< tag) indexedArgs)) derivingD
     ]
-  where eventName   = mkName (toUpperFirst (T.unpack name))
-        derivingD   = [mkName "Show", mkName "Eq", mkName "Ord", ''Generic]
-        eventFields = normalC eventName (eventBangType <$> inputs)
-        encodingT   = conT (mkName "ABIEncoding")
-        eventT      = conT (mkName "Event")
-        indexedFieldsCount = length . filter eveArgIndexed $ inputs
+  where
+    toBang ty = bangType (bang sourceNoUnpack sourceStrict) (return ty)
+    tag (n, ty) = AppT (AppT (ConT $ mkName "Tagged") (LitT $ NumTyLit n)) <$> typeQ ty
+    labeledArgs = zip [1..] inputs
+    indexedArgs = map (\(n, ea) -> (n, eveArgType ea)) . filter (eveArgIndexed . snd) $ labeledArgs
+    indexedName = mkName $ toUpperFirst (T.unpack name) <> "Indexed"
+    nonIndexedArgs = map (\(n, ea) -> (n, eveArgType ea)) . filter (not . eveArgIndexed . snd) $ labeledArgs
+    nonIndexedName = mkName $ toUpperFirst (T.unpack name) <> "NonIndexed"
+    allArgs = return . map toBang =<< (traverse typeQ . map eveArgType $ inputs)
+    allName = mkName $ toUpperFirst (T.unpack name)
+    derivingD   = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
 
 -- | Method delcarations maker
 mkFun :: Declaration -> Q [Dec]
@@ -256,7 +253,7 @@ mkFun fun@(DFunction name constant inputs outputs) = (++)
         dataName  = mkName (toUpperFirst (T.unpack $ name <> "Data"))
         funName   = mkName (toLowerFirst (T.unpack name))
         bangInput = fmap funBangType inputs
-        derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''Generic]
+        derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
         encodingT = conT (mkName "ABIEncoding")
         methodT   = conT (mkName "Method")
 
