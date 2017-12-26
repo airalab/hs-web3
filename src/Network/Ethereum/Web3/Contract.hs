@@ -78,16 +78,7 @@ class Event e where
 
 event :: ( Provider p
          , Event e
-         , IndexedEvent i ni e
-         , Generic i
-         , Rep i ~ SOP I '[hli]
-         , Generic ni
-         , Rep ni ~ SOP I '[hlni]
-         , Generic e
-         , Rep e ~ SOP I '[hle]
-         , CombineChange i ni e
-         , GenericABIDecode (SOP I '[hlni])
-         , ArrayParser (SOP I '[hli])
+         , DecodeEvent i ni e
          )
        => Proxy e
        -> Address
@@ -106,8 +97,9 @@ event p a f = do
               return ()
   where
     prepareTopics = fmap (T.drop 2) . drop 1
+    pairChange :: DecodeEvent i ni e => Change -> Maybe (e, Change)
     pairChange changeWithMeta = do
-      changeEvent <- decodeEvent p changeWithMeta
+      changeEvent <- decodeEvent changeWithMeta
       return (changeEvent, changeWithMeta)
 
 -- | Contract method caller

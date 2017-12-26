@@ -12,11 +12,9 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Network.Ethereum.Web3.Encoding.Event(
-    IndexedEvent(..)
-  , ArrayParser
+    DecodeEvent(..)
+  , ArrayParser(..)
   , genericArrayParser
-  , CombineChange
-  , decodeEvent
   ) where
 
 import Data.Kind
@@ -136,24 +134,25 @@ decoded = parseChange undefined undefined
 
 -}
 
-decodeEvent :: ( IndexedEvent i ni e
-               , Generic i
-               , Rep i ~ SOP I '[hli]
-               , Generic ni
-               , Rep ni ~ SOP I '[hlni]
-               , Generic e
-               , Rep e ~ SOP I '[hle]
-               , CombineChange i ni e
-               , GenericABIDecode (SOP I '[hlni])
-               , ArrayParser (SOP I '[hli])
-               )
-             => Proxy e
-             -> Change
-             -> Maybe e
-decodeEvent pe change = do
-    let anonymous = isAnonymous pe
-    (Event i ni :: Event i ni) <- parseChange change anonymous
-    return $ combineChange i ni
+class DecodeEvent i ni e | e -> i ni where
+  decodeEvent :: Change -> Maybe e
+
+
+instance ( IndexedEvent i ni e
+         , Generic i
+         , Rep i ~ SOP I '[hli]
+         , Generic ni
+         , Rep ni ~ SOP I '[hlni]
+         , Generic e
+         , Rep e ~ SOP I '[hle]
+         , CombineChange i ni e
+         , GenericABIDecode (SOP I '[hlni])
+         , ArrayParser (SOP I '[hli])
+         ) => DecodeEvent i ni e where
+  decodeEvent change = do
+      let anonymous = isAnonymous (Proxy :: Proxy e)
+      (Event i ni :: Event i ni) <- parseChange change anonymous
+      return $ combineChange i ni
 
 --------------------------------------------------------------------------------
 -- Event Parsing Internals
