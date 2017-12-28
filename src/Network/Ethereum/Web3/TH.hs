@@ -39,33 +39,33 @@ module Network.Ethereum.Web3.TH (
   , ABIDecode(..)
   ) where
 
-import Control.Monad ((<=<))
-import qualified Data.Text.Lazy.Encoding as LT
-import qualified Data.Text.Lazy.Builder  as B
-import qualified Data.Text.Lazy          as LT
-import qualified Data.Attoparsec.Text    as P
-import qualified Data.Text               as T
+import           Control.Monad                          ((<=<))
+import qualified Data.Attoparsec.Text                   as P
+import qualified Data.Text                              as T
+import qualified Data.Text.Lazy                         as LT
+import qualified Data.Text.Lazy.Builder                 as B
+import qualified Data.Text.Lazy.Encoding                as LT
 
-import Network.Ethereum.Web3.Address (Address)
-import Network.Ethereum.Web3.Encoding.Generic
-import Network.Ethereum.Web3.Encoding.Event
-import Network.Ethereum.Web3.Encoding
-import Network.Ethereum.Web3.Provider
-import Network.Ethereum.Web3.Internal
-import Network.Ethereum.Web3.Contract
-import Network.Ethereum.Web3.JsonAbi
-import Network.Ethereum.Web3.Types
-import Network.Ethereum.Unit
+import           Network.Ethereum.Unit
+import           Network.Ethereum.Web3.Address          (Address)
+import           Network.Ethereum.Web3.Contract
+import           Network.Ethereum.Web3.Encoding
+import           Network.Ethereum.Web3.Encoding.Event
+import           Network.Ethereum.Web3.Encoding.Generic
+import           Network.Ethereum.Web3.Internal
+import           Network.Ethereum.Web3.JsonAbi
+import           Network.Ethereum.Web3.Provider
+import           Network.Ethereum.Web3.Types
 
-import           Control.Monad                        (replicateM)
+import           Control.Monad                          (replicateM)
 
 import           Data.Aeson
-import           Data.ByteArray                       (Bytes)
-import           Data.List                            (groupBy, sortBy)
-import           Data.Monoid                          (mconcat, (<>))
-import           Data.Text                            (Text, isPrefixOf)
+import           Data.ByteArray                         (Bytes)
+import           Data.List                              (groupBy, sortBy)
+import           Data.Monoid                            (mconcat, (<>))
+import           Data.Text                              (Text, isPrefixOf)
 
-import qualified GHC.Generics as GHC
+import qualified GHC.Generics                           as GHC
 
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Lib

@@ -1,14 +1,14 @@
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TypeInType #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DataKinds            #-}
+{-# LANGUAGE DeriveGeneric        #-}
+{-# LANGUAGE FlexibleContexts     #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE RecordWildCards      #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
+{-# LANGUAGE StandaloneDeriving   #-}
+{-# LANGUAGE TypeFamilies         #-}
+{-# LANGUAGE TypeInType           #-}
+{-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE StandaloneDeriving #-}
 
 module Network.Ethereum.Web3.Encoding.Generic (
     GenericABIEncode
@@ -20,24 +20,28 @@ module Network.Ethereum.Web3.Encoding.Generic (
   , Singleton(..)
   ) where
 
+import           Data.Attoparsec.Combinator              (lookAhead)
 import qualified Data.Attoparsec.Text                    as P
-import Data.Attoparsec.Combinator (lookAhead)
 
 
-import Data.Tagged (Tagged(..))
-import Data.Int (Int64)
-import qualified Data.List as L
-import Data.Monoid
-import Data.Proxy (Proxy(..))
-import qualified Data.Text as T
-import qualified Data.Text.Lazy as LT
-import Data.Text.Lazy.Builder (Builder, toLazyText)
-import Data.Attoparsec.Text.Lazy (Parser, maybeResult, parse)
-import Generics.SOP (Generic(..), NP(..), NS(..), I(..), SOP(..), Rep(..))
-import qualified GHC.Generics as GHC (Generic)
+import           Data.Attoparsec.Text.Lazy               (Parser, maybeResult,
+                                                          parse)
+import           Data.Int                                (Int64)
+import qualified Data.List                               as L
+import           Data.Monoid
+import           Data.Proxy                              (Proxy (..))
+import           Data.Tagged                             (Tagged (..))
+import qualified Data.Text                               as T
+import qualified Data.Text.Lazy                          as LT
+import           Data.Text.Lazy.Builder                  (Builder, toLazyText)
+import           Generics.SOP                            (Generic (..), I (..),
+                                                          NP (..), NS (..),
+                                                          Rep (..), SOP (..))
+import qualified GHC.Generics                            as GHC (Generic)
 
-import Network.Ethereum.Web3.Encoding (ABIEncode(..), ABIDecode(..))
-import Network.Ethereum.Web3.Encoding.Internal (EncodingType(..))
+import           Network.Ethereum.Web3.Encoding          (ABIDecode (..),
+                                                          ABIEncode (..))
+import           Network.Ethereum.Web3.Encoding.Internal (EncodingType (..))
 
 -- | A class for encoding generically composed datatypes to their abi encoding
 class GenericABIEncode a where
@@ -48,8 +52,8 @@ class GenericABIDecode a where
   genericFromDataParser :: Parser a
 
 data EncodedValue =
-  EncodedValue { order :: Int64
-               , offset :: Maybe Int64
+  EncodedValue { order    :: Int64
+               , offset   :: Maybe Int64
                , encoding :: Builder
                }
 
@@ -65,11 +69,11 @@ combineEncodedValues encodings =
       encodings' = addTailOffsets headsOffset [] sortedEs
   in let heads = foldl (\acc EncodedValue{..} -> case offset of
                           Nothing -> acc <> encoding
-                          Just o -> acc <> toDataBuilder (toInteger o)
+                          Just o  -> acc <> toDataBuilder (toInteger o)
                       ) mempty encodings'
          tails = foldl (\acc EncodedValue{..} -> case offset of
                           Nothing -> acc
-                          Just _ -> acc <> encoding
+                          Just _  -> acc <> encoding
                       ) mempty encodings'
       in heads <> tails
   where

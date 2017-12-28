@@ -40,12 +40,12 @@ module Network.Ethereum.Web3 (
   , module Network.Ethereum.Unit
   ) where
 
-import Network.Ethereum.Web3.Encoding.Bytes
-import Network.Ethereum.Web3.Encoding.Generic
-import Network.Ethereum.Web3.Encoding.Event
-import Network.Ethereum.Web3.Contract
-import Network.Ethereum.Web3.Encoding
-import Network.Ethereum.Web3.Provider
-import Network.Ethereum.Web3.Address
-import Network.Ethereum.Web3.Types
-import Network.Ethereum.Unit
+import           Network.Ethereum.Unit
+import           Network.Ethereum.Web3.Address
+import           Network.Ethereum.Web3.Contract
+import           Network.Ethereum.Web3.Encoding
+import           Network.Ethereum.Web3.Encoding.Bytes
+import           Network.Ethereum.Web3.Encoding.Event
+import           Network.Ethereum.Web3.Encoding.Generic
+import           Network.Ethereum.Web3.Provider
+import           Network.Ethereum.Web3.Types

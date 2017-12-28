@@ -1,15 +1,15 @@
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE TypeInType #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE DataKinds              #-}
+{-# LANGUAGE FlexibleContexts       #-}
+{-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE GADTs                  #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE PolyKinds              #-}
+{-# LANGUAGE ScopedTypeVariables    #-}
+{-# LANGUAGE TypeFamilies           #-}
+{-# LANGUAGE TypeInType             #-}
+{-# LANGUAGE TypeOperators          #-}
+{-# LANGUAGE UndecidableInstances   #-}
 
 module Network.Ethereum.Web3.Encoding.Event(
     DecodeEvent(..)
@@ -18,19 +18,20 @@ module Network.Ethereum.Web3.Encoding.Event(
   , genericArrayParser
   ) where
 
-import Data.Kind
-import Data.Tagged (Tagged(..))
-import qualified Data.Text as T
-import Data.Proxy (Proxy(..))
-import qualified GHC.Generics as GHC (Generic)
-import Generics.SOP
-import GHC.TypeLits (CmpNat, Nat)
+import           Data.Kind
+import           Data.Proxy                              (Proxy (..))
+import           Data.Tagged                             (Tagged (..))
+import qualified Data.Text                               as T
+import           Generics.SOP
+import qualified GHC.Generics                            as GHC (Generic)
+import           GHC.TypeLits                            (CmpNat, Nat)
 
-import Network.Ethereum.Web3.Encoding (ABIDecode, fromData)
-import Network.Ethereum.Web3.Encoding.Internal
-import Network.Ethereum.Web3.Types (Change(..))
-import Network.Ethereum.Web3.Address (Address)
-import Network.Ethereum.Web3.Encoding.Generic (GenericABIDecode, genericFromData)
+import           Network.Ethereum.Web3.Address           (Address)
+import           Network.Ethereum.Web3.Encoding          (ABIDecode, fromData)
+import           Network.Ethereum.Web3.Encoding.Generic  (GenericABIDecode,
+                                                          genericFromData)
+import           Network.Ethereum.Web3.Encoding.Internal
+import           Network.Ethereum.Web3.Types             (Change (..))
 
 class ArrayParser a where
   arrayParser :: [T.Text] -> Maybe a

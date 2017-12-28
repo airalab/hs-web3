@@ -13,17 +13,19 @@
 --
 module Network.Ethereum.Web3.Encoding (ABIEncode(..), ABIDecode(..)) where
 
-import Data.Tagged (Tagged(..))
-import Data.Text.Lazy.Builder (Builder, toLazyText, fromText, fromLazyText)
-import Data.Attoparsec.Text.Lazy (parse, maybeResult, Parser)
-import qualified Network.Ethereum.Web3.Address as A
-import qualified Data.Attoparsec.Text          as P
-import qualified Data.Text.Lazy                as LT
-import qualified Data.Text                     as T
-import Network.Ethereum.Web3.Encoding.Internal
-import Network.Ethereum.Web3.Address (Address)
-import Data.Monoid ((<>))
-import Data.Text (Text)
+import qualified Data.Attoparsec.Text                    as P
+import           Data.Attoparsec.Text.Lazy               (Parser, maybeResult,
+                                                          parse)
+import           Data.Monoid                             ((<>))
+import           Data.Tagged                             (Tagged (..))
+import           Data.Text                               (Text)
+import qualified Data.Text                               as T
+import qualified Data.Text.Lazy                          as LT
+import           Data.Text.Lazy.Builder                  (Builder, fromLazyText,
+                                                          fromText, toLazyText)
+import           Network.Ethereum.Web3.Address           (Address)
+import qualified Network.Ethereum.Web3.Address           as A
+import           Network.Ethereum.Web3.Encoding.Internal
 
 -- | Contract ABI data codec
 class ABIEncode a where
