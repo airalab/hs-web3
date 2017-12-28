@@ -34,24 +34,6 @@ import           Test.Hspec
 contractAddress :: Address
 contractAddress = fromString . unsafePerformIO $ getEnv "SIMPLESTORAGE_CONTRACT_ADDRESS"
 
-newtype BoundedEvent ev (from :: Symbol) (to :: Symbol) = BoundedEvent ev
-
-instance ABIEncoding ev => ABIEncoding (BoundedEvent ev from to) where
-    fromDataParser = BoundedEvent <$> fromDataParser
-    toDataBuilder (BoundedEvent ev) = toDataBuilder ev
-
-instance (Event ev, KnownSymbol from, KnownSymbol to) => Event (BoundedEvent ev from to) where
-    eventFilter (BoundedEvent ev) a =
-        let maybifyBlank "" = Nothing
-            maybifyBlank x  = Just (T.pack x)
-            baseFilter = eventFilter ev a
-         in baseFilter { filterFromBlock = maybifyBlank $ symbolVal (Proxy :: Proxy from)
-                       , filterToBlock = maybifyBlank $ symbolVal (Proxy :: Proxy to)
-                       }
-
-instance Show ev => Show (BoundedEvent ev from to) where
-    show (BoundedEvent ev) = show ev
-
 spec :: Spec
 spec = describe "Simple Storage" $ do
     it "should inject contract addresses" injectExportedEnvironmentVariables
@@ -69,7 +51,10 @@ interactions = describe "can interact with a SimpleStorage contract" $ do
 
     it "can read the value back" $ \primaryAccount -> do
         let theCall = callFromTo primaryAccount contractAddress
-        sleepSeconds 5
+        now' <- runWeb3Configured Eth.blockNumber
+        let now = read (T.unpack now')
+            later = now + 3
+        awaitBlock later
         v <- runWeb3Configured (count theCall)
         v `shouldBe` theValue
 
@@ -83,11 +68,8 @@ events = describe "can interact with a SimpleStorage contract across block inter
         now' <- runWeb3Configured Eth.blockNumber
         let now = read (T.unpack now')
             later = now + 3
-            later' = "0x" ++ showHex later ""
         liftIO . putStrLn $ "now is " ++ show now ++ " (" ++ show now' ++ ")"
-        SomeSymbol (Proxy :: Proxy later) <- return (someSymbolVal later')
-        void . runWeb3Configured $ event contractAddress $ \(ev :: BoundedEvent CountSet later "latest") -> do
-            let BoundedEvent (CountSet cs) = ev
+        void . runWeb3Configured $ event contractAddress $ \(CountSet cs) -> do
             liftIO . putStrLn $ "1: Got a CountSet! " ++ show cs
             liftIO $ modifyMVar_ var (return . (cs:))
             if cs == 10
@@ -98,37 +80,7 @@ events = describe "can interact with a SimpleStorage contract across block inter
         awaitBlock later
         void . for theSets $ \v -> runWeb3Configured (setCount theCall v)
         takeMVarWithTimeout 20000000 termination >>= \case
-            Nothing -> error "timed out waiting for filter!"
-            Just term -> return ()
-        vals <- takeMVar var
-        sort vals `shouldBe` sort theSets
-    it "can stream events starting and ending in the future, bounded" $ \primaryAccount -> do
-        var <- newMVar []
-        termination <- newEmptyMVar
-        let theCall = callFromTo primaryAccount contractAddress
-            theSets = [10, 11, 12]
-        now' <- runWeb3Configured Eth.blockNumber
-        let now = read (T.unpack now')
-            later = now + 3
-            latest = now + 8
-            later' = "0x" ++ showHex later ""
-            latest' = "0x" ++ showHex latest ""
-        liftIO . putStrLn $ "now is " ++ show now ++ " (" ++ show now' ++ ")"
-        SomeSymbol (Proxy :: Proxy later) <- return (someSymbolVal later')
-        SomeSymbol (Proxy :: Proxy latest) <- return (someSymbolVal latest')
-        void . runWeb3Configured $ event contractAddress $ \(ev :: BoundedEvent CountSet later latest) -> do
-            let BoundedEvent (CountSet cs) = ev
-            liftIO . putStrLn $ "1: Got a CountSet! " ++ show cs
-            liftIO $ modifyMVar_ var (return . (cs:))
-            if cs == 12
-                then do
-                    liftIO $ putMVar termination True
-                    return TerminateEvent
-                else return ContinueEvent
-        awaitBlock later
-        void . for theSets $ \v -> runWeb3Configured (setCount theCall v)
-        takeMVarWithTimeout 20000000 termination >>= \case
-            Nothing -> error "timed out waiting for filter!"
+            Nothing -> error "timed out waiting for event thread!"
             Just term -> return ()
         vals <- takeMVar var
         sort vals `shouldBe` sort theSets
