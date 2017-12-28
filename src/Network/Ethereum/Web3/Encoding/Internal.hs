@@ -18,18 +18,21 @@ import Data.Tagged (Tagged)
 import Data.Text.Lazy.Builder (Builder, toLazyText, fromText, fromLazyText)
 import qualified Data.ByteString.Base16        as BS16 (decode, encode)
 import qualified Data.Attoparsec.Text          as P
-import qualified Data.Text.Lazy                as LT
+import           Data.Attoparsec.Text.Lazy     (Parser)
+import           Data.Bits                     (Bits)
+import qualified Data.ByteString.Base16        as BS16 (decode, encode)
+import           Data.Monoid                   ((<>))
+import           Data.Proxy                    (Proxy(..))
+import           Data.Text                     (Text)
 import qualified Data.Text                     as T
+import           Data.Text.Encoding            (decodeUtf8, encodeUtf8)
+import qualified Data.Text.Lazy                as LT
+import           Data.Text.Lazy.Builder        (Builder, fromLazyText, fromText,
+                                                toLazyText)
+import           Data.Text.Lazy.Builder.Int    as B
 import qualified Data.Text.Read                as R
-import Data.Text.Encoding (encodeUtf8, decodeUtf8)
-import Network.Ethereum.Web3.Address (Address)
-import Data.Attoparsec.Text.Lazy (Parser)
-import Data.Text.Lazy.Builder.Int as B
-import Language.Haskell.TH
-import Data.Monoid ((<>))
-import Data.Proxy (Proxy(..))
-import Data.Text (Text)
-import Data.Bits (Bits)
+
+import           Network.Ethereum.Web3.Address (Address)
 
 class EncodingType a where
     typeName :: Proxy a -> String
@@ -81,6 +84,9 @@ alignL, alignR :: Builder -> Builder
 alignL = fst . align
 {-# INLINE alignR #-}
 alignR = snd . align
+
+toQuantityHexText :: Integral a => a -> Text
+toQuantityHexText = T.append "0x" . LT.toStrict . toLazyText . B.hexadecimal
 
 int256HexBuilder :: Integral a => a -> Builder
 int256HexBuilder x

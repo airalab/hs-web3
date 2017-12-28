@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 -- |
 -- Module      :  Network.Ethereum.Web3.Address
 -- Copyright   :  Alexander Krupenkin 2016
@@ -16,19 +17,20 @@ module Network.Ethereum.Web3.Address (
   , zero
   ) where
 
-import Data.Aeson (FromJSON(..), ToJSON(..), Value(..))
-import qualified Data.Char as C
-import Data.Text.Lazy.Builder.Int as B (hexadecimal)
-import Data.Text.Lazy.Builder (toLazyText)
-import Data.Text.Read as R (hexadecimal)
-import Data.Text (Text, unpack, pack)
-import Data.String (IsString(..))
-import Data.Text.Lazy (toStrict)
-import qualified Data.Text as T
-import Control.Monad ((<=<))
-import Data.Monoid ((<>))
+import           Control.Monad              ((<=<))
+import           Data.Aeson                 (FromJSON (..), ToJSON (..),
+                                             Value (..))
+import qualified Data.Char                  as C
+import           Data.Monoid                ((<>))
+import           Data.String                (IsString (..))
+import           Data.Text                  (Text, pack, unpack)
+import qualified Data.Text                  as T
+import           Data.Text.Lazy             (toStrict)
+import           Data.Text.Lazy.Builder     (toLazyText)
+import           Data.Text.Lazy.Builder.Int as B (hexadecimal)
+import           Data.Text.Read             as R (hexadecimal)
 
-import GHC.Generics (Generic)
+import           GHC.Generics               (Generic)
 
 -- | Ethereum account address
 newtype Address = Address { unAddress :: Integer }
@@ -40,11 +42,11 @@ instance Show Address where
 instance IsString Address where
     fromString a = case fromText (pack a) of
         Right address -> address
-        Left e -> error e
+        Left e        -> error e
 
 instance FromJSON Address where
     parseJSON (String a) = either fail return (fromText a)
-    parseJSON _ = fail "Address should be a string"
+    parseJSON _          = fail "Address should be a string"
 
 instance ToJSON Address where
     toJSON = toJSON . ("0x" <>) . toText

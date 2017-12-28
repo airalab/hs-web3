@@ -45,7 +45,6 @@ module Network.Ethereum.Web3.Contract (
   , nopay
   ) where
 
-
 import Generics.SOP
 import qualified Data.Text.Lazy.Builder.Int as B
 import qualified Data.Text.Lazy.Builder     as B
@@ -110,14 +109,12 @@ event p a f = do
 -- | Contract method caller
 class TxMethod a where
     -- | Send a transaction for given contract 'Address', value and input data
-    sendTx :: forall p b .
-              (Provider p, Unit b)
-           => Address
-           -- ^ Contract address
-           -> b
-           -- ^ Payment value (set 'nopay' to empty value)
+    sendTx :: forall p .
+              Provider p
+           => Call
+           -- ^ Call configuration
            -> a
-           -- ^ Method data
+           -- ^ method data
            -> Web3 p TxHash
            -- ^ 'Web3' wrapped result
 
@@ -125,8 +122,8 @@ class CallMethod a b where
     -- | Constant call given contract 'Address' in mode and given input data
     call :: forall p .
             Provider p
-         => Address
-         -- ^ Contract address
+         => Call
+         -- ^ Call configuration
          -> DefaultBlock
          -- ^ State mode for constant call (latest or pending)
          -> a
@@ -137,29 +134,20 @@ class CallMethod a b where
 instance ( Generic a
          , GenericABIEncode (Rep a)
          ) => TxMethod a where
-  sendTx to value dat = do
-    primeAddress <- listToMaybe <$> Eth.accounts
-    Eth.sendTransaction (txdata primeAddress $ Just $ genericToData dat)
-    where txdata from = Call from to (Just defaultGas) Nothing (Just $ toWeiText value)
-          toWeiText   = ("0x" <>) . toStrict . B.toLazyText . B.hexadecimal . toWei
-          defaultGas  = "0x2DC2DC"
-
+  sendTx call dat = Eth.sendTransaction (call { callData = Just $ genericToData dat })
 
 instance ( Generic a
          , GenericABIEncode (Rep a)
          , Generic b
          , GenericABIDecode (Rep b)
          ) => CallMethod a b where
-  call to mode dat = do
-    primeAddress <- listToMaybe <$> Eth.accounts
-    res <- Eth.call (txdata primeAddress) mode
+  call call mode dat = do
+    res <- Eth.call (call { callData = Just $ genericToData dat }) mode
     case genericFromData (T.drop 2 res) of
         Nothing -> liftIO $ throwIO $ ParserFail $
             "Unable to parse result on `" ++ T.unpack res
-            ++ "` from `" ++ show to ++ "`"
+            ++ "` from `" ++ show (callTo call) ++ "`"
         Just x -> return x
-    where
-      txdata from = Call from to Nothing Nothing Nothing (Just (genericToData dat))
 
 -- | Zero value is used to send transaction without money
 nopay :: Wei
@@ -177,7 +165,6 @@ instance ABIDecode NoMethod where
 
 instance CallMethod NoMethod b where
     call = undefined
-
 
 instance TxMethod NoMethod where
     sendTx = undefined

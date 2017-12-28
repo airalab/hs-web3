@@ -11,10 +11,10 @@
 --
 module Network.Ethereum.Web3.Net where
 
-import Network.Ethereum.Web3.Provider
-import Network.Ethereum.Web3.JsonRpc
-import Network.Ethereum.Web3.Types
-import Data.Text (Text)
+import           Data.Text                      (Text)
+import           Network.Ethereum.Web3.JsonRpc
+import           Network.Ethereum.Web3.Provider
+import           Network.Ethereum.Web3.Types
 
 -- | Returns the current network id.
 version :: Provider a => Web3 a Text

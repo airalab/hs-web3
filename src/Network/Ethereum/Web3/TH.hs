@@ -1,7 +1,8 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE QuasiQuotes     #-}
-{-# LANGUAGE CPP             #-}
-{-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE CPP              #-}
+{-# LANGUAGE DeriveGeneric    #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE QuasiQuotes      #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 -- |
 -- Module      :  Network.Ethereum.Web3.TH
@@ -56,19 +57,19 @@ import Network.Ethereum.Web3.JsonAbi
 import Network.Ethereum.Web3.Types
 import Network.Ethereum.Unit
 
-import Control.Monad (replicateM)
+import           Control.Monad                        (replicateM)
 
-import Data.Text (Text, isPrefixOf)
-import Data.List (groupBy, sortBy)
-import Data.Monoid (mconcat, (<>))
-import Data.ByteArray (Bytes)
-import Data.Aeson
+import           Data.Aeson
+import           Data.ByteArray                       (Bytes)
+import           Data.List                            (groupBy, sortBy)
+import           Data.Monoid                          (mconcat, (<>))
+import           Data.Text                            (Text, isPrefixOf)
 
 import qualified GHC.Generics as GHC
 
-import Language.Haskell.TH.Quote
-import Language.Haskell.TH.Lib
-import Language.Haskell.TH
+import           Language.Haskell.TH
+import           Language.Haskell.TH.Lib
+import           Language.Haskell.TH.Quote
 
 -- | Read contract ABI from file
 abiFrom :: QuasiQuoter
@@ -184,7 +185,7 @@ funWrapper c name dname args result = do
     sequence $ if c
         then
           [ sigD name $ [t|Provider $p =>
-                            $(arrowing $ [t|Address|] : inputT ++ [outputT])
+                            $(arrowing $ [t|Call|] : inputT ++ [outputT])
                           |]
           , funD' name (varP <$> a : vars) $
               case result of
@@ -193,14 +194,14 @@ funWrapper c name dname args result = do
           ]
 
         else
-          [ sigD name $ [t|(Provider $p, Unit $(varT b)) =>
-                            $(arrowing $ [t|Address|] : varT b : inputT ++ [[t|Web3 $p TxHash|]])
+          [ sigD name $ [t|(Provider $p) =>
+                            $(arrowing $ [t|Call|] : inputT ++ [[t|Web3 $p TxHash|]])
                           |]
-          , funD' name (varP <$> a : b : vars) $
-                [|sendTx $(varE a) $(varE b) $(params)|] ]
+          , funD' name (varP <$> a : vars) $
+                [|sendTx $(varE a) $(params)|] ]
   where
     p = varT (mkName "p")
-    arrowing [x] = x
+    arrowing [x]      = x
     arrowing (x : xs) = [t|$x -> $(arrowing xs)|]
     inputT  = fmap (typeQ . funArgType) args
     outputT = case result of
@@ -252,9 +253,9 @@ mkFun fun@(DFunction name constant inputs outputs) = (++)
 escape :: [Declaration] -> [Declaration]
 escape = concat . escapeNames . groupBy fnEq . sortBy fnCompare
   where fnEq (DFunction n1 _ _ _) (DFunction n2 _ _ _) = n1 == n2
-        fnEq _ _ = False
+        fnEq _ _                                       = False
         fnCompare (DFunction n1 _ _ _) (DFunction n2 _ _ _) = compare n1 n2
-        fnCompare _ _ = GT
+        fnCompare _ _                                       = GT
 
 escapeNames :: [[Declaration]] -> [[Declaration]]
 escapeNames = fmap go
@@ -266,14 +267,14 @@ escapeNames = fmap go
 mkDecl :: Declaration -> Q [Dec]
 mkDecl x@DFunction{} = mkFun x
 mkDecl x@DEvent{}    = mkEvent x
-mkDecl _ = return []
+mkDecl _             = return []
 
 -- | ABI to declarations converter
 quoteAbiDec :: String -> Q [Dec]
 quoteAbiDec abi_string =
     case decode abi_lbs of
         Just (ContractABI abi) -> concat <$> mapM mkDecl (escape abi)
-        _ -> fail "Unable to parse ABI!"
+        _                      -> fail "Unable to parse ABI!"
   where abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
 
 -- | ABI information string
