@@ -14,7 +14,13 @@ cabal-version:       >=1.10
 
 extra-source-files:
   README.md
-  data/ERC20.json
+  contracts/Migrations.sol
+  contracts/SimpleStorage.sol
+  truffle.js
+  migrations/1_initial_migration.js
+  migrations/2_deploy_contracts.js
+  convertAbi.sh
+  inject-contract-addresses.sh
 
 source-repository head
   type:     git
@@ -23,8 +29,7 @@ source-repository head
 custom-setup
   setup-depends:
     base,
-    Cabal,
-    split
+    Cabal
 
 library
   hs-source-dirs:      src
@@ -69,8 +74,6 @@ test-suite web3-test
   main-is:             Spec.hs
   other-modules:       Network.Ethereum.Web3.Test.MethodDumpSpec
                        Network.Ethereum.Web3.Test.SimpleStorageSpec
-                       Network.Ethereum.Web3.Test.ComplexStorageSpec
-                       Network.Ethereum.Web3.Test.ERC20Spec
                        Network.Ethereum.Web3.Test.Utils
   build-depends:       base
                      , bytestring
