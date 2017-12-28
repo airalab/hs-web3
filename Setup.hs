@@ -26,13 +26,12 @@ exportStore :: String
 exportStore = ".detected-contract-addresses"
 
 myBuildHook :: PackageDescription -> LocalBuildInfo -> UserHooks -> BuildFlags -> IO ()
-myBuildHook pd lbi uh flags = when hasTestTarget $ do
-    putStrLn "Running truffle deploy and convertAbi before building tests"
-    rawCommand v "truffle" ["deploy"] Nothing
-    rawCommand v "./convertAbi.sh" [] Nothing
-    rawCommand v "./inject-contract-addresses.sh" [] (Just [("EXPORT_STORE", exportStore)])
-
+myBuildHook pd lbi uh flags = do
+    let v = fromFlag $ buildVerbosity flags
+        hasTestTarget = any ("test:" `isPrefixOf`) $ buildArgs flags
+    when hasTestTarget $ do
+        putStrLn "Running truffle deploy and convertAbi before building tests"
+        rawCommand v "truffle" ["deploy"] Nothing
+        rawCommand v "./convertAbi.sh" [] Nothing
+        rawCommand v "./inject-contract-addresses.sh" [] (Just [("EXPORT_STORE", exportStore)])
     buildHook simpleUserHooks pd lbi uh flags
-
-    where v = fromFlag $ buildVerbosity flags
-          hasTestTarget = any ("test:" `isPrefixOf`) $ buildArgs flags
