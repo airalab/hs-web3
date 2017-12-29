@@ -6,6 +6,7 @@
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE UndecidableInstances  #-}
+{-# LANGUAGE RankNTypes  #-}
 
 -- |
 -- Module      :  Network.Ethereum.Web3.Contract
@@ -41,6 +42,7 @@ module Network.Ethereum.Web3.Contract (
   , TxMethod(..)
   , CallMethod(..)
   , Event(..)
+  , event
   , NoMethod(..)
   , nopay
   ) where
@@ -80,16 +82,16 @@ class Event e where
     -- | Event filter structure used by low-level subscription methods
     eventFilter :: Proxy e -> Address -> Filter
 
-event :: ( Provider p
+event :: forall p e i ni.
+          ( Provider p
          , Event e
          , DecodeEvent i ni e
          )
-       => Proxy e
-       -> Address
+       => Address
        -> (e -> ReaderT Change (Web3 p) EventAction)
        -> Web3 p ThreadId
-event p a f = do
-    fid <- Eth.newFilter (eventFilter p a)
+event a f = do
+    fid <- Eth.newFilter (eventFilter (Proxy :: Proxy e) a)
     forkWeb3 $
         let loop = do liftIO (threadDelay 1000000)
                       changes <- Eth.getFilterChanges fid

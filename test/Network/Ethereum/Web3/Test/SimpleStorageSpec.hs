@@ -1,6 +1,9 @@
 {-# LANGUAGE KindSignatures  #-}
+{-# LANGUAGE LambdaCase  #-}
 {-# LANGUAGE QuasiQuotes     #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 module Network.Ethereum.Web3.Test.SimpleStorageSpec where
 
 import           Control.Concurrent               (threadDelay)
@@ -19,7 +22,6 @@ import           Data.Traversable                 (for)
 import           GHC.TypeLits
 import           Network.Ethereum.Web3            hiding (convert)
 import           Network.Ethereum.Web3.Contract   (Event (..))
-import           Network.Ethereum.Web3.Encoding   (ABIEncoding (..))
 import qualified Network.Ethereum.Web3.Eth        as Eth
 import           Network.Ethereum.Web3.Test.Utils
 import           Network.Ethereum.Web3.TH

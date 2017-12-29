@@ -35,12 +35,15 @@ module Network.Ethereum.Web3.TH (
   , Bytes
   , Text
   , Singleton(..)
-  , ABIEncode(..)
-  , ABIDecode(..)
+  , IndexedEvent(..)
+  , Tagged
+  , module Generics.SOP
   ) where
 
 import           Control.Monad                          ((<=<))
 import qualified Data.Attoparsec.Text                   as P
+import           Data.List                              (length)
+import           Data.Tagged                            (Tagged)
 import qualified Data.Text                              as T
 import qualified Data.Text.Lazy                         as LT
 import qualified Data.Text.Lazy.Builder                 as B
@@ -65,6 +68,7 @@ import           Data.List                              (groupBy, sortBy)
 import           Data.Monoid                            (mconcat, (<>))
 import           Data.Text                              (Text, isPrefixOf)
 
+import           Generics.SOP
 import qualified GHC.Generics                           as GHC
 
 import           Language.Haskell.TH
@@ -220,6 +224,8 @@ mkEvent ev@(DEvent name inputs anonymous) = sequence
     , instanceD' allName (conT (mkName "Generic")) []
     , instanceD (cxt []) (return $ (ConT $ mkName "IndexedEvent") `AppT` ConT indexedName `AppT` ConT nonIndexedName `AppT` ConT allName)
         [funD' (mkName "isAnonymous") [] [|const anonymous|]]
+    , instanceD' allName eventT (eventFilterD (T.unpack $ eventId ev) (length indexedArgs))
+
     ]
   where
     toBang ty = bangType (bang sourceNoUnpack sourceStrict) (return ty)
@@ -231,7 +237,9 @@ mkEvent ev@(DEvent name inputs anonymous) = sequence
     nonIndexedName = mkName $ toUpperFirst (T.unpack name) <> "NonIndexed"
     allArgs = map eveArgType $ inputs
     allName = mkName $ toUpperFirst (T.unpack name)
-    derivingD   = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
+    derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
+    eventT = conT (mkName "Event")
+
 
 
 -- | Method delcarations maker

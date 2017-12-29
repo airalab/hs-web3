@@ -28,6 +28,7 @@ module Network.Ethereum.Web3 (
   -- ** Contract actions
   , EventAction(..)
   , Event(..)
+  , event
   , TxMethod(..)
   , CallMethod(..)
   , NoMethod(..)
@@ -38,6 +39,7 @@ module Network.Ethereum.Web3 (
   , Address
   -- ** Ethereum unit conversion utils
   , module Network.Ethereum.Unit
+  , IndexedEvent(..)
   ) where
 
 import           Network.Ethereum.Unit
