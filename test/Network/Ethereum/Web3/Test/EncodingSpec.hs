@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Network.Ethereum.Web3.Test.EncodingSpec where
 
 import qualified Data.ByteString.Base16 as BS16
@@ -7,9 +9,10 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Encoding as T
 import Data.Text.Lazy.Builder (toLazyText)
-
+import Generics.SOP (Generic, Rep)
 
 import Network.Ethereum.Web3.Encoding
+import Network.Ethereum.Web3.Encoding.Generic
 import Data.Monoid
 import Network.Ethereum.Web3 hiding (convert)
 import Test.Hspec
@@ -60,7 +63,6 @@ bytesNTest =
              encoded = "6761766f66796f726b0000000000000000000000000000000000000000000000"
          roundTrip decoded encoded
 
-
 -- utils
 bytesDecode :: T.Text -> Bytes
 bytesDecode = convert . fst . BS16.decode . T.encodeUtf8
@@ -76,3 +78,16 @@ roundTrip :: ( Show a
 roundTrip decoded encoded = do
   encoded `shouldBe` ( TL.toStrict . toLazyText . toDataBuilder $ decoded)
   fromData encoded `shouldBe` Just decoded
+
+roundTripGeneric :: ( Show a
+                    , Eq a
+                    , Generic a
+                    , GenericABIEncode (Rep a)
+                    , GenericABIDecode (Rep a)
+                    )
+                 => a
+                 -> T.Text
+                 -> IO ()
+roundTripGeneric decoded encoded = do
+  encoded `shouldBe` (TL.toStrict . toLazyText . genericABIEncode $ decoded)
+  genericFromData encoded `shouldBe` Just decoded

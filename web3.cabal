@@ -82,6 +82,7 @@ test-suite web3-test
                      , base16-bytestring
                      , bytestring
                      , data-default
+                     , generics-sop
                      , hspec
                      , hspec-contrib
                      , hspec-discover
