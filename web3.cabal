@@ -76,8 +76,10 @@ test-suite web3-test
   main-is:             Spec.hs
   other-modules:       Network.Ethereum.Web3.Test.MethodDumpSpec
                        Network.Ethereum.Web3.Test.SimpleStorageSpec
+                       Network.Ethereum.Web3.Test.EncodingSpec
                        Network.Ethereum.Web3.Test.Utils
   build-depends:       base
+                     , base16-bytestring
                      , bytestring
                      , data-default
                      , hspec
