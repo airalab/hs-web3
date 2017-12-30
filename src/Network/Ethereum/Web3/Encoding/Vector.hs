@@ -24,3 +24,7 @@ instance (ABIEncode a, KnownNat n) => ABIEncode (Vector n a) where
 instance (ABIDecode a, KnownNat n) => ABIDecode (Vector n a) where
   fromDataParser = let len = natVal (Proxy :: Proxy n)
                    in unsafeFromList (sing :: Sing n) <$> replicateM (fromInteger len) fromDataParser
+
+instance (KnownNat n, EncodingType a) => EncodingType (Vector n a) where
+  typeName = const $ typeName (Proxy :: Proxy a) ++ "[" ++ show (natVal (Proxy :: Proxy n)) ++ "]"
+  isDynamic = const $ isDynamic (Proxy :: Proxy a)

@@ -12,8 +12,10 @@ import Data.Text.Lazy.Builder (toLazyText)
 import Generics.SOP (Generic, Rep)
 
 import Network.Ethereum.Web3.Encoding
+import Network.Ethereum.Web3.Encoding.Vector
 import Network.Ethereum.Web3.Encoding.Generic
 import Data.Monoid
+import Data.Sized
 import Network.Ethereum.Web3 hiding (convert)
 import Test.Hspec
 
@@ -22,6 +24,7 @@ spec :: Spec
 spec = do
   bytesDTest
   bytesNTest
+  vectorTest
 
 
 bytesDTest :: Spec
@@ -78,6 +81,28 @@ roundTrip :: ( Show a
 roundTrip decoded encoded = do
   encoded `shouldBe` ( TL.toStrict . toLazyText . toDataBuilder $ decoded)
   fromData encoded `shouldBe` Just decoded
+
+vectorTest :: Spec
+vectorTest =
+    describe "statically sized array tests" $ do
+
+      it "can encode statically sized vectors of addresses" $ do
+         let decoded = False :< True :< NilL :: Vector 2 Bool
+             encoded = "0000000000000000000000000000000000000000000000000000000000000000"
+                    <> "0000000000000000000000000000000000000000000000000000000000000001"
+         roundTrip decoded encoded
+
+      it "can encode statically sized vectors of statically sized bytes"$  do
+         let elem1 = BytesN . bytesDecode $ "cf" :: BytesN 1
+             elem2 = BytesN . bytesDecode $ "68" :: BytesN 1
+             elem3 = BytesN . bytesDecode $ "4d" :: BytesN 1
+             elem4 = BytesN . bytesDecode $ "fb" :: BytesN 1
+             decoded = elem1 :< elem2 :< elem3 :< elem4 :< NilL :: Vector 4 (BytesN 1)
+             encoded = "cf00000000000000000000000000000000000000000000000000000000000000"
+                    <> "6800000000000000000000000000000000000000000000000000000000000000"
+                    <> "4d00000000000000000000000000000000000000000000000000000000000000"
+                    <> "fb00000000000000000000000000000000000000000000000000000000000000"
+         roundTrip decoded encoded
 
 roundTripGeneric :: ( Show a
                     , Eq a

@@ -90,7 +90,7 @@ test-suite unit
                      , hspec-discover
                      , hspec-expectations
                      , memory
-                     , text
+                     , sized
                      , split
                      , stm
                      , time
