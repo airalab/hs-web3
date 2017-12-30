@@ -1,6 +1,4 @@
 import           Control.Monad                      (void, when)
-import           Data.List                          (isPrefixOf)
-import           Data.Traversable                   (for)
 import           Distribution.PackageDescription    (HookedBuildInfo, PackageDescription)
 import           Distribution.Simple
 import           Distribution.Simple.LocalBuildInfo (LocalBuildInfo (..))
@@ -28,8 +26,8 @@ exportStore = ".detected-contract-addresses"
 myBuildHook :: PackageDescription -> LocalBuildInfo -> UserHooks -> BuildFlags -> IO ()
 myBuildHook pd lbi uh flags = do
     let v = fromFlag $ buildVerbosity flags
-        hasTestTarget = any ("test:" `isPrefixOf`) $ buildArgs flags
-    when hasTestTarget $ do
+        hasLiveTestTarget = "test:live" `elem` buildArgs flags
+    when hasLiveTestTarget $ do
         putStrLn "Running truffle deploy and convertAbi before building tests"
         rawCommand v "truffle" ["deploy"] Nothing
         rawCommand v "./convertAbi.sh" [] Nothing
