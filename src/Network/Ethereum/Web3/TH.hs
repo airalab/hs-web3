@@ -223,8 +223,6 @@ mkEvent ev@(DEvent name inputs anonymous) = sequence
     derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
     eventT = conT (mkName "Event")
 
-
-
 -- | Method delcarations maker
 mkFun :: Declaration -> Q [Dec]
 mkFun fun@(DFunction name constant inputs outputs) = (++)
