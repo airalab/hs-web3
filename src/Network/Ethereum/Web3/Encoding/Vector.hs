@@ -1,20 +1,23 @@
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds            #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE KindSignatures       #-}
+{-# LANGUAGE PolyKinds            #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Network.Ethereum.Web3.Encoding.Vector where
 
-import Control.Monad (replicateM)
-import Data.Sized (Sized, toList, fromList, unsafeFromList)
-import Data.Singletons (sing, Sing)
-import Data.Proxy
-import Network.Ethereum.Web3.Encoding (ABIEncode(..), ABIDecode(..))
-import Network.Ethereum.Web3.Encoding.Internal (EncodingType(..))
-import GHC.TypeLits
+import           Control.Monad                           (replicateM)
+import           Data.Proxy
+import           Data.Singletons                         (Sing, sing)
+import           Data.Sized                              (Sized, fromList,
+                                                          toList,
+                                                          unsafeFromList)
+import           GHC.TypeLits
+import           Network.Ethereum.Web3.Encoding          (ABIDecode (..),
+                                                          ABIEncode (..))
+import           Network.Ethereum.Web3.Encoding.Internal (EncodingType (..))
 
 type Vector (n :: Nat) a = Sized [] n a
 

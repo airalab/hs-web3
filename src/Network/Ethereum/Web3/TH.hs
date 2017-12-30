@@ -41,13 +41,13 @@ module Network.Ethereum.Web3.TH (
   ) where
 
 import           Control.Monad                          ((<=<))
-import           Text.Parsec.Text                       as P
 import           Data.List                              (length)
 import           Data.Tagged                            (Tagged)
 import qualified Data.Text                              as T
 import qualified Data.Text.Lazy                         as LT
 import qualified Data.Text.Lazy.Builder                 as B
 import qualified Data.Text.Lazy.Encoding                as LT
+import           Text.Parsec.Text                       as P
 
 import           Network.Ethereum.Unit
 import           Network.Ethereum.Web3.Address          (Address)

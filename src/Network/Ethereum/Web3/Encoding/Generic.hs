@@ -21,9 +21,6 @@ module Network.Ethereum.Web3.Encoding.Generic (
   ) where
 
 import           Control.Error
-import           Text.Parsec.Combinator              (lookAhead)
-import           Text.Parsec               (parse, getPosition, sourceColumn)
-import           Text.Parsec.Text.Lazy               (Parser)
 import           Data.Int                                (Int64)
 import qualified Data.List                               as L
 import           Data.Monoid
@@ -36,10 +33,15 @@ import           Generics.SOP                            (Generic (..), I (..),
                                                           NP (..), NS (..),
                                                           Rep (..), SOP (..))
 import qualified GHC.Generics                            as GHC (Generic)
+import           Text.Parsec                             (getPosition, parse,
+                                                          sourceColumn)
+import           Text.Parsec.Combinator                  (lookAhead)
+import           Text.Parsec.Text.Lazy                   (Parser)
 
 import           Network.Ethereum.Web3.Encoding          (ABIDecode (..),
                                                           ABIEncode (..))
-import           Network.Ethereum.Web3.Encoding.Internal (EncodingType (..), takeHexChar)
+import           Network.Ethereum.Web3.Encoding.Internal (EncodingType (..),
+                                                          takeHexChar)
 
 -- | A class for encoding generically composed datatypes to their abi encoding
 class GenericABIEncode a where

@@ -1,22 +1,26 @@
-{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE KindSignatures             #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE PolyKinds                  #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 
 module Network.Ethereum.Web3.Encoding.Int where
 
-import Control.Error (hush)
-import Numeric (showIntAtBase)
-import Data.Char (intToDigit)
-import qualified Data.ByteString as BS
-import qualified Data.Text as T
-import qualified Data.Text.Read as R
-import Data.Proxy (Proxy(..))
-import Network.Ethereum.Web3.Encoding(ABIEncode(..), ABIDecode(..))
-import Network.Ethereum.Web3.Encoding.Internal (EncodingType(..), int256HexBuilder, int256HexParser, takeHexChar)
-import GHC.TypeLits
+import           Control.Error                           (hush)
+import qualified Data.ByteString                         as BS
+import           Data.Char                               (intToDigit)
+import           Data.Proxy                              (Proxy (..))
+import qualified Data.Text                               as T
+import qualified Data.Text.Read                          as R
+import           GHC.TypeLits
+import           Network.Ethereum.Web3.Encoding          (ABIDecode (..),
+                                                          ABIEncode (..))
+import           Network.Ethereum.Web3.Encoding.Internal (EncodingType (..),
+                                                          int256HexBuilder,
+                                                          int256HexParser,
+                                                          takeHexChar)
+import           Numeric                                 (showIntAtBase)
 
 
 -- | Sized unsigned integers

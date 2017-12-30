@@ -15,9 +15,6 @@
 module Network.Ethereum.Web3.Encoding.Internal where
 
 import           Control.Monad                 (replicateM)
-import qualified Text.Parsec                   as P
-import           Text.Parsec.Char              (anyChar)
-import           Text.Parsec.Text.Lazy         (Parser)
 import           Data.Bits                     (Bits)
 import qualified Data.ByteString.Base16        as BS16 (decode, encode)
 import qualified Data.ByteString.Base16        as BS16 (decode, encode)
@@ -34,6 +31,9 @@ import           Data.Text.Lazy.Builder        (Builder, fromLazyText, fromText,
                                                 toLazyText)
 import           Data.Text.Lazy.Builder.Int    as B
 import qualified Data.Text.Read                as R
+import qualified Text.Parsec                   as P
+import           Text.Parsec.Char              (anyChar)
+import           Text.Parsec.Text.Lazy         (Parser)
 
 import           Network.Ethereum.Web3.Address (Address)
 

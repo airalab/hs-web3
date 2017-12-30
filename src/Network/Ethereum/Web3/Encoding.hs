@@ -13,10 +13,10 @@
 --
 module Network.Ethereum.Web3.Encoding (ABIEncode(..), ABIDecode(..)) where
 
-import           Control.Error                 (hush)
-import           Text.Parsec                   (parse)
-import           Text.Parsec.Text.Lazy         (Parser)
-import           Text.Parsec.Combinator        (many1)
+import           Control.Error                           (hush)
+import           Text.Parsec                             (parse)
+import           Text.Parsec.Combinator                  (many1)
+import           Text.Parsec.Text.Lazy                   (Parser)
 
 
 import           Data.Monoid                             ((<>))

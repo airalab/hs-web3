@@ -6,7 +6,6 @@
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE UndecidableInstances  #-}
-{-# LANGUAGE RankNTypes  #-}
 
 -- |
 -- Module      :  Network.Ethereum.Web3.Contract
