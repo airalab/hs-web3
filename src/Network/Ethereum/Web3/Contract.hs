@@ -32,7 +32,7 @@
 -- @
 -- runweb3 $ do
 --   x  <- call "0x.." Latest MySelector
---   tx <- sendTx "0x.."} nopay $ MySelector2 (x + 2)
+--   tx <- sendTx "0x.." nopay $ MySelector2 (x + 2)
 -- @
 --
 module Network.Ethereum.Web3.Contract (
