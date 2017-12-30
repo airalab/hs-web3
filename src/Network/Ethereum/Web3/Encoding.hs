@@ -13,9 +13,12 @@
 --
 module Network.Ethereum.Web3.Encoding (ABIEncode(..), ABIDecode(..)) where
 
-import qualified Data.Attoparsec.Text                    as P
-import           Data.Attoparsec.Text.Lazy               (Parser, maybeResult,
-                                                          parse)
+import           Control.Error                 (hush)
+import           Text.Parsec                   (parse)
+import           Text.Parsec.Text.Lazy         (Parser)
+import           Text.Parsec.Combinator        (many1)
+
+
 import           Data.Monoid                             ((<>))
 import           Data.Tagged                             (Tagged (..))
 import           Data.Text                               (Text)
@@ -40,7 +43,7 @@ class ABIDecode a where
     -- | Parse encoded value
     fromData :: Text -> Maybe a
     {-# INLINE fromData #-}
-    fromData = maybeResult . parse fromDataParser . LT.fromStrict
+    fromData = hush . parse fromDataParser "" . LT.fromStrict
 
 instance ABIEncode Bool where
     toDataBuilder  = int256HexBuilder . fromEnum
@@ -77,7 +80,7 @@ instance ABIEncode Address where
 
 instance ABIDecode Address where
     fromDataParser = either error id . A.fromText
-                     <$> (P.take 24 *> P.take 40)
+                     <$> (takeHexChar 24 *> takeHexChar 40)
 
 instance ABIEncode a => ABIEncode [a] where
     toDataBuilder x = int256HexBuilder (length x)
@@ -85,7 +88,7 @@ instance ABIEncode a => ABIEncode [a] where
 
 instance ABIDecode a => ABIDecode [a] where
     fromDataParser = do len <- int256HexParser
-                        take len <$> P.many1 fromDataParser
+                        take len <$> many1 fromDataParser
 
 instance ABIEncode a => ABIEncode (Tagged t a) where
   toDataBuilder (Tagged a) = toDataBuilder a

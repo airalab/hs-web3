@@ -55,7 +55,6 @@ library
                      , Network.Ethereum.Web3.Encoding.Internal
   build-depends:       base >4.8 && <4.11
                      , aeson
-                     , attoparsec
                      , base16-bytestring
                      , bytestring
                      , cryptonite
@@ -65,6 +64,8 @@ library
                      , http-client
                      , data-default
                      , memory
+                     , mtl
+                     , parsec
                      , singletons
                      , sized
                      , tagged

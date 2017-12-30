@@ -10,13 +10,12 @@ module Network.Ethereum.Web3.Encoding.Int where
 import Control.Error (hush)
 import Numeric (showIntAtBase)
 import Data.Char (intToDigit)
-import qualified Data.Attoparsec.Text          as P
 import qualified Data.ByteString as BS
 import qualified Data.Text as T
 import qualified Data.Text.Read as R
 import Data.Proxy (Proxy(..))
 import Network.Ethereum.Web3.Encoding(ABIEncode(..), ABIDecode(..))
-import Network.Ethereum.Web3.Encoding.Internal (EncodingType(..), int256HexBuilder, int256HexParser)
+import Network.Ethereum.Web3.Encoding.Internal (EncodingType(..), int256HexBuilder, int256HexParser, takeHexChar)
 import GHC.TypeLits
 
 
@@ -68,7 +67,7 @@ instance KnownNat n => ABIDecode (IntN n) where
   fromDataParser =
     let nBytes = natVal (Proxy :: Proxy n)
     in do
-      a <- P.take 64
+      a <- takeHexChar 64
       case fromHexStringSigned a >>= intNFromInteger of
         Nothing -> fail $ "Could not decode as " ++ typeName (Proxy :: Proxy (UIntN n)) ++ ": " ++ show a
         Just a' -> return a'

@@ -20,12 +20,10 @@ module Network.Ethereum.Web3.Encoding.Generic (
   , Singleton(..)
   ) where
 
-import           Data.Attoparsec.Combinator              (lookAhead)
-import qualified Data.Attoparsec.Text                    as P
-
-
-import           Data.Attoparsec.Text.Lazy               (Parser, maybeResult,
-                                                          parse)
+import           Control.Error
+import           Text.Parsec.Combinator              (lookAhead)
+import           Text.Parsec               (parse)
+import           Text.Parsec.Text.Lazy               (Parser)
 import           Data.Int                                (Int64)
 import qualified Data.List                               as L
 import           Data.Monoid
@@ -97,7 +95,6 @@ class ABIData a where
 instance ABIData (NP f '[]) where
     _serialize encoded _ = encoded
 
-
 instance (EncodingType b, ABIEncode b, ABIData (NP I as)) => ABIData (NP I (b :as)) where
   _serialize encoded (I b :* a) =
     if isDynamic (Proxy :: Proxy b)
@@ -132,7 +129,6 @@ genericToData :: ( Generic a
               -> T.Text
 genericToData = LT.toStrict . toLazyText . genericToDataBuilder . from
 
-
 instance GenericABIDecode (NP f '[]) where
   genericFromDataParser = return Nil
 
@@ -154,21 +150,12 @@ genericFromData :: ( Generic a
                    )
                 => T.Text
                 -> Maybe a
-genericFromData = fmap to . maybeResult . parse genericFromDataParser . LT.fromStrict
+genericFromData = fmap to . hush . parse genericFromDataParser "" . LT.fromStrict
 
-factorParser :: (ABIDecode a, EncodingType a) => Parser a
-factorParser = undefined
---  | not $ isDynamic (Proxy :: Proxy a) = fromDataParser
---  | otherwise = undefined
-
--- | Dynamic argument parser
---dParser :: ABIDecode a => Parser a
---dParser = do
---  dataOffset <- fromDataParser
---  lookAhead $ do
---    _ <- P.take dataOffset
---    fromDataParser
-
+factorParser :: forall a . ABIDecode a => EncodingType a => Parser a
+factorParser
+  | not $ isDynamic (Proxy :: Proxy a) = fromDataParser
+  | otherwise = undefined
 
 -- We also need "one-tuples"
 newtype Singleton a = Singleton { unSingleton :: a } deriving GHC.Generic

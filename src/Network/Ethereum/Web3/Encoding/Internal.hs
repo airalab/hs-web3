@@ -14,8 +14,10 @@
 --
 module Network.Ethereum.Web3.Encoding.Internal where
 
-import qualified Data.Attoparsec.Text          as P
-import           Data.Attoparsec.Text.Lazy     (Parser)
+import           Control.Monad                 (replicateM)
+import qualified Text.Parsec                   as P
+import           Text.Parsec.Char              (anyChar)
+import           Text.Parsec.Text.Lazy         (Parser)
 import           Data.Bits                     (Bits)
 import qualified Data.ByteString.Base16        as BS16 (decode, encode)
 import qualified Data.ByteString.Base16        as BS16 (decode, encode)
@@ -96,7 +98,7 @@ int256HexBuilder x
 
 int256HexParser :: (Bits a, Integral a) => Parser a
 int256HexParser = do
-    hex <- P.take 64
+    hex <- takeHexChar 64
     case R.hexadecimal hex of
         Right (v, "") -> return v
         _ -> fail ("Broken hexadecimal: `" ++ T.unpack hex ++ "`")
@@ -111,6 +113,9 @@ textParser :: Parser Text
 textParser = do
     len <- int256HexParser
     let zeroBytes = 32 - (len `mod` 32)
-    str <- P.take (len * 2) <* P.take (zeroBytes * 2)
+    str <- takeHexChar (len * 2) <* takeHexChar (zeroBytes * 2)
     return (hexToText str)
   where hexToText = decodeUtf8 . fst . BS16.decode . encodeUtf8
+
+takeHexChar :: Int -> Parser T.Text
+takeHexChar n = LT.toStrict . LT.pack <$> replicateM n anyChar

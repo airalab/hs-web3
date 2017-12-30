@@ -18,7 +18,6 @@ module Network.Ethereum.Web3.Encoding.Bytes (
   , BytesD(..)
   ) where
 
-import qualified Data.Attoparsec.Text                    as P
 import           Data.ByteArray                          (Bytes)
 import qualified Data.ByteArray                          as BA
 import qualified Data.ByteString.Base16                  as BS16 (decode,
@@ -53,7 +52,7 @@ instance KnownNat n => ABIDecode (BytesN n) where
     fromDataParser = do
         let result   = undefined :: KnownNat n => BytesN n
             len      = fromIntegral (natVal result)
-        bytesString <- T.take (len * 2) <$> P.take 64
+        bytesString <- T.take (len * 2) <$> takeHexChar 64
         return (update result (bytesDecode bytesString))
 
 instance KnownNat n => Show (BytesN n) where
@@ -88,7 +87,7 @@ instance ABIDecode BytesD where
         len <- int256HexParser
         if (len :: Integer) > fromIntegral (maxBound :: Int)
         then fail "Bytes length over bound!"
-        else (BytesD . bytesDecode) <$> P.take (fromIntegral len * 2)
+        else (BytesD . bytesDecode) <$> takeHexChar (fromIntegral len * 2)
 
 instance Show BytesD where
     show = show . BS16.encode . BA.convert . unBytesD

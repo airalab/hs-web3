@@ -41,7 +41,7 @@ module Network.Ethereum.Web3.TH (
   ) where
 
 import           Control.Monad                          ((<=<))
-import qualified Data.Attoparsec.Text                   as P
+import           Text.Parsec.Text                       as P
 import           Data.List                              (length)
 import           Data.Tagged                            (Tagged)
 import qualified Data.Text                              as T
