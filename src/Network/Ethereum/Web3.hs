@@ -37,7 +37,12 @@ module Network.Ethereum.Web3 (
   -- ** Ethereum data types
   , BytesN(..)
   , BytesD(..)
+  , IntN(..)
+  , intNFromInteger
+  , UIntN(..)
+  , uIntNFromInteger
   , Address
+  , Vector
   -- ** Ethereum unit conversion utils
   , module Network.Ethereum.Unit
   , IndexedEvent(..)
@@ -50,5 +55,7 @@ import           Network.Ethereum.Web3.Encoding
 import           Network.Ethereum.Web3.Encoding.Bytes
 import           Network.Ethereum.Web3.Encoding.Event
 import           Network.Ethereum.Web3.Encoding.Generic
+import           Network.Ethereum.Web3.Encoding.Int
+import           Network.Ethereum.Web3.Encoding.Vector
 import           Network.Ethereum.Web3.Provider
 import           Network.Ethereum.Web3.Types
