@@ -14,11 +14,8 @@
 module Network.Ethereum.Web3.Encoding (ABIEncode(..), ABIDecode(..)) where
 
 import           Control.Error                           (hush)
-import           Text.Parsec                             (parse)
-import           Text.Parsec.Combinator                  (many1)
+import           Text.Parsec                             (parse, many1)
 import           Text.Parsec.Text.Lazy                   (Parser)
-
-
 import           Data.Monoid                             ((<>))
 import           Data.Tagged                             (Tagged (..))
 import           Data.Text                               (Text)

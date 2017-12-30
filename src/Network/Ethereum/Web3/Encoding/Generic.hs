@@ -34,8 +34,7 @@ import           Generics.SOP                            (Generic (..), I (..),
                                                           Rep (..), SOP (..))
 import qualified GHC.Generics                            as GHC (Generic)
 import           Text.Parsec                             (getPosition, parse,
-                                                          sourceColumn)
-import           Text.Parsec.Combinator                  (lookAhead)
+                                                          sourceColumn, lookAhead)
 import           Text.Parsec.Text.Lazy                   (Parser)
 
 import           Network.Ethereum.Web3.Encoding          (ABIDecode (..),

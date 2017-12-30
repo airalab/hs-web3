@@ -32,7 +32,6 @@ import           Data.Text.Lazy.Builder        (Builder, fromLazyText, fromText,
 import           Data.Text.Lazy.Builder.Int    as B
 import qualified Data.Text.Read                as R
 import qualified Text.Parsec                   as P
-import           Text.Parsec.Char              (anyChar)
 import           Text.Parsec.Text.Lazy         (Parser)
 
 import           Network.Ethereum.Web3.Address (Address)
@@ -118,4 +117,4 @@ textParser = do
   where hexToText = decodeUtf8 . fst . BS16.decode . encodeUtf8
 
 takeHexChar :: Int -> Parser T.Text
-takeHexChar n = LT.toStrict . LT.pack <$> replicateM n anyChar
+takeHexChar n = LT.toStrict . LT.pack <$> replicateM n P.anyChar
