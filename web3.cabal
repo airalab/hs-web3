@@ -59,6 +59,7 @@ library
                      , base16-bytestring
                      , bytestring
                      , cryptonite
+                     , errors
                      , generics-sop
                      , http-client-tls
                      , http-client

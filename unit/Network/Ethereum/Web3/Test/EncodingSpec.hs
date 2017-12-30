@@ -10,9 +10,10 @@ import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Encoding as T
 import Data.Text.Lazy.Builder (toLazyText)
 import Generics.SOP (Generic, Rep)
-
+import Data.Maybe (fromJust)
 import Network.Ethereum.Web3.Encoding
 import Network.Ethereum.Web3.Encoding.Vector
+import Network.Ethereum.Web3.Encoding.Int
 import Network.Ethereum.Web3.Encoding.Generic
 import Data.Monoid
 import Data.Sized
@@ -22,10 +23,33 @@ import Test.Hspec
 
 spec :: Spec
 spec = do
+  intNTest
   bytesDTest
   bytesNTest
   vectorTest
   dynamicArraysTest
+
+intNTest :: Spec
+intNTest =
+    describe "uint tests" $ do
+
+      it "can encode int16" $ do
+         let decoded = fromJust . intNFromInteger $ -1 :: IntN 16
+             encoded = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+         roundTrip decoded encoded
+
+      it "can encode larger uint256" $ do
+         let decoded = fromJust . uIntNFromInteger $ (2 ^ 255) - 1 :: UIntN 256
+             encoded = "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+         roundTrip decoded encoded
+
+      it "can fail to encode larger int248" $ do
+         let muint = uIntNFromInteger $ (2 ^ 255) - 1 :: Maybe (UIntN 248)
+         muint `shouldBe` Nothing
+
+      it "can fail to encode larger negative int248" $ do
+         let mint = intNFromInteger $ - (2 ^ 255 + 1) :: Maybe (IntN 248)
+         mint `shouldBe` Nothing
 
 
 bytesDTest :: Spec
@@ -67,22 +91,6 @@ bytesNTest =
              encoded = "6761766f66796f726b0000000000000000000000000000000000000000000000"
          roundTrip decoded encoded
 
--- utils
-bytesDecode :: T.Text -> Bytes
-bytesDecode = convert . fst . BS16.decode . T.encodeUtf8
-
-roundTrip :: ( Show a
-             , Eq a
-             , ABIEncode a
-             , ABIDecode a
-             )
-          => a
-          -> T.Text
-          -> IO ()
-roundTrip decoded encoded = do
-  encoded `shouldBe` ( TL.toStrict . toLazyText . toDataBuilder $ decoded)
-  fromData encoded `shouldBe` Just decoded
-
 vectorTest :: Spec
 vectorTest =
     describe "statically sized array tests" $ do
@@ -116,6 +124,23 @@ dynamicArraysTest = do
                     <> "0000000000000000000000000000000000000000000000000000000000000001"
                     <> "0000000000000000000000000000000000000000000000000000000000000000"
          roundTrip decoded encoded
+
+-- utils
+bytesDecode :: T.Text -> Bytes
+bytesDecode = convert . fst . BS16.decode . T.encodeUtf8
+
+roundTrip :: ( Show a
+             , Eq a
+             , ABIEncode a
+             , ABIDecode a
+             )
+          => a
+          -> T.Text
+          -> IO ()
+roundTrip decoded encoded = do
+  encoded `shouldBe` ( TL.toStrict . toLazyText . toDataBuilder $ decoded)
+  fromData encoded `shouldBe` Just decoded
+
 
 roundTripGeneric :: ( Show a
                     , Eq a

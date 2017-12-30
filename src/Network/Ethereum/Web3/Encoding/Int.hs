@@ -7,7 +7,13 @@
 
 module Network.Ethereum.Web3.Encoding.Int where
 
+import Control.Error (hush)
+import Numeric (showIntAtBase)
+import Data.Char (intToDigit)
+import qualified Data.Attoparsec.Text          as P
 import qualified Data.ByteString as BS
+import qualified Data.Text as T
+import qualified Data.Text.Read as R
 import Data.Proxy (Proxy(..))
 import Network.Ethereum.Web3.Encoding(ABIEncode(..), ABIDecode(..))
 import Network.Ethereum.Web3.Encoding.Internal (EncodingType(..), int256HexBuilder, int256HexParser)
@@ -55,11 +61,25 @@ instance KnownNat n => EncodingType (IntN n) where
              in const $ "int" ++ n
   isDynamic = const False
 
+instance ABIEncode (IntN n) where
+  toDataBuilder = toDataBuilder . unIntN
+
 instance KnownNat n => ABIDecode (IntN n) where
   fromDataParser =
     let nBytes = natVal (Proxy :: Proxy n)
     in do
-      a <- int256HexParser
-      case intNFromInteger a of
+      a <- P.take 64
+      case fromHexStringSigned a >>= intNFromInteger of
         Nothing -> fail $ "Could not decode as " ++ typeName (Proxy :: Proxy (UIntN n)) ++ ": " ++ show a
         Just a' -> return a'
+
+-- utils
+fromHexStringSigned :: T.Text -> Maybe Integer
+fromHexStringSigned hx = hush $ do
+  (a, "") <- R.hexadecimal . T.singleton . T.head $ hx
+  let hd = showIntAtBase 2 intToDigit a $ ""
+      signIsNeg = length hd == 4 && head hd == '1'
+  (b, "") <- R.hexadecimal hx
+  if signIsNeg
+    then return $ b - (2 ^ 256 - 1) - 1
+    else return b
