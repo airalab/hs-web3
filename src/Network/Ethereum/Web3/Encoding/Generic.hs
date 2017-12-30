@@ -22,7 +22,7 @@ module Network.Ethereum.Web3.Encoding.Generic (
 
 import           Control.Error
 import           Text.Parsec.Combinator              (lookAhead)
-import           Text.Parsec               (parse)
+import           Text.Parsec               (parse, getPosition, sourceColumn)
 import           Text.Parsec.Text.Lazy               (Parser)
 import           Data.Int                                (Int64)
 import qualified Data.List                               as L
@@ -39,7 +39,7 @@ import qualified GHC.Generics                            as GHC (Generic)
 
 import           Network.Ethereum.Web3.Encoding          (ABIDecode (..),
                                                           ABIEncode (..))
-import           Network.Ethereum.Web3.Encoding.Internal (EncodingType (..))
+import           Network.Ethereum.Web3.Encoding.Internal (EncodingType (..), takeHexChar)
 
 -- | A class for encoding generically composed datatypes to their abi encoding
 class GenericABIEncode a where
@@ -155,7 +155,15 @@ genericFromData = fmap to . hush . parse genericFromDataParser "" . LT.fromStric
 factorParser :: forall a . ABIDecode a => EncodingType a => Parser a
 factorParser
   | not $ isDynamic (Proxy :: Proxy a) = fromDataParser
-  | otherwise = undefined
+  | otherwise = dParser
+
+dParser :: forall a . ABIDecode a => Parser a
+dParser = do
+  dataOffset <- fromInteger <$> fromDataParser
+  lookAhead $ do
+    n <- sourceColumn <$> getPosition
+    _ <- takeHexChar (dataOffset * 2 - (n - 1))
+    fromDataParser
 
 -- We also need "one-tuples"
 newtype Singleton a = Singleton { unSingleton :: a } deriving GHC.Generic
