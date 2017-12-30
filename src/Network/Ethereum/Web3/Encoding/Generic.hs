@@ -173,6 +173,9 @@ factorParser = undefined
 -- We also need "one-tuples"
 newtype Singleton a = Singleton { unSingleton :: a } deriving GHC.Generic
 
+deriving instance Eq a => Eq (Singleton a)
+deriving instance Show a => Show (Singleton a)
+
 instance Generic (Singleton a)
 
 instance ABIEncode a => ABIEncode (Singleton a) where
