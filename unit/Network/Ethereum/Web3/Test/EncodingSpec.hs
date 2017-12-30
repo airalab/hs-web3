@@ -25,6 +25,7 @@ spec = do
   bytesDTest
   bytesNTest
   vectorTest
+  dynamicArraysTest
 
 
 bytesDTest :: Spec
@@ -102,6 +103,18 @@ vectorTest =
                     <> "6800000000000000000000000000000000000000000000000000000000000000"
                     <> "4d00000000000000000000000000000000000000000000000000000000000000"
                     <> "fb00000000000000000000000000000000000000000000000000000000000000"
+         roundTrip decoded encoded
+
+dynamicArraysTest :: Spec
+dynamicArraysTest = do
+    describe "dynamically sized array tests" $ do
+
+      it "can encode dynamically sized lists of bools" $ do
+         let decoded = [True, True, False]
+             encoded = "0000000000000000000000000000000000000000000000000000000000000003"
+                    <> "0000000000000000000000000000000000000000000000000000000000000001"
+                    <> "0000000000000000000000000000000000000000000000000000000000000001"
+                    <> "0000000000000000000000000000000000000000000000000000000000000000"
          roundTrip decoded encoded
 
 roundTripGeneric :: ( Show a
