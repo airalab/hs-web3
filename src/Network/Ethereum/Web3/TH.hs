@@ -142,23 +142,6 @@ eventEncodigD :: Name -> [EventArg] -> [DecQ]
 eventEncodigD eventName args =
     [ funD' (mkName "fromDataParser") [] [|decodeEvent|] ]
 
-funEncodigD :: Name -> Int -> String -> [DecQ]
-funEncodigD funName paramLen ident =
-    [ funDtoDataB ]
-  where
-    newVars = replicateM paramLen (newName "t")
-    sVar    = mkName "a"
-    funDtoDataB
-        | paramLen == 0 = funD' (mkName "toDataBuilder") [conP funName []] [|ident|]
-        | paramLen == 1 = funD' (mkName "toDataBuilder")
-                            [conP funName [varP sVar]]
-                                [|ident <> toDataBuilder (Singleton $(varE sVar))|]
-        | otherwise = do
-            vars <- newVars
-            funD' (mkName "toDataBuilder")
-              [conP funName $ fmap varP vars]
-              [|ident <> toDataBuilder $(tupE $ fmap varE vars)|]
-
 eventFilterD :: String -> Int -> [DecQ]
 eventFilterD topic0 n =
   let addr = mkName "a"
@@ -249,14 +232,14 @@ mkFun fun@(DFunction name constant inputs outputs) = (++)
   <*> sequence
         [ dataD' dataName (normalC dataName bangInput) derivingD
         , instanceD' dataName (conT (mkName "Generic")) []
+        , instanceD' dataName  (conT (mkName "Method"))
+          [funD' (mkName "selector") [] [|const mIdent|]]
         ]
   where mIdent    = T.unpack (methodId $ fun{funName = T.replace "'" "" name})
         dataName  = mkName (toUpperFirst (T.unpack $ name <> "Data"))
         funName   = mkName (toLowerFirst (T.unpack name))
         bangInput = fmap funBangType inputs
         derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
-        encodingT = conT (mkName "ABIEncode")
-        methodT   = conT (mkName "Method")
 
 escape :: [Declaration] -> [Declaration]
 escape = concat . escapeNames . groupBy fnEq . sortBy fnCompare

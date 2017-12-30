@@ -8,7 +8,6 @@
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE TypeInType           #-}
 {-# LANGUAGE TypeOperators        #-}
-{-# LANGUAGE UndecidableInstances #-}
 
 module Network.Ethereum.Web3.Encoding.Generic (
     GenericABIEncode

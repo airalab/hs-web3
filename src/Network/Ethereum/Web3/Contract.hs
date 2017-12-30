@@ -5,7 +5,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE UndecidableInstances  #-}
 
 -- |
 -- Module      :  Network.Ethereum.Web3.Contract
@@ -33,15 +32,16 @@
 -- @
 -- runweb3 $ do
 --   x  <- call "0x.." Latest MySelector
---   tx <- sendTx "0x.." nopay $ MySelector2 (x + 2)
+--   tx <- sendTx "0x.."} nopay $ MySelector2 (x + 2)
 -- @
 --
 module Network.Ethereum.Web3.Contract (
     EventAction(..)
-  , TxMethod(..)
-  , CallMethod(..)
   , Event(..)
   , event
+  , Method(..)
+  , call
+  , sendTx
   , NoMethod(..)
   , nopay
   ) where
@@ -59,7 +59,7 @@ import           Data.Text.Lazy                         (toStrict)
 import qualified Data.Text.Lazy.Builder                 as B
 import qualified Data.Text.Lazy.Builder.Int             as B
 import           Generics.SOP
-
+import           GHC.TypeLits
 import           Network.Ethereum.Unit
 import           Network.Ethereum.Web3.Address
 import           Network.Ethereum.Web3.Encoding
@@ -107,43 +107,41 @@ event a f = do
       changeEvent <- decodeEvent changeWithMeta
       return (changeEvent, changeWithMeta)
 
--- | Contract method caller
-class TxMethod a where
-    -- | Send a transaction for given contract 'Address', value and input data
-    sendTx :: forall p .
-              Provider p
-           => Call
-           -- ^ Call configuration
-           -> a
-           -- ^ method data
-           -> Web3 p TxHash
-           -- ^ 'Web3' wrapped result
+class Method a where
+  selector :: Proxy a -> T.Text
 
-class CallMethod a b where
-    -- | Constant call given contract 'Address' in mode and given input data
-    call :: forall p .
-            Provider p
-         => Call
-         -- ^ Call configuration
-         -> DefaultBlock
-         -- ^ State mode for constant call (latest or pending)
-         -> a
-         -- ^ Method data
-         -> Web3 p b
-         -- ^ 'Web3' wrapped result
+sendTx :: ( Generic a
+          , GenericABIEncode (Rep a)
+          , Provider p
+          , Method a
+          )
+       => Call
+       -- ^ Call configuration
+       -> a
+       -- ^ method data
+       -> Web3 p TxHash
+sendTx call (dat :: a) =
+  let sel = selector (Proxy :: Proxy a)
+  in Eth.sendTransaction (call { callData = Just $ sel <> genericToData dat })
 
-instance ( Generic a
-         , GenericABIEncode (Rep a)
-         ) => TxMethod a where
-  sendTx call dat = Eth.sendTransaction (call { callData = Just $ genericToData dat })
-
-instance ( Generic a
-         , GenericABIEncode (Rep a)
-         , Generic b
-         , GenericABIDecode (Rep b)
-         ) => CallMethod a b where
-  call call mode dat = do
-    res <- Eth.call (call { callData = Just $ genericToData dat }) mode
+call :: ( Generic a
+        , GenericABIEncode (Rep a)
+        , Generic b
+        , GenericABIDecode (Rep b)
+        , Provider p
+        , Method a
+        )
+     => Call
+     -- ^ Call configuration
+     -> DefaultBlock
+     -- ^ State mode for constant call (latest or pending)
+     -> a
+     -- ^ Method data
+     -> Web3 p b
+     -- ^ 'Web3' wrapped result
+call call mode (dat :: a) = do
+    let sel = selector (Proxy :: Proxy a)
+    res <- Eth.call (call { callData = Just $ sel <> genericToData dat }) mode
     case genericFromData (T.drop 2 res) of
         Nothing -> liftIO $ throwIO $ ParserFail $
             "Unable to parse result on `" ++ T.unpack res
@@ -157,15 +155,3 @@ nopay = 0
 
 -- | Dummy method for sending transaction without method call
 data NoMethod = NoMethod
-
-instance ABIEncode NoMethod where
-    toDataBuilder  = const ""
-
-instance ABIDecode NoMethod where
-    fromDataParser = return NoMethod
-
-instance CallMethod NoMethod b where
-    call = undefined
-
-instance TxMethod NoMethod where
-    sendTx = undefined

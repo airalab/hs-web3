@@ -29,8 +29,9 @@ module Network.Ethereum.Web3 (
   , EventAction(..)
   , Event(..)
   , event
-  , TxMethod(..)
-  , CallMethod(..)
+  , Method(..)
+  , sendTx
+  , call
   , NoMethod(..)
   , nopay
   -- ** Ethereum data types
