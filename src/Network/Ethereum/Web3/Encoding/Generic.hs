@@ -1,13 +1,13 @@
-{-# LANGUAGE DataKinds            #-}
-{-# LANGUAGE DeriveGeneric        #-}
-{-# LANGUAGE FlexibleContexts     #-}
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE RecordWildCards      #-}
-{-# LANGUAGE ScopedTypeVariables  #-}
-{-# LANGUAGE StandaloneDeriving   #-}
-{-# LANGUAGE TypeFamilies         #-}
-{-# LANGUAGE TypeInType           #-}
-{-# LANGUAGE TypeOperators        #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE FlexibleInstances   #-}
+{-# LANGUAGE RecordWildCards     #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StandaloneDeriving  #-}
+{-# LANGUAGE TypeFamilies        #-}
+{-# LANGUAGE TypeInType          #-}
+{-# LANGUAGE TypeOperators       #-}
 
 module Network.Ethereum.Web3.Encoding.Generic (
     GenericABIEncode
@@ -32,8 +32,9 @@ import           Generics.SOP                            (Generic (..), I (..),
                                                           NP (..), NS (..),
                                                           Rep (..), SOP (..))
 import qualified GHC.Generics                            as GHC (Generic)
-import           Text.Parsec                             (getPosition, parse,
-                                                          sourceColumn, lookAhead)
+import           Text.Parsec                             (getPosition,
+                                                          lookAhead, parse,
+                                                          sourceColumn)
 import           Text.Parsec.Text.Lazy                   (Parser)
 
 import           Network.Ethereum.Web3.Encoding          (ABIDecode (..),

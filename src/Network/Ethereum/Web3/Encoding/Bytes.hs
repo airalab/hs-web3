@@ -31,8 +31,6 @@ import           GHC.TypeLits                            (KnownNat, Nat, natVal)
 import           Network.Ethereum.Web3.Encoding
 import           Network.Ethereum.Web3.Encoding.Internal
 
-import           Debug.Trace
-
 -- | Fixed length byte array
 newtype BytesN (n :: Nat) = BytesN { unBytesN :: Bytes }
   deriving (Eq, Ord)

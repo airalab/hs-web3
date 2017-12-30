@@ -33,7 +33,6 @@ import           Network.Ethereum.Web3.Encoding.Generic  (GenericABIDecode,
 import           Network.Ethereum.Web3.Encoding.Internal
 import           Network.Ethereum.Web3.Types             (Change (..))
 
-import Debug.Trace
 
 class ArrayParser a where
   arrayParser :: [T.Text] -> Maybe a
@@ -67,9 +66,11 @@ genericArrayParser = fmap to . arrayParser
 data Event i ni = Event i ni
 
 parseChange :: ( Generic i
+               , Show i
                , Rep i ~ irep
                , ArrayParser irep
                , Generic ni
+               , Show ni
                , Rep ni ~ nirep
                , GenericABIDecode nirep
                )
@@ -127,6 +128,7 @@ instance ( IndexedEvent i ni e
          , CombineChange i ni e
          , GenericABIDecode (SOP I '[hlni])
          , ArrayParser (SOP I '[hli])
+         , Show i, Show ni
          ) => DecodeEvent i ni e where
   decodeEvent change = do
       let anonymous = isAnonymous (Proxy :: Proxy e)

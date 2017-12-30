@@ -14,8 +14,6 @@
 module Network.Ethereum.Web3.Encoding (ABIEncode(..), ABIDecode(..)) where
 
 import           Control.Error                           (hush)
-import           Text.Parsec                             (parse, many1)
-import           Text.Parsec.Text.Lazy                   (Parser)
 import           Data.Monoid                             ((<>))
 import           Data.Tagged                             (Tagged (..))
 import           Data.Text                               (Text)
@@ -26,6 +24,8 @@ import           Data.Text.Lazy.Builder                  (Builder, fromLazyText,
 import           Network.Ethereum.Web3.Address           (Address)
 import qualified Network.Ethereum.Web3.Address           as A
 import           Network.Ethereum.Web3.Encoding.Internal
+import           Text.Parsec                             (many1, parse)
+import           Text.Parsec.Text.Lazy                   (Parser)
 
 -- | Contract ABI data codec
 class ABIEncode a where
