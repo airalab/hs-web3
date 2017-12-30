@@ -203,7 +203,7 @@ mkEvent ev@(DEvent name inputs anonymous) = sequence
     , instanceD' indexedName (conT (mkName "Generic")) []
     , dataD' nonIndexedName (normalC nonIndexedName (map (toBang <=< tag) nonIndexedArgs)) derivingD
     , instanceD' nonIndexedName (conT (mkName "Generic")) []
-    , dataD' allName (normalC allName (map (toBang <=< typeQ) allArgs)) derivingD
+    , dataD' allName (recC allName (map (\(n, a) -> ((\(b,t) -> return (n,b,t)) <=< toBang <=< typeQ $ a)) allArgs)) derivingD
     , instanceD' allName (conT (mkName "Generic")) []
     , instanceD (cxt []) (return $ (ConT $ mkName "IndexedEvent") `AppT` ConT indexedName `AppT` ConT nonIndexedName `AppT` ConT allName)
         [funD' (mkName "isAnonymous") [] [|const anonymous|]]
@@ -218,7 +218,7 @@ mkEvent ev@(DEvent name inputs anonymous) = sequence
     indexedName = mkName $ toUpperFirst (T.unpack name) <> "Indexed"
     nonIndexedArgs = map (\(n, ea) -> (n, eveArgType ea)) . filter (not . eveArgIndexed . snd) $ labeledArgs
     nonIndexedName = mkName $ toUpperFirst (T.unpack name) <> "NonIndexed"
-    allArgs = map eveArgType $ inputs
+    allArgs = map (\i ->  (mkName . T.unpack $ eveArgName i , eveArgType i)) inputs
     allName = mkName $ toUpperFirst (T.unpack name)
     derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
     eventT = conT (mkName "Event")
