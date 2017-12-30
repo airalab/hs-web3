@@ -34,6 +34,11 @@ intNTest :: Spec
 intNTest =
     describe "uint tests" $ do
 
+      it "can encode integer" $ do
+         let decoded = (10 :: Integer)
+             encoded = "000000000000000000000000000000000000000000000000000000000000000a"
+         roundTrip decoded encoded
+
       it "can encode int16" $ do
          let decoded = fromJust . intNFromInteger $ -1 :: IntN 16
              encoded = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"

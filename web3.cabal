@@ -82,6 +82,7 @@ test-suite unit
   main-is:             Spec.hs
   other-modules:       Network.Ethereum.Web3.Test.MethodDumpSpec
                        Network.Ethereum.Web3.Test.EncodingSpec
+                       Network.Ethereum.Web3.Test.EventSpec
   build-depends:       base
                      , base16-bytestring
                      , bytestring
@@ -95,6 +96,7 @@ test-suite unit
                      , sized
                      , split
                      , stm
+                     , tagged
                      , time
                      , text
                      , transformers

@@ -33,6 +33,8 @@ import           Network.Ethereum.Web3.Encoding.Generic  (GenericABIDecode,
 import           Network.Ethereum.Web3.Encoding.Internal
 import           Network.Ethereum.Web3.Types             (Change (..))
 
+import Debug.Trace
+
 class ArrayParser a where
   arrayParser :: [T.Text] -> Maybe a
 
@@ -79,10 +81,12 @@ parseChange change isAnonymous = do
     ni <- genericFromData data_
     return $ Event i ni
   where
-    topics = if isAnonymous
-               then changeTopics change
-               else tail $ changeTopics change
-    data_ = changeData change
+    strip0x hx = if T.take 2 hx == "0x" then T.drop 2 hx else hx
+    topics = map strip0x $
+      if isAnonymous
+        then changeTopics change
+        else tail $ changeTopics change
+    data_ = strip0x $ changeData change
 
 class IndexedEvent i ni e | e -> i ni where
   isAnonymous :: Proxy e -> Bool

@@ -72,13 +72,16 @@ events = describe "can interact with a SimpleStorage contract across block inter
             later = now + 3
         liftIO . putStrLn $ "now is " ++ show now ++ " (" ++ show now' ++ ")"
         void . runWeb3Configured $ event contractAddress $ \(CountSet cs) -> do
-            liftIO . putStrLn $ "1: Got a CountSet! " ++ show cs
-            liftIO $ modifyMVar_ var (return . (cs:))
-            if cs == 10
+            liftIO . print $ "Got count: " ++ show cs
+            v <- liftIO $ takeMVar var
+            let newV = cs : v
+            liftIO $ putMVar var newV
+            if length newV == 3
                 then do
                     liftIO $ putMVar termination True
                     return TerminateEvent
-                else return ContinueEvent
+                else do
+                  return ContinueEvent
         awaitBlock later
         void . for theSets $ \v -> runWeb3Configured (setCount theCall v)
         takeMVarWithTimeout 20000000 termination >>= \case
