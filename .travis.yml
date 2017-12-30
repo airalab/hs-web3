@@ -27,7 +27,7 @@ install:
 
 script:
 - if [ $STACK ]; then stack -j2 --no-terminal --install-ghc test web3:unit;
-  else cabal install --only-dependencies --enable-tests $CABALCONFOPTS && cabal configure --enable-tests $CABALCONFOPTS -v2 && cabal build web3 $CABALBUILDOPTS && cabal test unit;
+  else cabal update && cabal install --only-dependencies --enable-tests $CABALCONFOPTS && cabal configure --enable-tests $CABALCONFOPTS -v2 && cabal build web3 $CABALBUILDOPTS && cabal test unit;
   fi
 
 matrix:
