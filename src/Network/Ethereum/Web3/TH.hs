@@ -41,7 +41,6 @@ module Network.Ethereum.Web3.TH (
   , module Generics.SOP
   ) where
 
-import           Cases                                  (process, upper, camel)
 import           Control.Monad                          ((<=<))
 import           Data.List                              (length)
 import           Data.Tagged                            (Tagged)
@@ -224,7 +223,7 @@ mkEvent ev@(DEvent name inputs anonymous) = sequence
     allName = mkName $ toUpperFirst (T.unpack name)
     derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
     eventT = conT (mkName "Event")
-    mkAccessorSuffix = camelize . T.pack . toUpperFirst . T.unpack . (\t -> if T.head t == '_' then T.drop 1 t else t)
+    mkAccessorSuffix = T.pack . toUpperFirst . (\t -> if head t == '_' then drop 1 t else t) . T.unpack
 
 -- | Method delcarations maker
 mkFun :: Declaration -> Q [Dec]
