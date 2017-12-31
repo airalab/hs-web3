@@ -219,11 +219,25 @@ mkEvent ev@(DEvent name inputs anonymous) = sequence
     indexedName = mkName $ toUpperFirst (T.unpack name) <> "Indexed"
     nonIndexedArgs = map (\(n, ea) -> (n, eveArgType ea)) . filter (not . eveArgIndexed . snd) $ labeledArgs
     nonIndexedName = mkName $ toUpperFirst (T.unpack name) <> "NonIndexed"
-    allArgs = map (\i ->  (mkName . T.unpack $ ((T.pack . toLowerFirst . T.unpack $ name) <> (mkAccessorSuffix . eveArgName $ i)) , eveArgType i)) inputs
+    allArgs = makeArgs name $ map (\i -> (eveArgName i, eveArgType i)) inputs
     allName = mkName $ toUpperFirst (T.unpack name)
     derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
     eventT = conT (mkName "Event")
-    mkAccessorSuffix = T.pack . toUpperFirst . (\t -> if head t == '_' then drop 1 t else t) . T.unpack
+
+-- | this function gives appropriate names for the accessors in the following way
+-- | argName -> evArgName
+-- | arg_name -> evArg_name
+-- | _argName -> evArgName
+-- | "" -> evi , for example Transfer(address, address uint256) ~> Transfer {transfer1 :: address, transfer2 :: address, transfer3 :: Integer}
+makeArgs :: T.Text -> [(T.Text, T.Text)] -> [(Name, T.Text)]
+makeArgs prefix ns = go 1 ns
+  where
+    prefixStr = T.unpack prefix
+    go :: Int -> [(T.Text, T.Text)] -> [(Name, T.Text)]
+    go i [] = []
+    go i ((h, ty) : tail) = if T.null h
+                        then (mkName . show $ i, ty) : go (i + 1) tail
+                        else (mkName . (++) prefixStr . toUpperFirst . (\t -> if head t == '_' then drop 1 t else t) . T.unpack $ h, ty) : go (i + 1) tail
 
 -- | Method delcarations maker
 mkFun :: Declaration -> Q [Dec]
