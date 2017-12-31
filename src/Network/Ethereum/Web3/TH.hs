@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE QuasiQuotes      #-}
 {-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE OverloadedStrings  #-}
 
 -- |
 -- Module      :  Network.Ethereum.Web3.TH
@@ -40,6 +41,7 @@ module Network.Ethereum.Web3.TH (
   , module Generics.SOP
   ) where
 
+import           Cases                                  (process, upper, camel)
 import           Control.Monad                          ((<=<))
 import           Data.List                              (length)
 import           Data.Tagged                            (Tagged)
@@ -218,10 +220,11 @@ mkEvent ev@(DEvent name inputs anonymous) = sequence
     indexedName = mkName $ toUpperFirst (T.unpack name) <> "Indexed"
     nonIndexedArgs = map (\(n, ea) -> (n, eveArgType ea)) . filter (not . eveArgIndexed . snd) $ labeledArgs
     nonIndexedName = mkName $ toUpperFirst (T.unpack name) <> "NonIndexed"
-    allArgs = map (\i ->  (mkName . T.unpack $ ((T.pack . toLowerFirst . T.unpack $ name) <> eveArgName i) , eveArgType i)) inputs
+    allArgs = map (\i ->  (mkName . T.unpack $ ((T.pack . toLowerFirst . T.unpack $ name) <> (mkAccessorSuffix . eveArgName $ i)) , eveArgType i)) inputs
     allName = mkName $ toUpperFirst (T.unpack name)
     derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
     eventT = conT (mkName "Event")
+    mkAccessorSuffix = process upper camel . (\t -> if T.head t == '_' then T.drop 1 t else t)
 
 -- | Method delcarations maker
 mkFun :: Declaration -> Q [Dec]

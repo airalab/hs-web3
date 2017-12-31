@@ -57,6 +57,7 @@ library
                      , aeson
                      , base16-bytestring
                      , bytestring
+                     , cases
                      , cryptonite
                      , errors
                      , generics-sop
