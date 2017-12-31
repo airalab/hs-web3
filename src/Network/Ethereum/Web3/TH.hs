@@ -232,11 +232,11 @@ mkEvent ev@(DEvent name inputs anonymous) = sequence
 makeArgs :: T.Text -> [(T.Text, T.Text)] -> [(Name, T.Text)]
 makeArgs prefix ns = go 1 ns
   where
-    prefixStr = T.unpack prefix
+    prefixStr = toLowerFirst . T.unpack $ prefix
     go :: Int -> [(T.Text, T.Text)] -> [(Name, T.Text)]
     go i [] = []
     go i ((h, ty) : tail) = if T.null h
-                        then (mkName . show $ i, ty) : go (i + 1) tail
+                        then (mkName $  prefixStr ++ show i, ty) : go (i + 1) tail
                         else (mkName . (++) prefixStr . toUpperFirst . (\t -> if head t == '_' then drop 1 t else t) . T.unpack $ h, ty) : go (i + 1) tail
 
 -- | Method delcarations maker
