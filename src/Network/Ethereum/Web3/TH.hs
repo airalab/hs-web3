@@ -224,7 +224,7 @@ mkEvent ev@(DEvent name inputs anonymous) = sequence
     allName = mkName $ toUpperFirst (T.unpack name)
     derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
     eventT = conT (mkName "Event")
-    mkAccessorSuffix = process upper camel . (\t -> if T.head t == '_' then T.drop 1 t else t)
+    mkAccessorSuffix = camelize . T.pack . toUpperFirst . T.unpack . (\t -> if T.head t == '_' then T.drop 1 t else t)
 
 -- | Method delcarations maker
 mkFun :: Declaration -> Q [Dec]
