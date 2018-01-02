@@ -14,11 +14,11 @@ cabal-version:       >=1.10
 
 extra-source-files:
   README.md
-  contracts/Migrations.sol
-  contracts/SimpleStorage.sol
-  truffle.js
-  migrations/1_initial_migration.js
-  migrations/2_deploy_contracts.js
+  test-support/contracts/Migrations.sol
+  test-support/contracts/SimpleStorage.sol
+  test-support/truffle.js
+  test-support/migrations/1_initial_migration.js
+  test-support/migrations/2_deploy_contracts.js
   test-support/convertAbi.sh
   test-support/inject-contract-addresses.sh
 
@@ -29,7 +29,8 @@ source-repository head
 custom-setup
   setup-depends:
     base,
-    Cabal
+    Cabal,
+    directory
 
 library
   hs-source-dirs:      src

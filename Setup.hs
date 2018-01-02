@@ -6,6 +6,7 @@ import           Distribution.Simple.LocalBuildInfo (ComponentName (..), LocalBu
 import           Distribution.Simple.Setup          (BuildFlags (..), fromFlag)
 import           Distribution.Simple.Utils
 import           Distribution.Verbosity             (Verbosity)
+import           System.Directory                   (makeAbsolute)
 import           System.Environment                 (getEnv, getEnvironment, setEnv)
 
 buildingInCabal :: IO Bool
@@ -25,18 +26,21 @@ main = defaultMainWithHooks simpleUserHooks
 
 setupLiveTests :: Verbosity -> IO ()
 setupLiveTests v = do
+    convertAbi <- makeAbsolute "./test-support/convertAbi.sh"
+    injectAddr <- makeAbsolute "./test-support/inject-contract-addresses.sh"
     putStrLn "Running truffle deploy and convertAbi before building tests"
-    rawCommand v "truffle" ["deploy"] Nothing
-    rawCommand v "./test-support/convertAbi.sh" [] Nothing
-    rawCommand v "./test-support/inject-contract-addresses.sh" [] (Just [("EXPORT_STORE", exportStore)])
+    testCommand v "truffle" ["deploy"] Nothing
+    testCommand v convertAbi [] Nothing
+    testCommand v injectAddr [] (Just [("EXPORT_STORE", exportStore)])
 
-rawCommand :: Verbosity -> String -> [String] -> Maybe [(String, String)] -> IO ()
-rawCommand v prog args moreEnv = do
+testCommand :: Verbosity -> String -> [String] -> Maybe [(String, String)] -> IO ()
+testCommand v prog args moreEnv = do
     env <- getEnvironment
+    newWorkdir <- makeAbsolute "./test-support/"
     let allEnvs = case moreEnv of
                     Nothing   -> env
                     Just more -> more ++ env
-    maybeExit $ rawSystemIOWithEnv v prog args Nothing (Just allEnvs) Nothing Nothing Nothing
+    maybeExit $ rawSystemIOWithEnv v prog args (Just newWorkdir) (Just allEnvs) Nothing Nothing Nothing
 
 exportStore :: String
 exportStore = ".detected-contract-addresses"
