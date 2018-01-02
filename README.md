@@ -72,3 +72,21 @@ main = do
     putStrLn s
   where token = "0x237D60A8b41aFD2a335305ed458B609D7667D789"
 ```
+
+### Testing
+Testing the `web3` is split up into two suites: `unit` and `live`.
+The `unit` suite tests internal library facilities, while the `live` tests that
+the library adequately interacts with a Web3 provider.
+
+One may simply run `stack test` to run both suites, or `stack test web3:unit` or `stack test web3:live`
+to run the test suites individually.
+
+The `unit` suite has no external dependencies, while the `live` suite requires Truffle and `jq`
+to be available on your machine.
+
+The `live` suite also requires a Web3 provider with Ethereum capabilities, as well as
+an unlocked account with ether to send transactions from. It uses Truffle to deploy testing contracts,
+generating ABIs for them in the process, then using said ABIs as part of a TemplateHaskell step in the suite.
+It is assumed that the provider is available at `http://localhost:8545`. If that's not the case, you must update `truffle.js`
+so that Truffle can deploy the contracts correctly, and pass the `WEB3_PROVIDER=http://host:port` environment variable
+when running the tests so that the `web3` library can interact with the chain that's being tested against.
