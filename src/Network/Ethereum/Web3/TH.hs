@@ -117,7 +117,7 @@ toHSType s = case s of
     SolidityAddress -> conT (mkName "Address")
     SolidityUint n -> appT (conT (mkName "UIntN")) (numLit n)
     SolidityInt n -> appT (conT (mkName "IntN")) (numLit n)
-    SolidityString ->  conT (mkName "Address")
+    SolidityString ->  conT (mkName "Text")
     SolidityBytesN n -> appT (conT (mkName "BytesN")) (numLit n)
     SolidityBytesD ->  conT (mkName "BytesD")
     SolidityVector ns a -> expandVector ns a

@@ -24,23 +24,27 @@ import           Test.Hspec
 [abiFrom|build/contracts/abis/ComplexStorage.json|]
 
 spec :: Spec
-spec = before withPrimaryEthereumAccount $
-    describe "can interact with a ComplexStorage contract" $ do
+spec = describe "Complex Storage" $ do
+    it "should inject contract addresses" injectExportedEnvironmentVariables
+    withPrimaryEthereumAccount `before` complexStorageSpec
+
+complexStorageSpec :: SpecWith Address
+complexStorageSpec = do
+  describe "can interact with a ComplexStorage contract" $ do
         -- todo: these should ideally be arbitrary!
         let sUint   = fromJust $ uIntNFromInteger 1
             sInt    = fromJust $ intNFromInteger $ -1
-            sBool   = True
-            sInt224 = 221
+            sBool   =  True
+            sInt224 = fromJust $ intNFromInteger $ 221
             sBools   = True :< False :< NilL
-            sInts    = [1, 1, -3]
+            sInts    = Prelude.map (fromJust . intNFromInteger) [1, 1, -3]
             sString  = "hello"
             sBytes16 = BytesN $ convert ("\x12\x34\x56\x78\x12\x34\x56\x78\x12\x34\x56\x78\x12\x34\x56\x78" :: ByteString)
             sByte2sElem  = (BytesN (convert ("\x12\x34" :: ByteString)) :: BytesN 2)
             sByte2sVec = sByte2sElem :< sByte2sElem :< sByte2sElem :< sByte2sElem :< NilL
             sByte2s = [sByte2sVec, sByte2sVec]
-            contractAddress = fromString . unsafePerformIO $ getEnv "COMPLEXSTORAGE_CONTRACT_ADDRESS"
-        it "should inject contract addresses" (const injectExportedEnvironmentVariables)
         it "can set the values of a ComplexStorage" $ \primaryAccount -> do
+            contractAddress <- Prelude.fmap fromString . liftIO $ getEnv "COMPLEXSTORAGE_CONTRACT_ADDRESS"
             let theCall = callFromTo primaryAccount contractAddress
             ret <- runWeb3Configured $ setValues theCall
                                                  sUint
@@ -52,9 +56,10 @@ spec = before withPrimaryEthereumAccount $
                                                  sString
                                                  sBytes16
                                                  sByte2s
-            True `shouldBe` True -- we need to get this far :)
+            True `shouldBe` True -- we need to et this far :)
 
         it "can verify that it set the values correctly" $ \primaryAccount -> do
+            contractAddress <- Prelude.fmap fromString . liftIO $ getEnv "COMPLEXSTORAGE_CONTRACT_ADDRESS"
             let theCall = callFromTo primaryAccount contractAddress
                 runGetterCall f = runWeb3Configured (f theCall)
             -- gotta sleep for the block to get confirmed!
@@ -64,17 +69,19 @@ spec = before withPrimaryEthereumAccount $
             intVal'     <- runGetterCall intVal
             boolVal'    <- runGetterCall boolVal
             int224Val'  <- runGetterCall int224Val
-            boolsVal    <- runGetterCall boolVectorVal
-            intsVal     <- runGetterCall intListVal
+            boolsVal    <- runGetterCall $ \c -> boolVectorVal c (fromJust $ uIntNFromInteger 0)
+            intsVal     <- runGetterCall $ \c -> intListVal c (fromJust $ uIntNFromInteger 0)
             stringVal'  <- runGetterCall stringVal
             bytes16Val' <- runGetterCall bytes16Val
-            bytes2s     <- runGetterCall bytes2VectorListVal
+            bytes2s     <- runGetterCall $ \c -> bytes2VectorListVal c (fromJust $ uIntNFromInteger 0) (fromJust $ uIntNFromInteger 0)
             uintVal'    `shouldBe` sUint
             intVal'     `shouldBe` sInt
             boolVal'    `shouldBe` sBool
             int224Val'  `shouldBe` sInt224
-            boolsVal    `shouldBe` sBools
-            intsVal     `shouldBe` sInts
+            boolsVal    `shouldBe` True
+            intsVal     `shouldBe` sInts  Prelude.!! 0
             stringVal'  `shouldBe` sString
             bytes16Val' `shouldBe` sBytes16
-            bytes2s `shouldBe` sByte2s
+            bytes2s `shouldBe` sByte2sElem
+
+

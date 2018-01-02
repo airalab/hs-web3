@@ -40,7 +40,7 @@ instance Show Address where
     show = unpack . toText
 
 instance IsString Address where
-    fromString a = case fromText (pack a) of
+  fromString a = case fromText (pack a) of
         Right address -> address
         Left e        -> error e
 
