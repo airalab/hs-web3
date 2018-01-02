@@ -27,8 +27,8 @@ setupLiveTests :: Verbosity -> IO ()
 setupLiveTests v = do
     putStrLn "Running truffle deploy and convertAbi before building tests"
     rawCommand v "truffle" ["deploy"] Nothing
-    rawCommand v "./convertAbi.sh" [] Nothing
-    rawCommand v "./inject-contract-addresses.sh" [] (Just [("EXPORT_STORE", exportStore)])
+    rawCommand v "./test-support/convertAbi.sh" [] Nothing
+    rawCommand v "./test-support/inject-contract-addresses.sh" [] (Just [("EXPORT_STORE", exportStore)])
 
 rawCommand :: Verbosity -> String -> [String] -> Maybe [(String, String)] -> IO ()
 rawCommand v prog args moreEnv = do

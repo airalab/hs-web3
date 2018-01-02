@@ -19,8 +19,8 @@ extra-source-files:
   truffle.js
   migrations/1_initial_migration.js
   migrations/2_deploy_contracts.js
-  convertAbi.sh
-  inject-contract-addresses.sh
+  test-support/convertAbi.sh
+  test-support/inject-contract-addresses.sh
 
 source-repository head
   type:     git
