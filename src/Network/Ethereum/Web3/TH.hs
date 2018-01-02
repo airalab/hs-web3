@@ -42,7 +42,7 @@ module Network.Ethereum.Web3.TH (
   ) where
 
 import           Control.Monad                          ((<=<))
-import           Data.List                              (length)
+import           Data.List                              (length, uncons)
 import           Data.Tagged                            (Tagged)
 import qualified Data.Text                              as T
 import qualified Data.Text.Lazy                         as LT
@@ -55,6 +55,8 @@ import           Network.Ethereum.Web3.Address          (Address)
 import           Network.Ethereum.Web3.Contract
 import           Network.Ethereum.Web3.Encoding
 import           Network.Ethereum.Web3.Encoding.Event
+import           Network.Ethereum.Web3.Encoding.Int
+import           Network.Ethereum.Web3.Encoding.Vector
 import           Network.Ethereum.Web3.Encoding.Generic
 import           Network.Ethereum.Web3.Internal
 import           Network.Ethereum.Web3.JsonAbi
@@ -108,19 +110,32 @@ funD' :: Name -> [PatQ] -> ExpQ -> DecQ
 funD' name p f = funD name [clause p (normalB f) []]
 
 -- | ABI and Haskell types association
+
+toHSType :: SolidityType -> TypeQ
+toHSType s = case s of
+    SolidityBool -> conT (mkName "Bool")
+    SolidityAddress -> conT (mkName "Address")
+    SolidityUint n -> appT (conT (mkName "UIntN")) (numLit n)
+    SolidityInt n -> appT (conT (mkName "IntN")) (numLit n)
+    SolidityString ->  conT (mkName "Address")
+    SolidityBytesN n -> appT (conT (mkName "BytesN")) (numLit n)
+    SolidityBytesD ->  conT (mkName "BytesD")
+    SolidityVector ns a -> expandVector ns a
+    SolidityArray a -> appT listT $ toHSType a
+  where
+    numLit n = litT (numTyLit $ toInteger n)
+    expandVector :: [Int] -> SolidityType -> TypeQ
+    expandVector ns a = case uncons ns of
+      Just (n, rest) ->
+        if length rest == 0
+          then (conT $ mkName "Vector") `appT` numLit n `appT` toHSType a
+          else (conT $ mkName "Vector") `appT` numLit n `appT` expandVector rest a
+      _ -> error $ "impossible Nothing branch in `expandVector`: " ++ show ns ++ " " ++ show a
+
 typeQ :: Text -> TypeQ
-typeQ typ | T.any (== '[') typ = appT listT (go (T.takeWhile (/= '[') typ))
-          | otherwise          = go typ
-  where go x | "string"  == x         = conT (mkName "Text")
-             | "address" == x         = conT (mkName "Address")
-             | "bytes"   == x         = conT (mkName "BytesD")
-             | "bool"    == x         = conT (mkName "Bool")
-             | "bytes" `isPrefixOf` x = appT (conT (mkName "BytesN"))
-                                             (numLit (T.drop 5 x))
-             | "int"   `isPrefixOf` x = conT (mkName "Integer")
-             | "uint"  `isPrefixOf` x = conT (mkName "Integer")
-             | otherwise = fail ("Unknown type: " ++ T.unpack x)
-        numLit n = litT (numTyLit (read (T.unpack n)))
+typeQ t = case parseSolidityType t of
+  Left e -> error $ "Unable to parse solidity type: " ++ show e
+  Right ty -> toHSType ty
 
 -- | Event argument to TH type
 eventBangType :: EventArg -> BangTypeQ

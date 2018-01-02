@@ -19,8 +19,11 @@ module Network.Ethereum.Web3.JsonAbi (
   , signature
   , methodId
   , eventId
+  , SolidityType(..)
+  , parseSolidityType
   ) where
 
+import           Control.Monad                  (void)
 import           Crypto.Hash                    (Digest, Keccak_256, hash)
 import           Data.Aeson
 import           Data.Aeson.TH
@@ -29,6 +32,8 @@ import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 import qualified Data.Text.Encoding             as T
 import           Network.Ethereum.Web3.Internal
+import           Text.Parsec
+import           Text.Parsec.Text
 
 -- | Method argument
 data FunctionArg = FunctionArg
@@ -144,3 +149,89 @@ methodId = ("0x" <>) . T.take 8 . sha3 . signature
 eventId :: Declaration -> Text
 {-# INLINE eventId #-}
 eventId = ("0x" <>) . sha3 . signature
+
+-- | Solidity types and parsers
+
+data SolidityType =
+    SolidityBool
+  | SolidityAddress
+  | SolidityUint Int
+  | SolidityInt Int
+  | SolidityString
+  | SolidityBytesN Int
+  | SolidityBytesD
+  | SolidityVector [Int] SolidityType
+  | SolidityArray SolidityType
+    deriving (Eq, Show)
+
+numberParser :: Parser Int
+numberParser = read <$> many1 digit
+
+parseUint :: Parser SolidityType
+parseUint = do
+  _ <- string "uint"
+  n <- numberParser
+  pure $ SolidityUint n
+
+parseInt :: Parser SolidityType
+parseInt = do
+  _ <- string "int"
+  n <- numberParser
+  pure $ SolidityInt n
+
+parseBool :: Parser SolidityType
+parseBool = string "bool" >>  pure SolidityBool
+
+parseString :: Parser SolidityType
+parseString = string "string" >> pure SolidityString
+
+parseBytes :: Parser SolidityType
+parseBytes = do
+  _ <- string "bytes"
+  mn <- optionMaybe numberParser
+  pure $ maybe SolidityBytesD SolidityBytesN  mn
+
+parseAddress :: Parser SolidityType
+parseAddress = string "address" >> pure SolidityAddress
+
+solidityBasicTypeParser :: Parser SolidityType
+solidityBasicTypeParser =
+    choice [ parseUint
+           , parseInt
+           , parseAddress
+           , parseBool
+           , parseString
+           , parseBytes
+           ]
+
+parseVector :: Parser SolidityType
+parseVector = do
+    s <- solidityBasicTypeParser
+    ns <- many1Till lengthParser ((lookAhead $ void (string "[]")) <|> eof)
+    pure $ SolidityVector ns s
+  where
+    many1Till p end = do
+      a <- p
+      as <- manyTill p end
+      return (a : as)
+    lengthParser = do
+          _ <- char '['
+          n <- numberParser
+          _ <- char ']'
+          pure n
+
+parseArray :: Parser SolidityType
+parseArray = do
+  s <- (try $ parseVector <* string "[]") <|> (solidityBasicTypeParser <* string "[]")
+  pure $ SolidityArray s
+
+
+solidityTypeParser :: Parser SolidityType
+solidityTypeParser =
+    choice [ try parseArray
+           , try parseVector
+           , solidityBasicTypeParser
+           ]
+
+parseSolidityType :: Text -> Either ParseError SolidityType
+parseSolidityType = parse solidityTypeParser ""
