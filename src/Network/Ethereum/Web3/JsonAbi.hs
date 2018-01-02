@@ -196,11 +196,11 @@ parseAddress = string "address" >> pure SolidityAddress
 
 solidityBasicTypeParser :: Parser SolidityType
 solidityBasicTypeParser =
-    choice [ parseUint
-           , parseInt
-           , parseAddress
-           , parseBool
-           , parseString
+    choice [ try parseUint
+           , try parseInt
+           , try parseAddress
+           , try parseBool
+           , try parseString
            , parseBytes
            ]
 

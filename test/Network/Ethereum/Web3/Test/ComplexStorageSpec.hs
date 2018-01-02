@@ -1,11 +1,16 @@
 {-# LANGUAGE QuasiQuotes     #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE DataKinds #-}
+
 module Network.Ethereum.Web3.Test.ComplexStorageSpec where
 
 import           Data.ByteArray                   (convert)
 import           Data.ByteString                  (ByteString)
 import           Data.Default
 import           Data.Either                      (isRight)
+import           Data.Maybe
+import           Data.Sized
 import           Data.String                      (fromString)
 import           Network.Ethereum.Web3            hiding (convert)
 import qualified Network.Ethereum.Web3.Eth        as Eth
@@ -22,15 +27,17 @@ spec :: Spec
 spec = before withPrimaryEthereumAccount $
     describe "can interact with a ComplexStorage contract" $ do
         -- todo: these should ideally be arbitrary!
-        let sUint   = 1
-            sInt    = 1
+        let sUint   = fromJust $ uIntNFromInteger 1
+            sInt    = fromJust $ intNFromInteger $ -1
             sBool   = True
             sInt224 = 221
-            sBools   = [True, False]
-            sInts    = [1, 1, 3]
+            sBools   = True :< False :< NilL
+            sInts    = [1, 1, -3]
             sString  = "hello"
             sBytes16 = BytesN $ convert ("\x12\x34\x56\x78\x12\x34\x56\x78\x12\x34\x56\x78\x12\x34\x56\x78" :: ByteString)
-            sByte2s  = replicate 4 (BytesN (convert ("\x12\x34" :: ByteString)))
+            sByte2sElem  = (BytesN (convert ("\x12\x34" :: ByteString)) :: BytesN 2)
+            sByte2sVec = sByte2sElem :< sByte2sElem :< sByte2sElem :< sByte2sElem :< NilL
+            sByte2s = [sByte2sVec, sByte2sVec]
             contractAddress = fromString . unsafePerformIO $ getEnv "COMPLEXSTORAGE_CONTRACT_ADDRESS"
         it "should inject contract addresses" (const injectExportedEnvironmentVariables)
         it "can set the values of a ComplexStorage" $ \primaryAccount -> do
@@ -53,22 +60,21 @@ spec = before withPrimaryEthereumAccount $
             -- gotta sleep for the block to get confirmed!
             sleepSeconds 5
             -- there really has to be a better way to do this
-            -- also need to figure out how to do vectors completely...
             uintVal'    <- runGetterCall uintVal
             intVal'     <- runGetterCall intVal
             boolVal'    <- runGetterCall boolVal
             int224Val'  <- runGetterCall int224Val
-            --boolsVal    <- runGetterCall boolVectorVal
-            --intsVal     <- runGetterCall intListVal
+            boolsVal    <- runGetterCall boolVectorVal
+            intsVal     <- runGetterCall intListVal
             stringVal'  <- runGetterCall stringVal
             bytes16Val' <- runGetterCall bytes16Val
-            --bytes2s     <- runGetterCall bytes2VectorListVal
+            bytes2s     <- runGetterCall bytes2VectorListVal
             uintVal'    `shouldBe` sUint
             intVal'     `shouldBe` sInt
             boolVal'    `shouldBe` sBool
             int224Val'  `shouldBe` sInt224
-            --boolsVal    `shouldBe` sBools
-            --intsVal     `shouldBe` sInts
+            boolsVal    `shouldBe` sBools
+            intsVal     `shouldBe` sInts
             stringVal'  `shouldBe` sString
             bytes16Val' `shouldBe` sBytes16
-            -- bytes2s `shouldBe` sByte2s
+            bytes2s `shouldBe` sByte2s

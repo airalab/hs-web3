@@ -109,8 +109,9 @@ test-suite live
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
-  other-modules:       Network.Ethereum.Web3.Test.SimpleStorageSpec
-                       Network.Ethereum.Web3.Test.Utils
+  other-modules:       Network.Ethereum.Web3.Test.ComplexStorageSpec
+                     , Network.Ethereum.Web3.Test.SimpleStorageSpec
+                     , Network.Ethereum.Web3.Test.Utils
   build-depends:       base
                      , bytestring
                      , data-default
@@ -120,6 +121,7 @@ test-suite live
                      , hspec-expectations
                      , memory
                      , text
+                     , sized
                      , split
                      , stm
                      , time
