@@ -31,7 +31,7 @@ import           System.Environment               (getEnv)
 import           System.IO.Unsafe                 (unsafePerformIO)
 import           Test.Hspec
 
-[abiFrom|build/contracts/abis/SimpleStorage.json|]
+[abiFrom|test-support/build/contracts/abis/SimpleStorage.json|]
 
 contractAddress :: Address
 contractAddress = fromString . unsafePerformIO $ getEnv "SIMPLESTORAGE_CONTRACT_ADDRESS"
