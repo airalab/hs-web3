@@ -3,3 +3,4 @@
 .detected-contract-addresses
 .DS_Store
 build/
+dist/
