@@ -70,7 +70,6 @@ exportStore = ".detected-contract-addresses"
 
 myBuildHook :: PackageDescription -> LocalBuildInfo -> UserHooks -> BuildFlags -> IO ()
 myBuildHook pd lbi uh flags = do
-    print $ buildArgs flags
     inCabal <- buildingInCabal
     let v = fromFlag $ buildVerbosity flags
         args = buildArgs flags
