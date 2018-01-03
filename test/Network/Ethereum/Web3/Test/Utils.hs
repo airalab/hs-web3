@@ -33,7 +33,7 @@ instance Provider EnvironmentProvider where
     rpcUri = liftIO (fromMaybe "http://localhost:8545" <$> lookupEnv "WEB3_PROVIDER")
 
 exportStore :: String
-exportStore = ".detected-contract-addresses"
+exportStore = "./test-support/.detected-contract-addresses"
 
 loadExportedEnvironmentVariables :: IO [(String, String)]
 loadExportedEnvironmentVariables = do
