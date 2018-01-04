@@ -209,7 +209,7 @@ instance UnTag '[] where
   unTag a = a
 
 instance UnTag ts => UnTag (Tagged n a : ts) where
-  type UnTag' (Tagged n a : as) = a : UnTag' as
+  type UnTag' (Tagged n a : ts) = a : UnTag' ts
   unTag (Tagged a :< ts) = a :< unTag ts
 
 class HListMerge (as :: [*]) (bs :: [*]) where
