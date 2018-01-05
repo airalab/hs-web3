@@ -5,6 +5,7 @@
 
 module Network.Ethereum.Web3.Test.ComplexStorageSpec where
 
+import           Control.Monad.IO.Class           (liftIO)
 import           Data.ByteArray                   (convert)
 import           Data.ByteString                  (ByteString)
 import           Data.Default
@@ -21,7 +22,7 @@ import           System.Environment               (getEnv)
 import           System.IO.Unsafe                 (unsafePerformIO)
 import           Test.Hspec
 
-[abiFrom|build/contracts/abis/ComplexStorage.json|]
+[abiFrom|test-support/build/contracts/abis/ComplexStorage.json|]
 
 spec :: Spec
 spec = describe "Complex Storage" $ do
