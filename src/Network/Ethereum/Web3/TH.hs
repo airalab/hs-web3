@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE QuasiQuotes      #-}
 {-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE OverloadedStrings  #-}
 
 -- |
 -- Module      :  Network.Ethereum.Web3.TH
@@ -35,34 +36,43 @@ module Network.Ethereum.Web3.TH (
   , Bytes
   , Text
   , Singleton(..)
-  , ABIEncoding(..)
+  , IndexedEvent(..)
+  , Tagged
+  , module Generics.SOP
   ) where
 
-import qualified Data.Attoparsec.Text                 as P
-import qualified Data.Text                            as T
-import qualified Data.Text.Lazy                       as LT
-import qualified Data.Text.Lazy.Builder               as B
-import qualified Data.Text.Lazy.Encoding              as LT
+import           Control.Monad                          ((<=<))
+import           Data.List                              (length, uncons)
+import           Data.Tagged                            (Tagged)
+import qualified Data.Text                              as T
+import qualified Data.Text.Lazy                         as LT
+import qualified Data.Text.Lazy.Builder                 as B
+import qualified Data.Text.Lazy.Encoding                as LT
+import           Text.Parsec.Text                       as P
 
 import           Network.Ethereum.Unit
-import           Network.Ethereum.Web3.Address        (Address)
+import           Network.Ethereum.Web3.Address          (Address)
 import           Network.Ethereum.Web3.Contract
 import           Network.Ethereum.Web3.Encoding
-import           Network.Ethereum.Web3.Encoding.Tuple
+import           Network.Ethereum.Web3.Encoding.Event
+import           Network.Ethereum.Web3.Encoding.Int
+import           Network.Ethereum.Web3.Encoding.Vector
+import           Network.Ethereum.Web3.Encoding.Generic
 import           Network.Ethereum.Web3.Internal
 import           Network.Ethereum.Web3.JsonAbi
 import           Network.Ethereum.Web3.Provider
 import           Network.Ethereum.Web3.Types
 
-import           Control.Monad                        (replicateM)
+import           Control.Monad                          (replicateM)
 
 import           Data.Aeson
-import           Data.ByteArray                       (Bytes)
-import           Data.List                            (groupBy, sortBy)
-import           Data.Monoid                          (mconcat, (<>))
-import           Data.Text                            (Text, isPrefixOf)
+import           Data.ByteArray                         (Bytes)
+import           Data.List                              (groupBy, sortBy)
+import           Data.Monoid                            (mconcat, (<>))
+import           Data.Text                              (Text, isPrefixOf)
 
-import           GHC.Generics
+import           Generics.SOP
+import qualified GHC.Generics                           as GHC
 
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Lib
@@ -100,19 +110,32 @@ funD' :: Name -> [PatQ] -> ExpQ -> DecQ
 funD' name p f = funD name [clause p (normalB f) []]
 
 -- | ABI and Haskell types association
+
+toHSType :: SolidityType -> TypeQ
+toHSType s = case s of
+    SolidityBool -> conT (mkName "Bool")
+    SolidityAddress -> conT (mkName "Address")
+    SolidityUint n -> appT (conT (mkName "UIntN")) (numLit n)
+    SolidityInt n -> appT (conT (mkName "IntN")) (numLit n)
+    SolidityString ->  conT (mkName "Text")
+    SolidityBytesN n -> appT (conT (mkName "BytesN")) (numLit n)
+    SolidityBytesD ->  conT (mkName "BytesD")
+    SolidityVector ns a -> expandVector ns a
+    SolidityArray a -> appT listT $ toHSType a
+  where
+    numLit n = litT (numTyLit $ toInteger n)
+    expandVector :: [Int] -> SolidityType -> TypeQ
+    expandVector ns a = case uncons ns of
+      Just (n, rest) ->
+        if length rest == 0
+          then (conT $ mkName "Vector") `appT` numLit n `appT` toHSType a
+          else (conT $ mkName "Vector") `appT` numLit n `appT` expandVector rest a
+      _ -> error $ "impossible Nothing branch in `expandVector`: " ++ show ns ++ " " ++ show a
+
 typeQ :: Text -> TypeQ
-typeQ typ | T.any (== '[') typ = appT listT (go (T.takeWhile (/= '[') typ))
-          | otherwise          = go typ
-  where go x | "string"  == x         = conT (mkName "Text")
-             | "address" == x         = conT (mkName "Address")
-             | "bytes"   == x         = conT (mkName "BytesD")
-             | "bool"    == x         = conT (mkName "Bool")
-             | "bytes" `isPrefixOf` x = appT (conT (mkName "BytesN"))
-                                             (numLit (T.drop 5 x))
-             | "int"   `isPrefixOf` x = conT (mkName "Integer")
-             | "uint"  `isPrefixOf` x = conT (mkName "Integer")
-             | otherwise = fail ("Unknown type: " ++ T.unpack x)
-        numLit n = litT (numTyLit (read (T.unpack n)))
+typeQ t = case parseSolidityType t of
+  Left e -> error $ "Unable to parse solidity type: " ++ show e
+  Right ty -> toHSType ty
 
 -- | Event argument to TH type
 eventBangType :: EventArg -> BangTypeQ
@@ -133,46 +156,7 @@ isDynType x | T.any (== '[') x = True
 
 eventEncodigD :: Name -> [EventArg] -> [DecQ]
 eventEncodigD eventName args =
-    [ funD' (mkName "toDataBuilder")  []
-        [|error "Event to data conversion isn't available!"|]
-    , funD' (mkName "fromDataParser") [] fromDataP ]
-  where
-    indexed = map eveArgIndexed args
-    newVars = replicateM (length args) (newName "t")
-
-    parseArg v = bindS (varP v) [|fromDataParser|]
-
-    parseData []   = []
-    parseData [v]  = pure $ bindS (varP v) [|unSingleton <$> fromDataParser|]
-    parseData vars = pure $ bindS (tupP (varP <$> vars)) [|fromDataParser|]
-
-    fromDataP = do
-        vars <- zip indexed <$> newVars
-        let ixVars   = [v | (isIndexed, v) <- vars, isIndexed]
-            noIxVars = [v | (isIndexed, v) <- vars, not isIndexed]
-            expVars  = [varE v | (_, v) <- vars]
-        doE $ fmap parseArg ixVars
-           ++ parseData noIxVars
-           ++ [noBindS [|return $(appsE (conE eventName : expVars))|]]
-
-funEncodigD :: Name -> Int -> String -> [DecQ]
-funEncodigD funName paramLen ident =
-    [ funDtoDataB
-    , funD' (mkName "fromDataParser") []
-        [|error "Function from data conversion isn't available!"|] ]
-  where
-    newVars = replicateM paramLen (newName "t")
-    sVar    = mkName "a"
-    funDtoDataB
-        | paramLen == 0 = funD' (mkName "toDataBuilder") [conP funName []] [|ident|]
-        | paramLen == 1 = funD' (mkName "toDataBuilder")
-                            [conP funName [varP sVar]]
-                                [|ident <> toDataBuilder (Singleton $(varE sVar))|]
-        | otherwise = do
-            vars <- newVars
-            funD' (mkName "toDataBuilder")
-              [conP funName $ fmap varP vars]
-              [|ident <> toDataBuilder $(tupE $ fmap varE vars)|]
+    [ funD' (mkName "fromDataParser") [] [|decodeEvent|] ]
 
 eventFilterD :: String -> Int -> [DecQ]
 eventFilterD topic0 n =
@@ -229,19 +213,46 @@ funWrapper c name dname args result = do
         Just xs  -> let outs = fmap (typeQ . funArgType) xs
                     in  [t|Web3 $p $(foldl appT (tupleT (length xs)) outs)|]
 
--- | Event declarations maker
 mkEvent :: Declaration -> Q [Dec]
-mkEvent eve@(DEvent name inputs _) = sequence
-    [ dataD' eventName eventFields derivingD
-    , instanceD' eventName encodingT (eventEncodigD eventName inputs)
-    , instanceD' eventName eventT    (eventFilterD (T.unpack $ eventId eve) indexedFieldsCount)
+mkEvent ev@(DEvent name inputs anonymous) = sequence
+    [ dataD' indexedName (normalC indexedName (map (toBang <=< tag) indexedArgs)) derivingD
+    , instanceD' indexedName (conT (mkName "Generic")) []
+    , dataD' nonIndexedName (normalC nonIndexedName (map (toBang <=< tag) nonIndexedArgs)) derivingD
+    , instanceD' nonIndexedName (conT (mkName "Generic")) []
+    , dataD' allName (recC allName (map (\(n, a) -> ((\(b,t) -> return (n,b,t)) <=< toBang <=< typeQ $ a)) allArgs)) derivingD
+    , instanceD' allName (conT (mkName "Generic")) []
+    , instanceD (cxt []) (return $ (ConT $ mkName "IndexedEvent") `AppT` ConT indexedName `AppT` ConT nonIndexedName `AppT` ConT allName)
+        [funD' (mkName "isAnonymous") [] [|const anonymous|]]
+    , instanceD' allName eventT (eventFilterD (T.unpack $ eventId ev) (length indexedArgs))
+
     ]
-  where eventName   = mkName (toUpperFirst (T.unpack name))
-        derivingD   = [mkName "Show", mkName "Eq", mkName "Ord", ''Generic]
-        eventFields = normalC eventName (eventBangType <$> inputs)
-        encodingT   = conT (mkName "ABIEncoding")
-        eventT      = conT (mkName "Event")
-        indexedFieldsCount = length . filter eveArgIndexed $ inputs
+  where
+    toBang ty = bangType (bang sourceNoUnpack sourceStrict) (return ty)
+    tag (n, ty) = AppT (AppT (ConT $ mkName "Tagged") (LitT $ NumTyLit n)) <$> typeQ ty
+    labeledArgs = zip [1..] inputs
+    indexedArgs = map (\(n, ea) -> (n, eveArgType ea)) . filter (eveArgIndexed . snd) $ labeledArgs
+    indexedName = mkName $ toUpperFirst (T.unpack name) <> "Indexed"
+    nonIndexedArgs = map (\(n, ea) -> (n, eveArgType ea)) . filter (not . eveArgIndexed . snd) $ labeledArgs
+    nonIndexedName = mkName $ toUpperFirst (T.unpack name) <> "NonIndexed"
+    allArgs = makeArgs name $ map (\i -> (eveArgName i, eveArgType i)) inputs
+    allName = mkName $ toUpperFirst (T.unpack name)
+    derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
+    eventT = conT (mkName "Event")
+
+-- | this function gives appropriate names for the accessors in the following way
+-- | argName -> evArgName
+-- | arg_name -> evArg_name
+-- | _argName -> evArgName
+-- | "" -> evi , for example Transfer(address, address uint256) ~> Transfer {transfer1 :: address, transfer2 :: address, transfer3 :: Integer}
+makeArgs :: T.Text -> [(T.Text, T.Text)] -> [(Name, T.Text)]
+makeArgs prefix ns = go 1 ns
+  where
+    prefixStr = toLowerFirst . T.unpack $ prefix
+    go :: Int -> [(T.Text, T.Text)] -> [(Name, T.Text)]
+    go i [] = []
+    go i ((h, ty) : tail) = if T.null h
+                        then (mkName $  prefixStr ++ show i, ty) : go (i + 1) tail
+                        else (mkName . (++) prefixStr . toUpperFirst . (\t -> if head t == '_' then drop 1 t else t) . T.unpack $ h, ty) : go (i + 1) tail
 
 -- | Method delcarations maker
 mkFun :: Declaration -> Q [Dec]
@@ -249,16 +260,15 @@ mkFun fun@(DFunction name constant inputs outputs) = (++)
   <$> funWrapper constant funName dataName inputs outputs
   <*> sequence
         [ dataD' dataName (normalC dataName bangInput) derivingD
-        , instanceD' dataName encodingT
-            (funEncodigD dataName (length inputs) mIdent)
-        , instanceD' dataName methodT [] ]
+        , instanceD' dataName (conT (mkName "Generic")) []
+        , instanceD' dataName  (conT (mkName "Method"))
+          [funD' (mkName "selector") [] [|const mIdent|]]
+        ]
   where mIdent    = T.unpack (methodId $ fun{funName = T.replace "'" "" name})
         dataName  = mkName (toUpperFirst (T.unpack $ name <> "Data"))
         funName   = mkName (toLowerFirst (T.unpack name))
         bangInput = fmap funBangType inputs
-        derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''Generic]
-        encodingT = conT (mkName "ABIEncoding")
-        methodT   = conT (mkName "Method")
+        derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
 
 escape :: [Declaration] -> [Declaration]
 escape = concat . escapeNames . groupBy fnEq . sortBy fnCompare

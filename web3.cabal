@@ -14,13 +14,13 @@ cabal-version:       >=1.10
 
 extra-source-files:
   README.md
-  contracts/Migrations.sol
-  contracts/SimpleStorage.sol
-  truffle.js
-  migrations/1_initial_migration.js
-  migrations/2_deploy_contracts.js
-  convertAbi.sh
-  inject-contract-addresses.sh
+  test-support/contracts/Migrations.sol
+  test-support/contracts/SimpleStorage.sol
+  test-support/truffle.js
+  test-support/migrations/1_initial_migration.js
+  test-support/migrations/2_deploy_contracts.js
+  test-support/convertAbi.sh
+  test-support/inject-contract-addresses.sh
 
 source-repository head
   type:     git
@@ -29,7 +29,8 @@ source-repository head
 custom-setup
   setup-depends:
     base,
-    Cabal
+    Cabal,
+    directory
 
 library
   hs-source-dirs:      src
@@ -46,25 +47,33 @@ library
                      , Network.Ethereum.Web3.Encoding
                      , Network.Ethereum.Web3.Contract
                      , Network.Ethereum.Web3.Encoding.Bytes
-                     , Network.Ethereum.Web3.Encoding.Tuple
+                     , Network.Ethereum.Web3.Encoding.Event
+                     , Network.Ethereum.Web3.Encoding.Generic
+                     , Network.Ethereum.Web3.Encoding.Int
+                     , Network.Ethereum.Web3.Encoding.Vector
   other-modules:       Network.Ethereum.Web3.JsonRpc
                      , Network.Ethereum.Web3.Internal
-                     , Network.Ethereum.Web3.Encoding.TupleTH
                      , Network.Ethereum.Web3.Encoding.Internal
   build-depends:       base >4.8 && <4.11
+                     , aeson
                      , base16-bytestring
-                     , template-haskell
-                     , http-client-tls
-                     , transformers
-                     , http-client
-                     , attoparsec
                      , bytestring
                      , cryptonite
+                     , errors
+                     , generics-sop
+                     , http-client-tls
+                     , http-client
                      , data-default
-                     , vector
                      , memory
-                     , aeson
+                     , mtl
+                     , parsec
+                     , singletons
+                     , sized
+                     , tagged
+                     , template-haskell
                      , text
+                     , transformers
+                     , vector
   default-extensions:  OverloadedStrings
   default-language:    Haskell2010
 
@@ -73,17 +82,22 @@ test-suite unit
   hs-source-dirs:      unit
   main-is:             Spec.hs
   other-modules:       Network.Ethereum.Web3.Test.MethodDumpSpec
+                       Network.Ethereum.Web3.Test.EncodingSpec
+                       Network.Ethereum.Web3.Test.EventSpec
   build-depends:       base
+                     , base16-bytestring
                      , bytestring
                      , data-default
+                     , generics-sop
                      , hspec
                      , hspec-contrib
                      , hspec-discover
                      , hspec-expectations
                      , memory
-                     , text
+                     , sized
                      , split
                      , stm
+                     , tagged
                      , time
                      , text
                      , transformers
@@ -96,8 +110,9 @@ test-suite live
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
-  other-modules:       Network.Ethereum.Web3.Test.SimpleStorageSpec
-                       Network.Ethereum.Web3.Test.Utils
+  other-modules:       Network.Ethereum.Web3.Test.ComplexStorageSpec
+                     , Network.Ethereum.Web3.Test.SimpleStorageSpec
+                     , Network.Ethereum.Web3.Test.Utils
   build-depends:       base
                      , bytestring
                      , data-default
@@ -107,6 +122,7 @@ test-suite live
                      , hspec-expectations
                      , memory
                      , text
+                     , sized
                      , split
                      , stm
                      , time

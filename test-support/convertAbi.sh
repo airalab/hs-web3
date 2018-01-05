@@ -1,5 +1,5 @@
 #!/bin/sh
-
+set -xe
 cd build/contracts/
 mkdir -p abis
 
