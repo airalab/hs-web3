@@ -1,9 +1,21 @@
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE KindSignatures             #-}
-{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE PolyKinds                  #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
+
+
+-- |
+-- Module      :  Network.Ethereum.Web3.Encoding.Int
+-- Copyright   :  Alexander Krupenkin 2016
+-- License     :  BSD3
+--
+-- Maintainer  :  mail@akru.me
+-- Stability   :  experimental
+-- Portability :  noportable
+--
+-- The type int<M> and uint<M> support.
+--
 
 module Network.Ethereum.Web3.Encoding.Int where
 

@@ -6,6 +6,18 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
+-- |
+-- Module      :  Network.Ethereum.Web3.Encoding.Vector
+-- Copyright   :  Alexander Krupenkin 2016
+-- License     :  BSD3
+--
+-- Maintainer  :  mail@akru.me
+-- Stability   :  experimental
+-- Portability :  noportable
+--
+-- statically sized vector support.
+--
+
 module Network.Ethereum.Web3.Encoding.Vector where
 
 import           Control.Monad                           (replicateM)

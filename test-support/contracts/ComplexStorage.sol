@@ -26,5 +26,9 @@ contract ComplexStorage {
          
          ValsSet(_uintVal, _intVal, _boolVal, _int224Val, _boolVectorVal, _intListVal, _stringVal, _bytes16Val, _bytes2VectorListVal);
     }
-    
+
+    function getVals () constant public returns (uint, int, bool, int224, bool[2], int[], string, bytes16, bytes2[4][]) {
+      return (uintVal, intVal, boolVal, int224Val, boolVectorVal, intListVal, stringVal, bytes16Val, bytes2VectorListVal);
+    }
+   
 }
