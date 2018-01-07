@@ -82,6 +82,10 @@ class Event e where
     -- | Event filter structure used by low-level subscription methods
     eventFilter :: Proxy e -> Address -> Filter
 
+-- | 'event' spawns an asynchronous event filter to monitor the latest events
+-- | logged by the contract at the given address for a particular event type. All
+-- | events of type 'e' are composed of an indexed component 'i', and a
+-- | non-indexed component 'ni'.
 event :: forall p e i ni.
           ( Provider p
          , Event e
@@ -108,7 +112,10 @@ event a f = do
       changeEvent <- decodeEvent changeWithMeta
       return (changeEvent, changeWithMeta)
 
+
 class Method a where
+  -- | selector is used to compute the function selector for a given function type, defined as
+  -- | the hex string representation of the first 4 bytes of the hash of the signature.
   selector :: Proxy a -> T.Text
 
 sendTx :: ( Generic a

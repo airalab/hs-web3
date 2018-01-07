@@ -3,7 +3,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE QuasiQuotes      #-}
 {-# LANGUAGE TemplateHaskell  #-}
-{-# LANGUAGE OverloadedStrings  #-}
 
 -- |
 -- Module      :  Network.Ethereum.Web3.TH

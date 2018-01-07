@@ -4,6 +4,19 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
+
+-- Module      :  Network.Ethereum.Web3.Test.SimpleStorage
+-- Copyright   :  Alexander Krupenkin 2016
+-- License     :  BSD3
+--
+-- Maintainer  :  mail@akru.me
+-- Stability   :  experimental
+-- Portability :  unportable
+--
+-- SimpleStorage is a Solidity contract which stores a uint256.
+-- The point of this test is to test function calls to update and
+-- read the value, as well as an event monitor.
+
 module Network.Ethereum.Web3.Test.SimpleStorageSpec where
 
 import           Control.Concurrent               (threadDelay)
