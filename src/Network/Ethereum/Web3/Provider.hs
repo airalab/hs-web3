@@ -11,7 +11,7 @@
 --
 module Network.Ethereum.Web3.Provider where
 
-import           Control.Concurrent          (ThreadId, forkIO)
+import           Control.Concurrent.Async    (Async, async)
 import           Control.Exception           (try)
 import           Control.Monad.IO.Class      (MonadIO (..))
 import           Network.Ethereum.Web3.Types
@@ -38,6 +38,6 @@ runWeb3 :: MonadIO m => Web3 DefaultProvider b -> m (Either Web3Error b)
 runWeb3 = runWeb3'
 
 -- | Fork 'Web3' with the same 'Provider'
-forkWeb3 :: Web3 a () -> Web3 a ThreadId
+forkWeb3 :: Web3 a b -> Web3 a (Async b)
 {-# INLINE forkWeb3 #-}
-forkWeb3 = Web3 . forkIO . unWeb3
+forkWeb3 = Web3 . async . unWeb3

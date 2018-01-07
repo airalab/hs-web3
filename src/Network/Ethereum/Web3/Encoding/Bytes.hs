@@ -18,7 +18,6 @@ module Network.Ethereum.Web3.Encoding.Bytes (
   , BytesD(..)
   ) where
 
-import qualified Data.Attoparsec.Text                    as P
 import           Data.ByteArray                          (Bytes)
 import qualified Data.ByteArray                          as BA
 import qualified Data.ByteString.Base16                  as BS16 (decode,
@@ -32,8 +31,6 @@ import           GHC.TypeLits                            (KnownNat, Nat, natVal)
 import           Network.Ethereum.Web3.Encoding
 import           Network.Ethereum.Web3.Encoding.Internal
 
-import           Debug.Trace
-
 -- | Fixed length byte array
 newtype BytesN (n :: Nat) = BytesN { unBytesN :: Bytes }
   deriving (Eq, Ord)
@@ -46,12 +43,14 @@ instance KnownNat n => EncodingType (BytesN n) where
     typeName  = const $ "bytes" <> (show . natVal $ (Proxy :: Proxy n))
     isDynamic = const False
 
-instance KnownNat n => ABIEncoding (BytesN n) where
+instance KnownNat n => ABIEncode (BytesN n) where
     toDataBuilder (BytesN bytes) = bytesBuilder bytes
+
+instance KnownNat n => ABIDecode (BytesN n) where
     fromDataParser = do
         let result   = undefined :: KnownNat n => BytesN n
             len      = fromIntegral (natVal result)
-        bytesString <- T.take (len * 2) <$> P.take 64
+        bytesString <- T.take (len * 2) <$> takeHexChar 64
         return (update result (bytesDecode bytesString))
 
 instance KnownNat n => Show (BytesN n) where
@@ -78,14 +77,15 @@ instance EncodingType BytesD where
     typeName  = const "bytes[]"
     isDynamic = const True
 
-instance ABIEncoding BytesD where
+instance ABIEncode BytesD where
     toDataBuilder (BytesD bytes) = int256HexBuilder (BA.length bytes)
                                 <> bytesBuilder bytes
+instance ABIDecode BytesD where
     fromDataParser = do
         len <- int256HexParser
         if (len :: Integer) > fromIntegral (maxBound :: Int)
         then fail "Bytes length over bound!"
-        else (BytesD . bytesDecode) <$> P.take (fromIntegral len * 2)
+        else (BytesD . bytesDecode) <$> takeHexChar (fromIntegral len * 2)
 
 instance Show BytesD where
     show = show . BS16.encode . BA.convert . unBytesD

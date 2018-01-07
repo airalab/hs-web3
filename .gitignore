@@ -1,2 +1,6 @@
 .stack-work
 *.swp
+.detected-contract-addresses
+.DS_Store
+build/
+dist/

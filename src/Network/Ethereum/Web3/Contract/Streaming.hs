@@ -68,14 +68,14 @@ data FilterStreamState = FilterStreamState { fssCurrentBlock  :: BlockNumber
 
 -- | 'playLogs' streams the 'filterStream' and calls eth_getLogs on these
 -- | 'Filter' objects.
-playLogs :: forall p a. (Provider p, ABIEncoding a)
+playLogs :: forall p a. (Provider p, ABIDecode a)
          => HaltingMealyT (Web3 p) FilterStreamState [FilterChange a]
 playLogs  = do
   filter <- filterStream
   changes <- arrM . const . lift $ Eth.getLogs filter
   return $ mkFilterChanges changes
 
-pollFilter :: forall p a s . (Provider p, ABIEncoding a)
+pollFilter :: forall p a s . (Provider p, ABIDecode a)
            => FilterId
            -> DefaultBlock
            -> HaltingMealyT (Web3 p) s [FilterChange a]
@@ -90,7 +90,7 @@ pollFilter fid stop = MealyT $ \s -> do
     changes <- lift $ Eth.getFilterChanges fid
     return (mkFilterChanges changes, pollFilter fid stop)
 
-mkFilterChanges :: ABIEncoding a => [Change] -> [FilterChange a]
+mkFilterChanges :: ABIDecode a => [Change] -> [FilterChange a]
 mkFilterChanges cs = flip mapMaybe cs $ \c@Change{..} -> do
                        x <- fromData changeData
                        return $ FilterChange c x
@@ -115,7 +115,7 @@ filterStream = MealyT $ \FilterStreamState{..} -> do
             newTo upper (BlockNumber current) window = min upper . BlockNumber $ current + window
 
 
-event' :: (ABIEncoding a, Provider p)
+event' :: (ABIDecode a, Provider p)
        => Filter
        -> Integer
        -> (a -> ReaderT Change (Web3 p) EventAction)
@@ -138,7 +138,7 @@ event' fltr window handler = do
       filterId <- Eth.newFilter fltr { filterFromBlock = Just pollingFromBlock }
       void $ reduceEventStream (pollFilter filterId pollTo) handler ()
 
-event :: forall p a . (Provider p, ABIEncoding a)
+event :: forall p a . (Provider p, ABIDecode a)
       => Filter
       -> (a -> ReaderT Change (Web3 p) EventAction)
       -> Web3 p ()

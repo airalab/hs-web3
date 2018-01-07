@@ -1,3 +1,11 @@
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+
 -- |
 -- Module      :  Network.Ethereum.Web3.Contract
 -- Copyright   :  Alexander Krupenkin 2016
@@ -29,28 +37,36 @@
 --
 module Network.Ethereum.Web3.Contract (
     EventAction(..)
-  , Method(..)
   , Event(..)
+  , event
+  , Method(..)
+  , call
+  , sendTx
   , NoMethod(..)
   , nopay
   ) where
 
-import           Control.Concurrent             (ThreadId, threadDelay)
-import           Control.Exception              (throwIO)
-import           Control.Monad                  (forM, when)
-import           Control.Monad.IO.Class         (liftIO)
-import           Control.Monad.Trans.Reader     (ReaderT (..))
-import           Data.Maybe                     (listToMaybe, mapMaybe)
-import           Data.Monoid                    ((<>))
-import qualified Data.Text                      as T
-import           Data.Text.Lazy                 (toStrict)
-import qualified Data.Text.Lazy.Builder         as B
-import qualified Data.Text.Lazy.Builder.Int     as B
-
+import           Control.Concurrent                     (threadDelay)
+import           Control.Concurrent.Async               (Async)
+import           Control.Exception                      (throwIO)
+import           Control.Monad                          (forM, when)
+import           Control.Monad.IO.Class                 (liftIO)
+import           Control.Monad.Trans.Reader             (ReaderT (..))
+import           Data.Maybe                             (listToMaybe, mapMaybe)
+import           Data.Monoid                            ((<>))
+import           Data.Proxy                             (Proxy (..))
+import qualified Data.Text                              as T
+import           Data.Text.Lazy                         (toStrict)
+import qualified Data.Text.Lazy.Builder                 as B
+import qualified Data.Text.Lazy.Builder.Int             as B
+import           Generics.SOP
+import           GHC.TypeLits
 import           Network.Ethereum.Unit
 import           Network.Ethereum.Web3.Address
 import           Network.Ethereum.Web3.Encoding
-import qualified Network.Ethereum.Web3.Eth      as Eth
+import           Network.Ethereum.Web3.Encoding.Event
+import           Network.Ethereum.Web3.Encoding.Generic
+import qualified Network.Ethereum.Web3.Eth              as Eth
 import           Network.Ethereum.Web3.Provider
 import           Network.Ethereum.Web3.Types
 
@@ -62,29 +78,20 @@ data EventAction = ContinueEvent
   deriving (Show, Eq)
 
 -- | Contract event listener
-class ABIEncoding a => Event a where
+class Event e where
     -- | Event filter structure used by low-level subscription methods
-    eventFilter :: a -> Address -> Filter
+    eventFilter :: Proxy e -> Address -> Filter
 
-    -- | Start an event listener for given contract 'Address' and callback
-    event :: Provider p
-          => Address
-          -- ^ Contract address
-          -> (a -> ReaderT Change (Web3 p) EventAction)
-          -- ^ 'Event' handler
-          -> Web3 p ThreadId
-          -- ^ 'Web3' wrapped event handler spawn ident
-    event = _event
-
-_event :: (Provider p, Event a)
+event :: forall p e i ni.
+          ( Provider p
+         , Event e
+         , DecodeEvent i ni e
+         )
        => Address
-       -> (a -> ReaderT Change (Web3 p) EventAction)
-       -> Web3 p ThreadId
-_event a f = do
-    fid <- let ftyp = snd $ let x = undefined :: Event a => a
-                            in  (f x, x)
-           in  Eth.newFilter (eventFilter ftyp a)
-
+       -> (e -> ReaderT Change (Web3 p) EventAction)
+       -> Web3 p (Async ())
+event a f = do
+    fid <- Eth.newFilter (eventFilter (Proxy :: Proxy e) a)
     forkWeb3 $
         let loop = do liftIO (threadDelay 1000000)
                       changes <- Eth.getFilterChanges fid
@@ -96,45 +103,47 @@ _event a f = do
               return ()
   where
     prepareTopics = fmap (T.drop 2) . drop 1
+    pairChange :: DecodeEvent i ni e => Change -> Maybe (e, Change)
     pairChange changeWithMeta = do
-      changeEvent <- fromData $
-        T.append (T.concat (prepareTopics $ changeTopics changeWithMeta))
-                 (T.drop 2 $ changeData changeWithMeta)
+      changeEvent <- decodeEvent changeWithMeta
       return (changeEvent, changeWithMeta)
 
--- | Contract method caller
-class ABIEncoding a => Method a where
-    -- | Send a transaction for given contract 'Address', value and input data
-    sendTx :: (Provider p)
-           => Call
-           -- ^ Call configuration
-           -> a
-           -- ^ Method data
-           -> Web3 p TxHash
-           -- ^ 'Web3' wrapped result
-    sendTx = _sendTransaction
+class Method a where
+  selector :: Proxy a -> T.Text
 
-    -- | Constant call given contract 'Address' in mode and given input data
-    call :: (Provider p, ABIEncoding b)
-         => Call
-         -- ^ Call configuration
-         -> DefaultBlock
-         -- ^ State mode for constant call (latest or pending)
-         -> a
-         -- ^ Method data
-         -> Web3 p b
-         -- ^ 'Web3' wrapped result
-    call = _call
+sendTx :: ( Generic a
+          , GenericABIEncode (Rep a)
+          , Provider p
+          , Method a
+          )
+       => Call
+       -- ^ Call configuration
+       -> a
+       -- ^ method data
+       -> Web3 p TxHash
+sendTx call (dat :: a) =
+  let sel = selector (Proxy :: Proxy a)
+  in Eth.sendTransaction (call { callData = Just $ sel <> genericToData dat })
 
-_sendTransaction :: (Provider p, Method a)
-                 => Call -> a -> Web3 p TxHash
-_sendTransaction call dat = Eth.sendTransaction (call { callData = Just $ toData dat })
-
-_call :: (Provider p, Method a, ABIEncoding b)
-      => Call -> DefaultBlock -> a -> Web3 p b
-_call call mode dat = do
-    res <- Eth.call (call { callData = Just $ toData dat }) mode
-    case fromData (T.drop 2 res) of
+call :: ( Generic a
+        , GenericABIEncode (Rep a)
+        , Generic b
+        , GenericABIDecode (Rep b)
+        , Provider p
+        , Method a
+        )
+     => Call
+     -- ^ Call configuration
+     -> DefaultBlock
+     -- ^ State mode for constant call (latest or pending)
+     -> a
+     -- ^ Method data
+     -> Web3 p b
+     -- ^ 'Web3' wrapped result
+call call mode (dat :: a) = do
+    let sel = selector (Proxy :: Proxy a)
+    res <- Eth.call (call { callData = Just $ sel <> genericToData dat }) mode
+    case genericFromData (T.drop 2 res) of
         Nothing -> liftIO $ throwIO $ ParserFail $
             "Unable to parse result on `" ++ T.unpack res
             ++ "` from `" ++ show (callTo call) ++ "`"
@@ -147,9 +156,3 @@ nopay = 0
 
 -- | Dummy method for sending transaction without method call
 data NoMethod = NoMethod
-
-instance ABIEncoding NoMethod where
-    fromDataParser = return NoMethod
-    toDataBuilder  = const ""
-
-instance Method NoMethod
