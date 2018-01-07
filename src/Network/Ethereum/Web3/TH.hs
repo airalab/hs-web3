@@ -164,8 +164,8 @@ eventFilterD topic0 n =
   in [ funD' (mkName "eventFilter") [wildP, varP addr]
        [|Filter (Just $(varE addr))
                 (Just $ [Just topic0] <> indexedArgs)
-                Nothing
-                Nothing
+                Latest
+                Latest
        |]
      ]
 

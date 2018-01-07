@@ -39,7 +39,7 @@ import           Network.Ethereum.Web3.Contract   (Event (..))
 import qualified Network.Ethereum.Web3.Eth        as Eth
 import           Network.Ethereum.Web3.Test.Utils
 import           Network.Ethereum.Web3.TH
-import           Network.Ethereum.Web3.Types      (Call (..), Change (..), Filter (..))
+import           Network.Ethereum.Web3.Types      (Call (..), Change (..), Filter (..), BlockNumber)
 import           Numeric                          (showHex)
 import           System.Environment               (getEnv)
 import           System.IO.Unsafe                 (unsafePerformIO)
@@ -75,13 +75,14 @@ interactions = describe "can interact with a SimpleStorage contract" $ do
 
 events :: SpecWith Address
 events = describe "can interact with a SimpleStorage contract across block intervals" $ do
+    let basicCountFilter = eventFilter (Proxy :: Proxy CountSet) contractAddress
     it "can stream events starting and ending in the future, unbounded" $ \primaryAccount -> do
         var <- newMVar []
         let theCall = callFromTo primaryAccount contractAddress
             theSets = [8, 9, 10]
         _ <- runWeb3Configured $ do
           liftIO $ print "Launching event monitor ..."
-          fiber <- event contractAddress $ \(CountSet cs) -> do
+          fiber <- event basicCountFilter $ \(CountSet cs) -> do
             liftIO . print $ "Got count: " ++ show cs
             v <- liftIO $ takeMVar var
             let newV = cs : v
@@ -92,11 +93,46 @@ events = describe "can interact with a SimpleStorage contract across block inter
                   return TerminateEvent
                 else return ContinueEvent
           liftIO $ print "Setting values on SimpleStorage ..."
-          _ <- forkWeb3 $ for theSets $ \v -> do
-            liftIO $ threadDelay 2000000
-            setCount theCall v
+          _ <- forkWeb3 $ setValues theCall theSets
           liftIO $ do
             print "Waiting for event monitor to complete ..."
             wait fiber
         vals <- takeMVar var
         sort vals `shouldBe` sort theSets
+
+--    it "can stream events starting and ending in the future, bounded" $ \primaryAccount -> do
+--        var <- newMVar []
+--        let theCall = callFromTo primaryAccount contractAddress
+--            theSets = [8, 9, 10]
+--        now <- runWeb3Configured Eth.blockNumber
+--        print $ "Current blockNumber is: " ++ show now
+--        let later = now + 3
+--            latest = now + 8
+--            filter = basicCountFilter {filterFromBlock = later, filterToBlock = latest}
+--        fiber <- runWeb3Configured $ do
+--          event filter $ \e@(CountSet cs) -> do
+--            liftEff $ log $ "Received Event: " <> show e
+--            old <- liftIO $ takeMVar var
+--            let new = count cs : old
+--            if length new == 3
+--               then return TerminateEvent
+--               else do
+--                 liftIO $ putMVar new var
+--                 reurn $ ContinueEvent
+--        runWeb3Configured $ hangOutTillBlock later
+--        setValues theSets
+--        _ <- wait fiber
+--        vals <- takeMVar var
+--        sort vals `shouldBe` sort theSets
+--
+--hangOutTillBlock :: Provider p => BlockNumber -> Web3 p ()
+--hangOutTillBlock bn = do
+--  bn' <- Eth.blockNumber
+--  if bn' >= bn
+--    then return ()
+--    else liftIO (threadDelay 1000000) *> hangOutTillBlock bn
+
+setValues :: Provider p => Call -> [UIntN 256] -> Web3 p ()
+setValues theCall theSets = void $ for theSets $ \v -> do
+  liftIO $ threadDelay 2000000
+  setCount theCall v

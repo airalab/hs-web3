@@ -105,17 +105,6 @@ instance ToJSON BlockNumber where
         let hexValue = B.toLazyText (B.hexadecimal x)
         in  toJSON ("0x" <> hexValue)
 
--- | Low-level event filter data structure
-data Filter = Filter
-  { filterAddress   :: !(Maybe Address)
-  , filterTopics    :: !(Maybe [Maybe Text])
-  , filterFromBlock :: !(Maybe BlockNumber)
-  , filterToBlock   :: !(Maybe BlockNumber)
-  } deriving (Show, Generic)
-
-$(deriveJSON (defaultOptions
-    { fieldLabelModifier = toLowerFirst . drop 6 }) ''Filter)
-
 -- | Event filter identifier
 newtype FilterId = FilterId Integer
   deriving (Show, Eq, Ord, Generic)
@@ -170,6 +159,22 @@ instance Default Call where
 data DefaultBlock = BlockWithNumber BlockNumber | Earliest | Latest | Pending
   deriving (Show, Eq)
 
+instance ToJSON DefaultBlock where
+    toJSON (BlockWithNumber bn) = toJSON bn
+    toJSON parameter            = toJSON . toLowerFirst . show $ parameter
+
+-- | Low-level event filter data structure
+data Filter = Filter
+  { filterAddress   :: !(Maybe Address)
+  , filterTopics    :: !(Maybe [Maybe Text])
+  , filterFromBlock :: !DefaultBlock
+  , filterToBlock   :: !DefaultBlock
+  } deriving (Show, Generic)
+
+$(deriveToJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 6 }) ''Filter)
+
+
 instance Ord DefaultBlock where
     compare Pending Pending                         = EQ
     compare Latest Latest                           = EQ
@@ -181,9 +186,6 @@ instance Ord DefaultBlock where
     compare Earliest _                              = LT
     compare a b                                     = compare (Down b) (Down a)
 
-instance ToJSON DefaultBlock where
-    toJSON (BlockWithNumber bn) = toJSON bn
-    toJSON parameter            = toJSON . toLowerFirst . show $ parameter
 
 -- TODO: Wrap
 -- | Transaction hash text string
