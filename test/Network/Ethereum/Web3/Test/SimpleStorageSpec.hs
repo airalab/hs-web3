@@ -7,6 +7,7 @@
 module Network.Ethereum.Web3.Test.SimpleStorageSpec where
 
 import           Control.Concurrent               (threadDelay)
+import           Control.Concurrent.Async         (wait)
 import           Control.Concurrent.MVar
 import           Control.Monad                    (void)
 import           Control.Monad.IO.Class           (liftIO)
@@ -53,9 +54,8 @@ interactions = describe "can interact with a SimpleStorage contract" $ do
 
     it "can read the value back" $ \primaryAccount -> do
         let theCall = callFromTo primaryAccount contractAddress
-        now' <- runWeb3Configured Eth.blockNumber
-        let now = read (T.unpack now')
-            later = now + 3
+        now <- runWeb3Configured Eth.blockNumber
+        let later = now + 3
         awaitBlock later
         v <- runWeb3Configured (count theCall)
         v `shouldBe` theValue
@@ -64,28 +64,26 @@ events :: SpecWith Address
 events = describe "can interact with a SimpleStorage contract across block intervals" $ do
     it "can stream events starting and ending in the future, unbounded" $ \primaryAccount -> do
         var <- newMVar []
-        termination <- newEmptyMVar
         let theCall = callFromTo primaryAccount contractAddress
             theSets = [8, 9, 10]
-        now' <- runWeb3Configured Eth.blockNumber
-        let now = read (T.unpack now')
-            later = now + 3
-        liftIO . putStrLn $ "now is " ++ show now ++ " (" ++ show now' ++ ")"
-        void . runWeb3Configured $ event contractAddress $ \(CountSet cs) -> do
+        _ <- runWeb3Configured $ do
+          liftIO $ print "Launching event monitor ..."
+          fiber <- event contractAddress $ \(CountSet cs) -> do
             liftIO . print $ "Got count: " ++ show cs
             v <- liftIO $ takeMVar var
             let newV = cs : v
             liftIO $ putMVar var newV
             if length newV == 3
                 then do
-                    liftIO $ putMVar termination True
-                    return TerminateEvent
-                else do
-                  return ContinueEvent
-        awaitBlock later
-        void . for theSets $ \v -> runWeb3Configured (setCount theCall v)
-        takeMVarWithTimeout 20000000 termination >>= \case
-            Nothing -> error "timed out waiting for event thread!"
-            Just term -> return ()
+                  liftIO $ print "Received All Values"
+                  return TerminateEvent
+                else return ContinueEvent
+          liftIO $ print "Setting values on SimpleStorage ..."
+          _ <- forkWeb3 $ for theSets $ \v -> do
+            liftIO $ threadDelay 2000000
+            setCount theCall v
+          liftIO $ do
+            print "Waiting for event monitor to complete ..."
+            wait fiber
         vals <- takeMVar var
         sort vals `shouldBe` sort theSets

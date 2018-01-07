@@ -91,7 +91,7 @@ instance UnitSpec Quantity where
     divider = const 1
     name = const "quantity"
 
-newtype BlockNumber = BlockNumber Integer deriving (Eq, Show, Generic, Ord)
+newtype BlockNumber = BlockNumber Integer deriving (Eq, Show, Generic, Ord, Read, Num)
 
 instance FromJSON BlockNumber where
     parseJSON (String v) =

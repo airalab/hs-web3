@@ -23,7 +23,7 @@ import           Data.Time.Clock.POSIX       (getPOSIXTime)
 import           Data.Traversable            (for)
 import           Network.Ethereum.Web3       (Address, DefaultProvider, Provider (..), Web3, Web3Error, runWeb3')
 import           Network.Ethereum.Web3.Eth   (accounts, blockNumber)
-import           Network.Ethereum.Web3.Types (Call (..))
+import           Network.Ethereum.Web3.Types (Call (..), BlockNumber)
 import           System.Environment          (lookupEnv, setEnv)
 import           Test.Hspec.Expectations     (shouldSatisfy)
 
@@ -96,11 +96,10 @@ takeMVarWithTimeout timeout mv = do
                     then threadDelay 1000000 >> go expires
                     else return Nothing
 
-awaitBlock :: Integer -> IO ()
+awaitBlock :: BlockNumber -> IO ()
 awaitBlock bn = do
     bn' <- runWeb3Configured blockNumber
-    let bn'' = read (T.unpack bn')
-    putStrLn $ "awaiting block " ++ show bn ++ ", currently " ++ show bn''
-    if bn'' >= bn
+    putStrLn $ "awaiting block " ++ show bn ++ ", currently " ++ show bn'
+    if bn' >= bn
         then return ()
         else threadDelay 1000000 >> awaitBlock bn
