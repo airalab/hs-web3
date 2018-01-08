@@ -131,11 +131,22 @@ event' fltr window handler = do
       void $ reduceEventStream (pollFilter filterId pollTo) handler
 
 reduceEventStream :: Monad m
-                  => MachineT m ((->) s) [FilterChange a]
+                  => MachineT m k [FilterChange a]
                   -> (a -> ReaderT Change m EventAction)
-                  -> m (Maybe s)
-reduceEventStream machine handler = undefined
+                  -> m (Maybe BlockNumber)
+reduceEventStream machine handler = do
+    step <- runMachineT machine
+    case step of
+      Stop -> return Nothing
+      Await _ _ resume -> go resume handler
+      Yield changes resume = do
+        acts <- processChanges handler changes
+        if TerminateEvent `notElem` acts
+          then go resume handler $ maximum compareChanges changes
+          else return Nothing
   where
+    compareChanges a b = \a b -> (blockNumber . rawChange $ a) `compare` (blockNumber . rawChange $ b)
+    go :: Machine m k [FilterChange a] -> (a -> ReaderT Change m EventAction) 
     processChanges :: Monad m => (a -> ReaderT Change m EventAction) -> [FilterChange a] -> m [EventAction]
     processChanges handler changes = forM changes $ \FilterChange{..} ->
                                        flip runReaderT filterChangeRawChange $
@@ -154,7 +165,7 @@ playLogs :: forall p k i ni e.
             )
          => FilterStreamState
          -> MachineT (Web3 p) k [FilterChange e]
-playLogs s = extractChanges (filterStream s)
+playLogs s = extractChanges $ filterStream s
   where
     extractChanges :: MachineT (Web3 p) k Filter -> MachineT (Web3 p) k [FilterChange e]
     extractChanges f = stepMachine f playLog
