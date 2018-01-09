@@ -115,18 +115,21 @@ event' :: forall p i ni e .
        -> (e -> ReaderT Change (Web3 p) EventAction)
        -> Web3 p ()
 event' fltr window handler = do
-  start <- mkBlockNumber $ filterFromBlock fltr
-  let initState = FilterStreamState { fssCurrentBlock = start
-                                    , fssInitialFilter = fltr
-                                    , fssWindowSize = window
-                                    }
-  mLastProcessedFilterState <- reduceEventStream (playLogs initState) handler
-  case mLastProcessedFilterState of
-    Nothing -> return ()
-    Just (act, lastBlock) -> when (act /= TerminateEvent) $ do
-      let pollingFromBlock = lastBlock + 1
-          pollTo = filterToBlock fltr
-      filterId <- Eth.newFilter fltr { filterFromBlock = BlockWithNumber pollingFromBlock }
+    start <- mkBlockNumber $ filterFromBlock fltr
+    let initState = FilterStreamState { fssCurrentBlock = start
+                                      , fssInitialFilter = fltr
+                                      , fssWindowSize = window
+                                      }
+    mLastProcessedFilterState <- reduceEventStream (playLogs initState) handler
+    case mLastProcessedFilterState of
+      Nothing -> startPolling fltr {filterFromBlock = BlockWithNumber start}
+      Just (act, lastBlock) -> when (act /= TerminateEvent) $ do
+        let pollingFromBlock = lastBlock + 1
+        startPolling fltr {filterFromBlock = BlockWithNumber pollingFromBlock}
+  where
+    startPolling fltr = do
+      filterId <- Eth.newFilter fltr
+      let pollTo = filterToBlock fltr
       void $ reduceEventStream (pollFilter filterId pollTo) handler
 
 reduceEventStream :: Monad m
