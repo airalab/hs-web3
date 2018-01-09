@@ -95,6 +95,7 @@ class Event e where
     -- | Event filter structure used by low-level subscription methods
     eventFilter :: Proxy e -> Address -> Filter
 
+-- | run 'event\'' one block at a time.
 event :: forall p i ni e .
          ( Provider p
          , DecodeEvent i ni e
@@ -105,6 +106,10 @@ event :: forall p i ni e .
       -> Web3 p ()
 event fltr handler = event' fltr 0 handler
 
+-- | 'event\'' take s a filter, a window size, and a handler. It runs the handler
+-- | over the results of 'eventLogs' results using 'reduceEventStream'. If no
+-- | 'TerminateEvent' action is thrown and the toBlock is not yet reached,
+-- | it then transitions to polling.
 event' :: forall p i ni e .
           ( Provider p
           , DecodeEvent i ni e
@@ -134,6 +139,7 @@ event' fltr window handler = do
       let pollTo = filterToBlock fltr
       void $ reduceEventStream (pollFilter filterId pollTo) handler
 
+-- | Effectively a mapM_ over the machine using the given handler.
 reduceEventStream :: Monad m
                   => MachineT m k [FilterChange a]
                   -> (a -> ReaderT Change m EventAction)
@@ -176,6 +182,7 @@ playLogs s = filterStream s
           ~> autoM Eth.getLogs
           ~> mapping mkFilterChanges
 
+-- | polls a filter from the given filterId until the target toBlock is reached.
 pollFilter :: forall p i ni e s k.
               ( Provider p
               , DecodeEvent i ni e
@@ -215,6 +222,13 @@ data FilterStreamState = FilterStreamState { fssCurrentBlock  :: BlockNumber
                                            , fssWindowSize    :: Integer
                                            }
 
+
+-- | `filterStream` is a machine which represents taking an initial filter
+-- | over a range of blocks b1, ... bn (where bn is possibly `Latest` or `Pending`,
+-- | but b1 is an actual `BlockNumber`), and making a stream of filter objects
+-- | which cover this filter in intervals of size `windowSize`. The machine
+-- | halts whenever the `fromBlock` of a spanning filter either (1) excedes the
+-- | initial filter's `toBlock` or (2) is greater than the chain head's `BlockNumber`.
 filterStream :: Provider p
              => FilterStreamState
              -> MachineT (Web3 p) k (Filter)
@@ -237,6 +251,7 @@ filterStream initialPlan = unfoldPlan initialPlan filterPlan
     newTo :: BlockNumber -> BlockNumber -> Integer -> BlockNumber
     newTo upper (BlockNumber current) window = min upper . BlockNumber $ current + window
 
+-- | Coerce a 'DefaultBlock' into a numerical block number.
 mkBlockNumber :: Provider p => DefaultBlock -> Web3 p BlockNumber
 mkBlockNumber bm = case bm of
   BlockWithNumber bn -> return bn
