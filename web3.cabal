@@ -46,15 +46,15 @@ library
                      , Network.Ethereum.Web3.Provider
                      , Network.Ethereum.Web3.Encoding
                      , Network.Ethereum.Web3.Contract
+                     , Network.Ethereum.Web3.Encoding.Int
                      , Network.Ethereum.Web3.Encoding.Bytes
                      , Network.Ethereum.Web3.Encoding.Event
-                     , Network.Ethereum.Web3.Encoding.Event.Internal
-                     , Network.Ethereum.Web3.Encoding.Generic
-                     , Network.Ethereum.Web3.Encoding.Int
                      , Network.Ethereum.Web3.Encoding.Vector
+                     , Network.Ethereum.Web3.Encoding.Generic
   other-modules:       Network.Ethereum.Web3.JsonRpc
                      , Network.Ethereum.Web3.Internal
                      , Network.Ethereum.Web3.Encoding.Internal
+                     , Network.Ethereum.Web3.Encoding.Event.Internal
   build-depends:       base >4.8 && <4.11
                      , aeson
                      , base16-bytestring
