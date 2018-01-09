@@ -18,20 +18,21 @@ module Network.Ethereum.Web3.JsonRpc (
   , ServerUri
   ) where
 
-import Network.Ethereum.Web3.Provider
-import Network.Ethereum.Web3.Types
+import           Network.Ethereum.Web3.Provider
+import           Network.Ethereum.Web3.Types
 
-import Network.HTTP.Client (httpLbs, newManager, requestBody,
-                            responseBody, method, requestHeaders,
-                            parseRequest, RequestBody(RequestBodyLBS))
-import Network.HTTP.Client.TLS (tlsManagerSettings)
-import Data.ByteString.Lazy (ByteString)
-import Control.Applicative ((<|>))
-import Control.Exception (throwIO)
-import Data.Vector (fromList)
-import Control.Monad ((>=>))
-import Data.Text (Text)
-import Data.Aeson
+import           Control.Applicative            ((<|>))
+import           Control.Exception              (throwIO)
+import           Control.Monad                  ((>=>))
+import           Data.Aeson
+import           Data.ByteString.Lazy           (ByteString)
+import           Data.Text                      (Text)
+import           Data.Vector                    (fromList)
+import           Network.HTTP.Client            (RequestBody (RequestBodyLBS),
+                                                 httpLbs, method, newManager,
+                                                 parseRequest, requestBody,
+                                                 requestHeaders, responseBody)
+import           Network.HTTP.Client.TLS        (tlsManagerSettings)
 
 -- | Name of called method.
 type MethodName = Text

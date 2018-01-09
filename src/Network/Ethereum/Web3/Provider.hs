@@ -11,10 +11,10 @@
 --
 module Network.Ethereum.Web3.Provider where
 
-import Control.Concurrent (forkIO, ThreadId)
-import Control.Monad.IO.Class (MonadIO(..))
-import Network.Ethereum.Web3.Types
-import Control.Exception (try)
+import           Control.Concurrent          (ThreadId, forkIO)
+import           Control.Exception           (try)
+import           Control.Monad.IO.Class      (MonadIO (..))
+import           Network.Ethereum.Web3.Types
 
 -- | Ethereum node service provider
 class Provider a where

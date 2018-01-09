@@ -14,20 +14,20 @@ install:
   ]; then cp $CABALCONFIG cabal.config; fi; if [ -n "$STACKAGESNAPSHOT" ]; then curl
   --silent https://www.stackage.org/$STACKAGESNAPSHOT/cabal.config | grep -v "$(cabal
   info . -v0 | head -n 1 | awk '{ print $2 }' | sed -E 's/-[0-9]+(\.[0-9]+)+//') =="
-  > cabal.config; fi; cabal install --only-dependencies $CABALCONFOPTS --dry -v >
+  > cabal.config; fi; cabal install --only-dependencies --enable-tests $CABALCONFOPTS --dry -v >
   installplan.txt; sed -i -e '1,/^Resolving /d' installplan.txt; cat installplan.txt;
   if diff -u $HOME/.cabsnap/installplan.txt installplan.txt; then echo "cabal build-cache
   HIT"; rm -rfv .ghc; cp -av $HOME/.cabsnap/ghc $HOME/.ghc; cp -av $HOME/.cabsnap/lib
   $HOME/.cabsnap/share $HOME/.cabsnap/bin $HOME/.cabal/; else echo "cabal build-cache
   MISS"; rm -rf $HOME/.cabsnap; mkdir -p $HOME/.ghc $HOME/.cabal/lib $HOME/.cabal/share
-  $HOME/.cabal/bin; cabal install --only-dependencies $CABALCONFOPTS; fi; if [ ! -d
+  $HOME/.cabal/bin; cabal install --only-dependencies --enable-tests $CABALCONFOPTS; fi; if [ ! -d
   $HOME/.cabsnap ]; then echo "snapshotting package-db to build-cache"; mkdir $HOME/.cabsnap;
   cp -av $HOME/.ghc $HOME/.cabsnap/ghc; cp -av $HOME/.cabal/lib $HOME/.cabal/share
   $HOME/.cabal/bin installplan.txt $HOME/.cabsnap/; fi;
 
 script:
-- if [ $STACK ]; then stack -j2 --no-terminal --install-ghc test; 
-  else cabal configure $CABALCONFOPTS -v2 && cabal build $CABALBUILDOPTS && cabal test;
+- if [ $STACK ]; then stack -j2 --no-terminal --install-ghc test web3:unit;
+  else cabal update && cabal install --only-dependencies --enable-tests $CABALCONFOPTS && cabal configure --enable-tests $CABALCONFOPTS -v2 && cabal build web3 $CABALBUILDOPTS && cabal test unit;
   fi
 
 matrix:
@@ -36,6 +36,10 @@ matrix:
       addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1], sources: [hvr-ghc]}}
     - env: GHCVER=8.0.2 CABALVER=1.24
       addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.2], sources: [hvr-ghc]}}
+    - env: GHCVER=8.2.1 CABALVER=2.0
+      addons: {apt: {packages: [cabal-install-2.0,ghc-8.2.1], sources: [hvr-ghc]}}
+    - env: GHCVER=8.2.2 CABALVER=2.0
+      addons: {apt: {packages: [cabal-install-2.0,ghc-8.2.2], sources: [hvr-ghc]}}
     - env: GHCVER=head CABALVER=head
       addons: {apt: {packages: [cabal-install-head,ghc-head], sources: [hvr-ghc]}}
     - env: STACK=YES

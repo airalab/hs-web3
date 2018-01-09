@@ -1,3 +1,6 @@
+{-# LANGUAGE PolyKinds           #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
 -- |
 -- Module      :  Network.Ethereum.Web3.Encoding.Internal
 -- Copyright   :  Alexander Krupenkin 2016
@@ -11,24 +14,31 @@
 --
 module Network.Ethereum.Web3.Encoding.Internal where
 
-import Data.Text.Lazy.Builder (Builder, toLazyText, fromText, fromLazyText)
+import           Control.Monad                 (replicateM)
+import           Data.Bits                     (Bits)
 import qualified Data.ByteString.Base16        as BS16 (decode, encode)
-import qualified Data.Attoparsec.Text          as P
-import qualified Data.Text.Lazy                as LT
+import qualified Data.ByteString.Base16        as BS16 (decode, encode)
+import           Data.Monoid                   ((<>))
+import           Data.Proxy                    (Proxy (..))
+import           Data.Tagged                   (Tagged)
+import           Data.Text                     (Text)
 import qualified Data.Text                     as T
+import           Data.Text.Encoding            (decodeUtf8, encodeUtf8)
+import qualified Data.Text.Lazy                as LT
+import           Data.Text.Lazy.Builder        (Builder, fromLazyText, fromText,
+                                                toLazyText)
+import           Data.Text.Lazy.Builder        (Builder, fromLazyText, fromText,
+                                                toLazyText)
+import           Data.Text.Lazy.Builder.Int    as B
 import qualified Data.Text.Read                as R
-import Data.Text.Encoding (encodeUtf8, decodeUtf8)
-import Network.Ethereum.Web3.Address (Address)
-import Data.Attoparsec.Text.Lazy (Parser)
-import Data.Text.Lazy.Builder.Int as B
-import Language.Haskell.TH
-import Data.Monoid ((<>))
-import Data.Text (Text)
-import Data.Bits (Bits)
+import qualified Text.Parsec                   as P
+import           Text.Parsec.Text.Lazy         (Parser)
+
+import           Network.Ethereum.Web3.Address (Address)
 
 class EncodingType a where
-    typeName :: a -> String
-    isDynamic :: a -> Bool
+    typeName :: Proxy a -> String
+    isDynamic :: Proxy a -> Bool
 
 instance EncodingType Bool where
     typeName  = const "bool"
@@ -58,6 +68,10 @@ instance EncodingType a => EncodingType [a] where
     typeName  = const "[]"
     isDynamic = const True
 
+instance EncodingType a => EncodingType (Tagged t a) where
+    typeName _ = typeName (Proxy :: Proxy a)
+    isDynamic _ = isDynamic (Proxy :: Proxy a)
+
 -- | Make 256bit alignment; lazy (left, right)
 align :: Builder -> (Builder, Builder)
 align v = (v <> zeros, zeros <> v)
@@ -73,6 +87,9 @@ alignL = fst . align
 {-# INLINE alignR #-}
 alignR = snd . align
 
+toQuantityHexText :: Integral a => a -> Text
+toQuantityHexText = T.append "0x" . LT.toStrict . toLazyText . B.hexadecimal
+
 int256HexBuilder :: Integral a => a -> Builder
 int256HexBuilder x
   | x < 0 = int256HexBuilder (2^256 + fromIntegral x)
@@ -80,7 +97,7 @@ int256HexBuilder x
 
 int256HexParser :: (Bits a, Integral a) => Parser a
 int256HexParser = do
-    hex <- P.take 64
+    hex <- takeHexChar 64
     case R.hexadecimal hex of
         Right (v, "") -> return v
         _ -> fail ("Broken hexadecimal: `" ++ T.unpack hex ++ "`")
@@ -95,6 +112,9 @@ textParser :: Parser Text
 textParser = do
     len <- int256HexParser
     let zeroBytes = 32 - (len `mod` 32)
-    str <- P.take (len * 2) <* P.take (zeroBytes * 2)
+    str <- takeHexChar (len * 2) <* takeHexChar (zeroBytes * 2)
     return (hexToText str)
   where hexToText = decodeUtf8 . fst . BS16.decode . encodeUtf8
+
+takeHexChar :: Int -> Parser T.Text
+takeHexChar n = LT.toStrict . LT.pack <$> replicateM n P.anyChar
