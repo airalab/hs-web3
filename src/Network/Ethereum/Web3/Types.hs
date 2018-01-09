@@ -15,22 +15,22 @@
 --
 module Network.Ethereum.Web3.Types where
 
-import           Control.Exception              (Exception)
-import           Control.Monad.IO.Class         (MonadIO)
+import           Control.Exception                       (Exception)
+import           Control.Monad.IO.Class                  (MonadIO)
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Default
-import           Data.Monoid                    ((<>))
-import           Data.Text                      (Text)
-import qualified Data.Text.Lazy.Builder         as B
-import qualified Data.Text.Lazy.Builder.Int     as B
-import qualified Data.Text.Read                 as R
-import           Data.Typeable                  (Typeable)
+import           Data.Monoid                             ((<>))
+import           Data.Text                               (Text)
+import qualified Data.Text.Lazy.Builder                  as B
+import qualified Data.Text.Lazy.Builder.Int              as B
+import qualified Data.Text.Read                          as R
+import           Data.Typeable                           (Typeable)
 import           GHC.Generics
-import           Network.Ethereum.Web3.Address  (Address, zero)
-import           Network.Ethereum.Web3.Internal (toLowerFirst)
-import           Network.Ethereum.Web3.Encoding.Internal (toQuantityHexText)
 import           Network.Ethereum.Unit
+import           Network.Ethereum.Web3.Address           (Address, zero)
+import           Network.Ethereum.Web3.Encoding.Internal (toQuantityHexText)
+import           Network.Ethereum.Web3.Internal          (toLowerFirst)
 
 -- | Any communication with Ethereum node wrapped with 'Web3' monad
 newtype Web3 a b = Web3 { unWeb3 :: IO b }
