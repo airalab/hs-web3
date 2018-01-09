@@ -102,8 +102,8 @@ event :: forall p i ni e .
          )
       => Filter
       -> (e -> ReaderT Change (Web3 p) EventAction)
-      -> Web3 p (Async ())
-event fltr handler = forkWeb3 $ event' fltr 0 handler
+      -> Web3 p ()
+event fltr handler = event' fltr 0 handler
 
 event' :: forall p i ni e .
           ( Provider p
@@ -123,9 +123,11 @@ event' fltr window handler = do
     mLastProcessedFilterState <- reduceEventStream (playLogs initState) handler
     case mLastProcessedFilterState of
       Nothing -> startPolling fltr {filterFromBlock = BlockWithNumber start}
-      Just (act, lastBlock) -> when (act /= TerminateEvent) $ do
-        let pollingFromBlock = lastBlock + 1
-        startPolling fltr {filterFromBlock = BlockWithNumber pollingFromBlock}
+      Just a@(act, lastBlock) -> do
+        end <- mkBlockNumber . filterToBlock $ fltr
+        when (act /= TerminateEvent && lastBlock < end) $
+          let pollingFromBlock = lastBlock + 1
+          in startPolling fltr {filterFromBlock = BlockWithNumber pollingFromBlock}
   where
     startPolling fltr = do
       filterId <- Eth.newFilter fltr
@@ -192,7 +194,7 @@ pollFilter fid end = construct $ pollPlan fid end
           lift $ Eth.uninstallFilter fid
           stop
         else do
-          liftIO $ threadDelay 1000
+          liftIO $ threadDelay 1000000
           changes <- lift $ Eth.getFilterChanges fid
           yield $ mkFilterChanges changes
           pollPlan fid end

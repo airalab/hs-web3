@@ -1,12 +1,12 @@
 module Network.Ethereum.Web3.Test.Utils
   ( injectExportedEnvironmentVariables
   , runWeb3Configured
+  , runWeb3Configured'
   , withAccounts
   , withPrimaryEthereumAccount
   , callFromTo
   , sleepSeconds
   , microtime
-  , takeMVarWithTimeout
   , awaitBlock
   ) where
 
@@ -64,6 +64,11 @@ runWeb3Configured f = do
     v `shouldSatisfy` isRight
     let Right a = v in return a
 
+runWeb3Configured' :: Web3 EnvironmentProvider a -> IO a
+runWeb3Configured' f = do
+    Right v <- runWeb3' f
+    return v
+
 withAccounts :: ([Address] -> IO a) -> IO a
 withAccounts f = runWeb3Configured accounts >>= f
 
@@ -82,19 +87,6 @@ sleepSeconds = threadDelay . (* 1000000)
 
 microtime :: IO Integer
 microtime = numerator . toRational . (* 1000000) <$> getPOSIXTime
-
-takeMVarWithTimeout :: Integer -> MVar a -> IO (Maybe a)
-takeMVarWithTimeout timeout mv = do
-    startTime <- microtime
-    go (startTime + timeout)
-
-    where go expires = tryTakeMVar mv >>= \case
-            Just x -> return (Just x)
-            Nothing -> do
-                now <- microtime
-                if now < expires
-                    then threadDelay 1000000 >> go expires
-                    else return Nothing
 
 awaitBlock :: BlockNumber -> IO ()
 awaitBlock bn = do

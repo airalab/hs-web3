@@ -28,7 +28,10 @@ import           Control.Monad.Trans.Reader       (ask)
 import           Data.ByteString                  (ByteString)
 import           Data.Default
 import           Data.Either                      (isRight)
+import           Data.Foldable                    (forM_)
 import           Data.List                        (sort)
+import           Data.Maybe
+import           Data.Monoid
 import           Data.Proxy
 import           Data.String                      (fromString)
 import qualified Data.Text                        as T
@@ -39,7 +42,7 @@ import           Network.Ethereum.Web3.Contract   (Event (..))
 import qualified Network.Ethereum.Web3.Eth        as Eth
 import           Network.Ethereum.Web3.Test.Utils
 import           Network.Ethereum.Web3.TH
-import           Network.Ethereum.Web3.Types      (Call (..), Change (..), Filter (..), BlockNumber)
+import           Network.Ethereum.Web3.Types
 import           Numeric                          (showHex)
 import           System.Environment               (getEnv)
 import           System.IO.Unsafe                 (unsafePerformIO)
@@ -75,64 +78,142 @@ interactions = describe "can interact with a SimpleStorage contract" $ do
 
 events :: SpecWith Address
 events = describe "can interact with a SimpleStorage contract across block intervals" $ do
-    let basicCountFilter = eventFilter (Proxy :: Proxy CountSet) contractAddress
     it "can stream events starting and ending in the future, unbounded" $ \primaryAccount -> do
         var <- newMVar []
         let theCall = callFromTo primaryAccount contractAddress
-            theSets = [8, 9, 10]
-        _ <- runWeb3Configured $ do
-          liftIO $ print "Launching event monitor ..."
-          fiber <- event basicCountFilter $ \(CountSet cs) -> do
-            liftIO . print $ "Got count: " ++ show cs
+            theSets = map (fromJust . uIntNFromInteger) [1, 2, 3]
+        print "Setting up the filter..."
+        fiber <- runWeb3Configured' $ do
+          let fltr = eventFilter (Proxy :: Proxy CountSet) contractAddress
+          forkWeb3 $ event fltr $ \(CountSet cs) -> do
+            v <- liftIO $ takeMVar var
+            let newV = cs : v
+            liftIO $ putMVar var newV
+            if length newV == 3
+                then return TerminateEvent
+                else return ContinueEvent
+        print "Setting the values..."
+        setValues theCall theSets
+        wait fiber
+        print "Filter caught 3 values..."
+        vals <- takeMVar var
+        sort vals `shouldBe` sort theSets
+
+    it "can stream events starting and ending in the future, bounded" $ \primaryAccount -> do
+        runWeb3Configured Eth.blockNumber >>= \bn -> awaitBlock (bn + 1)
+        var <- newMVar []
+        let theCall = callFromTo primaryAccount contractAddress
+            theSets = map (fromJust . uIntNFromInteger) [13, 14, 15]
+        start <- runWeb3Configured Eth.blockNumber
+        let later = BlockWithNumber (start + 3)
+            latest = BlockWithNumber (start + 8)
+            fltr = (eventFilter (Proxy :: Proxy CountSet) contractAddress) { filterFromBlock = later
+                                                                           , filterToBlock = latest
+                                                                           }
+        print "Setting up the filter..."
+        fiber <- runWeb3Configured' $
+          forkWeb3 $ event fltr $ \(CountSet cs) -> do
+            v <- liftIO $ takeMVar var
+            let newV = cs : v
+            liftIO $ putMVar var newV
+            if length newV == 3
+                then return TerminateEvent
+                else return ContinueEvent
+        awaitBlock (start + 3)
+        print "Setting the values..."
+        setValues theCall theSets
+        wait fiber
+        print "Filter caught 3 values..."
+        vals <- takeMVar var
+        sort vals `shouldBe` sort theSets
+
+    it "can stream events starting in the past and ending in the future" $ \primaryAccount -> do
+        runWeb3Configured Eth.blockNumber >>= \bn -> awaitBlock (bn + 1)
+        var <- newMVar []
+        blockNumberVar <- newEmptyMVar
+        let theCall = callFromTo primaryAccount contractAddress
+            theSets1 = map (fromJust . uIntNFromInteger) [7, 8, 9]
+            theSets2 = map (fromJust . uIntNFromInteger) [10, 11, 12]
+        start <- runWeb3Configured Eth.blockNumber
+        let fltr = eventFilter (Proxy :: Proxy CountSet) contractAddress
+        fiber <- runWeb3Configured' $ do
+          forkWeb3 $ event fltr $ \(CountSet cs) -> do
             v <- liftIO $ takeMVar var
             let newV = cs : v
             liftIO $ putMVar var newV
             if length newV == 3
                 then do
-                  liftIO $ print "Received All Values"
-                  return TerminateEvent
+                    change <- ask
+                    liftIO $ putMVar blockNumberVar (changeBlockNumber change)
+                    return TerminateEvent
+                else do
+                  return ContinueEvent
+        print "Running first transactions as past transactions..."
+        setValues theCall theSets1
+        wait fiber
+        print "All past transactions succeeded... "
+        end <- takeMVar blockNumberVar
+        awaitBlock $ end + 1 -- make past transactions definitively in past
+        var' <- newMVar []
+        fiber <- runWeb3Configured' $ do
+          let fltr = (eventFilter (Proxy :: Proxy CountSet) contractAddress) {filterFromBlock = BlockWithNumber start}
+          forkWeb3 $ event fltr $ \(CountSet cs) -> do
+            v <- liftIO $ takeMVar var'
+            let newV = cs : v
+            liftIO $ putMVar var' newV
+            if length newV == 6
+                then return TerminateEvent
                 else return ContinueEvent
-          liftIO $ print "Setting values on SimpleStorage ..."
-          _ <- forkWeb3 $ setValues theCall theSets
-          liftIO $ do
-            print "Waiting for event monitor to complete ..."
-            wait fiber
-        vals <- takeMVar var
+        print "Setting more values"
+        setValues theCall theSets2
+        wait fiber
+        print "All new values have ben set"
+        vals <- takeMVar var'
+        sort vals `shouldBe` sort (theSets1 <> theSets2)
+
+    it "can stream events starting and ending in the past, bounded" $ \primaryAccount -> do
+        runWeb3Configured Eth.blockNumber >>= \bn -> awaitBlock (bn + 1)
+        var <- newMVar []
+        let theCall = callFromTo primaryAccount contractAddress
+            theSets = map (fromJust . uIntNFromInteger) [4, 5, 6]
+        start <- runWeb3Configured Eth.blockNumber
+        blockNumberVar <- newEmptyMVar
+        let fltr = eventFilter (Proxy :: Proxy CountSet) contractAddress
+        print "Setting up filter for past transactions..."
+        fiber <- runWeb3Configured' $ do
+          forkWeb3 $ event fltr $ \(CountSet cs) -> do
+            v <- liftIO $ takeMVar var
+            let newV = cs : v
+            liftIO $ putMVar var newV
+            if length newV == 3
+                then do
+                    change <- ask
+                    liftIO $ putMVar blockNumberVar (changeBlockNumber change)
+                    return TerminateEvent
+                else do
+                  return ContinueEvent
+        print "Setting values"
+        setValues theCall theSets
+        wait fiber
+        print "All values have been set"
+        end <- takeMVar blockNumberVar
+        var' <- newMVar []
+        let fltr' = fltr { filterFromBlock = BlockWithNumber start
+                         , filterToBlock = BlockWithNumber end
+                         }
+        awaitBlock $ end + 1 -- make it definitively in the past
+        runWeb3Configured $
+          event fltr' $ \(CountSet cs) -> do
+            v <- liftIO $ takeMVar var'
+            let newV = cs : v
+            liftIO $ putMVar var' newV
+            if length newV == 3
+                then return TerminateEvent
+                else return ContinueEvent
+        vals <- takeMVar var'
         sort vals `shouldBe` sort theSets
 
---    it "can stream events starting and ending in the future, bounded" $ \primaryAccount -> do
---        var <- newMVar []
---        let theCall = callFromTo primaryAccount contractAddress
---            theSets = [8, 9, 10]
---        now <- runWeb3Configured Eth.blockNumber
---        print $ "Current blockNumber is: " ++ show now
---        let later = now + 3
---            latest = now + 8
---            filter = basicCountFilter {filterFromBlock = later, filterToBlock = latest}
---        fiber <- runWeb3Configured $ do
---          event filter $ \e@(CountSet cs) -> do
---            liftEff $ log $ "Received Event: " <> show e
---            old <- liftIO $ takeMVar var
---            let new = count cs : old
---            if length new == 3
---               then return TerminateEvent
---               else do
---                 liftIO $ putMVar new var
---                 reurn $ ContinueEvent
---        runWeb3Configured $ hangOutTillBlock later
---        setValues theSets
---        _ <- wait fiber
---        vals <- takeMVar var
---        sort vals `shouldBe` sort theSets
---
---hangOutTillBlock :: Provider p => BlockNumber -> Web3 p ()
---hangOutTillBlock bn = do
---  bn' <- Eth.blockNumber
---  if bn' >= bn
---    then return ()
---    else liftIO (threadDelay 1000000) *> hangOutTillBlock bn
-
-setValues :: Provider p => Call -> [UIntN 256] -> Web3 p ()
-setValues theCall theSets = void $ for theSets $ \v -> do
-  liftIO $ threadDelay 2000000
-  setCount theCall v
+setValues :: Call -> [UIntN 256] -> IO ()
+setValues theCall theSets = forM_ theSets $ \v -> do
+  runWeb3Configured (setCount theCall v)
+  threadDelay 1000000
