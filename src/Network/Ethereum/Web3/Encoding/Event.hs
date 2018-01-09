@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds              #-}
+{-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
@@ -30,17 +31,18 @@ module Network.Ethereum.Web3.Encoding.Event(
   , genericArrayParser
   ) where
 
-import qualified Data.Text                               as T
+import qualified Data.Text                                     as T
 import           Generics.SOP
-import qualified GHC.Generics                            as GHC (Generic)
+import qualified GHC.Generics                                  as GHC (Generic)
 
-import           Network.Ethereum.Web3.Address           (Address)
-import           Network.Ethereum.Web3.Encoding          (ABIDecode, fromData)
-import           Network.Ethereum.Web3.Encoding.Generic  (GenericABIDecode,
-                                                          genericFromData)
+import           Network.Ethereum.Web3.Address                 (Address)
+import           Network.Ethereum.Web3.Encoding                (ABIDecode,
+                                                                fromData)
 import           Network.Ethereum.Web3.Encoding.Event.Internal
+import           Network.Ethereum.Web3.Encoding.Generic        (GenericABIDecode,
+                                                                genericFromData)
 import           Network.Ethereum.Web3.Encoding.Internal
-import           Network.Ethereum.Web3.Types             (Change (..))
+import           Network.Ethereum.Web3.Types                   (Change (..))
 
 -- | Indexed event args come back in as a list of encoded values. 'ArrayParser'
 -- | is used to decode these values so that they can be used to reconstruct the

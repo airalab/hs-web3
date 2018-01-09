@@ -21,9 +21,11 @@ import           Data.String                 (IsString, fromString)
 import qualified Data.Text                   as T
 import           Data.Time.Clock.POSIX       (getPOSIXTime)
 import           Data.Traversable            (for)
-import           Network.Ethereum.Web3       (Address, DefaultProvider, Provider (..), Web3, Web3Error, runWeb3')
+import           Network.Ethereum.Web3       (Address, DefaultProvider,
+                                              Provider (..), Web3, Web3Error,
+                                              runWeb3')
 import           Network.Ethereum.Web3.Eth   (accounts, blockNumber)
-import           Network.Ethereum.Web3.Types (Call (..), BlockNumber)
+import           Network.Ethereum.Web3.Types (BlockNumber, Call (..))
 import           System.Environment          (lookupEnv, setEnv)
 import           Test.Hspec.Expectations     (shouldSatisfy)
 

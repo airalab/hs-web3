@@ -54,9 +54,9 @@ import           Network.Ethereum.Web3.Address          (Address)
 import           Network.Ethereum.Web3.Contract
 import           Network.Ethereum.Web3.Encoding
 import           Network.Ethereum.Web3.Encoding.Event
+import           Network.Ethereum.Web3.Encoding.Generic
 import           Network.Ethereum.Web3.Encoding.Int
 import           Network.Ethereum.Web3.Encoding.Vector
-import           Network.Ethereum.Web3.Encoding.Generic
 import           Network.Ethereum.Web3.Internal
 import           Network.Ethereum.Web3.JsonAbi
 import           Network.Ethereum.Web3.Provider
@@ -112,15 +112,15 @@ funD' name p f = funD name [clause p (normalB f) []]
 
 toHSType :: SolidityType -> TypeQ
 toHSType s = case s of
-    SolidityBool -> conT (mkName "Bool")
-    SolidityAddress -> conT (mkName "Address")
-    SolidityUint n -> appT (conT (mkName "UIntN")) (numLit n)
-    SolidityInt n -> appT (conT (mkName "IntN")) (numLit n)
-    SolidityString ->  conT (mkName "Text")
-    SolidityBytesN n -> appT (conT (mkName "BytesN")) (numLit n)
-    SolidityBytesD ->  conT (mkName "BytesD")
+    SolidityBool        -> conT (mkName "Bool")
+    SolidityAddress     -> conT (mkName "Address")
+    SolidityUint n      -> appT (conT (mkName "UIntN")) (numLit n)
+    SolidityInt n       -> appT (conT (mkName "IntN")) (numLit n)
+    SolidityString      ->  conT (mkName "Text")
+    SolidityBytesN n    -> appT (conT (mkName "BytesN")) (numLit n)
+    SolidityBytesD      ->  conT (mkName "BytesD")
     SolidityVector ns a -> expandVector ns a
-    SolidityArray a -> appT listT $ toHSType a
+    SolidityArray a     -> appT listT $ toHSType a
   where
     numLit n = litT (numTyLit $ toInteger n)
     expandVector :: [Int] -> SolidityType -> TypeQ
@@ -133,7 +133,7 @@ toHSType s = case s of
 
 typeQ :: Text -> TypeQ
 typeQ t = case parseSolidityType t of
-  Left e -> error $ "Unable to parse solidity type: " ++ show e
+  Left e   -> error $ "Unable to parse solidity type: " ++ show e
   Right ty -> toHSType ty
 
 -- | Event argument to TH type

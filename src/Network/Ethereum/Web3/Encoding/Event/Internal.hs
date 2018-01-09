@@ -29,10 +29,10 @@
 module Network.Ethereum.Web3.Encoding.Event.Internal where
 
 import           Data.Kind
-import           Data.Proxy                              (Proxy (..))
-import           Data.Tagged                             (Tagged (..))
+import           Data.Proxy   (Proxy (..))
+import           Data.Tagged  (Tagged (..))
 import           Generics.SOP
-import           GHC.TypeLits                            (CmpNat)
+import           GHC.TypeLits (CmpNat)
 
 data HList :: [*] -> * where
   HNil :: HList '[]

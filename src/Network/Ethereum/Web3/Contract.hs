@@ -1,12 +1,11 @@
 {-# LANGUAGE DataKinds             #-}
-{-# LANGUAGE RecordWildCards             #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE ApplicativeDo  #-}
 
 -- |
 -- Module      :  Network.Ethereum.Web3.Contract
@@ -49,15 +48,15 @@ module Network.Ethereum.Web3.Contract (
   ) where
 
 import           Control.Concurrent                     (threadDelay)
-import           Control.Concurrent.Async                     (Async)
+import           Control.Concurrent.Async               (Async)
 import           Control.Exception                      (throwIO)
-import           Control.Monad                          (forM, when, void)
+import           Control.Monad                          (forM, void, when)
 import           Control.Monad.IO.Class                 (liftIO)
-import           Control.Monad.Trans.Class      (lift)
-import           Control.Monad.Trans.Maybe      (MaybeT (..))
+import           Control.Monad.Trans.Class              (lift)
+import           Control.Monad.Trans.Maybe              (MaybeT (..))
 import           Control.Monad.Trans.Reader             (ReaderT (..))
-import           Data.Maybe                             (listToMaybe, mapMaybe)
 import           Data.Machine
+import           Data.Maybe                             (listToMaybe, mapMaybe)
 import           Data.Monoid                            ((<>))
 import           Data.Proxy                             (Proxy (..))
 import qualified Data.Text                              as T
@@ -75,7 +74,7 @@ import qualified Network.Ethereum.Web3.Eth              as Eth
 import           Network.Ethereum.Web3.Provider
 import           Network.Ethereum.Web3.Types
 
-import Data.Machine.Plan
+import           Data.Machine.Plan
 
 
 
@@ -255,8 +254,8 @@ filterStream initialPlan = unfoldPlan initialPlan filterPlan
 mkBlockNumber :: Provider p => DefaultBlock -> Web3 p BlockNumber
 mkBlockNumber bm = case bm of
   BlockWithNumber bn -> return bn
-  Earliest -> return 0
-  _ -> Eth.blockNumber
+  Earliest           -> return 0
+  _                  -> Eth.blockNumber
 
 --------------------------------------------------------------------------------
 -- * Transactions and Calls
