@@ -123,9 +123,8 @@ event' fltr window handler = do
   mLastProcessedFilterState <- reduceEventStream (playLogs initState) handler
   case mLastProcessedFilterState of
     Nothing -> return ()
-    Just lastProcessedFilterState -> do
-      let BlockNumber lastBlock = fssCurrentBlock lastProcessedFilterState
-          pollingFromBlock = BlockNumber $ lastBlock + 1
+    Just (act, lastBlock) -> when (act /= TerminateEvent) $ do
+      let pollingFromBlock = lastBlock + 1
           pollTo = filterToBlock fltr
       filterId <- Eth.newFilter fltr { filterFromBlock = BlockWithNumber pollingFromBlock }
       void $ reduceEventStream (pollFilter filterId pollTo) handler
@@ -133,24 +132,27 @@ event' fltr window handler = do
 reduceEventStream :: Monad m
                   => MachineT m k [FilterChange a]
                   -> (a -> ReaderT Change m EventAction)
-                  -> m (Maybe BlockNumber)
-reduceEventStream machine handler = do
-    step <- runMachineT machine
-    case step of
-      Stop -> return Nothing
-      Await _ _ resume -> go resume handler
-      Yield changes resume = do
-        acts <- processChanges handler changes
-        if TerminateEvent `notElem` acts
-          then go resume handler $ maximum compareChanges changes
-          else return Nothing
+                  -> m (Maybe (EventAction, BlockNumber))
+reduceEventStream filterChanges handler = fmap listToMaybe . runT $
+       filterChanges
+    ~> autoM (processChanges handler)
+    ~> asParts
+    ~> runWhile (\(act, _) -> act /= TerminateEvent)
+    ~> final
   where
-    compareChanges a b = \a b -> (blockNumber . rawChange $ a) `compare` (blockNumber . rawChange $ b)
-    go :: Machine m k [FilterChange a] -> (a -> ReaderT Change m EventAction) 
-    processChanges :: Monad m => (a -> ReaderT Change m EventAction) -> [FilterChange a] -> m [EventAction]
-    processChanges handler changes = forM changes $ \FilterChange{..} ->
-                                       flip runReaderT filterChangeRawChange $
+    runWhile p = repeatedly $ do
+      v <- await
+      if p v
+        then yield v
+        else yield v >> stop
+    processChanges :: Monad m
+                   => (a -> ReaderT Change m EventAction)
+                   -> [FilterChange a]
+                   -> m [(EventAction, BlockNumber)]
+    processChanges handler changes = forM changes $ \FilterChange{..} -> do
+                                       act <- flip runReaderT filterChangeRawChange $
                                             handler filterChangeEvent
+                                       return (act, changeBlockNumber filterChangeRawChange)
 
 data FilterChange a = FilterChange { filterChangeRawChange :: Change
                                    , filterChangeEvent     :: a
@@ -165,19 +167,9 @@ playLogs :: forall p k i ni e.
             )
          => FilterStreamState
          -> MachineT (Web3 p) k [FilterChange e]
-playLogs s = extractChanges $ filterStream s
-  where
-    extractChanges :: MachineT (Web3 p) k Filter -> MachineT (Web3 p) k [FilterChange e]
-    extractChanges f = stepMachine f playLog
-    playLog :: Step k Filter (MachineT (Web3 p) k Filter) -> MachineT (Web3 p) k [FilterChange e]
-    playLog step = case step of
-      Stop -> stopped
-      Await _ _ resume -> extractChanges resume
-      Yield filter resume -> emit filter <> extractChanges resume
-    emit :: Filter -> MachineT (Web3 p) k [FilterChange e]
-    emit fltr = construct $ do
-      changes <- lift . Eth.getLogs $ fltr
-      yield $ mkFilterChanges changes
+playLogs s = filterStream s
+          ~> autoM Eth.getLogs
+          ~> mapping mkFilterChanges
 
 pollFilter :: forall p i ni e s k.
               ( Provider p
