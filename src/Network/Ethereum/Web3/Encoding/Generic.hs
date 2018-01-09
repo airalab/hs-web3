@@ -9,6 +9,21 @@
 {-# LANGUAGE TypeInType          #-}
 {-# LANGUAGE TypeOperators       #-}
 
+
+-- |
+-- Module      :  Network.Ethereum.Web3.Encoding.Generic
+-- Copyright   :  Alexander Krupenkin 2016
+-- License     :  BSD3
+--
+-- Maintainer  :  mail@akru.me
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- This module is internal, the purpose is to define helper classes and functions
+-- to assist in encoding and decoding Solidity types for function calls and events.
+-- The user of this library should have no need to use this directly in application code.
+--
+
 module Network.Ethereum.Web3.Encoding.Generic (
     GenericABIEncode
   , GenericABIDecode

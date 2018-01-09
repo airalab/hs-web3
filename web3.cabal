@@ -48,6 +48,7 @@ library
                      , Network.Ethereum.Web3.Contract
                      , Network.Ethereum.Web3.Encoding.Bytes
                      , Network.Ethereum.Web3.Encoding.Event
+                     , Network.Ethereum.Web3.Encoding.Event.Internal
                      , Network.Ethereum.Web3.Encoding.Generic
                      , Network.Ethereum.Web3.Encoding.Int
                      , Network.Ethereum.Web3.Encoding.Vector

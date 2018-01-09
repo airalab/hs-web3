@@ -3,6 +3,20 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE DataKinds #-}
 
+-- |
+-- Module      :  Network.Ethereum.Web3.Test.ComplexStorage
+-- Copyright   :  Alexander Krupenkin 2016
+-- License     :  BSD3
+--
+-- Maintainer  :  mail@akru.me
+-- Stability   :  experimental
+-- Portability :  unportable
+--
+-- ComplexStorage is a Solidity contract which has global variables of
+-- several different types. The point of this test is to test the encoding
+-- of a complicated Solidity tuple, consisting of dynamically and statically
+-- sized components.
+
 module Network.Ethereum.Web3.Test.ComplexStorageSpec where
 
 import           Control.Monad.IO.Class           (liftIO)
@@ -85,4 +99,9 @@ complexStorageSpec = do
             bytes16Val' `shouldBe` sBytes16
             bytes2s `shouldBe` sByte2sElem
 
-
+        it "can decode a complicated value correctly" $ \primaryAccount -> do
+            contractAddress <- Prelude.fmap fromString . liftIO $ getEnv "COMPLEXSTORAGE_CONTRACT_ADDRESS"
+            let theCall = callFromTo primaryAccount contractAddress
+                runGetterCall f = runWeb3Configured (f theCall)
+            allVals <- runGetterCall getVals
+            allVals `shouldBe` (sUint, sInt, sBool, sInt224, sBools, sInts, sString, sBytes16, sByte2s)
