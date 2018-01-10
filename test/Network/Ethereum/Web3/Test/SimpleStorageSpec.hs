@@ -97,7 +97,7 @@ events = describe "can interact with a SimpleStorage contract across block inter
                   return ContinueEvent
         awaitBlock later
         void . for theSets $ \v -> runWeb3Configured (setCount theCall v)
-        takeMVarWithTimeout 20000000 termination >>= \case
+        takeMVarWithTimeout 50000000 termination >>= \case
             Nothing -> error "timed out waiting for event thread!"
             Just term -> return ()
         vals <- takeMVar var
