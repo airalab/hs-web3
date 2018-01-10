@@ -1,7 +1,12 @@
-sudo: false
+sudo: required
 language: haskell
+services:
+- docker
 
 before_install:
+- nvm install 8.9.4
+- nvm use 8.9.4
+- npm i -g truffle
 - if [ $STACK ]; then mkdir -p ~/.local/bin; export PATH=$HOME/.local/bin:$PATH;
   travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack';
   else export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH;
@@ -26,8 +31,9 @@ install:
   $HOME/.cabal/bin installplan.txt $HOME/.cabsnap/; fi;
 
 script:
-- if [ $STACK ]; then stack -j2 --no-terminal --install-ghc test web3:unit;
-  else cabal update && cabal install --only-dependencies --enable-tests $CABALCONFOPTS && cabal configure --enable-tests $CABALCONFOPTS -v2 && cabal build web3 $CABALBUILDOPTS && cabal test unit;
+- docker run --rm -d -p 8545:8545 foamspace/cliquebait:latest
+- if [ $STACK ]; then stack -j2 --no-terminal --install-ghc test;
+  else cabal update && cabal install --only-dependencies --enable-tests $CABALCONFOPTS && cabal configure --enable-tests $CABALCONFOPTS -v2 && cabal build web3 $CABALBUILDOPTS && cabal test;
   fi
 
 matrix:
