@@ -71,14 +71,16 @@ complexStorageSpec = do
                                                  sString
                                                  sBytes16
                                                  sByte2s
+            -- wait a couple blocks so subsequent reads are working with a confirmed tx
+            now <- runWeb3Configured Eth.blockNumber
+            let later = now + 3
+            awaitBlock later
             True `shouldBe` True -- we need to et this far :)
 
         it "can verify that it set the values correctly" $ \primaryAccount -> do
             contractAddress <- Prelude.fmap fromString . liftIO $ getEnv "COMPLEXSTORAGE_CONTRACT_ADDRESS"
             let theCall = callFromTo primaryAccount contractAddress
                 runGetterCall f = runWeb3Configured (f theCall)
-            -- gotta sleep for the block to get confirmed!
-            sleepSeconds 5
             -- there really has to be a better way to do this
             uintVal'    <- runGetterCall uintVal
             intVal'     <- runGetterCall intVal
