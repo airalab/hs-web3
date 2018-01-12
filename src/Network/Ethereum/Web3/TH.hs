@@ -265,7 +265,7 @@ mkFun fun@(DFunction name constant inputs outputs) = (++)
         ]
   where mIdent    = T.unpack (methodId $ fun{funName = T.replace "'" "" name})
         dataName  = mkName (toUpperFirst (T.unpack $ name <> "Data"))
-        funName   = mkName (toLowerFirst (T.unpack name))
+        funName   = mkName (toLowerFirst (T.unpack name) ++ "F")
         bangInput = fmap funBangType inputs
         derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
 
