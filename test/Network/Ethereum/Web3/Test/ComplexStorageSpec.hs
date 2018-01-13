@@ -1,7 +1,7 @@
-{-# LANGUAGE QuasiQuotes     #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE QuasiQuotes           #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 -- |
 -- Module      :  Network.Ethereum.Web3.Test.ComplexStorage
@@ -16,6 +16,7 @@
 -- several different types. The point of this test is to test the encoding
 -- of a complicated Solidity tuple, consisting of dynamically and statically
 -- sized components.
+--
 
 module Network.Ethereum.Web3.Test.ComplexStorageSpec where
 

@@ -1,10 +1,11 @@
-{-# LANGUAGE KindSignatures  #-}
-{-# LANGUAGE LambdaCase  #-}
-{-# LANGUAGE QuasiQuotes     #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE KindSignatures        #-}
+{-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE QuasiQuotes           #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 
+-- |
 -- Module      :  Network.Ethereum.Web3.Test.SimpleStorage
 -- Copyright   :  Alexander Krupenkin 2016
 -- License     :  BSD3
@@ -38,7 +39,8 @@ import           Network.Ethereum.Web3.Contract   (Event (..))
 import qualified Network.Ethereum.Web3.Eth        as Eth
 import           Network.Ethereum.Web3.Test.Utils
 import           Network.Ethereum.Web3.TH
-import           Network.Ethereum.Web3.Types      (Call (..), Change (..), Filter (..))
+import           Network.Ethereum.Web3.Types      (Call (..), Change (..),
+                                                   Filter (..))
 import           Numeric                          (showHex)
 import           System.Environment               (getEnv)
 import           System.IO.Unsafe                 (unsafePerformIO)

@@ -1,5 +1,4 @@
-{-# LANGUAGE TemplateHaskell   #-}
-
+{-# LANGUAGE TemplateHaskell #-}
 -- |
 -- Module      :  Network.Ethereum.Web3.JsonAbi
 -- Copyright   :  Alexander Krupenkin 2016

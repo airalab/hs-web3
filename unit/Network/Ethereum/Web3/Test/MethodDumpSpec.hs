@@ -1,3 +1,4 @@
+{-# LANGUAGE QuasiQuotes #-}
 module Network.Ethereum.Web3.Test.MethodDumpSpec where
 
 import           Control.Monad.IO.Class   (liftIO)
