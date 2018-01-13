@@ -3,7 +3,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE QuasiQuotes      #-}
 {-# LANGUAGE TemplateHaskell  #-}
-
 -- |
 -- Module      :  Network.Ethereum.Web3.TH
 -- Copyright   :  Alexander Krupenkin 2016
@@ -43,6 +42,7 @@ module Network.Ethereum.Web3.TH (
 import           Control.Monad                          ((<=<))
 import           Data.List                              (length, uncons)
 import           Data.Tagged                            (Tagged)
+import           Data.Text                              (Text)
 import qualified Data.Text                              as T
 import qualified Data.Text.Lazy                         as LT
 import qualified Data.Text.Lazy.Builder                 as B
@@ -243,11 +243,11 @@ mkEvent ev@(DEvent name inputs anonymous) = sequence
 -- | arg_name -> evArg_name
 -- | _argName -> evArgName
 -- | "" -> evi , for example Transfer(address, address uint256) ~> Transfer {transfer1 :: address, transfer2 :: address, transfer3 :: Integer}
-makeArgs :: T.Text -> [(T.Text, T.Text)] -> [(Name, T.Text)]
+makeArgs :: Text -> [(Text, Text)] -> [(Name, Text)]
 makeArgs prefix ns = go 1 ns
   where
     prefixStr = toLowerFirst . T.unpack $ prefix
-    go :: Int -> [(T.Text, T.Text)] -> [(Name, T.Text)]
+    go :: Int -> [(Text, Text)] -> [(Name, Text)]
     go i [] = []
     go i ((h, ty) : tail) = if T.null h
                         then (mkName $  prefixStr ++ show i, ty) : go (i + 1) tail

@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 module Network.Ethereum.Web3.Test.Utils
   ( injectExportedEnvironmentVariables
   , runWeb3Configured

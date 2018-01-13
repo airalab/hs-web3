@@ -1,5 +1,4 @@
 {-# LANGUAGE PolyKinds #-}
-
 -- |
 -- Module      :  Network.Ethereum.Web3.Encoding
 -- Copyright   :  Alexander Krupenkin 2016

@@ -5,7 +5,6 @@
 {-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-
 -- |
 -- Module      :  Network.Ethereum.Web3.Encoding.Vector
 -- Copyright   :  Alexander Krupenkin 2016
@@ -15,9 +14,8 @@
 -- Stability   :  experimental
 -- Portability :  noportable
 --
--- statically sized vector support.
+-- Statically sized vector support.
 --
-
 module Network.Ethereum.Web3.Encoding.Vector where
 
 import           Control.Monad                           (replicateM)

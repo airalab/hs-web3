@@ -6,7 +6,6 @@
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
-
 -- |
 -- Module      :  Network.Ethereum.Web3.Contract
 -- Copyright   :  Alexander Krupenkin 2016

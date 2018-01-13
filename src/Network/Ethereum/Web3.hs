@@ -1,4 +1,3 @@
---
 -- Module      :  Network.Ethereum.Web3
 -- Copyright   :  Alexander Krupenkin 2016
 -- License     :  BSD3
