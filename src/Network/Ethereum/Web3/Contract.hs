@@ -104,7 +104,7 @@ event :: forall p i ni e .
       => Filter e
       -> (e -> ReaderT Change (Web3 p) EventAction)
       -> Web3 p (Async ())
-event fltr handler = forkWeb3 $ eventMany' fltr 0 handler
+event fltr handler = forkWeb3 $ event' fltr handler
 
 -- | same as event, but does not immediately spawn a new thread.
 event' :: forall p i ni e .
