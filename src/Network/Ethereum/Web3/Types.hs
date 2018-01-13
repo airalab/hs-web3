@@ -164,16 +164,20 @@ instance ToJSON DefaultBlock where
     toJSON parameter            = toJSON . toLowerFirst . show $ parameter
 
 -- | Low-level event filter data structure
-data Filter = Filter
+data Filter e = Filter
   { filterAddress   :: !(Maybe Address)
   , filterTopics    :: !(Maybe [Maybe Text])
   , filterFromBlock :: !DefaultBlock
   , filterToBlock   :: !DefaultBlock
   } deriving (Show, Generic)
 
-$(deriveToJSON (defaultOptions
-    { fieldLabelModifier = toLowerFirst . drop 6 }) ''Filter)
 
+instance ToJSON (Filter e) where
+  toJSON f = object [ "address" .= filterAddress f
+                    , "topics" .= filterTopics f
+                    , "fromBlock" .= filterFromBlock f
+                    , "toBlock" .= filterToBlock f
+                    ]
 
 instance Ord DefaultBlock where
     compare Pending Pending                         = EQ

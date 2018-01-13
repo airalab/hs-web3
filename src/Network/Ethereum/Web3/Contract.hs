@@ -92,7 +92,7 @@ data EventAction = ContinueEvent
 -- | Contract event listener
 class Event e where
     -- | Event filter structure used by low-level subscription methods
-    eventFilter :: Proxy e -> Address -> Filter
+    eventFilter :: Proxy e -> Address -> Filter e
 
 -- | run 'event\'' one block at a time.
 event :: forall p i ni e .
@@ -100,7 +100,7 @@ event :: forall p i ni e .
          , DecodeEvent i ni e
          , Event e
          )
-      => Filter
+      => Filter e
       -> (e -> ReaderT Change (Web3 p) EventAction)
       -> Web3 p ()
 event fltr handler = event' fltr 0 handler
@@ -114,7 +114,7 @@ event' :: forall p i ni e .
           , DecodeEvent i ni e
           , Event e
           )
-       => Filter
+       => Filter e
        -> Integer
        -> (e -> ReaderT Change (Web3 p) EventAction)
        -> Web3 p ()
@@ -175,7 +175,7 @@ playLogs :: forall p k i ni e.
             , DecodeEvent i ni e
             , Event e
             )
-         => FilterStreamState
+         => FilterStreamState e
          -> MachineT (Web3 p) k [FilterChange e]
 playLogs s = filterStream s
           ~> autoM Eth.getLogs
@@ -216,10 +216,11 @@ mkFilterChanges cs =
     x <- decodeEvent c
     return $ FilterChange c x
 
-data FilterStreamState = FilterStreamState { fssCurrentBlock  :: BlockNumber
-                                           , fssInitialFilter :: Filter
-                                           , fssWindowSize    :: Integer
-                                           }
+data FilterStreamState e =
+  FilterStreamState { fssCurrentBlock  :: BlockNumber
+                    , fssInitialFilter :: Filter e
+                    , fssWindowSize    :: Integer
+                    }
 
 
 -- | `filterStream` is a machine which represents taking an initial filter
@@ -229,11 +230,11 @@ data FilterStreamState = FilterStreamState { fssCurrentBlock  :: BlockNumber
 -- | halts whenever the `fromBlock` of a spanning filter either (1) excedes the
 -- | initial filter's `toBlock` or (2) is greater than the chain head's `BlockNumber`.
 filterStream :: Provider p
-             => FilterStreamState
-             -> MachineT (Web3 p) k (Filter)
+             => FilterStreamState e
+             -> MachineT (Web3 p) k (Filter e)
 filterStream initialPlan = unfoldPlan initialPlan filterPlan
   where
-    filterPlan :: Provider p => FilterStreamState -> PlanT k Filter (Web3 p) FilterStreamState
+    filterPlan :: Provider p => FilterStreamState e -> PlanT k (Filter e) (Web3 p) (FilterStreamState e)
     filterPlan initialState@FilterStreamState{..} = do
       end <- lift . mkBlockNumber $ filterToBlock fssInitialFilter
       if fssCurrentBlock > end

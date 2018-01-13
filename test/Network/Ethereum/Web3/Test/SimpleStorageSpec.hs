@@ -173,7 +173,7 @@ events = describe "can interact with a SimpleStorage contract across block inter
 
 processUntil :: (Provider provider)
              => MVar [CountSet]
-             -> Filter
+             -> Filter CountSet
              -> ([CountSet] -> Bool) -- TODO: make it work for any event
              -> (Change -> Web3 provider ())
              -> Web3 provider ()
@@ -189,7 +189,7 @@ processUntil var filter predicate action = do
 
 processUntil' :: (Provider provider)
               => MVar [CountSet]
-              -> Filter
+              -> Filter CountSet
               -> ([CountSet] -> Bool)
               -> Web3 provider ()
 processUntil' var filter predicate = processUntil var filter predicate (const $ return ())
