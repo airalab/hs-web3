@@ -40,6 +40,8 @@ module Network.Ethereum.Web3.Contract (
     EventAction(..)
   , Event(..)
   , event
+  , event'
+  , eventMany'
   , Method(..)
   , call
   , sendTx
@@ -102,23 +104,34 @@ event :: forall p i ni e .
          )
       => Filter e
       -> (e -> ReaderT Change (Web3 p) EventAction)
-      -> Web3 p ()
-event fltr handler = event' fltr 0 handler
+      -> Web3 p (Async ())
+event fltr handler = forkWeb3 $ eventMany' fltr 0 handler
 
--- | 'event\'' take s a filter, a window size, and a handler. It runs the handler
--- | over the results of 'eventLogs' results using 'reduceEventStream'. If no
--- | 'TerminateEvent' action is thrown and the toBlock is not yet reached,
--- | it then transitions to polling.
+-- | same as event, but does not immediately spawn a new thread.
 event' :: forall p i ni e .
           ( Provider p
           , DecodeEvent i ni e
           , Event e
           )
        => Filter e
+       -> (e -> ReaderT Change (Web3 p) EventAction)
+       -> Web3 p ()
+event' fltr handler = eventMany' fltr 0 handler
+
+-- | 'event\'' take s a filter, a window size, and a handler. It runs the handler
+-- | over the results of 'eventLogs' results using 'reduceEventStream'. If no
+-- | 'TerminateEvent' action is thrown and the toBlock is not yet reached,
+-- | it then transitions to polling.
+eventMany' :: forall p i ni e .
+           ( Provider p
+           , DecodeEvent i ni e
+           , Event e
+           )
+       => Filter e
        -> Integer
        -> (e -> ReaderT Change (Web3 p) EventAction)
        -> Web3 p ()
-event' fltr window handler = do
+eventMany' fltr window handler = do
     start <- mkBlockNumber $ filterFromBlock fltr
     let initState = FilterStreamState { fssCurrentBlock = start
                                       , fssInitialFilter = fltr

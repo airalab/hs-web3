@@ -178,7 +178,7 @@ processUntil :: (Provider provider)
              -> (Change -> Web3 provider ())
              -> Web3 provider ()
 processUntil var filter predicate action = do
-  event filter $ \(ev :: CountSet) -> do
+  event' filter $ \(ev :: CountSet) -> do
     newV <- liftIO $ modifyMVar var $ \v -> return (ev:v, ev:v)
     if predicate newV
         then do

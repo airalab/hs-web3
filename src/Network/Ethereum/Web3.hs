@@ -29,6 +29,8 @@ module Network.Ethereum.Web3 (
   , EventAction(..)
   , Event(..)
   , event
+  , event'
+  , eventMany'
   , Method(..)
   , sendTx
   , call
