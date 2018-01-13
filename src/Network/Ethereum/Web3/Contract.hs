@@ -5,7 +5,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
-
 -- |
 -- Module      :  Network.Ethereum.Web3.Contract
 -- Copyright   :  Alexander Krupenkin 2016

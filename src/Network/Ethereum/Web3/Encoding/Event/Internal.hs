@@ -10,8 +10,6 @@
 {-# LANGUAGE TypeInType             #-}
 {-# LANGUAGE TypeOperators          #-}
 {-# LANGUAGE UndecidableInstances   #-}
-
-
 -- |
 -- Module      :  Network.Ethereum.Web3.Encoding.Event.Internal
 -- Copyright   :  Alexander Krupenkin 2016
@@ -25,14 +23,13 @@
 -- to assist in event decoding. The user of this library should have no need to use
 -- this directly in application code.
 --
-
 module Network.Ethereum.Web3.Encoding.Event.Internal where
 
 import           Data.Kind
-import           Data.Proxy                              (Proxy (..))
-import           Data.Tagged                             (Tagged (..))
+import           Data.Proxy   (Proxy (..))
+import           Data.Tagged  (Tagged (..))
 import           Generics.SOP
-import           GHC.TypeLits                            (CmpNat)
+import           GHC.TypeLits (CmpNat)
 
 data HList :: [*] -> * where
   HNil :: HList '[]

@@ -1,17 +1,18 @@
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE DeriveGeneric #-}
 
 module Network.Ethereum.Web3.Test.EventSpec where
 
-import qualified GHC.Generics as GHC
-import Generics.SOP
-import Data.Tagged
-import Network.Ethereum.Web3
-import Network.Ethereum.Web3.Types
-import Network.Ethereum.Web3.Encoding.Event
-import Network.Ethereum.Web3.Encoding
-import Network.Ethereum.Web3.Encoding.Generic
-import Test.Hspec
+import           Data.Tagged
+import           Generics.SOP
+import qualified GHC.Generics                           as GHC
+import           Network.Ethereum.Web3
+import           Network.Ethereum.Web3.Encoding
+import           Network.Ethereum.Web3.Encoding.Event
+import           Network.Ethereum.Web3.Encoding.Generic
+import           Network.Ethereum.Web3.Types
+import           Test.Hspec
 
 spec :: Spec
 spec = eventTest
