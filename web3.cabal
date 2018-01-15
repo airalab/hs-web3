@@ -56,26 +56,29 @@ library
                      , Network.Ethereum.Web3.Encoding.Internal
                      , Network.Ethereum.Web3.Encoding.Event.Internal
   build-depends:       base >4.8 && <4.11
+                     , aeson
+                     , async
                      , base16-bytestring
-                     , template-haskell
-                     , generics-sop
-                     , transformers
-                     , data-default
-                     , http-client-tls
-                     , http-client
                      , bytestring
                      , cryptonite
-                     , singletons
+                     , data-default
+                     , generics-sop
+                     , http-client-tls
+                     , http-client
+                     , machines
+                     , mtl
                      , errors
-                     , vector
-                     , tagged
                      , memory
                      , parsec
-                     , aeson
+                     , singletons
                      , sized
+                     , tagged
+                     , template-haskell
+                     , transformers
                      , text
-                     , mtl
+                     , vector
   default-extensions:  OverloadedStrings
+  ghc-options:         -Werror
   default-language:    Haskell2010
 
 test-suite unit
@@ -102,9 +105,8 @@ test-suite unit
                      , time
                      , text
                      , web3
-                     , stm
-  ghc-options:        -threaded -rtsopts -with-rtsopts=-N -ddump-splices
-  default-extensions:  OverloadedStrings
+  ghc-options:         -Werror -threaded -rtsopts -with-rtsopts=-N -ddump-splices
+  default-extensions:  DataKinds LambdaCase DeriveGeneric QuasiQuotes TemplateHaskell OverloadedStrings ScopedTypeVariables TypeApplications
   default-language:    Haskell2010
 
 test-suite live
@@ -114,7 +116,13 @@ test-suite live
   other-modules:       Network.Ethereum.Web3.Test.ComplexStorageSpec
                      , Network.Ethereum.Web3.Test.SimpleStorageSpec
                      , Network.Ethereum.Web3.Test.Utils
-  build-depends:       base
+  build-depends:       async
+                     , base
+                     , bytestring
+                     , data-default
+                     , hspec
+                     , hspec-contrib
+                     , hspec-discover
                      , hspec-expectations
                      , hspec-discover
                      , hspec-contrib
@@ -125,11 +133,11 @@ test-suite live
                      , memory
                      , sized
                      , split
+                     , stm
                      , text
                      , time
                      , text
                      , web3
-                     , stm
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -ddump-splices
-  default-extensions:  OverloadedStrings
+  ghc-options:         -Werror -threaded -rtsopts -with-rtsopts=-N -ddump-splices
+  default-extensions:  DataKinds LambdaCase DeriveGeneric QuasiQuotes TemplateHaskell OverloadedStrings ScopedTypeVariables TypeApplications
   default-language:    Haskell2010
