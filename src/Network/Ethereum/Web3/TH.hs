@@ -251,7 +251,7 @@ makeArgs prefix ns = go 1 ns
     go i [] = []
     go i ((h, ty) : tail) = if T.null h
                         then (mkName $  prefixStr ++ show i, ty) : go (i + 1) tail
-                        else (mkName . (++) prefixStr . toUpperFirst . (\t -> if head t == '_' then drop 1 t else t) . T.unpack $ h, ty) : go (i + 1) tail
+                        else (mkName . (++ "_") . (++) prefixStr . toUpperFirst . T.unpack $ h, ty) : go (i + 1) tail
 
 -- | Method delcarations maker
 mkFun :: Declaration -> Q [Dec]
