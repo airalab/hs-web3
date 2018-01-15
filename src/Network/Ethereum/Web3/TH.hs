@@ -251,7 +251,7 @@ makeArgs prefix ns = go 1 ns
     go i [] = []
     go i ((h, ty) : tail) = if T.null h
                         then (mkName $  prefixStr ++ show i, ty) : go (i + 1) tail
-                        else (mkName . (++) prefixStr . toUpperFirst . T.unpack $ h, ty) : go (i + 1) tail
+                        else (mkName . (++ "_") . (++) prefixStr . toUpperFirst . T.unpack $ h, ty) : go (i + 1) tail
 
 -- | Method delcarations maker
 mkFun :: Declaration -> Q [Dec]
@@ -265,7 +265,7 @@ mkFun fun@(DFunction name constant inputs outputs) = (++)
         ]
   where mIdent    = T.unpack (methodId $ fun{funName = T.replace "'" "" name})
         dataName  = mkName (toUpperFirst (T.unpack $ name <> "Data"))
-        funName   = mkName (toLowerFirst (T.unpack name) ++ "F")
+        funName   = mkName (toLowerFirst (T.unpack name))
         bangInput = fmap funBangType inputs
         derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
 
