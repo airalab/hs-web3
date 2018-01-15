@@ -93,7 +93,7 @@ data EventAction = ContinueEvent
 -- | Contract event listener
 class Event e where
     -- | Event filter structure used by low-level subscription methods
-    eventFilter :: Proxy e -> Address -> Filter e
+    eventFilter :: Address -> Filter e
 
 -- | run 'event\'' one block at a time.
 event :: forall p i ni e .

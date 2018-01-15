@@ -161,7 +161,7 @@ eventFilterD :: String -> Int -> [DecQ]
 eventFilterD topic0 n =
   let addr = mkName "a"
       indexedArgs = replicate n Nothing :: [Maybe String]
-  in [ funD' (mkName "eventFilter") [wildP, varP addr]
+  in [ funD' (mkName "eventFilter") [varP addr]
        [|Filter (Just $(varE addr))
                 (Just $ [Just topic0] <> indexedArgs)
                 Latest
