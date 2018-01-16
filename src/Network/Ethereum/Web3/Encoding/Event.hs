@@ -8,8 +8,6 @@
 {-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE TypeOperators          #-}
 {-# LANGUAGE UndecidableInstances   #-}
-
-
 -- |
 -- Module      :  Network.Ethereum.Web3.Encoding.Event
 -- Copyright   :  Alexander Krupenkin 2016
@@ -23,7 +21,6 @@
 -- to assist in event decoding. The user of this library should have no need to use
 -- this directly in application code.
 --
-
 module Network.Ethereum.Web3.Encoding.Event(
     DecodeEvent(..)
   , ArrayParser(..)
@@ -89,7 +86,8 @@ parseChange :: ( Generic i
                , GenericABIDecode nirep
                )
              => Change
-             -> Bool -- is anonymous event
+             -> Bool
+             -- ^ is anonymous event
              -> Maybe (Event i ni)
 parseChange change isAnonymous = do
     i <- genericArrayParser topics

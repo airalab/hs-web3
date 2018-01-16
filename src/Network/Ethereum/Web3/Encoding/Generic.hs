@@ -8,8 +8,6 @@
 {-# LANGUAGE TypeFamilies        #-}
 {-# LANGUAGE TypeInType          #-}
 {-# LANGUAGE TypeOperators       #-}
-
-
 -- |
 -- Module      :  Network.Ethereum.Web3.Encoding.Generic
 -- Copyright   :  Alexander Krupenkin 2016
@@ -23,7 +21,6 @@
 -- to assist in encoding and decoding Solidity types for function calls and events.
 -- The user of this library should have no need to use this directly in application code.
 --
-
 module Network.Ethereum.Web3.Encoding.Generic (
     GenericABIEncode
   , GenericABIDecode

@@ -105,7 +105,7 @@ getBalance = remote "eth_getBalance"
 -- | Creates a filter object, based on filter options, to notify when the
 -- state changes (logs). To check if the state has changed, call
 -- 'getFilterChanges'.
-newFilter :: Provider a => Filter -> Web3 a FilterId
+newFilter :: Provider a => Filter e -> Web3 a FilterId
 {-# INLINE newFilter #-}
 newFilter = remote "eth_newFilter"
 
@@ -122,7 +122,7 @@ uninstallFilter :: Provider a => FilterId -> Web3 a Bool
 uninstallFilter = remote "eth_uninstallFilter"
 
 -- | Returns an array of all logs matching a given filter object.
-getLogs :: Provider a => Filter -> Web3 a [Change]
+getLogs :: Provider a => Filter e -> Web3 a [Change]
 {-# INLINE getLogs #-}
 getLogs = remote "eth_getLogs"
 

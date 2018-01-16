@@ -3,8 +3,6 @@
 {-# LANGUAGE KindSignatures             #-}
 {-# LANGUAGE PolyKinds                  #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
-
-
 -- |
 -- Module      :  Network.Ethereum.Web3.Encoding.Int
 -- Copyright   :  Alexander Krupenkin 2016
@@ -16,7 +14,6 @@
 --
 -- The type int<M> and uint<M> support.
 --
-
 module Network.Ethereum.Web3.Encoding.Int where
 
 import           Control.Error                           (hush)

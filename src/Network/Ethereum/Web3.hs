@@ -1,4 +1,3 @@
---
 -- Module      :  Network.Ethereum.Web3
 -- Copyright   :  Alexander Krupenkin 2016
 -- License     :  BSD3
@@ -29,6 +28,8 @@ module Network.Ethereum.Web3 (
   , EventAction(..)
   , Event(..)
   , event
+  , event'
+  , eventMany'
   , Method(..)
   , sendTx
   , call

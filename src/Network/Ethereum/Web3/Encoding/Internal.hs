@@ -1,6 +1,5 @@
 {-# LANGUAGE PolyKinds           #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-
 -- |
 -- Module      :  Network.Ethereum.Web3.Encoding.Internal
 -- Copyright   :  Alexander Krupenkin 2016

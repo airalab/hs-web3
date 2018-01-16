@@ -6,7 +6,6 @@
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
-
 -- |
 -- Module      :  Network.Ethereum.Web3.Contract
 -- Copyright   :  Alexander Krupenkin 2016
@@ -40,6 +39,8 @@ module Network.Ethereum.Web3.Contract (
     EventAction(..)
   , Event(..)
   , event
+  , event'
+  , eventMany'
   , Method(..)
   , call
   , sendTx
@@ -92,7 +93,7 @@ data EventAction = ContinueEvent
 -- | Contract event listener
 class Event e where
     -- | Event filter structure used by low-level subscription methods
-    eventFilter :: Proxy e -> Address -> Filter
+    eventFilter :: Address -> Filter e
 
 -- | run 'event\'' one block at a time.
 event :: forall p i ni e .
@@ -100,25 +101,36 @@ event :: forall p i ni e .
          , DecodeEvent i ni e
          , Event e
          )
-      => Filter
+      => Filter e
       -> (e -> ReaderT Change (Web3 p) EventAction)
-      -> Web3 p ()
-event fltr handler = event' fltr 0 handler
+      -> Web3 p (Async ())
+event fltr handler = forkWeb3 $ event' fltr handler
 
--- | 'event\'' take s a filter, a window size, and a handler. It runs the handler
--- | over the results of 'eventLogs' results using 'reduceEventStream'. If no
--- | 'TerminateEvent' action is thrown and the toBlock is not yet reached,
--- | it then transitions to polling.
+-- | same as event, but does not immediately spawn a new thread.
 event' :: forall p i ni e .
           ( Provider p
           , DecodeEvent i ni e
           , Event e
           )
-       => Filter
+       => Filter e
+       -> (e -> ReaderT Change (Web3 p) EventAction)
+       -> Web3 p ()
+event' fltr handler = eventMany' fltr 0 handler
+
+-- | 'event\'' take s a filter, a window size, and a handler. It runs the handler
+-- | over the results of 'eventLogs' results using 'reduceEventStream'. If no
+-- | 'TerminateEvent' action is thrown and the toBlock is not yet reached,
+-- | it then transitions to polling.
+eventMany' :: forall p i ni e .
+           ( Provider p
+           , DecodeEvent i ni e
+           , Event e
+           )
+       => Filter e
        -> Integer
        -> (e -> ReaderT Change (Web3 p) EventAction)
        -> Web3 p ()
-event' fltr window handler = do
+eventMany' fltr window handler = do
     start <- mkBlockNumber $ filterFromBlock fltr
     let initState = FilterStreamState { fssCurrentBlock = start
                                       , fssInitialFilter = fltr
@@ -175,7 +187,7 @@ playLogs :: forall p k i ni e.
             , DecodeEvent i ni e
             , Event e
             )
-         => FilterStreamState
+         => FilterStreamState e
          -> MachineT (Web3 p) k [FilterChange e]
 playLogs s = filterStream s
           ~> autoM Eth.getLogs
@@ -216,10 +228,11 @@ mkFilterChanges cs =
     x <- decodeEvent c
     return $ FilterChange c x
 
-data FilterStreamState = FilterStreamState { fssCurrentBlock  :: BlockNumber
-                                           , fssInitialFilter :: Filter
-                                           , fssWindowSize    :: Integer
-                                           }
+data FilterStreamState e =
+  FilterStreamState { fssCurrentBlock  :: BlockNumber
+                    , fssInitialFilter :: Filter e
+                    , fssWindowSize    :: Integer
+                    }
 
 
 -- | `filterStream` is a machine which represents taking an initial filter
@@ -229,11 +242,11 @@ data FilterStreamState = FilterStreamState { fssCurrentBlock  :: BlockNumber
 -- | halts whenever the `fromBlock` of a spanning filter either (1) excedes the
 -- | initial filter's `toBlock` or (2) is greater than the chain head's `BlockNumber`.
 filterStream :: Provider p
-             => FilterStreamState
-             -> MachineT (Web3 p) k (Filter)
+             => FilterStreamState e
+             -> MachineT (Web3 p) k (Filter e)
 filterStream initialPlan = unfoldPlan initialPlan filterPlan
   where
-    filterPlan :: Provider p => FilterStreamState -> PlanT k Filter (Web3 p) FilterStreamState
+    filterPlan :: Provider p => FilterStreamState e -> PlanT k (Filter e) (Web3 p) (FilterStreamState e)
     filterPlan initialState@FilterStreamState{..} = do
       end <- lift . mkBlockNumber $ filterToBlock fssInitialFilter
       if fssCurrentBlock > end

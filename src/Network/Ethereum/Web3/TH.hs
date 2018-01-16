@@ -3,7 +3,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE QuasiQuotes      #-}
 {-# LANGUAGE TemplateHaskell  #-}
-
 -- |
 -- Module      :  Network.Ethereum.Web3.TH
 -- Copyright   :  Alexander Krupenkin 2016
@@ -43,6 +42,7 @@ module Network.Ethereum.Web3.TH (
 import           Control.Monad                          ((<=<))
 import           Data.List                              (length, uncons)
 import           Data.Tagged                            (Tagged)
+import           Data.Text                              (Text)
 import qualified Data.Text                              as T
 import qualified Data.Text.Lazy                         as LT
 import qualified Data.Text.Lazy.Builder                 as B
@@ -161,7 +161,7 @@ eventFilterD :: String -> Int -> [DecQ]
 eventFilterD topic0 n =
   let addr = mkName "a"
       indexedArgs = replicate n Nothing :: [Maybe String]
-  in [ funD' (mkName "eventFilter") [wildP, varP addr]
+  in [ funD' (mkName "eventFilter") [varP addr]
        [|Filter (Just $(varE addr))
                 (Just $ [Just topic0] <> indexedArgs)
                 Latest
@@ -243,15 +243,15 @@ mkEvent ev@(DEvent name inputs anonymous) = sequence
 -- | arg_name -> evArg_name
 -- | _argName -> evArgName
 -- | "" -> evi , for example Transfer(address, address uint256) ~> Transfer {transfer1 :: address, transfer2 :: address, transfer3 :: Integer}
-makeArgs :: T.Text -> [(T.Text, T.Text)] -> [(Name, T.Text)]
+makeArgs :: Text -> [(Text, Text)] -> [(Name, Text)]
 makeArgs prefix ns = go 1 ns
   where
     prefixStr = toLowerFirst . T.unpack $ prefix
-    go :: Int -> [(T.Text, T.Text)] -> [(Name, T.Text)]
+    go :: Int -> [(Text, Text)] -> [(Name, Text)]
     go i [] = []
     go i ((h, ty) : tail) = if T.null h
                         then (mkName $  prefixStr ++ show i, ty) : go (i + 1) tail
-                        else (mkName . (++) prefixStr . toUpperFirst . (\t -> if head t == '_' then drop 1 t else t) . T.unpack $ h, ty) : go (i + 1) tail
+                        else (mkName . (++ "_") . (++) prefixStr . toUpperFirst . T.unpack $ h, ty) : go (i + 1) tail
 
 -- | Method delcarations maker
 mkFun :: Declaration -> Q [Dec]

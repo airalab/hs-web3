@@ -5,12 +5,16 @@ import           Data.List                                 (isSuffixOf)
 import           Distribution.PackageDescription           (HookedBuildInfo, PackageDescription (testSuites),
                                                             TestSuite (..))
 import           Distribution.Simple
-import           Distribution.Simple.LocalBuildInfo        (ComponentName (..), LocalBuildInfo (..))
-import           Distribution.Simple.Setup                 (BuildFlags (..), fromFlag)
+import           Distribution.Simple.LocalBuildInfo        (ComponentName (..),
+                                                            LocalBuildInfo (..))
+import           Distribution.Simple.Setup                 (BuildFlags (..),
+                                                            fromFlag)
 import           Distribution.Simple.Utils
 import           Distribution.Verbosity                    (Verbosity)
 import           System.Directory                          (makeAbsolute)
-import           System.Environment                        (getEnv, getEnvironment, setEnv)
+import           System.Environment                        (getEnv,
+                                                            getEnvironment,
+                                                            setEnv)
 
 #if MIN_VERSION_Cabal(2,0,0)
 

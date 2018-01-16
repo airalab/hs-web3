@@ -1,9 +1,8 @@
-{-# LANGUAGE KindSignatures  #-}
-{-# LANGUAGE LambdaCase  #-}
-{-# LANGUAGE QuasiQuotes     #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE KindSignatures        #-}
+{-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-
+{-# LANGUAGE QuasiQuotes           #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 -- Module      :  Network.Ethereum.Web3.Test.SimpleStorage
 -- Copyright   :  Alexander Krupenkin 2016
@@ -24,6 +23,7 @@ import           Control.Concurrent.Async         (wait)
 import           Control.Concurrent.MVar
 import           Control.Monad                    (void)
 import           Control.Monad.IO.Class           (liftIO)
+import           Control.Monad.Trans.Class        (lift)
 import           Control.Monad.Trans.Reader       (ask)
 import           Data.ByteString                  (ByteString)
 import           Data.Default
@@ -37,18 +37,24 @@ import           Data.String                      (fromString)
 import qualified Data.Text                        as T
 import           Data.Traversable                 (for)
 import           GHC.TypeLits
+
 import           Network.Ethereum.Web3            hiding (convert)
 import           Network.Ethereum.Web3.Contract   (Event (..))
 import qualified Network.Ethereum.Web3.Eth        as Eth
-import           Network.Ethereum.Web3.Test.Utils
 import           Network.Ethereum.Web3.TH
 import           Network.Ethereum.Web3.Types
+
 import           Numeric                          (showHex)
 import           System.Environment               (getEnv)
 import           System.IO.Unsafe                 (unsafePerformIO)
 import           Test.Hspec
 
+import Network.Ethereum.Web3.Test.Utils
+
 [abiFrom|test-support/build/contracts/abis/SimpleStorage.json|]
+
+unCountSet :: CountSet -> UIntN 256
+unCountSet (CountSet n) = n
 
 contractAddress :: Address
 contractAddress = fromString . unsafePerformIO $ getEnv "SIMPLESTORAGE_CONTRACT_ADDRESS"
@@ -84,20 +90,14 @@ events = describe "can interact with a SimpleStorage contract across block inter
             theSets = map (fromJust . uIntNFromInteger) [1, 2, 3]
         print "Setting up the filter..."
         fiber <- runWeb3Configured' $ do
-          let fltr = eventFilter (Proxy :: Proxy CountSet) contractAddress
-          forkWeb3 $ event fltr $ \(CountSet cs) -> do
-            v <- liftIO $ takeMVar var
-            let newV = cs : v
-            liftIO $ putMVar var newV
-            if length newV == 3
-                then return TerminateEvent
-                else return ContinueEvent
+          let fltr = eventFilter contractAddress
+          forkWeb3 $ processUntil' var fltr ((3 ==) . length)
         print "Setting the values..."
         setValues theCall theSets
         wait fiber
         print "Filter caught 3 values..."
         vals <- takeMVar var
-        sort vals `shouldBe` sort theSets
+        sort (unCountSet <$> vals) `shouldBe` sort theSets
 
     it "can stream events starting and ending in the future, bounded" $ \primaryAccount -> do
         runWeb3Configured Eth.blockNumber >>= \bn -> awaitBlock (bn + 1)
@@ -107,25 +107,19 @@ events = describe "can interact with a SimpleStorage contract across block inter
         start <- runWeb3Configured Eth.blockNumber
         let later = BlockWithNumber (start + 3)
             latest = BlockWithNumber (start + 8)
-            fltr = (eventFilter (Proxy :: Proxy CountSet) contractAddress) { filterFromBlock = later
-                                                                           , filterToBlock = latest
-                                                                           }
+            fltr = (eventFilter contractAddress :: Filter CountSet) { filterFromBlock = later
+                                                                    , filterToBlock = latest
+                                                                    }
         print "Setting up the filter..."
         fiber <- runWeb3Configured' $
-          forkWeb3 $ event fltr $ \(CountSet cs) -> do
-            v <- liftIO $ takeMVar var
-            let newV = cs : v
-            liftIO $ putMVar var newV
-            if length newV == 3
-                then return TerminateEvent
-                else return ContinueEvent
+          forkWeb3 $ processUntil' var fltr ((3 ==) . length)
         awaitBlock (start + 3)
         print "Setting the values..."
         setValues theCall theSets
         wait fiber
         print "Filter caught 3 values..."
         vals <- takeMVar var
-        sort vals `shouldBe` sort theSets
+        sort (unCountSet <$> vals) `shouldBe` sort theSets
 
     it "can stream events starting in the past and ending in the future" $ \primaryAccount -> do
         runWeb3Configured Eth.blockNumber >>= \bn -> awaitBlock (bn + 1)
@@ -135,19 +129,9 @@ events = describe "can interact with a SimpleStorage contract across block inter
             theSets1 = map (fromJust . uIntNFromInteger) [7, 8, 9]
             theSets2 = map (fromJust . uIntNFromInteger) [10, 11, 12]
         start <- runWeb3Configured Eth.blockNumber
-        let fltr = eventFilter (Proxy :: Proxy CountSet) contractAddress
+        let fltr = eventFilter contractAddress :: Filter CountSet
         fiber <- runWeb3Configured' $ do
-          forkWeb3 $ event fltr $ \(CountSet cs) -> do
-            v <- liftIO $ takeMVar var
-            let newV = cs : v
-            liftIO $ putMVar var newV
-            if length newV == 3
-                then do
-                    change <- ask
-                    liftIO $ putMVar blockNumberVar (changeBlockNumber change)
-                    return TerminateEvent
-                else do
-                  return ContinueEvent
+          forkWeb3 $ processUntil var fltr ((3 ==) . length) (liftIO . putMVar blockNumberVar . changeBlockNumber)
         print "Running first transactions as past transactions..."
         setValues theCall theSets1
         wait fiber
@@ -156,20 +140,14 @@ events = describe "can interact with a SimpleStorage contract across block inter
         awaitBlock $ end + 1 -- make past transactions definitively in past
         var' <- newMVar []
         fiber <- runWeb3Configured' $ do
-          let fltr = (eventFilter (Proxy :: Proxy CountSet) contractAddress) {filterFromBlock = BlockWithNumber start}
-          forkWeb3 $ event fltr $ \(CountSet cs) -> do
-            v <- liftIO $ takeMVar var'
-            let newV = cs : v
-            liftIO $ putMVar var' newV
-            if length newV == 6
-                then return TerminateEvent
-                else return ContinueEvent
+          let fltr = (eventFilter contractAddress :: Filter CountSet) {filterFromBlock = BlockWithNumber start}
+          forkWeb3 $ processUntil' var' fltr ((6 ==) . length)
         print "Setting more values"
         setValues theCall theSets2
         wait fiber
         print "All new values have ben set"
         vals <- takeMVar var'
-        sort vals `shouldBe` sort (theSets1 <> theSets2)
+        sort (unCountSet <$> vals) `shouldBe` sort (theSets1 <> theSets2)
 
     it "can stream events starting and ending in the past, bounded" $ \primaryAccount -> do
         runWeb3Configured Eth.blockNumber >>= \bn -> awaitBlock (bn + 1)
@@ -178,20 +156,10 @@ events = describe "can interact with a SimpleStorage contract across block inter
             theSets = map (fromJust . uIntNFromInteger) [4, 5, 6]
         start <- runWeb3Configured Eth.blockNumber
         blockNumberVar <- newEmptyMVar
-        let fltr = eventFilter (Proxy :: Proxy CountSet) contractAddress
+        let fltr = eventFilter contractAddress
         print "Setting up filter for past transactions..."
         fiber <- runWeb3Configured' $ do
-          forkWeb3 $ event fltr $ \(CountSet cs) -> do
-            v <- liftIO $ takeMVar var
-            let newV = cs : v
-            liftIO $ putMVar var newV
-            if length newV == 3
-                then do
-                    change <- ask
-                    liftIO $ putMVar blockNumberVar (changeBlockNumber change)
-                    return TerminateEvent
-                else do
-                  return ContinueEvent
+          forkWeb3 $ processUntil var fltr ((3 ==) . length) (liftIO . putMVar blockNumberVar . changeBlockNumber)
         print "Setting values"
         setValues theCall theSets
         wait fiber
@@ -202,16 +170,32 @@ events = describe "can interact with a SimpleStorage contract across block inter
                          , filterToBlock = BlockWithNumber end
                          }
         awaitBlock $ end + 1 -- make it definitively in the past
-        runWeb3Configured $
-          event fltr' $ \(CountSet cs) -> do
-            v <- liftIO $ takeMVar var'
-            let newV = cs : v
-            liftIO $ putMVar var' newV
-            if length newV == 3
-                then return TerminateEvent
-                else return ContinueEvent
+        runWeb3Configured $ processUntil' var' fltr' ((3 ==) . length)
         vals <- takeMVar var'
-        sort vals `shouldBe` sort theSets
+        sort (unCountSet <$> vals) `shouldBe` sort theSets
+
+processUntil :: (Provider provider)
+             => MVar [CountSet]
+             -> Filter CountSet
+             -> ([CountSet] -> Bool) -- TODO: make it work for any event
+             -> (Change -> Web3 provider ())
+             -> Web3 provider ()
+processUntil var filter predicate action = do
+  event' filter $ \(ev :: CountSet) -> do
+    newV <- liftIO $ modifyMVar var $ \v -> return (ev:v, ev:v)
+    if predicate newV
+        then do
+          change <- ask
+          lift $ action change
+          return TerminateEvent
+        else return ContinueEvent
+
+processUntil' :: (Provider provider)
+              => MVar [CountSet]
+              -> Filter CountSet
+              -> ([CountSet] -> Bool)
+              -> Web3 provider ()
+processUntil' var filter predicate = processUntil var filter predicate (const $ return ())
 
 setValues :: Call -> [UIntN 256] -> IO ()
 setValues theCall theSets = forM_ theSets $ \v -> do
