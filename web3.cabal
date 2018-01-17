@@ -37,45 +37,48 @@ library
   exposed-modules:     Network.Ethereum.Web3
                      , Network.Ethereum.Unit
                      , Network.Ethereum.Web3.TH
-                     , Network.Ethereum.Web3.Web3
                      , Network.Ethereum.Web3.Eth
                      , Network.Ethereum.Web3.Net
+                     , Network.Ethereum.Web3.Web3
                      , Network.Ethereum.Web3.Types
                      , Network.Ethereum.Web3.Address
                      , Network.Ethereum.Web3.JsonAbi
                      , Network.Ethereum.Web3.Provider
                      , Network.Ethereum.Web3.Encoding
                      , Network.Ethereum.Web3.Contract
+                     , Network.Ethereum.Web3.Encoding.Int
                      , Network.Ethereum.Web3.Encoding.Bytes
                      , Network.Ethereum.Web3.Encoding.Event
-                     , Network.Ethereum.Web3.Encoding.Event.Internal
-                     , Network.Ethereum.Web3.Encoding.Generic
-                     , Network.Ethereum.Web3.Encoding.Int
                      , Network.Ethereum.Web3.Encoding.Vector
+                     , Network.Ethereum.Web3.Encoding.Generic
   other-modules:       Network.Ethereum.Web3.JsonRpc
                      , Network.Ethereum.Web3.Internal
                      , Network.Ethereum.Web3.Encoding.Internal
+                     , Network.Ethereum.Web3.Encoding.Event.Internal
   build-depends:       base >4.8 && <4.11
                      , aeson
+                     , async
                      , base16-bytestring
                      , bytestring
                      , cryptonite
-                     , errors
+                     , data-default
                      , generics-sop
                      , http-client-tls
                      , http-client
-                     , data-default
-                     , memory
+                     , machines
                      , mtl
+                     , errors
+                     , memory
                      , parsec
                      , singletons
                      , sized
                      , tagged
                      , template-haskell
-                     , text
                      , transformers
+                     , text
                      , vector
   default-extensions:  OverloadedStrings
+  ghc-options:         -Werror
   default-language:    Haskell2010
 
 test-suite unit
@@ -85,25 +88,24 @@ test-suite unit
   other-modules:       Network.Ethereum.Web3.Test.MethodDumpSpec
                        Network.Ethereum.Web3.Test.EncodingSpec
                        Network.Ethereum.Web3.Test.EventSpec
-  build-depends:       base
+  build-depends:       base >4.8 && <4.11
+                     , hspec-expectations
+                     , hspec-discover
+                     , hspec-contrib
+                     , hspec
                      , base16-bytestring
-                     , bytestring
                      , data-default
                      , generics-sop
-                     , hspec
-                     , hspec-contrib
-                     , hspec-discover
-                     , hspec-expectations
+                     , transformers
+                     , bytestring
                      , memory
+                     , tagged
                      , sized
                      , split
-                     , stm
-                     , tagged
                      , time
                      , text
-                     , transformers
                      , web3
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -ddump-splices
+  ghc-options:         -Werror -threaded -rtsopts -with-rtsopts=-N -ddump-splices
   default-extensions:  DataKinds LambdaCase DeriveGeneric QuasiQuotes TemplateHaskell OverloadedStrings ScopedTypeVariables TypeApplications
   default-language:    Haskell2010
 
@@ -114,22 +116,28 @@ test-suite live
   other-modules:       Network.Ethereum.Web3.Test.ComplexStorageSpec
                      , Network.Ethereum.Web3.Test.SimpleStorageSpec
                      , Network.Ethereum.Web3.Test.Utils
-  build-depends:       base
+  build-depends:       async
+                     , base
                      , bytestring
                      , data-default
                      , hspec
                      , hspec-contrib
                      , hspec-discover
                      , hspec-expectations
+                     , hspec-discover
+                     , hspec-contrib
+                     , hspec
+                     , transformers
+                     , data-default
+                     , bytestring
                      , memory
-                     , text
                      , sized
                      , split
                      , stm
+                     , text
                      , time
                      , text
-                     , transformers
                      , web3
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -ddump-splices
+  ghc-options:         -Werror -threaded -rtsopts -with-rtsopts=-N -ddump-splices
   default-extensions:  DataKinds LambdaCase DeriveGeneric QuasiQuotes TemplateHaskell OverloadedStrings ScopedTypeVariables TypeApplications
   default-language:    Haskell2010

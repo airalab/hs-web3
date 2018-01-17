@@ -21,6 +21,7 @@ import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Default
 import           Data.Monoid                             ((<>))
+import           Data.Ord                                (Down (..))
 import           Data.Text                               (Text)
 import qualified Data.Text.Lazy.Builder                  as B
 import qualified Data.Text.Lazy.Builder.Int              as B
@@ -90,16 +91,19 @@ instance UnitSpec Quantity where
     divider = const 1
     name = const "quantity"
 
--- | Low-level event filter data structure
-data Filter = Filter
-  { filterAddress   :: !(Maybe Address)
-  , filterTopics    :: !(Maybe [Maybe Text])
-  , filterFromBlock :: !(Maybe Text)
-  , filterToBlock   :: !(Maybe Text)
-  } deriving (Show, Generic)
+newtype BlockNumber = BlockNumber Integer deriving (Eq, Show, Generic, Ord, Read, Num)
 
-$(deriveJSON (defaultOptions
-    { fieldLabelModifier = toLowerFirst . drop 6 }) ''Filter)
+instance FromJSON BlockNumber where
+    parseJSON (String v) =
+        case R.hexadecimal v of
+            Right (x, "") -> return (BlockNumber x)
+            _             -> fail "Unable to parse BlockNumber!"
+    parseJSON _ = fail "The string is required!"
+
+instance ToJSON BlockNumber where
+    toJSON (BlockNumber x) =
+        let hexValue = B.toLazyText (B.hexadecimal x)
+        in  toJSON ("0x" <> hexValue)
 
 -- | Event filter identifier
 newtype FilterId = FilterId Integer
@@ -124,7 +128,7 @@ data Change = Change
   , changeTransactionIndex :: !Text
   , changeTransactionHash  :: !Text
   , changeBlockHash        :: !Text
-  , changeBlockNumber      :: !Text
+  , changeBlockNumber      :: !BlockNumber
   , changeAddress          :: !Address
   , changeData             :: !Text
   , changeTopics           :: ![Text]
@@ -152,12 +156,40 @@ instance Default Call where
 
 
 -- | The contract call mode describe used state: latest or pending
-data DefaultBlock = BlockNumberHex Text | Earliest | Latest | Pending
+data DefaultBlock = BlockWithNumber BlockNumber | Earliest | Latest | Pending
   deriving (Show, Eq)
 
 instance ToJSON DefaultBlock where
-    toJSON (BlockNumberHex hex) = toJSON hex
+    toJSON (BlockWithNumber bn) = toJSON bn
     toJSON parameter            = toJSON . toLowerFirst . show $ parameter
+
+-- | Low-level event filter data structure
+data Filter e = Filter
+  { filterAddress   :: !(Maybe Address)
+  , filterTopics    :: !(Maybe [Maybe Text])
+  , filterFromBlock :: !DefaultBlock
+  , filterToBlock   :: !DefaultBlock
+  } deriving (Show, Generic)
+
+
+instance ToJSON (Filter e) where
+  toJSON f = object [ "address" .= filterAddress f
+                    , "topics" .= filterTopics f
+                    , "fromBlock" .= filterFromBlock f
+                    , "toBlock" .= filterToBlock f
+                    ]
+
+instance Ord DefaultBlock where
+    compare Pending Pending                         = EQ
+    compare Latest Latest                           = EQ
+    compare Earliest Earliest                       = EQ
+    compare (BlockWithNumber a) (BlockWithNumber b) = compare a b
+    compare _ Pending                               = LT
+    compare Pending Latest                          = GT
+    compare _ Latest                                = LT
+    compare Earliest _                              = LT
+    compare a b                                     = compare (Down b) (Down a)
+
 
 -- TODO: Wrap
 -- | Transaction hash text string
@@ -171,7 +203,7 @@ data Transaction = Transaction
   -- ^ QUANTITY - the number of transactions made by the sender prior to this one.
   , txBlockHash        :: !Text
   -- ^ DATA, 32 Bytes - hash of the block where this transaction was in. null when its pending.
-  , txBlockNumber      :: !Text
+  , txBlockNumber      :: !BlockNumber
   -- ^ QUANTITY - block number where this transaction was in. null when its pending.
   , txTransactionIndex :: !Text
   -- ^ QUANTITY - integer of the transactions index position in the block. null when its pending.
@@ -194,7 +226,7 @@ $(deriveJSON (defaultOptions
 
 -- | Block information
 data Block = Block
-  { blockNumber           :: !Text
+  { blockBlockNumber      :: !BlockNumber
   -- ^ QUANTITY - the block number. null when its pending block.
   , blockHash             :: !Text
   -- ^ DATA, 32 Bytes - hash of the block. null when its pending block.

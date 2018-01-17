@@ -3,7 +3,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE QuasiQuotes      #-}
 {-# LANGUAGE TemplateHaskell  #-}
-
 -- |
 -- Module      :  Network.Ethereum.Web3.TH
 -- Copyright   :  Alexander Krupenkin 2016
@@ -43,6 +42,7 @@ module Network.Ethereum.Web3.TH (
 import           Control.Monad                          ((<=<))
 import           Data.List                              (length, uncons)
 import           Data.Tagged                            (Tagged)
+import           Data.Text                              (Text)
 import qualified Data.Text                              as T
 import qualified Data.Text.Lazy                         as LT
 import qualified Data.Text.Lazy.Builder                 as B
@@ -54,9 +54,9 @@ import           Network.Ethereum.Web3.Address          (Address)
 import           Network.Ethereum.Web3.Contract
 import           Network.Ethereum.Web3.Encoding
 import           Network.Ethereum.Web3.Encoding.Event
+import           Network.Ethereum.Web3.Encoding.Generic
 import           Network.Ethereum.Web3.Encoding.Int
 import           Network.Ethereum.Web3.Encoding.Vector
-import           Network.Ethereum.Web3.Encoding.Generic
 import           Network.Ethereum.Web3.Internal
 import           Network.Ethereum.Web3.JsonAbi
 import           Network.Ethereum.Web3.Provider
@@ -112,15 +112,15 @@ funD' name p f = funD name [clause p (normalB f) []]
 
 toHSType :: SolidityType -> TypeQ
 toHSType s = case s of
-    SolidityBool -> conT (mkName "Bool")
-    SolidityAddress -> conT (mkName "Address")
-    SolidityUint n -> appT (conT (mkName "UIntN")) (numLit n)
-    SolidityInt n -> appT (conT (mkName "IntN")) (numLit n)
-    SolidityString ->  conT (mkName "Text")
-    SolidityBytesN n -> appT (conT (mkName "BytesN")) (numLit n)
-    SolidityBytesD ->  conT (mkName "BytesD")
+    SolidityBool        -> conT (mkName "Bool")
+    SolidityAddress     -> conT (mkName "Address")
+    SolidityUint n      -> appT (conT (mkName "UIntN")) (numLit n)
+    SolidityInt n       -> appT (conT (mkName "IntN")) (numLit n)
+    SolidityString      ->  conT (mkName "Text")
+    SolidityBytesN n    -> appT (conT (mkName "BytesN")) (numLit n)
+    SolidityBytesD      ->  conT (mkName "BytesD")
     SolidityVector ns a -> expandVector ns a
-    SolidityArray a -> appT listT $ toHSType a
+    SolidityArray a     -> appT listT $ toHSType a
   where
     numLit n = litT (numTyLit $ toInteger n)
     expandVector :: [Int] -> SolidityType -> TypeQ
@@ -133,7 +133,7 @@ toHSType s = case s of
 
 typeQ :: Text -> TypeQ
 typeQ t = case parseSolidityType t of
-  Left e -> error $ "Unable to parse solidity type: " ++ show e
+  Left e   -> error $ "Unable to parse solidity type: " ++ show e
   Right ty -> toHSType ty
 
 -- | Event argument to TH type
@@ -161,11 +161,11 @@ eventFilterD :: String -> Int -> [DecQ]
 eventFilterD topic0 n =
   let addr = mkName "a"
       indexedArgs = replicate n Nothing :: [Maybe String]
-  in [ funD' (mkName "eventFilter") [wildP, varP addr]
+  in [ funD' (mkName "eventFilter") [varP addr]
        [|Filter (Just $(varE addr))
                 (Just $ [Just topic0] <> indexedArgs)
-                Nothing
-                Nothing
+                Latest
+                Latest
        |]
      ]
 
@@ -243,15 +243,15 @@ mkEvent ev@(DEvent name inputs anonymous) = sequence
 -- | arg_name -> evArg_name
 -- | _argName -> evArgName
 -- | "" -> evi , for example Transfer(address, address uint256) ~> Transfer {transfer1 :: address, transfer2 :: address, transfer3 :: Integer}
-makeArgs :: T.Text -> [(T.Text, T.Text)] -> [(Name, T.Text)]
+makeArgs :: Text -> [(Text, Text)] -> [(Name, Text)]
 makeArgs prefix ns = go 1 ns
   where
     prefixStr = toLowerFirst . T.unpack $ prefix
-    go :: Int -> [(T.Text, T.Text)] -> [(Name, T.Text)]
+    go :: Int -> [(Text, Text)] -> [(Name, Text)]
     go i [] = []
     go i ((h, ty) : tail) = if T.null h
                         then (mkName $  prefixStr ++ show i, ty) : go (i + 1) tail
-                        else (mkName . (++) prefixStr . toUpperFirst . (\t -> if head t == '_' then drop 1 t else t) . T.unpack $ h, ty) : go (i + 1) tail
+                        else (mkName . (++ "_") . (++) prefixStr . toUpperFirst . T.unpack $ h, ty) : go (i + 1) tail
 
 -- | Method delcarations maker
 mkFun :: Declaration -> Q [Dec]

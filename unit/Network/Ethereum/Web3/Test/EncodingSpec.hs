@@ -1,24 +1,25 @@
+{-# LANGUAGE DataKinds        #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 module Network.Ethereum.Web3.Test.EncodingSpec where
 
-import qualified Data.ByteString.Base16 as BS16
-import Data.ByteString (ByteString)
-import Data.ByteArray (Bytes, convert)
-import qualified Data.Text as T
-import qualified Data.Text.Lazy as TL
-import qualified Data.Text.Encoding as T
-import Data.Text.Lazy.Builder (toLazyText)
-import Generics.SOP (Generic, Rep)
-import Data.Maybe (fromJust)
-import Network.Ethereum.Web3.Encoding
-import Network.Ethereum.Web3.Encoding.Vector
-import Network.Ethereum.Web3.Encoding.Int
-import Network.Ethereum.Web3.Encoding.Generic
-import Data.Monoid
-import Data.Sized
-import Network.Ethereum.Web3 hiding (convert)
-import Test.Hspec
+import           Data.ByteArray                         (Bytes, convert)
+import           Data.ByteString                        (ByteString)
+import qualified Data.ByteString.Base16                 as BS16
+import           Data.Maybe                             (fromJust)
+import           Data.Monoid
+import           Data.Sized
+import qualified Data.Text                              as T
+import qualified Data.Text.Encoding                     as T
+import qualified Data.Text.Lazy                         as TL
+import           Data.Text.Lazy.Builder                 (toLazyText)
+import           Generics.SOP                           (Generic, Rep)
+import           Network.Ethereum.Web3                  hiding (convert)
+import           Network.Ethereum.Web3.Encoding
+import           Network.Ethereum.Web3.Encoding.Generic
+import           Network.Ethereum.Web3.Encoding.Int
+import           Network.Ethereum.Web3.Encoding.Vector
+import           Test.Hspec
 
 
 spec :: Spec

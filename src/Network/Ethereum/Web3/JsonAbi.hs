@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- |
 -- Module      :  Network.Ethereum.Web3.JsonAbi

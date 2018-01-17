@@ -6,8 +6,10 @@ import           Data.Maybe                                (fromMaybe)
 import           Distribution.PackageDescription           (HookedBuildInfo, PackageDescription (testSuites),
                                                             TestSuite (..))
 import           Distribution.Simple
-import           Distribution.Simple.LocalBuildInfo        (ComponentName (..), LocalBuildInfo (..))
-import           Distribution.Simple.Setup                 (BuildFlags (..), fromFlag)
+import           Distribution.Simple.LocalBuildInfo        (ComponentName (..),
+                                                            LocalBuildInfo (..))
+import           Distribution.Simple.Setup                 (BuildFlags (..),
+                                                            fromFlag)
 import           Distribution.Simple.Utils
 import           Distribution.Verbosity                    (Verbosity)
 import           System.Directory                          (makeAbsolute)

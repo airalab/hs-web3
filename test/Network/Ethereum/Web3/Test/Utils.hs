@@ -1,12 +1,13 @@
+{-# LANGUAGE LambdaCase #-}
 module Network.Ethereum.Web3.Test.Utils
   ( injectExportedEnvironmentVariables
   , runWeb3Configured
+  , runWeb3Configured'
   , withAccounts
   , withPrimaryEthereumAccount
   , callFromTo
   , sleepSeconds
   , microtime
-  , takeMVarWithTimeout
   , awaitBlock
   ) where
 
@@ -21,9 +22,11 @@ import           Data.String                 (IsString, fromString)
 import qualified Data.Text                   as T
 import           Data.Time.Clock.POSIX       (getPOSIXTime)
 import           Data.Traversable            (for)
-import           Network.Ethereum.Web3       (Address, DefaultProvider, Provider (..), Web3, Web3Error, runWeb3')
+import           Network.Ethereum.Web3       (Address, DefaultProvider,
+                                              Provider (..), Web3, Web3Error,
+                                              runWeb3')
 import           Network.Ethereum.Web3.Eth   (accounts, blockNumber)
-import           Network.Ethereum.Web3.Types (Call (..))
+import           Network.Ethereum.Web3.Types (BlockNumber, Call (..))
 import           System.Environment          (lookupEnv, setEnv)
 import           Test.Hspec.Expectations     (shouldSatisfy)
 
@@ -64,6 +67,11 @@ runWeb3Configured f = do
     v `shouldSatisfy` isRight
     let Right a = v in return a
 
+runWeb3Configured' :: Web3 EnvironmentProvider a -> IO a
+runWeb3Configured' f = do
+    Right v <- runWeb3' f
+    return v
+
 withAccounts :: ([Address] -> IO a) -> IO a
 withAccounts f = runWeb3Configured accounts >>= f
 
@@ -83,24 +91,10 @@ sleepSeconds = threadDelay . (* 1000000)
 microtime :: IO Integer
 microtime = numerator . toRational . (* 1000000) <$> getPOSIXTime
 
-takeMVarWithTimeout :: Integer -> MVar a -> IO (Maybe a)
-takeMVarWithTimeout timeout mv = do
-    startTime <- microtime
-    go (startTime + timeout)
-
-    where go expires = tryTakeMVar mv >>= \case
-            Just x -> return (Just x)
-            Nothing -> do
-                now <- microtime
-                if now < expires
-                    then threadDelay 1000000 >> go expires
-                    else return Nothing
-
-awaitBlock :: Integer -> IO ()
+awaitBlock :: BlockNumber -> IO ()
 awaitBlock bn = do
     bn' <- runWeb3Configured blockNumber
-    let bn'' = read (T.unpack bn')
-    putStrLn $ "awaiting block " ++ show bn ++ ", currently " ++ show bn''
-    if bn'' >= bn
+    putStrLn $ "awaiting block " ++ show bn ++ ", currently " ++ show bn'
+    if bn' >= bn
         then return ()
         else threadDelay 1000000 >> awaitBlock bn
