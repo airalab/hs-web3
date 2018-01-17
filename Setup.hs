@@ -2,6 +2,7 @@
 
 import           Control.Monad                             (void, when)
 import           Data.List                                 (isSuffixOf)
+import           Data.Maybe                                (fromMaybe)
 import           Distribution.PackageDescription           (HookedBuildInfo, PackageDescription (testSuites),
                                                             TestSuite (..))
 import           Distribution.Simple
@@ -10,7 +11,7 @@ import           Distribution.Simple.Setup                 (BuildFlags (..), fro
 import           Distribution.Simple.Utils
 import           Distribution.Verbosity                    (Verbosity)
 import           System.Directory                          (makeAbsolute)
-import           System.Environment                        (getEnv, getEnvironment, setEnv)
+import           System.Environment                        (getEnvironment, lookupEnv, setEnv)
 
 #if MIN_VERSION_Cabal(2,0,0)
 
@@ -23,7 +24,7 @@ import           Distribution.Types.UnqualComponentName    (mkUnqualComponentNam
 
 buildingInCabal :: IO Bool
 buildingInCabal = do
-  parentProcess <- getEnv "_"
+  parentProcess <- fromMaybe "" <$> lookupEnv "_"
   return $ not ("stack" `isSuffixOf` parentProcess)
 
 -- note: this only works in cabal, stack doesn't seem to pass these?
