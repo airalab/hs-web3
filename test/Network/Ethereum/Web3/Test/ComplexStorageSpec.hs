@@ -20,6 +20,8 @@
 
 module Network.Ethereum.Web3.Test.ComplexStorageSpec where
 
+import           Control.Concurrent.Async         (wait)
+import           Control.Concurrent.MVar
 import           Control.Monad.IO.Class           (liftIO)
 import           Data.ByteArray                   (convert)
 import           Data.ByteString                  (ByteString)
@@ -59,9 +61,18 @@ complexStorageSpec = do
             sByte2sElem  = (BytesN (convert ("\x12\x34" :: ByteString)) :: BytesN 2)
             sByte2sVec = sByte2sElem :< sByte2sElem :< sByte2sElem :< sByte2sElem :< NilL
             sByte2s = [sByte2sVec, sByte2sVec]
-        it "can set the values of a ComplexStorage" $ \primaryAccount -> do
+
+        it "can set the values of a ComplexStorage and validate them with an event" $ \primaryAccount -> do
             contractAddress <- Prelude.fmap fromString . liftIO $ getEnv "COMPLEXSTORAGE_CONTRACT_ADDRESS"
             let theCall = callFromTo primaryAccount contractAddress
+                fltr    = eventFilter (Proxy :: Proxy ValsSet) contractAddress
+            -- kick off listening for the ValsSet event
+            vals <- newEmptyMVar
+            fiber <- runWeb3Configured' . forkWeb3 $
+                event fltr $ \(vs :: ValsSet) -> do
+                    liftIO $ putMVar vals vs
+                    pure TerminateEvent
+            -- kick off tx
             ret <- runWeb3Configured $ setValues theCall
                                                  sUint
                                                  sInt
@@ -72,14 +83,23 @@ complexStorageSpec = do
                                                  sString
                                                  sBytes16
                                                  sByte2s
-            True `shouldBe` True -- we need to et this far :)
+            -- wait for its ValsSet event
+            wait fiber
+            (ValsSet vsA vsB vsC vsD vsE vsF vsG vsH vsI) <- takeMVar vals
+            vsA `shouldBe` sUint
+            vsB `shouldBe` sInt
+            vsC `shouldBe` sBool
+            vsD `shouldBe` sInt224
+            vsE `shouldBe` sBools
+            vsF `shouldBe` sInts
+            vsG `shouldBe` sString
+            vsH `shouldBe` sBytes16
+            vsI `shouldBe` sByte2s
 
         it "can verify that it set the values correctly" $ \primaryAccount -> do
             contractAddress <- Prelude.fmap fromString . liftIO $ getEnv "COMPLEXSTORAGE_CONTRACT_ADDRESS"
             let theCall = callFromTo primaryAccount contractAddress
                 runGetterCall f = runWeb3Configured (f theCall)
-            -- gotta sleep for the block to get confirmed!
-            sleepSeconds 5
             -- there really has to be a better way to do this
             uintVal'    <- runGetterCall uintVal
             intVal'     <- runGetterCall intVal
