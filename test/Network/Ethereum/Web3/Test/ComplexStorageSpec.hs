@@ -65,10 +65,10 @@ complexStorageSpec = do
         it "can set the values of a ComplexStorage and validate them with an event" $ \primaryAccount -> do
             contractAddress <- Prelude.fmap fromString . liftIO $ getEnv "COMPLEXSTORAGE_CONTRACT_ADDRESS"
             let theCall = callFromTo primaryAccount contractAddress
-                fltr    = eventFilter (Proxy :: Proxy ValsSet) contractAddress
+                fltr    = eventFilter contractAddress
             -- kick off listening for the ValsSet event
             vals <- newEmptyMVar
-            fiber <- runWeb3Configured' . forkWeb3 $
+            fiber <- runWeb3Configured' $
                 event fltr $ \(vs :: ValsSet) -> do
                     liftIO $ putMVar vals vs
                     pure TerminateEvent

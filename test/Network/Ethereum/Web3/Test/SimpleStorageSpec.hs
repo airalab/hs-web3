@@ -32,7 +32,6 @@ import           Data.Foldable                    (forM_)
 import           Data.List                        (sort)
 import           Data.Maybe
 import           Data.Monoid
-import           Data.Proxy
 import           Data.String                      (fromString)
 import qualified Data.Text                        as T
 import           Data.Traversable                 (for)
