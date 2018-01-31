@@ -3,7 +3,7 @@
 
 module Network.Ethereum.Web3.Test.EncodingSpec where
 
-import           Data.ByteArray                         (Bytes, convert)
+import qualified Data.ByteArray                         as BA
 import           Data.ByteString                        (ByteString)
 import qualified Data.ByteString.Base16                 as BS16
 import           Data.Maybe                             (fromJust)
@@ -64,13 +64,13 @@ bytesDTest = do
     describe "bytesD tests" $ do
 
       it "can encode short bytesD" $ do
-         let decoded = BytesD . bytesDecode $ "c3a40000c3a4"
+         let decoded = Bytes . bytesDecode $ "c3a40000c3a4"
          let encoded = "0000000000000000000000000000000000000000000000000000000000000006"
                     <> "c3a40000c3a40000000000000000000000000000000000000000000000000000"
          roundTrip decoded encoded
 
       it "can encode long bytesD" $ do
-         let decoded = BytesD . bytesDecode $
+         let decoded = Bytes . bytesDecode $
                             "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
                          <> "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
                          <> "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
@@ -212,8 +212,8 @@ tuplesTest =
       roundTripGeneric decoded encoded
 
 -- utils
-bytesDecode :: T.Text -> Bytes
-bytesDecode = convert . fst . BS16.decode . T.encodeUtf8
+bytesDecode :: T.Text -> BA.Bytes
+bytesDecode = BA.convert . fst . BS16.decode . T.encodeUtf8
 
 roundTrip :: ( Show a
              , Eq a

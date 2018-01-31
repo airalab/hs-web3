@@ -31,7 +31,6 @@ module Network.Ethereum.Web3.TH (
     abi
   , abiFrom
   -- ** Used by TH data types
-  , Bytes
   , Text
   , Singleton(..)
   , IndexedEvent(..)
@@ -65,7 +64,7 @@ import           Network.Ethereum.Web3.Types
 import           Control.Monad                          (replicateM)
 
 import           Data.Aeson
-import           Data.ByteArray                         (Bytes)
+import qualified Data.ByteArray                         as BA
 import           Data.List                              (groupBy, sortBy)
 import           Data.Monoid                            (mconcat, (<>))
 import           Data.Text                              (Text, isPrefixOf)
@@ -118,7 +117,7 @@ toHSType s = case s of
     SolidityInt n       -> appT (conT (mkName "IntN")) (numLit n)
     SolidityString      ->  conT (mkName "Text")
     SolidityBytesN n    -> appT (conT (mkName "BytesN")) (numLit n)
-    SolidityBytesD      ->  conT (mkName "BytesD")
+    SolidityBytes       ->  conT (mkName "Bytes")
     SolidityVector ns a -> expandVector ns a
     SolidityArray a     -> appT listT $ toHSType a
   where

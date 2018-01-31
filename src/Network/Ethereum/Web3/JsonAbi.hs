@@ -159,7 +159,7 @@ data SolidityType =
   | SolidityInt Int
   | SolidityString
   | SolidityBytesN Int
-  | SolidityBytesD
+  | SolidityBytes
   | SolidityVector [Int] SolidityType
   | SolidityArray SolidityType
     deriving (Eq, Show)
@@ -189,7 +189,7 @@ parseBytes :: Parser SolidityType
 parseBytes = do
   _ <- string "bytes"
   mn <- optionMaybe numberParser
-  pure $ maybe SolidityBytesD SolidityBytesN  mn
+  pure $ maybe SolidityBytes SolidityBytesN mn
 
 parseAddress :: Parser SolidityType
 parseAddress = string "address" >> pure SolidityAddress

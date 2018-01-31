@@ -37,7 +37,7 @@ module Network.Ethereum.Web3 (
   , nopay
   -- ** Ethereum data types
   , BytesN(..)
-  , BytesD(..)
+  , Bytes(..)
   , IntN(..)
   , intNFromInteger
   , UIntN(..)
