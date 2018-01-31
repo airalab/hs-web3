@@ -63,7 +63,6 @@ library
                      , cryptonite
                      , data-default
                      , generics-sop
-                     , http-client-tls
                      , http-client
                      , machines
                      , mtl

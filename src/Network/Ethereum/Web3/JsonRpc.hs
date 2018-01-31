@@ -29,10 +29,11 @@ import           Data.ByteString.Lazy           (ByteString)
 import           Data.Text                      (Text)
 import           Data.Vector                    (fromList)
 import           Network.HTTP.Client            (RequestBody (RequestBodyLBS),
+                                                 defaultManagerSettings,
                                                  httpLbs, method, newManager,
                                                  parseRequest, requestBody,
                                                  requestHeaders, responseBody)
-import           Network.HTTP.Client.TLS        (tlsManagerSettings)
+
 
 -- | Name of called method.
 type MethodName = Text
@@ -47,7 +48,7 @@ remote n = remote_ (\uri -> call uri . Array . fromList)
   where
     call uri = connection uri . encode . Request n 1
     connection uri body = do
-        manager <- newManager tlsManagerSettings
+        manager <- newManager defaultManagerSettings
         request <- parseRequest uri
         let request' = request
                      { requestBody = RequestBodyLBS body
