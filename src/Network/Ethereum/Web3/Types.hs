@@ -226,7 +226,7 @@ $(deriveJSON (defaultOptions
 
 -- | Block information
 data Block = Block
-  { blockBlockNumber      :: !BlockNumber
+  { blockNumber           :: !BlockNumber
   -- ^ QUANTITY - the block number. null when its pending block.
   , blockHash             :: !Text
   -- ^ DATA, 32 Bytes - hash of the block. null when its pending block.
