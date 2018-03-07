@@ -105,6 +105,20 @@ instance ToJSON BlockNumber where
         let hexValue = B.toLazyText (B.hexadecimal x)
         in  toJSON ("0x" <> hexValue)
 
+
+data SyncActive = SyncActive { syncStartingBlock :: BlockNumber
+                             , syncCurrentBlock  :: BlockNumber
+                             , syncHighestBlock  :: BlockNumber
+                             } deriving (Eq, Generic, Show)
+$(deriveJSON (defaultOptions { fieldLabelModifier = toLowerFirst . drop 4 }) ''SyncActive)
+
+data SyncingState = Syncing SyncActive | NotSyncing deriving (Eq, Generic, Show)
+
+instance FromJSON SyncingState where
+    parseJSON (Bool _) = pure NotSyncing
+    parseJSON v = Syncing <$> parseJSON v
+
+
 -- | Event filter identifier
 newtype FilterId = FilterId Integer
   deriving (Show, Eq, Ord, Generic)
