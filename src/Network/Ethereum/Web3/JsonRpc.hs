@@ -24,36 +24,35 @@ import           Network.Ethereum.Web3.Types
 import           Control.Applicative            ((<|>))
 import           Control.Exception              (throwIO)
 import           Control.Monad                  ((>=>))
+import           Control.Monad.IO.Class         (liftIO)
+import           Control.Monad.Trans.Reader     (ReaderT, ask)
 import           Data.Aeson
 import           Data.ByteString.Lazy           (ByteString)
 import           Data.Text                      (Text)
 import           Data.Vector                    (fromList)
-import           Network.HTTP.Client            (RequestBody (RequestBodyLBS),
-                                                 httpLbs, method, newManager,
-                                                 parseRequest, requestBody,
-                                                 requestHeaders, responseBody)
-import           Network.HTTP.Client.TLS        (tlsManagerSettings)
+import           Network.HTTP.Client            (Manager,
+                                                 RequestBody (RequestBodyLBS),
+                                                 httpLbs, method, parseRequest,
+                                                 requestBody, requestHeaders,
+                                                 responseBody)
 
 -- | Name of called method.
 type MethodName = Text
 
--- | JSON-RPC server URI
-type ServerUri  = String
-
 -- | Remote call of JSON-RPC method.
 -- Arguments of function are stored into @params@ request array.
 remote :: Remote a => MethodName -> a
-remote n = remote_ (\uri -> call uri . Array . fromList)
+remote n = remote_ (call . Array . fromList)
   where
-    call uri = connection uri . encode . Request n 1
-    connection uri body = do
-        manager <- newManager tlsManagerSettings
+    call = connection . encode . Request n 1
+    connection body = do
+        (uri, manager) <- ask
         request <- parseRequest uri
         let request' = request
                      { requestBody = RequestBodyLBS body
                      , requestHeaders = [("Content-Type", "application/json")]
                      , method = "POST" }
-        responseBody <$> httpLbs request' manager
+        liftIO $ responseBody <$> httpLbs request' manager
 
 decodeResponse :: FromJSON a => ByteString -> IO a
 decodeResponse = tryParse . eitherDecode
@@ -65,13 +64,13 @@ decodeResponse = tryParse . eitherDecode
         tryParse = either (throwIO . ParserFail) return
 
 class Remote a where
-    remote_ :: (ServerUri -> [Value] -> IO ByteString) -> a
+    remote_ :: ([Value] -> ReaderT (ServerUri, Manager) IO ByteString) -> a
 
 instance (ToJSON a, Remote b) => Remote (a -> b) where
-    remote_ f x = remote_ (\u xs -> f u (toJSON x : xs))
+    remote_ f x = remote_ (\xs -> f (toJSON x : xs))
 
-instance (Provider p, FromJSON a) => Remote (Web3 p a) where
-    remote_ f = (\u -> Web3 (decodeResponse =<< f u [])) =<< rpcUri
+instance FromJSON a => Remote (Web3 a) where
+    remote_ f = Web3 ((liftIO . decodeResponse) =<< f [])
 
 -- | JSON-RPC request.
 data Request = Request { rqMethod :: !Text

@@ -17,6 +17,7 @@ module Network.Ethereum.Web3.Types where
 
 import           Control.Exception                       (Exception)
 import           Control.Monad.IO.Class                  (MonadIO)
+import           Control.Monad.Trans.Reader              (ReaderT)
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Default
@@ -31,10 +32,15 @@ import           GHC.Generics
 import           Network.Ethereum.Unit
 import           Network.Ethereum.Web3.Address           (Address, zero)
 import           Network.Ethereum.Web3.Encoding.Internal (toQuantityHexText)
-import           Network.Ethereum.Web3.Internal          (toLowerFirst)
+import           Network.Ethereum.Web3.Internal
+import           Network.HTTP.Client                     (Manager)
+
+
+-- | JSON-RPC server URI
+type ServerUri  = String
 
 -- | Any communication with Ethereum node wrapped with 'Web3' monad
-newtype Web3 a b = Web3 { unWeb3 :: IO b }
+newtype Web3 a = Web3 { unWeb3 :: ReaderT (ServerUri, Manager) IO a }
   deriving (Functor, Applicative, Monad, MonadIO)
 
 -- | Some peace of error response
@@ -48,6 +54,15 @@ data Web3Error
   deriving (Typeable, Show, Eq, Generic)
 
 instance Exception Web3Error
+
+--TODO: Change to `HttpProvider ServerUri | IpcProvider FilePath` to support IPC
+-- | Web3 Provider
+data Provider = HttpProvider ServerUri
+  deriving (Show, Eq, Generic)
+
+instance Default Provider where
+    def = HttpProvider "http://localhost:8545"
+
 
 -- | JSON-RPC error message
 data RpcError = RpcError
@@ -116,7 +131,7 @@ data SyncingState = Syncing SyncActive | NotSyncing deriving (Eq, Generic, Show)
 
 instance FromJSON SyncingState where
     parseJSON (Bool _) = pure NotSyncing
-    parseJSON v = Syncing <$> parseJSON v
+    parseJSON v        = Syncing <$> parseJSON v
 
 
 -- | Event filter identifier

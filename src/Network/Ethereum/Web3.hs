@@ -18,8 +18,6 @@
 module Network.Ethereum.Web3 (
   -- ** Web3 monad and service provider
     Web3
-  , Provider(..)
-  , DefaultProvider
   , Web3Error(..)
   , forkWeb3
   , runWeb3'

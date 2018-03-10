@@ -186,7 +186,7 @@ funWrapper c name dname args result = do
 
     sequence $ if c
         then
-          [ sigD name $ [t|Provider $p =>
+          [ sigD name $ [t|
                             $(arrowing $ [t|Call|] : inputT ++ [outputT])
                           |]
           , funD' name (varP <$> a : vars) $
@@ -196,21 +196,20 @@ funWrapper c name dname args result = do
           ]
 
         else
-          [ sigD name $ [t|(Provider $p) =>
-                            $(arrowing $ [t|Call|] : inputT ++ [[t|Web3 $p TxHash|]])
+          [ sigD name $ [t|
+                            $(arrowing $ [t|Call|] : inputT ++ [[t|Web3 TxHash|]])
                           |]
           , funD' name (varP <$> a : vars) $
                 [|sendTx $(varE a) $(params)|] ]
   where
-    p = varT (mkName "p")
     arrowing [x]      = x
     arrowing (x : xs) = [t|$x -> $(arrowing xs)|]
     inputT  = fmap (typeQ . funArgType) args
     outputT = case result of
-        Nothing  -> [t|Web3 $p ()|]
-        Just [x] -> [t|Web3 $p $(typeQ $ funArgType x)|]
+        Nothing  -> [t|Web3 ()|]
+        Just [x] -> [t|Web3 $(typeQ $ funArgType x)|]
         Just xs  -> let outs = fmap (typeQ . funArgType) xs
-                    in  [t|Web3 $p $(foldl appT (tupleT (length xs)) outs)|]
+                    in  [t|Web3 $(foldl appT (tupleT (length xs)) outs)|]
 
 mkEvent :: Declaration -> Q [Dec]
 mkEvent ev@(DEvent name inputs anonymous) = sequence

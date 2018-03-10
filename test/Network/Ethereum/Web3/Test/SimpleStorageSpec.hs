@@ -173,12 +173,11 @@ events = describe "can interact with a SimpleStorage contract across block inter
         vals <- takeMVar var'
         sort (unCountSet <$> vals) `shouldBe` sort theSets
 
-processUntil :: (Provider provider)
-             => MVar [CountSet]
+processUntil :: MVar [CountSet]
              -> Filter CountSet
              -> ([CountSet] -> Bool) -- TODO: make it work for any event
-             -> (Change -> Web3 provider ())
-             -> Web3 provider ()
+             -> (Change -> Web3 ())
+             -> Web3 ()
 processUntil var filter predicate action = do
   event' filter $ \(ev :: CountSet) -> do
     newV <- liftIO $ modifyMVar var $ \v -> return (ev:v, ev:v)
@@ -189,11 +188,10 @@ processUntil var filter predicate action = do
           return TerminateEvent
         else return ContinueEvent
 
-processUntil' :: (Provider provider)
-              => MVar [CountSet]
+processUntil' :: MVar [CountSet]
               -> Filter CountSet
               -> ([CountSet] -> Bool)
-              -> Web3 provider ()
+              -> Web3 ()
 processUntil' var filter predicate = processUntil var filter predicate (const $ return ())
 
 setValues :: Call -> [UIntN 256] -> IO ()
