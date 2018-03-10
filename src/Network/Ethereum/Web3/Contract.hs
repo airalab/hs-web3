@@ -97,24 +97,22 @@ class Event e where
 
 -- | run 'event\'' one block at a time.
 event :: forall p i ni e .
-         ( Provider p
-         , DecodeEvent i ni e
+         ( DecodeEvent i ni e
          , Event e
          )
       => Filter e
-      -> (e -> ReaderT Change (Web3 p) EventAction)
-      -> Web3 p (Async ())
+      -> (e -> ReaderT Change Web3  EventAction)
+      -> Web3 (Async ())
 event fltr handler = forkWeb3 $ event' fltr handler
 
 -- | same as event, but does not immediately spawn a new thread.
 event' :: forall p i ni e .
-          ( Provider p
-          , DecodeEvent i ni e
+          ( DecodeEvent i ni e
           , Event e
           )
        => Filter e
-       -> (e -> ReaderT Change (Web3 p) EventAction)
-       -> Web3 p ()
+       -> (e -> ReaderT Change Web3 EventAction)
+       -> Web3 ()
 event' fltr handler = eventMany' fltr 0 handler
 
 -- | 'event\'' take s a filter, a window size, and a handler. It runs the handler
@@ -122,14 +120,13 @@ event' fltr handler = eventMany' fltr 0 handler
 -- | 'TerminateEvent' action is thrown and the toBlock is not yet reached,
 -- | it then transitions to polling.
 eventMany' :: forall p i ni e .
-           ( Provider p
-           , DecodeEvent i ni e
+           ( DecodeEvent i ni e
            , Event e
            )
        => Filter e
        -> Integer
-       -> (e -> ReaderT Change (Web3 p) EventAction)
-       -> Web3 p ()
+       -> (e -> ReaderT Change Web3 EventAction)
+       -> Web3 ()
 eventMany' fltr window handler = do
     start <- mkBlockNumber $ filterFromBlock fltr
     let initState = FilterStreamState { fssCurrentBlock = start
@@ -183,28 +180,26 @@ data FilterChange a = FilterChange { filterChangeRawChange :: Change
 -- | 'playLogs' streams the 'filterStream' and calls eth_getLogs on these
 -- | 'Filter' objects.
 playLogs :: forall p k i ni e.
-            ( Provider p
-            , DecodeEvent i ni e
+            ( DecodeEvent i ni e
             , Event e
             )
          => FilterStreamState e
-         -> MachineT (Web3 p) k [FilterChange e]
+         -> MachineT Web3 k [FilterChange e]
 playLogs s = filterStream s
           ~> autoM Eth.getLogs
           ~> mapping mkFilterChanges
 
 -- | polls a filter from the given filterId until the target toBlock is reached.
 pollFilter :: forall p i ni e s k.
-              ( Provider p
-              , DecodeEvent i ni e
+              ( DecodeEvent i ni e
               , Event e
               )
            => FilterId
            -> DefaultBlock
-           -> MachineT (Web3 p) k [FilterChange e]
+           -> MachineT Web3 k [FilterChange e]
 pollFilter fid end = construct $ pollPlan fid end
   where
-    pollPlan :: FilterId -> DefaultBlock -> PlanT k [FilterChange e] (Web3 p) ()
+    pollPlan :: FilterId -> DefaultBlock -> PlanT k [FilterChange e] Web3 ()
     pollPlan fid end = do
       bn <- lift $ Eth.blockNumber
       if BlockWithNumber bn > end
@@ -241,12 +236,11 @@ data FilterStreamState e =
 -- | which cover this filter in intervals of size `windowSize`. The machine
 -- | halts whenever the `fromBlock` of a spanning filter either (1) excedes the
 -- | initial filter's `toBlock` or (2) is greater than the chain head's `BlockNumber`.
-filterStream :: Provider p
-             => FilterStreamState e
-             -> MachineT (Web3 p) k (Filter e)
+filterStream :: FilterStreamState e
+             -> MachineT Web3 k (Filter e)
 filterStream initialPlan = unfoldPlan initialPlan filterPlan
   where
-    filterPlan :: Provider p => FilterStreamState e -> PlanT k (Filter e) (Web3 p) (FilterStreamState e)
+    filterPlan :: FilterStreamState e -> PlanT k (Filter e) Web3 (FilterStreamState e)
     filterPlan initialState@FilterStreamState{..} = do
       end <- lift . mkBlockNumber $ filterToBlock fssInitialFilter
       if fssCurrentBlock > end
@@ -264,7 +258,7 @@ filterStream initialPlan = unfoldPlan initialPlan filterPlan
     newTo upper (BlockNumber current) window = min upper . BlockNumber $ current + window
 
 -- | Coerce a 'DefaultBlock' into a numerical block number.
-mkBlockNumber :: Provider p => DefaultBlock -> Web3 p BlockNumber
+mkBlockNumber :: DefaultBlock -> Web3 BlockNumber
 mkBlockNumber bm = case bm of
   BlockWithNumber bn -> return bn
   Earliest           -> return 0
@@ -280,14 +274,13 @@ class Method a where
 -- | 'sendTx' is used to submit a state changing transaction.
 sendTx :: ( Generic a
           , GenericABIEncode (Rep a)
-          , Provider p
           , Method a
           )
        => Call
        -- ^ Call configuration
        -> a
        -- ^ method data
-       -> Web3 p TxHash
+       -> Web3 TxHash
 sendTx call (dat :: a) =
   let sel = selector (Proxy :: Proxy a)
   in Eth.sendTransaction (call { callData = Just $ sel <> genericToData dat })
@@ -298,7 +291,6 @@ call :: ( Generic a
         , GenericABIEncode (Rep a)
         , Generic b
         , GenericABIDecode (Rep b)
-        , Provider p
         , Method a
         )
      => Call
@@ -307,7 +299,7 @@ call :: ( Generic a
      -- ^ State mode for constant call (latest or pending)
      -> a
      -- ^ Method data
-     -> Web3 p b
+     -> Web3 b
      -- ^ 'Web3' wrapped result
 call call mode (dat :: a) = do
     let sel = selector (Proxy :: Proxy a)

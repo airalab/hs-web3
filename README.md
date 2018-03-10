@@ -24,7 +24,7 @@ This is the Ethereum compatible Haskell API which implements the [Generic JSON R
 Any Ethereum node communication wrapped with `Web3` monadic type.
 
     > :t web3_clientVersion
-    web3_clientVersion :: Provider a => Web3 a Text
+    web3_clientVersion :: Web3 Text
 
 To run this computation used `runWeb3'` or `runWeb3` functions.
 

@@ -17,11 +17,11 @@ import           Network.Ethereum.Web3.Provider
 import           Network.Ethereum.Web3.Types
 
 -- | Returns current node version string.
-clientVersion :: Provider a => Web3 a Text
+clientVersion :: Web3 Text
 {-# INLINE clientVersion #-}
 clientVersion = remote "web3_clientVersion"
 
 -- | Returns Keccak-256 (not the standardized SHA3-256) of the given data.
-sha3 :: Provider a => Text -> Web3 a Text
+sha3 :: Text -> Web3 Text
 {-# INLINE sha3 #-}
 sha3 = remote "web3_sha3"
