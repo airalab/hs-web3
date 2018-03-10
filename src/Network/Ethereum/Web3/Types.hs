@@ -55,6 +55,15 @@ data Web3Error
 
 instance Exception Web3Error
 
+--TODO: Change to `HttpProvider ServerUri | IpcProvider FilePath` to support IPC
+-- | Web3 Provider
+data Provider = HttpProvider ServerUri
+  deriving (Show, Eq, Generic)
+
+instance Default Provider where
+    def = HttpProvider "http://localhost:8545"
+
+
 -- | JSON-RPC error message
 data RpcError = RpcError
   { errCode    :: !Int

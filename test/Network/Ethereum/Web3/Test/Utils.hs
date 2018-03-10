@@ -25,7 +25,8 @@ import           Data.Traversable            (for)
 import           Network.Ethereum.Web3       (Address, Web3, Web3Error,
                                               runWeb3')
 import           Network.Ethereum.Web3.Eth   (accounts, blockNumber)
-import           Network.Ethereum.Web3.Types (BlockNumber, Call (..))
+import           Network.Ethereum.Web3.Types (BlockNumber, Call (..),
+                                              Provider (..))
 import           System.Environment          (lookupEnv, setEnv)
 import           Test.Hspec.Expectations     (shouldSatisfy)
 
@@ -60,15 +61,15 @@ injectExportedEnvironmentVariables = do
 
 runWeb3Configured :: Show a => Web3 a -> IO a
 runWeb3Configured f = do
-    uri <- rpcUri
-    v <- runWeb3' uri f
+    provider <- HttpProvider <$> rpcUri
+    v <- runWeb3' provider f
     v `shouldSatisfy` isRight
     let Right a = v in return a
 
 runWeb3Configured' :: Web3 a -> IO a
 runWeb3Configured' f = do
-    uri <- rpcUri
-    Right v <- runWeb3' uri f
+    provider <- HttpProvider <$> rpcUri
+    Right v <- runWeb3' provider f
     return v
 
 withAccounts :: ([Address] -> IO a) -> IO a
