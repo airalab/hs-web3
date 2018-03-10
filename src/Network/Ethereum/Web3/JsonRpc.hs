@@ -24,7 +24,7 @@ import           Network.Ethereum.Web3.Types
 import           Control.Applicative            ((<|>))
 import           Control.Exception              (throwIO)
 import           Control.Monad                  ((>=>))
-import           Control.Monad.IO.Class           (liftIO)
+import           Control.Monad.IO.Class         (liftIO)
 import           Control.Monad.Trans.Reader     (ReaderT, ask)
 import           Data.Aeson
 import           Data.ByteString.Lazy           (ByteString)
@@ -32,10 +32,9 @@ import           Data.Text                      (Text)
 import           Data.Vector                    (fromList)
 import           Network.HTTP.Client            (Manager,
                                                  RequestBody (RequestBodyLBS),
-                                                 httpLbs, method, newManager,
-                                                 parseRequest, requestBody,
-                                                 requestHeaders, responseBody)
-import           Network.HTTP.Client.TLS        (tlsManagerSettings)
+                                                 httpLbs, method, parseRequest,
+                                                 requestBody, requestHeaders,
+                                                 responseBody)
 
 -- | Name of called method.
 type MethodName = Text
@@ -71,7 +70,7 @@ instance (ToJSON a, Remote b) => Remote (a -> b) where
     remote_ f x = remote_ (\xs -> f (toJSON x : xs))
 
 instance FromJSON a => Remote (Web3 a) where
-    remote_ f = Web3 ((liftIO . decodeResponse) =<< f []) 
+    remote_ f = Web3 ((liftIO . decodeResponse) =<< f [])
 
 -- | JSON-RPC request.
 data Request = Request { rqMethod :: !Text
