@@ -17,15 +17,21 @@ import           Control.Monad.IO.Class      (MonadIO (..))
 import           Control.Monad.Trans.Reader  (mapReaderT, runReaderT)
 import           Data.Default (def)
 import           Network.Ethereum.Web3.Types
-import           Network.HTTP.Client         (newManager)
+import           Network.HTTP.Client         (newManager, Manager)
 import           Network.HTTP.Client.TLS     (tlsManagerSettings)
+
+-- | 'Web3' monad runner, using the supplied Manager
+runWeb3With :: MonadIO m => Manager -> Provider -> Web3 a -> m (Either Web3Error a)
+{-# INLINE runWeb3With #-}
+runWeb3With manager (HttpProvider uri) f =
+    liftIO . try .  flip runReaderT (uri, manager) . unWeb3 $ f
 
 -- | 'Web3' monad runner
 runWeb3' :: MonadIO m => Provider -> Web3 a -> m (Either Web3Error a)
 {-# INLINE runWeb3' #-}
-runWeb3' (HttpProvider uri) f = do
+runWeb3' provider f = do
     manager <- liftIO $ newManager tlsManagerSettings
-    liftIO . try .  flip runReaderT (uri, manager) . unWeb3 $ f
+    runWeb3With manager provider f
 
 -- | 'Web3' runner for default provider
 runWeb3 :: MonadIO m => Web3 a -> m (Either Web3Error a)
