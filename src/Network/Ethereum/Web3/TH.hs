@@ -37,6 +37,8 @@ module Network.Ethereum.Web3.TH (
   , IndexedEvent(..)
   , Tagged
   , module Generics.SOP
+  , mkDecl
+  , escape
   ) where
 
 import           Control.Monad                          ((<=<))
