@@ -27,6 +27,6 @@ listening :: Web3 Bool
 listening = remote "net_listening"
 
 -- | Returns number of peers currently connected to the client.
-peerCount :: Web3 Text
+peerCount :: Web3 Quantity
 {-# INLINE peerCount #-}
 peerCount = remote "net_peerCount"

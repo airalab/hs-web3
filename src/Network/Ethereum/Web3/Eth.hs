@@ -38,7 +38,7 @@ mining :: Web3 Bool
 mining = remote "eth_mining"
 
 -- | Returns the number of hashes per second that the node is mining with.
-hashrate :: Web3 Text
+hashrate :: Web3 Quantity
 {-# INLINE hashrate #-}
 hashrate = remote "eth_hashrate"
 
@@ -48,30 +48,30 @@ getStorageAt :: Address -> Text -> DefaultBlock -> Web3 Text
 getStorageAt = remote "eth_getStorageAt"
 
 -- | Returns the number of transactions sent from an address.
-getTransactionCount :: Address -> DefaultBlock -> Web3 Text
+getTransactionCount :: Address -> DefaultBlock -> Web3 Quantity
 {-# INLINE getTransactionCount #-}
 getTransactionCount = remote "eth_getTransactionCount"
 
 -- | Returns the number of transactions in a block from a block matching the given block hash.
-getBlockTransactionCountByHash :: Text -> Web3 Text
+getBlockTransactionCountByHash :: Text -> Web3 Quantity
 {-# INLINE getBlockTransactionCountByHash #-}
 getBlockTransactionCountByHash = remote "eth_getBlockTransactionCountByHash"
 
 -- | Returns the number of transactions in a block matching the
 -- given block number.
-getBlockTransactionCountByNumber :: Text -> Web3 Text
+getBlockTransactionCountByNumber :: Text -> Web3 Quantity
 {-# INLINE getBlockTransactionCountByNumber #-}
 getBlockTransactionCountByNumber = remote "eth_getBlockTransactionCountByNumber"
 
 -- | Returns the number of uncles in a block from a block matching the given
 -- block hash.
-getUncleCountByBlockHash :: Text -> Web3 Text
+getUncleCountByBlockHash :: Text -> Web3 Quantity
 {-# INLINE getUncleCountByBlockHash #-}
 getUncleCountByBlockHash = remote "eth_getUncleCountByBlockHash"
 
 -- | Returns the number of uncles in a block from a block matching the given
 -- block number.
-getUncleCountByBlockNumber :: Text -> Web3 Text
+getUncleCountByBlockNumber :: Text -> Web3 Quantity
 {-# INLINE getUncleCountByBlockNumber #-}
 getUncleCountByBlockNumber = remote "eth_getUncleCountByBlockNumber"
 
@@ -99,7 +99,7 @@ sendRawTransaction :: Text -> Web3 Text
 sendRawTransaction = remote "eth_sendRawTransaction"
 
 -- | Returns the balance of the account of given address.
-getBalance :: Address -> DefaultBlock -> Web3 Text
+getBalance :: Address -> DefaultBlock -> Web3 Quantity
 {-# INLINE getBalance #-}
 getBalance = remote "eth_getBalance"
 
@@ -135,7 +135,7 @@ call = remote "eth_call"
 
 -- | Makes a call or transaction, which won't be added to the blockchain and
 -- returns the used gas, which can be used for estimating the used gas.
-estimateGas :: Call -> Web3 Text
+estimateGas :: Call -> Web3 Quantity
 {-# INLINE estimateGas #-}
 estimateGas = remote "eth_estimateGas"
 
@@ -191,7 +191,7 @@ blockNumber :: Web3 BlockNumber
 blockNumber = remote "eth_blockNumber"
 
 -- | Returns the current price per gas in wei.
-gasPrice :: Web3 Text
+gasPrice :: Web3 Quantity
 {-# INLINE gasPrice #-}
 gasPrice = remote "eth_gasPrice"
 

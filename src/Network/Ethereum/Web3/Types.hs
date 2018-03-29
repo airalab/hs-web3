@@ -92,7 +92,12 @@ instance ToJSON Quantity where
     toJSON = String . toQuantityHexText
 
 instance FromJSON Quantity where
-    parseJSON = undefined
+    parseJSON (String v) =
+        case R.hexadecimal v of
+            Right (x, "") -> return (Quantity x)
+            _             -> fail "Unable to parse Quantity"
+    parseJSON _ = fail "Quantity may only be parsed from a JSON String"
+
 
 instance Fractional Quantity where
     (/) a b = Quantity $ div (unQuantity a) (unQuantity b)
