@@ -166,7 +166,7 @@ getTransactionByBlockNumberAndIndex :: DefaultBlock -> Text -> Web3 (Maybe Trans
 getTransactionByBlockNumberAndIndex = remote "eth_getTransactionByBlockNumberAndIndex"
 
 -- | Returns the receipt of a transaction by transaction hash.
-getTransactionReceipt :: Text -> Web3 TxReceipt
+getTransactionReceipt :: TxHash -> Web3 (Maybe TxReceipt)
 {-# INLINE getTransactionReceipt #-}
 getTransactionReceipt = remote "eth_getTransactionReceipt"
 
