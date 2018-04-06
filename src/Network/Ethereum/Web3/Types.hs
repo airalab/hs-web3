@@ -229,6 +229,35 @@ instance Ord DefaultBlock where
 -- | Transaction hash text string
 type TxHash = Text
 
+
+-- | The Receipt of a Transaction
+data TxReceipt = TxReceipt
+  { receiptTransactionHash     :: !TxHash
+  -- ^ DATA, 32 Bytes - hash of the transaction.
+  , receiptTransactionIndex    :: !Text
+  -- ^ QUANTITY - index of the transaction.
+  , receiptBlockHash           :: !Text
+  -- ^ DATA, 32 Bytes - hash of the block where this transaction was in. null when its pending.
+  , receiptBlockNumber         :: !BlockNumber
+  -- ^ QUANTITY - block number where this transaction was in.
+  , receiptCumulativeGasUsed   :: !Text
+  -- ^ QUANTITY - The total amount of gas used when this transaction was executed in the block.
+  , receiptGasUsed             :: !Text
+  -- ^ QUANTITY - The amount of gas used by this specific transaction alone.
+  , receiptContractAddress     :: !(Maybe Text)
+  -- ^ DATA, 20 Bytes - The contract address created, if the transaction was a contract creation, otherwise null.
+  , receiptLogs                :: ![Value]
+  -- ^ Array - Array of log objects, which this transaction generated.
+  , receiptLogsBloom           :: !Text
+  -- ^ DATA, 256 Bytes - Bloom filter for light clients to quickly retrieve related logs.
+  , receiptStatus              :: !Text
+  -- ^ QUANTITY either 1 (success) or 0 (failure)
+  } deriving (Show, Generic)
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 7 }) ''TxReceipt)
+
+
 -- | Transaction information
 data Transaction = Transaction
   { txHash             :: !TxHash
