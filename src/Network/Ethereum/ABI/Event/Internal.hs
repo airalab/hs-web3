@@ -10,20 +10,22 @@
 {-# LANGUAGE TypeInType             #-}
 {-# LANGUAGE TypeOperators          #-}
 {-# LANGUAGE UndecidableInstances   #-}
+
 -- |
--- Module      :  Network.Ethereum.Web3.Encoding.Event.Internal
--- Copyright   :  Alexander Krupenkin 2016
+-- Module      :  Network.Ethereum.ABI.Event.Internal
+-- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
 -- Stability   :  experimental
--- Portability :  portable
+-- Portability :  unportable
 --
 -- This module is internal, the purpose is to define helper classes and types
 -- to assist in event decoding. The user of this library should have no need to use
 -- this directly in application code.
 --
-module Network.Ethereum.Web3.Encoding.Event.Internal where
+
+module Network.Ethereum.ABI.Event.Internal where
 
 import           Data.Kind
 import           Data.Proxy   (Proxy (..))

@@ -3,17 +3,17 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE QuasiQuotes      #-}
 {-# LANGUAGE TemplateHaskell  #-}
+
 -- |
--- Module      :  Network.Ethereum.Web3.TH
--- Copyright   :  Alexander Krupenkin 2016
+-- Module      :  Network.Ethereum.Contract.TH
+-- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
 -- Stability   :  experimental
 -- Portability :  unportable
 --
--- TemplateHaskell based Ethereum contract ABI
--- methods & event generator for Haskell native API.
+-- TemplateHaskell based generator for Ethereum contract ABI.
 --
 -- @
 -- [abiFrom|data/sample.json|]
@@ -26,55 +26,53 @@
 --   where wait = threadDelay 1000000 >> wait
 -- @
 --
-module Network.Ethereum.Web3.TH (
-  -- ** Quasiquoter's
+
+module Network.Ethereum.Contract.TH (
+
+  -- * Quasiquoter's
     abi
   , abiFrom
-  -- ** Used by TH data types
+
+  -- * Used by TH data types
   , Text
   , Singleton(..)
   , IndexedEvent(..)
   , Tagged
   , module Generics.SOP
+
   ) where
 
-import           Control.Monad                          ((<=<))
-import           Data.List                              (length, uncons)
-import           Data.Tagged                            (Tagged)
-import           Data.Text                              (Text)
-import qualified Data.Text                              as T
-import qualified Data.Text.Lazy                         as LT
-import qualified Data.Text.Lazy.Builder                 as B
-import qualified Data.Text.Lazy.Encoding                as LT
-import           Text.Parsec.Text                       as P
-
-import           Network.Ethereum.Unit
-import           Network.Ethereum.Web3.Address          (Address)
-import           Network.Ethereum.Web3.Contract
-import           Network.Ethereum.Web3.Encoding
-import           Network.Ethereum.Web3.Encoding.Event
-import           Network.Ethereum.Web3.Encoding.Generic
-import           Network.Ethereum.Web3.Encoding.Int
-import           Network.Ethereum.Web3.Encoding.Vector
-import           Network.Ethereum.Web3.Internal
-import           Network.Ethereum.Web3.JsonAbi
-import           Network.Ethereum.Web3.Provider
-import           Network.Ethereum.Web3.Types
-
-import           Control.Monad                          (replicateM)
-
-import           Data.Aeson
-import qualified Data.ByteArray                         as BA
-import           Data.List                              (groupBy, sortBy)
-import           Data.Monoid                            (mconcat, (<>))
-import           Data.Text                              (Text, isPrefixOf)
-
-import           Generics.SOP
-import qualified GHC.Generics                           as GHC
-
+import           Control.Monad                       ((<=<))
+import           Control.Monad                       (replicateM)
+import           Data.Aeson                          (eitherDecode)
+import           Data.List                           (uncons)
+import           Data.List                           (groupBy, sortBy)
+import           Data.Monoid                         ((<>))
+import           Data.Tagged                         (Tagged)
+import           Data.Text                           (Text, isPrefixOf)
+import qualified Data.Text                           as T
+import qualified Data.Text.Lazy                      as LT
+import qualified Data.Text.Lazy.Encoding             as LT
+import           Generics.SOP                        (Generic)
+import qualified GHC.Generics                        as GHC (Generic)
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Lib
 import           Language.Haskell.TH.Quote
+
+import           Network.Ethereum.ABI.Event          (IndexedEvent)
+import           Network.Ethereum.ABI.Event          (IndexedEvent)
+import           Network.Ethereum.ABI.Json           (ContractABI (..),
+                                                      Declaration (..),
+                                                      EventArg (..),
+                                                      FunctionArg (..),
+                                                      SolidityType (..),
+                                                      eventId, methodId,
+                                                      parseSolidityType)
+import           Network.Ethereum.ABI.Prim.Singleton (Singleton (..))
+import           Network.Ethereum.Web3.Internal      (toLowerFirst,
+                                                      toUpperFirst)
+import           Network.Ethereum.Web3.Monad         (Web3)
+import           Network.Ethereum.Web3.Types         (Call, TxHash)
 
 -- | Read contract ABI from file
 abiFrom :: QuasiQuoter
@@ -108,16 +106,15 @@ funD' :: Name -> [PatQ] -> ExpQ -> DecQ
 funD' name p f = funD name [clause p (normalB f) []]
 
 -- | ABI and Haskell types association
-
 toHSType :: SolidityType -> TypeQ
 toHSType s = case s of
     SolidityBool        -> conT (mkName "Bool")
     SolidityAddress     -> conT (mkName "Address")
     SolidityUint n      -> appT (conT (mkName "UIntN")) (numLit n)
     SolidityInt n       -> appT (conT (mkName "IntN")) (numLit n)
-    SolidityString      ->  conT (mkName "Text")
+    SolidityString      -> conT (mkName "Text")
     SolidityBytesN n    -> appT (conT (mkName "BytesN")) (numLit n)
-    SolidityBytes       ->  conT (mkName "Bytes")
+    SolidityBytes       -> conT (mkName "Bytes")
     SolidityVector ns a -> expandVector ns a
     SolidityArray a     -> appT listT $ toHSType a
   where
@@ -154,7 +151,7 @@ isDynType x | T.any (== '[') x = True
 
 eventEncodigD :: Name -> [EventArg] -> [DecQ]
 eventEncodigD eventName args =
-    [ funD' (mkName "fromDataParser") [] [|decodeEvent|] ]
+    [ funD' (mkName "decode") [] [|decodeEvent|] ]
 
 eventFilterD :: String -> Int -> [DecQ]
 eventFilterD topic0 n =
@@ -185,9 +182,7 @@ funWrapper c name dname args result = do
 
     sequence $ if c
         then
-          [ sigD name $ [t|Provider $p =>
-                            $(arrowing $ [t|Call|] : inputT ++ [outputT])
-                          |]
+          [ sigD name $ [t|$(arrowing $ [t|Call|] : inputT ++ [outputT])|]
           , funD' name (varP <$> a : vars) $
               case result of
                 Just [_] -> [|unSingleton <$> call $(varE a) Latest $(params)|]
@@ -195,9 +190,7 @@ funWrapper c name dname args result = do
           ]
 
         else
-          [ sigD name $ [t|(Provider $p) =>
-                            $(arrowing $ [t|Call|] : inputT ++ [[t|Web3 $p TxHash|]])
-                          |]
+          [ sigD name $ [t|$(arrowing $ [t|Call|] : inputT ++ [[t|Web3 TxHash|]])|]
           , funD' name (varP <$> a : vars) $
                 [|sendTx $(varE a) $(params)|] ]
   where
@@ -206,10 +199,10 @@ funWrapper c name dname args result = do
     arrowing (x : xs) = [t|$x -> $(arrowing xs)|]
     inputT  = fmap (typeQ . funArgType) args
     outputT = case result of
-        Nothing  -> [t|Web3 $p ()|]
-        Just [x] -> [t|Web3 $p $(typeQ $ funArgType x)|]
+        Nothing  -> [t|Web3 ()|]
+        Just [x] -> [t|Web3 $(typeQ $ funArgType x)|]
         Just xs  -> let outs = fmap (typeQ . funArgType) xs
-                    in  [t|Web3 $p $(foldl appT (tupleT (length xs)) outs)|]
+                    in  [t|Web3 $(foldl appT (tupleT (length xs)) outs)|]
 
 mkEvent :: Declaration -> Q [Dec]
 mkEvent ev@(DEvent name inputs anonymous) = sequence
@@ -219,10 +212,10 @@ mkEvent ev@(DEvent name inputs anonymous) = sequence
     , instanceD' nonIndexedName (conT (mkName "Generic")) []
     , dataD' allName (recC allName (map (\(n, a) -> ((\(b,t) -> return (n,b,t)) <=< toBang <=< typeQ $ a)) allArgs)) derivingD
     , instanceD' allName (conT (mkName "Generic")) []
-    , instanceD (cxt []) (return $ (ConT $ mkName "IndexedEvent") `AppT` ConT indexedName `AppT` ConT nonIndexedName `AppT` ConT allName)
+    , instanceD (cxt [])
+        (return $ (ConT $ mkName "IndexedEvent") `AppT` ConT indexedName `AppT` ConT nonIndexedName `AppT` ConT allName)
         [funD' (mkName "isAnonymous") [] [|const anonymous|]]
     , instanceD' allName eventT (eventFilterD (T.unpack $ eventId ev) (length indexedArgs))
-
     ]
   where
     toBang ty = bangType (bang sourceNoUnpack sourceStrict) (return ty)
@@ -290,9 +283,9 @@ mkDecl _             = return []
 -- | ABI to declarations converter
 quoteAbiDec :: String -> Q [Dec]
 quoteAbiDec abi_string =
-    case decode abi_lbs of
-        Just (ContractABI abi) -> concat <$> mapM mkDecl (escape abi)
-        _                      -> fail "Unable to parse ABI!"
+    case eitherDecode abi_lbs of
+        Left e                  -> fail $ "Error: " ++ show e
+        Right (ContractABI abi) -> concat <$> mapM mkDecl (escape abi)
   where abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
 
 -- | ABI information string

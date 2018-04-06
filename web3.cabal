@@ -34,48 +34,52 @@ custom-setup
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Network.Ethereum.Web3
+  exposed-modules:     Network.JsonRpc.TinyClient
+                     , Network.Ethereum.ABI.Json
+                     , Network.Ethereum.ABI.Class
+                     , Network.Ethereum.ABI.Codec
+                     , Network.Ethereum.ABI.Event
+                     , Network.Ethereum.ABI.Event.Internal
+                     , Network.Ethereum.ABI.Generic
+                     , Network.Ethereum.ABI.Prim.Int
+                     , Network.Ethereum.ABI.Prim.Bool
+                     , Network.Ethereum.ABI.Prim.List
+                     , Network.Ethereum.ABI.Prim.Bytes
+                     , Network.Ethereum.ABI.Prim.String
+                     , Network.Ethereum.ABI.Prim.Tagged
+                     , Network.Ethereum.ABI.Prim.Address
+                     , Network.Ethereum.ABI.Prim.Singleton
+                     , Network.Ethereum.Contract.TH
+                     , Network.Ethereum.Contract.Event
+                     , Network.Ethereum.Contract.Method
                      , Network.Ethereum.Unit
-                     , Network.Ethereum.Web3.TH
                      , Network.Ethereum.Web3.Eth
                      , Network.Ethereum.Web3.Net
                      , Network.Ethereum.Web3.Web3
                      , Network.Ethereum.Web3.Types
-                     , Network.Ethereum.Web3.Address
-                     , Network.Ethereum.Web3.JsonAbi
+                     , Network.Ethereum.Web3.Monad
                      , Network.Ethereum.Web3.Provider
-                     , Network.Ethereum.Web3.Encoding
-                     , Network.Ethereum.Web3.Contract
-                     , Network.Ethereum.Web3.Encoding.Int
-                     , Network.Ethereum.Web3.Encoding.Bytes
-                     , Network.Ethereum.Web3.Encoding.Event
-                     , Network.Ethereum.Web3.Encoding.Vector
-                     , Network.Ethereum.Web3.Encoding.Generic
-  other-modules:       Network.Ethereum.Web3.JsonRpc
                      , Network.Ethereum.Web3.Internal
-                     , Network.Ethereum.Web3.Encoding.Internal
-                     , Network.Ethereum.Web3.Encoding.Event.Internal
   build-depends:       base >4.8 && <4.11
-                     , aeson
-                     , async
-                     , base16-bytestring
-                     , bytestring
-                     , cryptonite
+                     , template-haskell
                      , data-default
                      , generics-sop
-                     , http-client
-                     , machines
-                     , mtl
-                     , errors
-                     , memory
-                     , parsec
-                     , singletons
-                     , sized
-                     , tagged
-                     , template-haskell
                      , transformers
+                     , http-client
+                     , http-client-tls
+                     , exceptions
+                     , bytestring
+                     , cryptonite
+                     , basement
+                     , machines
+                     , tagged
+                     , parsec
+                     , memory
+                     , cereal 
+                     , aeson
+                     , async
                      , text
-                     , vector
+                     , mtl
   default-extensions:  OverloadedStrings
   ghc-options:         -Werror
   default-language:    Haskell2010
@@ -92,14 +96,12 @@ test-suite unit
                      , hspec-discover
                      , hspec-contrib
                      , hspec
-                     , base16-bytestring
                      , data-default
                      , generics-sop
                      , transformers
                      , bytestring
                      , memory
                      , tagged
-                     , sized
                      , split
                      , time
                      , text
@@ -130,13 +132,12 @@ test-suite live
                      , data-default
                      , bytestring
                      , memory
-                     , sized
                      , split
-                     , stm
                      , text
                      , time
                      , text
                      , web3
+                     , stm
   ghc-options:         -Werror -threaded -rtsopts -with-rtsopts=-N -ddump-splices
   default-extensions:  DataKinds LambdaCase DeriveGeneric QuasiQuotes TemplateHaskell OverloadedStrings ScopedTypeVariables TypeApplications
   default-language:    Haskell2010

@@ -1,17 +1,18 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 -- |
--- Module      :  Network.Ethereum.Web3.JsonAbi
--- Copyright   :  Alexander Krupenkin 2016
+-- Module      :  Network.Ethereum.ABI.Json
+-- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
 -- Stability   :  experimental
--- Portability :  portable
+-- Portability :  noportable
 --
--- Ethereum smart contract JSON ABI types.
+-- JSON encoded contract ABI parsers.
 --
-module Network.Ethereum.Web3.JsonAbi (
+
+module Network.Ethereum.ABI.Json (
     ContractABI(..)
   , Declaration(..)
   , FunctionArg(..)
@@ -31,9 +32,10 @@ import           Data.Monoid                    ((<>))
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 import qualified Data.Text.Encoding             as T
-import           Network.Ethereum.Web3.Internal
 import           Text.Parsec
 import           Text.Parsec.Text
+
+import           Network.Ethereum.Web3.Internal
 
 -- | Method argument
 data FunctionArg = FunctionArg
@@ -88,6 +90,12 @@ $(deriveJSON (defaultOptions {
 newtype ContractABI = ContractABI { unABI :: [Declaration] }
   deriving (Eq, Ord)
 
+instance FromJSON ContractABI where
+    parseJSON = fmap ContractABI . parseJSON
+
+instance ToJSON ContractABI where
+    toJSON = toJSON . unABI
+
 instance Show ContractABI where
     show (ContractABI c) = T.unpack $ T.unlines $
         [ "Contract:" ]
@@ -96,12 +104,6 @@ instance Show ContractABI where
         ++ foldMap showEvent c ++
         [ "\tMethods:" ]
         ++ foldMap showMethod c
-
-instance FromJSON ContractABI where
-    parseJSON = fmap ContractABI . parseJSON
-
-instance ToJSON ContractABI where
-    toJSON (ContractABI x) = toJSON x
 
 showConstructor :: Declaration -> [Text]
 showConstructor x = case x of
@@ -151,7 +153,6 @@ eventId :: Declaration -> Text
 eventId = ("0x" <>) . sha3 . signature
 
 -- | Solidity types and parsers
-
 data SolidityType =
     SolidityBool
   | SolidityAddress
@@ -234,4 +235,4 @@ solidityTypeParser =
            ]
 
 parseSolidityType :: Text -> Either ParseError SolidityType
-parseSolidityType = parse solidityTypeParser ""
+parseSolidityType = parse solidityTypeParser "Solidity"

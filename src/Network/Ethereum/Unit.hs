@@ -1,9 +1,10 @@
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+
 -- |
 -- Module      :  Network.Ethereum.Unit
--- Copyright   :  Alexander Krupenkin 2016
+-- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
@@ -43,6 +44,7 @@
 --      Actual type: Szabo
 -- @
 --
+
 module Network.Ethereum.Unit (
     Unit(..)
   , UnitSpec(..)

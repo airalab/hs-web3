@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 -- |
 -- Module      :  Network.Ethereum.Web3.Provider
 -- Copyright   :  Alexander Krupenkin 2016
@@ -9,35 +10,49 @@
 --
 -- Web3 service provider.
 --
+
 module Network.Ethereum.Web3.Provider where
 
 import           Control.Concurrent.Async    (Async, async)
 import           Control.Exception           (try)
 import           Control.Monad.IO.Class      (MonadIO (..))
+import           Control.Monad.Trans.Reader  (mapReaderT, runReaderT)
+import           Data.Default                (Default (..))
+import           GHC.Generics                (Generic)
 import           Network.Ethereum.Web3.Types
+import           Network.HTTP.Client         (Manager, newManager)
+import           Network.HTTP.Client.TLS     (tlsManagerSettings)
 
--- | Ethereum node service provider
-class Provider a where
-    -- | JSON-RPC provider URI, default: localhost:8545
-    rpcUri :: Web3 a String
+import           Network.Ethereum.Web3.Monad (Web3 (..), Web3Error)
+import           Network.JsonRpc.TinyClient  (ServerUri)
 
--- | Default 'Web3' service provider
-data DefaultProvider
+--TODO: Change to `HttpProvider ServerUri | IpcProvider FilePath` to support IPC
+-- | Web3 Provider
+data Provider = HttpProvider ServerUri
+  deriving (Show, Eq, Generic)
 
-instance Provider DefaultProvider where
-    rpcUri = return "http://localhost:8545"
+instance Default Provider where
+  def = HttpProvider "http://localhost:8545"
+
+-- | 'Web3' monad runner, using the supplied Manager
+runWeb3With :: MonadIO m => Manager -> Provider -> Web3 a -> m (Either Web3Error a)
+{-# INLINE runWeb3With #-}
+runWeb3With manager (HttpProvider uri) f =
+    liftIO . try .  flip runReaderT (uri, manager) . unWeb3 $ f
 
 -- | 'Web3' monad runner
-runWeb3' :: MonadIO m => Web3 a b -> m (Either Web3Error b)
+runWeb3' :: MonadIO m => Provider -> Web3 a -> m (Either Web3Error a)
 {-# INLINE runWeb3' #-}
-runWeb3' = liftIO . try . unWeb3
+runWeb3' provider f = do
+    manager <- liftIO $ newManager tlsManagerSettings
+    runWeb3With manager provider f
 
 -- | 'Web3' runner for default provider
-runWeb3 :: MonadIO m => Web3 DefaultProvider b -> m (Either Web3Error b)
+runWeb3 :: MonadIO m => Web3 a -> m (Either Web3Error a)
 {-# INLINE runWeb3 #-}
-runWeb3 = runWeb3'
+runWeb3 = runWeb3' def
 
 -- | Fork 'Web3' with the same 'Provider'
-forkWeb3 :: Web3 a b -> Web3 a (Async b)
+forkWeb3 :: Web3 a -> Web3 (Async a)
 {-# INLINE forkWeb3 #-}
-forkWeb3 = Web3 . async . unWeb3
+forkWeb3 = Web3 . mapReaderT async . unWeb3
