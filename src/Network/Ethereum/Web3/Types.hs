@@ -74,8 +74,8 @@ instance FromJSON Quantity where
     parseJSON (String v) =
         case R.hexadecimal v of
             Right (x, "") -> return (Quantity x)
-            _             -> fail "Unable to parse Quantity!"
-    parseJSON _ = fail "The string is required!"
+            _             -> fail "Unable to parse Quantity"
+    parseJSON _ = fail "Quantity may only be parsed from a JSON String"
 
 instance Fractional Quantity where
     (/) a b = Quantity $ div (unQuantity a) (unQuantity b)
@@ -102,6 +102,20 @@ instance ToJSON BlockNumber where
     toJSON (BlockNumber x) =
         let hexValue = B.toLazyText (B.hexadecimal x)
         in  toJSON ("0x" <> hexValue)
+
+
+data SyncActive = SyncActive { syncStartingBlock :: BlockNumber
+                             , syncCurrentBlock  :: BlockNumber
+                             , syncHighestBlock  :: BlockNumber
+                             } deriving (Eq, Generic, Show)
+$(deriveJSON (defaultOptions { fieldLabelModifier = toLowerFirst . drop 4 }) ''SyncActive)
+
+data SyncingState = Syncing SyncActive | NotSyncing deriving (Eq, Generic, Show)
+
+instance FromJSON SyncingState where
+    parseJSON (Bool _) = pure NotSyncing
+    parseJSON v        = Syncing <$> parseJSON v
+
 
 -- | Event filter identifier
 newtype FilterId = FilterId Integer
@@ -220,7 +234,7 @@ $(deriveJSON (defaultOptions
 
 -- | Block information
 data Block = Block
-  { blockBlockNumber      :: !BlockNumber
+  { blockNumber           :: !BlockNumber
   -- ^ QUANTITY - the block number. null when its pending block.
   , blockHash             :: !Bytes
   -- ^ DATA, 32 Bytes - hash of the block. null when its pending block.

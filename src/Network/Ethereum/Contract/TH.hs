@@ -39,7 +39,8 @@ module Network.Ethereum.Contract.TH (
   , IndexedEvent(..)
   , Tagged
   , module Generics.SOP
-
+  , mkDecl
+  , escape
   ) where
 
 import           Control.Monad                       ((<=<))
@@ -194,7 +195,6 @@ funWrapper c name dname args result = do
           , funD' name (varP <$> a : vars) $
                 [|sendTx $(varE a) $(params)|] ]
   where
-    p = varT (mkName "p")
     arrowing [x]      = x
     arrowing (x : xs) = [t|$x -> $(arrowing xs)|]
     inputT  = fmap (typeQ . funArgType) args

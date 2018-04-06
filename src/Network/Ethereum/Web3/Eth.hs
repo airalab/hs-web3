@@ -23,9 +23,10 @@ protocolVersion :: Web3 Int
 {-# INLINE protocolVersion #-}
 protocolVersion = remote "eth_protocolVersion"
 
--- TODO The return type of this function requires a new type to be created
 -- | Returns an object with data about the sync status or false.
--- syncing :: Proviver a => Web3 Text
+syncing :: Web3 SyncingState
+{-# INLINE syncing #-}
+syncing = remote "eth_syncing"
 
 -- | Returns the client coinbase address.
 coinbase :: Web3 Address

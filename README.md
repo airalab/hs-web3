@@ -23,19 +23,21 @@ This is the Ethereum compatible Haskell API which implements the [Generic JSON R
 
 Any Ethereum node communication wrapped with `Web3` monadic type.
 
-    > :t web3_clientVersion
-    web3_clientVersion :: Provider a => Web3 a Text
+    > import Network.Ethereum.Web3.Web3
+    > :t clientVersion
+    clientVersion :: Web3 Text
 
 To run this computation used `runWeb3'` or `runWeb3` functions.
 
-    > runWeb3 web3_clientVersion
+    > import Network.Ethereum.Web3
+    > runWeb3 clientVersion
     Right "Parity//v1.4.5-beta-a028d04-20161126/x86_64-linux-gnu/rustc1.13.0"
 
 Function `runWeb3` use default `Web3` provider at `localhost:8545`.
 
     > :t runWeb3
     runWeb3
-      :: MonadIO m => Web3 DefaultProvider b -> m (Either Web3Error b)
+      :: MonadIO m => Web3 a -> m (Either Web3Error a)
 
 ### TemplateHaskell generator
 
@@ -53,24 +55,45 @@ typeclasses and function helpers.
                     0x03de48b3 runA1()
                     0x90126c7a runA2(string,uint256)
 
-See example of usage.
+See example of usage below. Use `-ddump-splices` to see generated code during compilation or in GHCi.
 
 ```haskell
-import Data.Text (unpack)
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes #-}
+
+module Main where
+
+import Data.Default
+import Data.Text (Text, unpack)
 import Text.Printf
+
+import Network.Ethereum.Web3 hiding (name)
+import Network.Ethereum.Web3.Encoding
+import Network.Ethereum.Web3.TH
+import Network.Ethereum.Web3.Types
 
 [abiFrom|data/ERC20.json|]
 
 main :: IO ()
 main = do
-    Right s <- runWeb3 $ do
-        n <- name token
-        s <- symbol token
-        d <- decimals token
+    result <- runWeb3 $ do
+        n <- name tokenCall
+        s <- symbol tokenCall
+        d <- decimals tokenCall
         return $ printf "Token %s with symbol %s and decimals %d"
-                        (unpack n) (unpack s) d
-    putStrLn s
-  where token = "0x237D60A8b41aFD2a335305ed458B609D7667D789"
+                   (unpack n) (unpack s) (fromIntegral d :: Int)
+    case result of
+      Left error -> print error
+      Right info -> putStrLn info
+  where 
+    token :: Address
+    token = "0x237D60A8b41aFD2a335305ed458B609D7667D789"
+
+    tokenCall :: Call
+    tokenCall = def { callTo = token }
 ```
 
 ### Testing
