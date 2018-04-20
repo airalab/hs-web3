@@ -1,14 +1,11 @@
 # Resolver to choose a 'specific' stackage snapshot or a compiler version.
-resolver: lts-11.3
+resolver: lts-11.5
 # User packages to be built.
 packages:
 - '.'
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
-extra-deps:
-- equational-reasoning-0.5.1.0
-- ghc-typelits-presburger-0.2.0.0
-- type-natural-0.8.0.0
+extra-deps: []
 # Override default flag values for local packages and extra-deps
 flags: {}
 # Extra package databases containing global packages
