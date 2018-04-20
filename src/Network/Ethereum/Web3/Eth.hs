@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 -- |
 -- Module      :  Network.Ethereum.Web3.Eth
 -- Copyright   :  Alexander Krupenkin 2016
@@ -9,14 +11,14 @@
 --
 -- Ethereum node JSON-RPC API methods with `eth_` prefix.
 --
+
 module Network.Ethereum.Web3.Eth where
 
-import           Network.Ethereum.ABI.Prim.Address
-import           Network.Ethereum.ABI.Prim.Bytes
-import           Network.Ethereum.Web3.Monad
-import           Network.Ethereum.Web3.Provider
+import           Network.Ethereum.ABI.Prim.Address (Address)
+import           Network.Ethereum.ABI.Prim.Bytes   (Bytes)
+import           Network.Ethereum.Web3.Provider    (Web3)
 import           Network.Ethereum.Web3.Types
-import           Network.JsonRpc.TinyClient
+import           Network.JsonRpc.TinyClient        (remote)
 
 -- | Returns the current ethereum protocol version.
 protocolVersion :: Web3 Int

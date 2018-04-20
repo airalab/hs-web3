@@ -1,4 +1,5 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 -- |
 -- Module      :  Network.Ethereum.ABI.Json
@@ -24,18 +25,22 @@ module Network.Ethereum.ABI.Json (
   , parseSolidityType
   ) where
 
-import           Control.Monad                  (void)
-import           Crypto.Hash                    (Digest, Keccak_256, hash)
-import           Data.Aeson
-import           Data.Aeson.TH
-import           Data.Monoid                    ((<>))
-import           Data.Text                      (Text)
-import qualified Data.Text                      as T
-import qualified Data.Text.Encoding             as T
-import           Text.Parsec
-import           Text.Parsec.Text
+import           Control.Monad      (void)
+import           Crypto.Hash        (Digest, Keccak_256, hash)
+import           Data.Aeson         (FromJSON (parseJSON), Options (constructorTagModifier, fieldLabelModifier, sumEncoding),
+                                     SumEncoding (TaggedObject),
+                                     ToJSON (toJSON), defaultOptions)
+import           Data.Aeson.TH      (deriveJSON)
+import           Data.Monoid        ((<>))
+import           Data.Text          (Text)
+import qualified Data.Text          as T (dropEnd, pack, take, unlines, unpack)
+import           Data.Text.Encoding (encodeUtf8)
+import           Text.Parsec        (ParseError, char, choice, digit, eof,
+                                     lookAhead, many1, manyTill, optionMaybe,
+                                     parse, string, try, (<|>))
+import           Text.Parsec.Text   (Parser)
 
-import           Network.Ethereum.Web3.Internal
+import           Data.String.Extra  (toLowerFirst)
 
 -- | Method argument
 data FunctionArg = FunctionArg
@@ -81,7 +86,7 @@ data Declaration
   deriving (Show, Eq, Ord)
 
 $(deriveJSON (defaultOptions {
-    sumEncoding = defaultTaggedObject { tagFieldName = "type" }
+    sumEncoding = TaggedObject "type" "contents"
   , constructorTagModifier = toLowerFirst . drop 1
   , fieldLabelModifier = toLowerFirst . drop 3 })
     ''Declaration)
@@ -125,22 +130,28 @@ showMethod x = case x of
 signature :: Declaration -> Text
 
 signature (DConstructor inputs) = "(" <> args inputs <> ")"
-  where args = T.dropEnd 1 . foldMap (<> ",") . fmap funArgType
+  where
+    args :: [FunctionArg] -> Text
+    args = T.dropEnd 1 . foldMap (<> ",") . fmap funArgType
 
 signature (DFallback _) = "()"
 
 signature (DFunction name _ inputs _) = name <> "(" <> args inputs <> ")"
-  where args = T.dropEnd 1 . foldMap (<> ",") . fmap funArgType
+  where
+    args :: [FunctionArg] -> Text
+    args = T.dropEnd 1 . foldMap (<> ",") . fmap funArgType
 
 signature (DEvent name inputs _) = name <> "(" <> args inputs <> ")"
-  where args = T.dropEnd 1 . foldMap (<> ",") . fmap eveArgType
+  where
+    args :: [EventArg] -> Text
+    args = T.dropEnd 1 . foldMap (<> ",") . fmap eveArgType
 
 -- | Localy compute Keccak-256 hash of given text
 sha3 :: Text -> Text
 {-# INLINE sha3 #-}
 sha3 x = T.pack (show digest)
   where digest :: Digest Keccak_256
-        digest = hash (T.encodeUtf8 x)
+        digest = hash (encodeUtf8 x)
 
 -- | Generate method selector by given method 'Delcaration'
 methodId :: Declaration -> Text
@@ -211,10 +222,12 @@ parseVector = do
     ns <- many1Till lengthParser ((lookAhead $ void (string "[]")) <|> eof)
     pure $ SolidityVector ns s
   where
+    many1Till :: Parser Int -> Parser () -> Parser [Int]
     many1Till p end = do
       a <- p
       as <- manyTill p end
       return (a : as)
+
     lengthParser = do
           _ <- char '['
           n <- numberParser

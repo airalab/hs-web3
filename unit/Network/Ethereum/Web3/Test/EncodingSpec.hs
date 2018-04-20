@@ -1,7 +1,8 @@
-{-# LANGUAGE DataKinds        #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE OverloadedLists  #-}
-{-# LANGUAGE TypeFamilies     #-}
+{-# LANGUAGE DataKinds         #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE OverloadedLists   #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeFamilies      #-}
 
 module Network.Ethereum.Web3.Test.EncodingSpec where
 
@@ -34,11 +35,6 @@ spec = do
 intNTest :: Spec
 intNTest =
     describe "uint tests" $ do
-
-      it "can encode integer" $
-         let decoded = (10 :: Integer)
-             encoded = "0x000000000000000000000000000000000000000000000000000000000000000a"
-          in roundTrip decoded encoded
 
       it "can encode int16" $
          let decoded = (-1) :: IntN 16
@@ -154,7 +150,7 @@ tuplesTest =
        in roundTripGeneric decoded encoded
 
     it "can encode 4-tuples with a mix of args - (UInt, String, Boolean, Array Int)" $ do
-      let decoded = (1 :: Integer, "dave" :: Text, True, [1, 2, 3] :: [Integer])
+      let decoded = (1 :: IntN 256, "dave" :: Text, True, [1, 2, 3] :: [IntN 256])
           encoded = "0x0000000000000000000000000000000000000000000000000000000000000001"
                  <> "0x0000000000000000000000000000000000000000000000000000000000000080"
                  <> "0x0000000000000000000000000000000000000000000000000000000000000001"

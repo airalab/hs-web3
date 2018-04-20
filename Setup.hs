@@ -13,7 +13,8 @@ import           Distribution.Simple.Setup                 (BuildFlags (..),
 import           Distribution.Simple.Utils
 import           Distribution.Verbosity                    (Verbosity)
 import           System.Directory                          (makeAbsolute)
-import           System.Environment                        (getEnvironment, lookupEnv, setEnv)
+import           System.Environment                        (getEnvironment,
+                                                            lookupEnv, setEnv)
 
 #if MIN_VERSION_Cabal(2,0,0)
 

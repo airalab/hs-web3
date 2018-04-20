@@ -1,7 +1,6 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies          #-}
-{-# LANGUAGE UndecidableInstances  #-}
+{-# LANGUAGE FlexibleContexts     #-}
+{-# LANGUAGE TypeFamilies         #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- |
 -- Module      :  Network.Ethereum.ABI.Prim.List
@@ -12,7 +11,7 @@
 -- Stability   :  experimental
 -- Portability :  noportable
 --
--- Ethereum ABI UTF8-encoded dynamic arrays.
+-- Ethereum ABI dynamic and static size vectors based on linked lists.
 --
 
 module Network.Ethereum.ABI.Prim.List (
@@ -34,17 +33,17 @@ instance ABIType [a] where
     isDynamic _ = True
 
 instance ABIPut a => ABIPut [a] where
-    abiPut l = do putWord256 (fromIntegral $ length l)
+    abiPut l = do putWord256 $ fromIntegral (length l)
                   foldMap abiPut l
 
 instance ABIGet a => ABIGet [a] where
     abiGet = do len <- fromIntegral <$> getWord256
                 replicateM len abiGet
 
-instance (KnownNat n, ABIType a) => ABIType (ListN n a) where
+instance ABIType (ListN n a) where
     isDynamic _ = False
 
-instance (KnownNat n, ABIPut a) => ABIPut (ListN n a) where
+instance ABIPut a => ABIPut (ListN n a) where
     abiPut = SL.mapM_ abiPut
 
 instance (NatWithinBound Int n, KnownNat n, ABIGet a) => ABIGet (ListN n a) where
@@ -53,4 +52,4 @@ instance (NatWithinBound Int n, KnownNat n, ABIGet a) => ABIGet (ListN n a) wher
 instance (NatWithinBound Int n, KnownNat n) => IsList (ListN n a) where
     type Item (ListN n a) = a
     fromList = toListN_
-    toList = unListN
+    toList   = unListN

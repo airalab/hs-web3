@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE OverloadedStrings      #-}
 {-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE UndecidableInstances   #-}
 
@@ -21,7 +22,9 @@
 --
 
 module Network.JsonRpc.TinyClient (
-    MethodName
+    JsonRpcException(..)
+  , RpcError(..)
+  , MethodName
   , ServerUri
   , Remote
   , remote
@@ -148,8 +151,8 @@ call n = connection . encode . Request n 1 . toJSON
 
 data JsonRpcException
     = ParsingException String
-    | CallException String
-    deriving Show
+    | CallException RpcError
+    deriving (Eq, Show)
 
 instance Exception JsonRpcException
 
@@ -161,4 +164,4 @@ decodeResponse = (tryParse . eitherDecode . encode)
                <=< tryParse . eitherDecode
   where
     tryParse = either (throwM . ParsingException) return
-    tryResult = either (throwM . CallException . show) return
+    tryResult = either (throwM . CallException) return

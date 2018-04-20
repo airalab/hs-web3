@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 -- |
 -- Module      :  Network.Ethereum.Web3.Net
 -- Copyright   :  Alexander Krupenkin 2016
@@ -9,12 +11,12 @@
 --
 -- Ethereum node JSON-RPC API methods with `net_` prefix.
 --
+
 module Network.Ethereum.Web3.Net where
 
-import           Network.Ethereum.Web3.Monad
-import           Network.Ethereum.Web3.Provider
-import           Network.Ethereum.Web3.Types
-import           Network.JsonRpc.TinyClient
+import           Network.Ethereum.Web3.Provider (Web3)
+import           Network.Ethereum.Web3.Types    (Quantity)
+import           Network.JsonRpc.TinyClient     (remote)
 
 -- | Returns the current network id.
 version :: Web3 Int

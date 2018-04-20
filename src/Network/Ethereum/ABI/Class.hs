@@ -22,11 +22,9 @@ module Network.Ethereum.ABI.Class (
   , GenericABIGet(..)
   ) where
 
-import           Data.ByteArray  (ByteArray, ByteArrayAccess)
-import           Data.ByteString (ByteString)
-import           Data.Proxy      (Proxy)
-import           Data.Serialize  (Get, Putter)
-import           Generics.SOP    (Generic, Rep, from, to)
+import           Data.Proxy     (Proxy)
+import           Data.Serialize (Get, Putter)
+import           Generics.SOP   (Generic, Rep, from, to)
 
 -- | A class for abi encoding datatype descriptions
 class ABIType a where

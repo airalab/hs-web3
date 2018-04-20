@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE FlexibleInstances   #-}
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies        #-}
 {-# LANGUAGE TypeOperators       #-}
@@ -22,8 +23,11 @@ module Network.Ethereum.ABI.Prim.Bytes (
   , BytesN
   ) where
 
+import           Data.Aeson                    (FromJSON (..), ToJSON (..),
+                                                Value (String))
 import           Data.ByteArray                (Bytes, convert, length, zero)
-import           Data.ByteArray.Encoding       (Base (Base16), convertFromBase)
+import           Data.ByteArray.Encoding       (Base (Base16), convertFromBase,
+                                                convertToBase)
 import           Data.ByteArray.Sized          (SizedByteArray,
                                                 unsafeFromByteArrayAccess)
 import qualified Data.ByteArray.Sized          as S (take)
@@ -34,6 +38,8 @@ import           Data.Proxy                    (Proxy (..))
 import           Data.Serialize                (Get, Putter, getBytes,
                                                 putByteString)
 import           Data.String                   (IsString (..))
+import qualified Data.Text                     as T (append, drop, take)
+import           Data.Text.Encoding            (decodeUtf8, encodeUtf8)
 import           GHC.TypeLits
 import           Prelude                       hiding (length)
 
@@ -63,9 +69,19 @@ instance IsString Bytes where
     fromString ('0' : 'x' : hex) = either error id $ convertFromBase Base16 (C8.pack hex)
     fromString str               = convert (C8.pack str)
 
+instance FromJSON Bytes where
+    parseJSON (String hex)
+        | T.take 2 hex == "0x" =
+            either fail pure $ convertFromBase Base16 $ encodeUtf8 $ T.drop 2 hex
+        | otherwise = fail "Hex string should have '0x' prefix"
+    parseJSON _ = fail "Bytes should be encoded as hex string"
+
+instance ToJSON Bytes where
+    toJSON = toJSON . T.append "0x" . decodeUtf8 . convertToBase Base16
+
 type BytesN n = SizedByteArray n Bytes
 
-instance (KnownNat n, n <= 32) => ABIType (BytesN n) where
+instance (n <= 32) => ABIType (BytesN n) where
     isDynamic _ = False
 
 instance (KnownNat n, n <= 32) => ABIGet (BytesN n) where

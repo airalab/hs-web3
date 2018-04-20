@@ -34,12 +34,10 @@ import           Data.Proxy                          (Proxy (..))
 import           Generics.SOP                        (Generic, I (..), NP (..),
                                                       NS (..), Rep, SOP (..),
                                                       from, to)
-import qualified GHC.Generics                        as GHC (Generic)
 
 import           Network.Ethereum.ABI.Class          (GenericABIGet)
 import           Network.Ethereum.ABI.Codec          (decode')
 import           Network.Ethereum.ABI.Event.Internal
-import           Network.Ethereum.ABI.Prim.Address   (Address)
 import           Network.Ethereum.Web3.Types         (Change (..))
 
 -- | Indexed event args come back in as a list of encoded values. 'ArrayParser'
@@ -81,11 +79,9 @@ data Event i ni = Event i ni
 
 -- | 'parseChange' decodes both the indexed and non-indexed event components.
 parseChange :: ( Generic i
-               , Show i
                , Rep i ~ irep
                , ArrayParser irep
                , Generic ni
-               , Show ni
                , Rep ni ~ nirep
                , GenericABIGet nirep
                )
@@ -93,11 +89,11 @@ parseChange :: ( Generic i
              -> Bool
              -- ^ is anonymous event
              -> Either String (Event i ni)
-parseChange change isAnonymous =
+parseChange change anonymous =
     Event <$> genericArrayParser topics <*> decode' data_
   where
-    topics | isAnonymous = changeTopics change
-           | otherwise   = tail (changeTopics change)
+    topics | anonymous = changeTopics change
+           | otherwise = tail (changeTopics change)
     data_ = changeData change
 
 class IndexedEvent i ni e | e -> i ni where
@@ -141,7 +137,6 @@ instance ( IndexedEvent i ni e
          , CombineChange i ni e
          , GenericABIGet (SOP I '[hlni])
          , ArrayParser (SOP I '[hli])
-         , Show i, Show ni
          ) => DecodeEvent i ni e where
   decodeEvent change = do
       let anonymous = isAnonymous (Proxy :: Proxy e)

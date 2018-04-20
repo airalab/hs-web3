@@ -1,5 +1,6 @@
-{-# LANGUAGE DataKinds     #-}
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DataKinds         #-}
+{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 -- |
 -- Module      :  Network.Ethereum.ABI.Prim.Address
@@ -20,7 +21,7 @@ module Network.Ethereum.ABI.Prim.Address (
 import           Control.Monad                 ((<=<))
 import           Data.Aeson                    (FromJSON (..), ToJSON (..),
                                                 Value (String))
-import           Data.ByteArray                (ByteArrayAccess, Bytes, zero)
+import           Data.ByteArray                (Bytes, zero)
 import           Data.ByteArray.Encoding       (Base (Base16), convertFromBase,
                                                 convertToBase)
 import           Data.ByteString               (ByteString)

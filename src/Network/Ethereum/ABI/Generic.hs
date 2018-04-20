@@ -23,21 +23,16 @@
 
 module Network.Ethereum.ABI.Generic () where
 
-import           Data.ByteArray                (ByteArray, ByteArrayAccess,
-                                                convert)
-import           Data.ByteString               (ByteString)
 import qualified Data.ByteString.Lazy          as LBS
 import           Data.Int                      (Int64)
 import qualified Data.List                     as L
-import           Data.Monoid
+import           Data.Monoid                   ((<>))
 import           Data.Proxy                    (Proxy (..))
 import           Data.Serialize                (Get, Put)
-import           Data.Serialize.Get            (bytesRead, getBytes, lookAheadE,
-                                                skip)
+import           Data.Serialize.Get            (bytesRead, lookAheadE, skip)
 import           Data.Serialize.Put            (runPutLazy)
-import           Generics.SOP                  (Generic (..), I (..), NP (..),
-                                                NS (..), Rep (..), SOP (..))
-import qualified GHC.Generics                  as GHC (Generic)
+import           Generics.SOP                  (I (..), NP (..), NS (..),
+                                                SOP (..))
 
 import           Network.Ethereum.ABI.Class    (ABIGet (..), ABIPut (..),
                                                 ABIType (..),
@@ -74,11 +69,11 @@ combineEncodedValues encodings =
     adjust :: Int64 -> [EncodedValue] -> [EncodedValue]
     adjust n = map (\ev -> ev {offset = (+) n <$> offset ev})
     addTailOffsets :: Int64 -> [EncodedValue] -> [EncodedValue] -> [EncodedValue]
-    addTailOffsets init acc es = case es of
+    addTailOffsets init' acc es = case es of
       [] -> reverse acc
-      (e : tail) -> case offset e of
-        Nothing -> addTailOffsets init (e : acc) tail
-        Just _ -> addTailOffsets init (e : acc) (adjust (LBS.length . runPutLazy . encoding $ e) tail)
+      (e : tail') -> case offset e of
+        Nothing -> addTailOffsets init' (e : acc) tail'
+        Just _  -> addTailOffsets init' (e : acc) (adjust (LBS.length . runPutLazy . encoding $ e) tail')
     headsOffset :: Int64
     headsOffset = foldl (\acc e -> case offset e of
                                 Nothing -> acc + (LBS.length . runPutLazy . encoding $ e)
@@ -108,17 +103,18 @@ instance (ABIType b, ABIPut b, ABIData (NP I as)) => ABIData (NP I (b :as)) wher
 
 instance ABIData (NP f as) => GenericABIPut (SOP f '[as]) where
     gAbiPut (SOP (Z a)) = combineEncodedValues $ _serialize [] a
+    gAbiPut _           = error "Impossible branch"
 
 instance GenericABIGet (NP f '[]) where
     gAbiGet = return Nil
 
-instance (ABIGet a, ABIType a, GenericABIGet (NP I as)) => GenericABIGet (NP I (a : as)) where
+instance (ABIGet a, GenericABIGet (NP I as)) => GenericABIGet (NP I (a : as)) where
     gAbiGet = (:*) <$> (I <$> factorParser) <*> gAbiGet
 
 instance GenericABIGet (NP f as) => GenericABIGet (SOP f '[as]) where
     gAbiGet = SOP . Z <$> gAbiGet
 
-factorParser :: forall a . ABIType a => ABIGet a => Get a
+factorParser :: forall a . ABIGet a => Get a
 factorParser
   | not $ isDynamic (Proxy :: Proxy a) = abiGet
   | otherwise = do

@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE TemplateHaskell            #-}
 
 -- |
@@ -19,27 +20,20 @@ module Network.Ethereum.Web3.Types where
 
 import           Data.Aeson
 import           Data.Aeson.TH
-import           Data.ByteArray                    (Bytes)
-import           Data.ByteArray.Encoding           (Base (Base16),
-                                                    convertFromBase,
-                                                    convertToBase)
-import           Data.ByteString                   (ByteString)
 import           Data.Default
 import           Data.Monoid                       ((<>))
 import           Data.Ord                          (Down (..))
 import           Data.String                       (IsString (..))
-import           Data.Text                         (Text)
 import qualified Data.Text                         as T
-import           Data.Text.Encoding                (decodeUtf8, encodeUtf8)
 import qualified Data.Text.Lazy.Builder            as B
 import qualified Data.Text.Lazy.Builder.Int        as B
 import qualified Data.Text.Read                    as R
-import           Data.Typeable                     (Typeable)
 import           GHC.Generics                      (Generic)
 
+import           Data.String.Extra                 (toLowerFirst)
 import           Network.Ethereum.ABI.Prim.Address (Address)
+import           Network.Ethereum.ABI.Prim.Bytes   (Bytes)
 import           Network.Ethereum.Unit
-import           Network.Ethereum.Web3.Internal    (toLowerFirst)
 
 -- | Should be viewed as type to representing QUANTITY in Web3 JSON RPC docs
 --
@@ -53,7 +47,7 @@ import           Network.Ethereum.Web3.Internal    (toLowerFirst)
 --  WRONG: 0x0400 (no leading zeroes allowed)
 --  WRONG: ff (must be prefixed 0x)
 newtype Quantity = Quantity { unQuantity :: Integer }
-    deriving (Show, Read, Num, Integral, Real, Enum, Eq, Ord, Generic)
+    deriving (Show, Read, Num, Real, Enum, Eq, Ord, Generic)
 
 instance IsString Quantity where
     fromString ('0' : 'x' : hex) =
@@ -276,16 +270,5 @@ data Block = Block
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 5 }) ''Block)
-
-instance ToJSON Bytes where
-    toJSON = String . ("0x" <>) . decodeUtf8 . convertToBase Base16
-
-instance FromJSON Bytes where
-    parseJSON (String v) =
-        case convertFromBase Base16 $ encodeUtf8 $ strip0x v of
-          Left e   -> fail e
-          Right ba -> return ba
-      where strip0x hx = if T.take 2 hx == "0x" then T.drop 2 hx else hx
-    parseJSON _ = fail "DATA should be a hex string"
 
 type TxHash = Bytes

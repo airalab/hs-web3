@@ -17,4 +17,4 @@ extra-package-dbs: []
 pvp-bounds: both
 # Nix integration
 nix:
-    packages: [ zlib ]
+    packages: [ zlib gmp ]

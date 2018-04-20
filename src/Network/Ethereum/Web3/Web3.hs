@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 -- |
 -- Module      :  Network.Ethereum.Web3.Web3
 -- Copyright   :  Alexander Krupenkin 2016
@@ -9,13 +11,13 @@
 --
 -- Ethereum node JSON-RPC API methods with `web3_` prefix.
 --
+
 module Network.Ethereum.Web3.Web3 where
 
-import           Data.ByteArray                 (Bytes)
-import           Data.Text                      (Text)
-import           Network.Ethereum.Web3.Monad    (Web3)
-import           Network.Ethereum.Web3.Provider (Provider)
-import           Network.JsonRpc.TinyClient     (remote)
+import           Data.Text                       (Text)
+import           Network.Ethereum.ABI.Prim.Bytes (Bytes)
+import           Network.Ethereum.Web3.Provider  (Web3)
+import           Network.JsonRpc.TinyClient      (remote)
 
 -- | Returns current node version string.
 clientVersion :: Web3 Text

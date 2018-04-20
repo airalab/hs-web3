@@ -34,7 +34,13 @@ custom-setup
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Network.JsonRpc.TinyClient
+  exposed-modules:     Network.Ethereum.Web3
+                     , Network.Ethereum.Web3.Eth
+                     , Network.Ethereum.Web3.Net
+                     , Network.Ethereum.Web3.Web3
+                     , Network.Ethereum.Web3.Types
+                     , Network.Ethereum.Web3.Provider
+                     , Network.Ethereum.Unit
                      , Network.Ethereum.ABI.Json
                      , Network.Ethereum.ABI.Class
                      , Network.Ethereum.ABI.Codec
@@ -52,14 +58,8 @@ library
                      , Network.Ethereum.Contract.TH
                      , Network.Ethereum.Contract.Event
                      , Network.Ethereum.Contract.Method
-                     , Network.Ethereum.Unit
-                     , Network.Ethereum.Web3.Eth
-                     , Network.Ethereum.Web3.Net
-                     , Network.Ethereum.Web3.Web3
-                     , Network.Ethereum.Web3.Types
-                     , Network.Ethereum.Web3.Monad
-                     , Network.Ethereum.Web3.Provider
-                     , Network.Ethereum.Web3.Internal
+                     , Network.JsonRpc.TinyClient
+                     , Data.String.Extra
   build-depends:       base >4.8 && <4.11
                      , template-haskell
                      , data-default
@@ -80,9 +80,19 @@ library
                      , async
                      , text
                      , mtl
-  default-extensions:  OverloadedStrings
-  ghc-options:         -Werror
   default-language:    Haskell2010
+  ghc-options:         -Werror
+                       -Wduplicate-exports -Whi-shadowing -Widentities -Wmissing-fields -Wmissing-methods
+                       -Wincomplete-patterns -Wincomplete-uni-patterns
+                       -Wmissing-exported-signatures -Wmissing-monadfail-instances -Wmissing-signatures
+                       -Wmissed-specialisations -Wall-missed-specialisations -Wderiving-typeable
+                       -Wname-shadowing -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances
+                       -Wnoncanonical-monoid-instances -Woverlapping-patterns -Wtabs
+                       -Wunrecognised-pragmas -Wunticked-promoted-constructors -Wmissing-home-modules
+                       -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds
+                       -Wunused-imports -Wunused-matches -Wunused-foralls -Wunused-do-bind -Wwrong-do-bind
+                       -Wtrustworthy-safe -Wwarnings-deprecations -Wdeferred-type-errors -Wtyped-holes
+                       -Wdeferred-out-of-scope-variables -Wpartial-type-signatures
 
 test-suite unit
   type:                exitcode-stdio-1.0
@@ -107,7 +117,6 @@ test-suite unit
                      , text
                      , web3
   ghc-options:         -Werror -threaded -rtsopts -with-rtsopts=-N -ddump-splices
-  default-extensions:  DataKinds LambdaCase DeriveGeneric QuasiQuotes TemplateHaskell OverloadedStrings ScopedTypeVariables TypeApplications
   default-language:    Haskell2010
 
 test-suite live
@@ -139,5 +148,4 @@ test-suite live
                      , web3
                      , stm
   ghc-options:         -Werror -threaded -rtsopts -with-rtsopts=-N -ddump-splices
-  default-extensions:  DataKinds LambdaCase DeriveGeneric QuasiQuotes TemplateHaskell OverloadedStrings ScopedTypeVariables TypeApplications
   default-language:    Haskell2010

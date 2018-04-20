@@ -1,8 +1,9 @@
-{-# LANGUAGE CPP              #-}
-{-# LANGUAGE DeriveGeneric    #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE QuasiQuotes      #-}
-{-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE CPP               #-}
+{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes       #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 -- |
 -- Module      :  Network.Ethereum.Contract.TH
@@ -41,6 +42,7 @@ module Network.Ethereum.Contract.TH (
   , module Generics.SOP
   , mkDecl
   , escape
+
   ) where
 
 import           Control.Monad                       ((<=<))
@@ -50,17 +52,17 @@ import           Data.List                           (uncons)
 import           Data.List                           (groupBy, sortBy)
 import           Data.Monoid                         ((<>))
 import           Data.Tagged                         (Tagged)
-import           Data.Text                           (Text, isPrefixOf)
+import           Data.Text                           (Text)
 import qualified Data.Text                           as T
 import qualified Data.Text.Lazy                      as LT
 import qualified Data.Text.Lazy.Encoding             as LT
 import           Generics.SOP                        (Generic)
 import qualified GHC.Generics                        as GHC (Generic)
 import           Language.Haskell.TH
-import           Language.Haskell.TH.Lib
 import           Language.Haskell.TH.Quote
 
-import           Network.Ethereum.ABI.Event          (IndexedEvent)
+import           Data.String.Extra                   (toLowerFirst,
+                                                      toUpperFirst)
 import           Network.Ethereum.ABI.Event          (IndexedEvent)
 import           Network.Ethereum.ABI.Json           (ContractABI (..),
                                                       Declaration (..),
@@ -70,9 +72,7 @@ import           Network.Ethereum.ABI.Json           (ContractABI (..),
                                                       eventId, methodId,
                                                       parseSolidityType)
 import           Network.Ethereum.ABI.Prim.Singleton (Singleton (..))
-import           Network.Ethereum.Web3.Internal      (toLowerFirst,
-                                                      toUpperFirst)
-import           Network.Ethereum.Web3.Monad         (Web3)
+import           Network.Ethereum.Web3.Provider      (Web3)
 import           Network.Ethereum.Web3.Types         (Call, TxHash)
 
 -- | Read contract ABI from file
@@ -133,26 +133,10 @@ typeQ t = case parseSolidityType t of
   Left e   -> error $ "Unable to parse solidity type: " ++ show e
   Right ty -> toHSType ty
 
--- | Event argument to TH type
-eventBangType :: EventArg -> BangTypeQ
-eventBangType (EventArg _ typ _) =
-    bangType (bang sourceNoUnpack sourceStrict) (typeQ typ)
-
 -- | Function argument to TH type
 funBangType :: FunctionArg -> BangTypeQ
 funBangType (FunctionArg _ typ) =
     bangType (bang sourceNoUnpack sourceStrict) (typeQ typ)
-
--- | Solidity dynamic type predicate
-isDynType :: Text -> Bool
-isDynType "bytes"  = True
-isDynType "string" = True
-isDynType x | T.any (== '[') x = True
-            | otherwise        = False
-
-eventEncodigD :: Name -> [EventArg] -> [DecQ]
-eventEncodigD eventName args =
-    [ funD' (mkName "decode") [] [|decodeEvent|] ]
 
 eventFilterD :: String -> Int -> [DecQ]
 eventFilterD topic0 n =
@@ -178,7 +162,7 @@ funWrapper :: Bool
            -- ^ Results
            -> Q [Dec]
 funWrapper c name dname args result = do
-    a : b : vars <- replicateM (length args + 2) (newName "t")
+    a : _ : vars <- replicateM (length args + 2) (newName "t")
     let params = appsE $ conE dname : fmap varE vars
 
     sequence $ if c
@@ -195,6 +179,7 @@ funWrapper c name dname args result = do
           , funD' name (varP <$> a : vars) $
                 [|sendTx $(varE a) $(params)|] ]
   where
+    arrowing []       = error "Impossible branch call"
     arrowing [x]      = x
     arrowing (x : xs) = [t|$x -> $(arrowing xs)|]
     inputT  = fmap (typeQ . funArgType) args
@@ -204,8 +189,9 @@ funWrapper c name dname args result = do
         Just xs  -> let outs = fmap (typeQ . funArgType) xs
                     in  [t|Web3 $(foldl appT (tupleT (length xs)) outs)|]
 
-mkEvent :: Declaration -> Q [Dec]
-mkEvent ev@(DEvent name inputs anonymous) = sequence
+mkDecl :: Declaration -> Q [Dec]
+
+mkDecl ev@(DEvent name inputs anonymous) = sequence
     [ dataD' indexedName (normalC indexedName (map (toBang <=< tag) indexedArgs)) derivingD
     , instanceD' indexedName (conT (mkName "Generic")) []
     , dataD' nonIndexedName (normalC nonIndexedName (map (toBang <=< tag) nonIndexedArgs)) derivingD
@@ -230,6 +216,23 @@ mkEvent ev@(DEvent name inputs anonymous) = sequence
     derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
     eventT = conT (mkName "Event")
 
+-- | Method delcarations maker
+mkDecl fun@(DFunction name constant inputs outputs) = (++)
+  <$> funWrapper constant fnName dataName inputs outputs
+  <*> sequence
+        [ dataD' dataName (normalC dataName bangInput) derivingD
+        , instanceD' dataName (conT (mkName "Generic")) []
+        , instanceD' dataName  (conT (mkName "Method"))
+          [funD' (mkName "selector") [] [|const mIdent|]]
+        ]
+  where mIdent    = T.unpack (methodId $ fun {funName = T.replace "'" "" name})
+        dataName  = mkName (toUpperFirst (T.unpack $ name <> "Data"))
+        fnName    = mkName (toLowerFirst (T.unpack name))
+        bangInput = fmap funBangType inputs
+        derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
+
+mkDecl _ = return []
+
 -- | this function gives appropriate names for the accessors in the following way
 -- | argName -> evArgName
 -- | arg_name -> evArg_name
@@ -240,26 +243,10 @@ makeArgs prefix ns = go 1 ns
   where
     prefixStr = toLowerFirst . T.unpack $ prefix
     go :: Int -> [(Text, Text)] -> [(Name, Text)]
-    go i [] = []
-    go i ((h, ty) : tail) = if T.null h
-                        then (mkName $  prefixStr ++ show i, ty) : go (i + 1) tail
-                        else (mkName . (++ "_") . (++) prefixStr . toUpperFirst . T.unpack $ h, ty) : go (i + 1) tail
-
--- | Method delcarations maker
-mkFun :: Declaration -> Q [Dec]
-mkFun fun@(DFunction name constant inputs outputs) = (++)
-  <$> funWrapper constant funName dataName inputs outputs
-  <*> sequence
-        [ dataD' dataName (normalC dataName bangInput) derivingD
-        , instanceD' dataName (conT (mkName "Generic")) []
-        , instanceD' dataName  (conT (mkName "Method"))
-          [funD' (mkName "selector") [] [|const mIdent|]]
-        ]
-  where mIdent    = T.unpack (methodId $ fun{funName = T.replace "'" "" name})
-        dataName  = mkName (toUpperFirst (T.unpack $ name <> "Data"))
-        funName   = mkName (toLowerFirst (T.unpack name))
-        bangInput = fmap funBangType inputs
-        derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
+    go _ [] = []
+    go i ((h, ty) : tail') = if T.null h
+                        then (mkName $  prefixStr ++ show i, ty) : go (i + 1) tail'
+                        else (mkName . (++ "_") . (++) prefixStr . toUpperFirst . T.unpack $ h, ty) : go (i + 1) tail'
 
 escape :: [Declaration] -> [Declaration]
 escape = concat . escapeNames . groupBy fnEq . sortBy fnCompare
@@ -270,28 +257,23 @@ escape = concat . escapeNames . groupBy fnEq . sortBy fnCompare
 
 escapeNames :: [[Declaration]] -> [[Declaration]]
 escapeNames = fmap go
-  where go (x : xs) = x : zipWith appendToName xs hats
+  where go []       = []
+        go (x : xs) = x : zipWith appendToName xs hats
         hats = [T.replicate n "'" | n <- [1..]]
         appendToName dfn addition = dfn { funName = funName dfn <> addition }
-
--- | Declaration parser
-mkDecl :: Declaration -> Q [Dec]
-mkDecl x@DFunction{} = mkFun x
-mkDecl x@DEvent{}    = mkEvent x
-mkDecl _             = return []
 
 -- | ABI to declarations converter
 quoteAbiDec :: String -> Q [Dec]
 quoteAbiDec abi_string =
     case eitherDecode abi_lbs of
-        Left e                  -> fail $ "Error: " ++ show e
-        Right (ContractABI abi) -> concat <$> mapM mkDecl (escape abi)
+        Left e                -> fail $ "Error: " ++ show e
+        Right (ContractABI a) -> concat <$> mapM mkDecl (escape a)
   where abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
 
 -- | ABI information string
 quoteAbiExp :: String -> ExpQ
 quoteAbiExp abi_string = stringE $
     case eitherDecode abi_lbs of
-        Left e    -> "Error: " ++ show e
-        Right abi -> show (abi :: ContractABI)
+        Left e  -> "Error: " ++ show e
+        Right a -> show (a :: ContractABI)
   where abi_lbs = LT.encodeUtf8 (LT.pack abi_string)

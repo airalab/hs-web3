@@ -24,7 +24,6 @@ module Network.Ethereum.Contract.Event (
   ) where
 
 import           Control.Concurrent                (threadDelay)
-import           Control.Concurrent.Async          (Async)
 import           Control.Monad                     (forM, void, when)
 import           Control.Monad.IO.Class            (liftIO)
 import           Control.Monad.Trans.Class         (lift)
@@ -41,8 +40,7 @@ import           Control.Concurrent.Async          (Async)
 import           Network.Ethereum.ABI.Event        (DecodeEvent (..))
 import           Network.Ethereum.ABI.Prim.Address (Address)
 import qualified Network.Ethereum.Web3.Eth         as Eth
-import           Network.Ethereum.Web3.Monad       (Web3)
-import           Network.Ethereum.Web3.Provider    (forkWeb3)
+import           Network.Ethereum.Web3.Provider    (Web3, forkWeb3)
 import           Network.Ethereum.Web3.Types       (BlockNumber (..),
                                                     Change (..),
                                                     DefaultBlock (..),
@@ -94,15 +92,15 @@ eventMany' fltr window handler = do
     mLastProcessedFilterState <- reduceEventStream (playLogs initState) handler
     case mLastProcessedFilterState of
       Nothing -> startPolling fltr {filterFromBlock = BlockWithNumber start}
-      Just a@(act, lastBlock) -> do
+      Just (act, lastBlock) -> do
         end <- mkBlockNumber . filterToBlock $ fltr
         when (act /= TerminateEvent && lastBlock < end) $
           let pollingFromBlock = lastBlock + 1
           in startPolling fltr {filterFromBlock = BlockWithNumber pollingFromBlock}
   where
-    startPolling fltr = do
-      filterId <- Eth.newFilter fltr
-      let pollTo = filterToBlock fltr
+    startPolling fltr' = do
+      filterId <- Eth.newFilter fltr'
+      let pollTo = filterToBlock fltr'
       void $ reduceEventStream (pollFilter filterId pollTo) handler
 
 -- | Effectively a mapM_ over the machine using the given handler.
@@ -126,10 +124,11 @@ reduceEventStream filterChanges handler = fmap listToMaybe . runT $
                    => (a -> ReaderT Change m EventAction)
                    -> [FilterChange a]
                    -> m [(EventAction, BlockNumber)]
-    processChanges handler changes = forM changes $ \FilterChange{..} -> do
-                                       act <- flip runReaderT filterChangeRawChange $
-                                            handler filterChangeEvent
-                                       return (act, changeBlockNumber filterChangeRawChange)
+    processChanges handler' changes =
+        forM changes $ \FilterChange{..} -> do
+            act <- flip runReaderT filterChangeRawChange $
+                handler' filterChangeEvent
+            return (act, changeBlockNumber filterChangeRawChange)
 
 data FilterChange a = FilterChange { filterChangeRawChange :: Change
                                    , filterChangeEvent     :: a
@@ -149,14 +148,14 @@ pollFilter :: forall i ni e k .
            => FilterId
            -> DefaultBlock
            -> MachineT Web3 k [FilterChange e]
-pollFilter fid end = construct $ pollPlan fid end
+pollFilter i = construct . pollPlan i
   where
     pollPlan :: FilterId -> DefaultBlock -> PlanT k [FilterChange e] Web3 ()
     pollPlan fid end = do
       bn <- lift $ Eth.blockNumber
       if BlockWithNumber bn > end
         then do
-          lift $ Eth.uninstallFilter fid
+          _ <- lift $ Eth.uninstallFilter fid
           stop
         else do
           liftIO $ threadDelay 1000000
@@ -198,9 +197,9 @@ filterStream initialPlan = unfoldPlan initialPlan filterPlan
                                          , filterToBlock = BlockWithNumber to'
                                          }
           yield filter'
-          filterPlan $ initialState { fssCurrentBlock = succ to' }
-    succ :: BlockNumber -> BlockNumber
-    succ (BlockNumber bn) = BlockNumber $ bn + 1
+          filterPlan $ initialState { fssCurrentBlock = succBn to' }
+    succBn :: BlockNumber -> BlockNumber
+    succBn (BlockNumber bn) = BlockNumber $ bn + 1
     newTo :: BlockNumber -> BlockNumber -> Integer -> BlockNumber
     newTo upper (BlockNumber current) window = min upper . BlockNumber $ current + window
 
