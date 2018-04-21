@@ -93,9 +93,9 @@ instance FromJSON RpcError where
                        <*> v .: "message"
                        <*> v .: "data"
 
--- | Typeclass for JSON-RPC calls monad base
+-- | Typeclass for JSON-RPC monad base.
 --
--- If you have monad with 'MonadIO', 'MonadThrow' and 'MonadReader Config' instances,
+-- If you have monad with 'MonadIO', 'MonadThrow' and 'MonadReader' instances,
 -- it can be used as base for JSON-RPC calls.
 --
 -- Example:
@@ -123,6 +123,7 @@ instance (ToJSON a, Remote m b) => Remote m (a -> b) where
 -- Arguments of function are stored into @params@ request array.
 --
 -- Example:
+--
 -- @
 --   myMethod :: Int -> Bool -> m String
 --   myMethod = remote "myMethod"

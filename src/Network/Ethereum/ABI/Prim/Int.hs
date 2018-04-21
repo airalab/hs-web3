@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE KindSignatures             #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeOperators              #-}
 
@@ -28,7 +29,8 @@ module Network.Ethereum.ABI.Prim.Int (
 import qualified Basement.Numerical.Number  as Basement (toInteger)
 import           Basement.Types.Word256     (Word256 (Word256))
 import qualified Basement.Types.Word256     as Basement (quot, rem)
-import           Data.Bits                  (Bits)
+import           Data.Bits                  (Bits (testBit))
+import           Data.Proxy                 (Proxy (..))
 import           Data.Serialize             (Get, Putter, Serialize (get, put))
 import           GHC.Generics               (Generic)
 import           GHC.TypeLits
@@ -49,6 +51,10 @@ newtype UIntN (n :: Nat) = UIntN { unUIntN :: Word256 }
 instance (KnownNat n, n <= 256) => Show (UIntN n) where
     show = show . unUIntN
 
+instance (KnownNat n, n <= 256) => Bounded (UIntN n) where
+    minBound = 0
+    maxBound = 2 ^ (natVal (Proxy :: Proxy n)) - 1
+
 instance (KnownNat n, n <= 256) => Real (UIntN n) where
     toRational = toRational . toInteger
 
@@ -67,17 +73,34 @@ instance (n <= 256) => ABIPut (UIntN n) where
 
 -- TODO: Signed data type
 newtype IntN (n :: Nat) = IntN { unIntN :: Word256 }
-    deriving (Eq, Ord, Enum, Num, Bits, Generic)
+    deriving (Eq, Ord, Enum, Bits, Generic)
 
-instance (n <= 256) => Show (IntN n) where
+instance (KnownNat n, n <= 256) => Show (IntN n) where
     show = show . toInteger
 
-instance (n <= 256) => Real (IntN n) where
+instance (KnownNat n, n <= 256) => Bounded (IntN n) where
+    minBound = negate $ 2 ^ (natVal (Proxy :: Proxy (n :: Nat)) - 1)
+    maxBound = 2 ^ (natVal (Proxy :: Proxy (n :: Nat)) - 1) - 1
+
+instance (KnownNat n, n <= 256) => Num (IntN n) where
+    a + b  = fromInteger (toInteger a + toInteger b)
+    a - b  = fromInteger (toInteger a - toInteger b)
+    a * b  = fromInteger (toInteger a * toInteger b)
+    abs    = fromInteger . abs . toInteger
+    negate = fromInteger . negate . toInteger
+    signum = fromInteger . signum . toInteger
+    fromInteger x
+      | x >= 0 = IntN (fromInteger x)
+      | otherwise = IntN (fromInteger $ 2 ^ 256 + x)
+
+instance (KnownNat n, n <= 256) => Real (IntN n) where
     toRational = toRational . toInteger
 
-instance (n <= 256) => Integral (IntN n) where
-    toInteger = toInteger . unIntN
+instance (KnownNat n, n <= 256) => Integral (IntN n) where
     quotRem (IntN a) (IntN b) = (IntN $ quot a b, IntN $ rem a b)
+    toInteger x
+      | testBit x 255 = toInteger (unIntN x) - 2 ^ 256
+      | otherwise = toInteger $ unIntN x
 
 instance (n <= 256) => ABIType (IntN n) where
     isDynamic _ = False
@@ -87,15 +110,6 @@ instance (n <= 256) => ABIGet (IntN n) where
 
 instance (n <= 256) => ABIPut (IntN n) where
     abiPut = putWord256 . unIntN
-
-{-
-toInt256 :: Integral a => a -> IntN 256
-toInt256 x | x >= 0 = IntN (fromIntegral x)
-           | otherwise = undefined
-
-fromInt256 :: Integral a => IntN 256 -> a
-fromInt256 = undefined
--}
 
 putWord256 :: Putter Word256
 putWord256 (Word256 a3 a2 a1 a0) =

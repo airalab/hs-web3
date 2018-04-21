@@ -46,17 +46,6 @@ intNTest =
              encoded = "0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
           in roundTrip decoded encoded
 
-{- TODO
-      it "can fail to encode larger int248" $ do
-         let muint = uIntNFromInteger $ (2 ^ 255) - 1 :: Maybe (UIntN 248)
-         muint `shouldBe` Nothing
-
-      it "can fail to encode larger negative int248" $ do
-         let mint = intNFromInteger $ - (2 ^ 255 + 1) :: Maybe (IntN 248)
-         mint `shouldBe` Nothing
--}
-
-
 bytesTest :: Spec
 bytesTest = do
     describe "bytes tests" $ do
@@ -149,8 +138,8 @@ tuplesTest =
                  <> "0x0000000000000000000000000000000000000000000000000000000000000000"
        in roundTripGeneric decoded encoded
 
-    it "can encode 4-tuples with a mix of args - (UInt, String, Boolean, Array Int)" $ do
-      let decoded = (1 :: IntN 256, "dave" :: Text, True, [1, 2, 3] :: [IntN 256])
+    it "can encode 4-tuples with a mix of args - (UInt32, String, Boolean, Array Int256)" $ do
+      let decoded = (1 :: IntN 32, "dave" :: Text, True, [1, 2, 3] :: [IntN 256])
           encoded = "0x0000000000000000000000000000000000000000000000000000000000000001"
                  <> "0x0000000000000000000000000000000000000000000000000000000000000080"
                  <> "0x0000000000000000000000000000000000000000000000000000000000000001"
@@ -169,7 +158,7 @@ tuplesTest =
           bool = True
           int224 = 221 :: IntN 224
           bools = [True, False] :: ListN 2 Bool
-          ints = [1, (-1), 3] :: [IntN 256]
+          ints = [1, (-1), 3] :: [IntN 32]
           string = "hello" :: Text
           bytes16 =  "0x12345678123456781234567812345678" :: BytesN 16
           elem = "0x1234" :: BytesN 2

@@ -30,9 +30,6 @@ import           Generics.SOP   (Generic, Rep, from, to)
 class ABIType a where
     isDynamic :: Proxy a -> Bool
 
-    default isDynamic :: Proxy a -> Bool
-    isDynamic _ = False
-
 -- | A class for encoding datatypes to their abi encoding
 --
 -- If your compiler has support for the @DeriveGeneric@ and
