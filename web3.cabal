@@ -83,15 +83,14 @@ library
   default-language:    Haskell2010
   ghc-options:         -Werror
                        -Wduplicate-exports -Whi-shadowing -Widentities -Wnoncanonical-monoid-instances
-                       -Woverlapping-patterns -Wtabs -Wdeferred-out-of-scope-variables -Wpartial-type-signatures
+                       -Woverlapping-patterns -Wtabs -Wpartial-type-signatures -Wderiving-typeable
+                       -Wunrecognised-pragmas -Wunticked-promoted-constructors -Wtyped-holes
                        -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods
                        -Wmissing-exported-signatures -Wmissing-monadfail-instances -Wmissing-signatures
                        -Wname-shadowing -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances
-                       -Wunrecognised-pragmas -Wunticked-promoted-constructors -Wmissing-home-modules
                        -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds
                        -Wunused-imports -Wunused-matches -Wunused-foralls -Wunused-do-bind -Wwrong-do-bind
-                       -Wtrustworthy-safe -Wwarnings-deprecations -Wdeferred-type-errors -Wtyped-holes
-                       -Wderiving-typeable
+                       -Wtrustworthy-safe -Wwarnings-deprecations -Wdeferred-type-errors
 
 test-suite unit
   type:                exitcode-stdio-1.0
