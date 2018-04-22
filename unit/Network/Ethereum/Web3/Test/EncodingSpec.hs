@@ -6,22 +6,21 @@
 
 module Network.Ethereum.Web3.Test.EncodingSpec where
 
-import           Data.Monoid                         ((<>))
-import           Data.Text                           (Text)
-import           Generics.SOP                        (Generic, Rep)
+import           Data.Monoid                      ((<>))
+import           Data.Text                        (Text)
+import           Generics.SOP                     (Generic, Rep)
 import           Test.Hspec
 
-import           Network.Ethereum.ABI.Class          (ABIGet, ABIPut,
-                                                      GenericABIGet,
-                                                      GenericABIPut)
-import           Network.Ethereum.ABI.Codec          (decode, decode', encode,
-                                                      encode')
-import           Network.Ethereum.ABI.Prim.Bool      ()
-import           Network.Ethereum.ABI.Prim.Bytes     (Bytes, BytesN)
-import           Network.Ethereum.ABI.Prim.Int       (IntN, UIntN)
-import           Network.Ethereum.ABI.Prim.List      (ListN)
-import           Network.Ethereum.ABI.Prim.Singleton (Singleton (..))
-import           Network.Ethereum.ABI.Prim.String    ()
+import           Network.Ethereum.ABI.Class       (ABIGet, ABIPut,
+                                                   GenericABIGet, GenericABIPut)
+import           Network.Ethereum.ABI.Codec       (decode, decode', encode,
+                                                   encode')
+import           Network.Ethereum.ABI.Prim.Bool   ()
+import           Network.Ethereum.ABI.Prim.Bytes  (Bytes, BytesN)
+import           Network.Ethereum.ABI.Prim.Int    (IntN, UIntN)
+import           Network.Ethereum.ABI.Prim.List   (ListN)
+import           Network.Ethereum.ABI.Prim.String ()
+import           Network.Ethereum.ABI.Prim.Tuple  (Singleton (..))
 
 spec :: Spec
 spec = do

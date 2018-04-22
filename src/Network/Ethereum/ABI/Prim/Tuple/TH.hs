@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 -- |
--- Module      :  Network.Ethereum.ABI.Prim.Tuple
+-- Module      :  Network.Ethereum.ABI.Prim.Tuple.TH
 -- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
