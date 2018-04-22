@@ -91,7 +91,7 @@ instance FromJSON RpcError where
     parseJSON = withObject "JSON-RPC error object" $
         \v -> RpcError <$> v .: "code"
                        <*> v .: "message"
-                       <*> v .: "data"
+                       <*> v .:? "data"
 
 -- | Typeclass for JSON-RPC monad base.
 --
