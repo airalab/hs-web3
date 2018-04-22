@@ -28,28 +28,12 @@
 -- @
 --
 
-module Network.Ethereum.Contract.TH (
+module Network.Ethereum.Contract.TH (abi, abiFrom) where
 
-  -- * Quasiquoter's
-    abi
-  , abiFrom
-
-  -- * Used by TH data types
-  , Text
-  , Singleton(..)
-  , IndexedEvent(..)
-  , Tagged
-  , module Generics.SOP
-  , mkDecl
-  , escape
-
-  ) where
-
-import           Control.Monad                       ((<=<))
-import           Control.Monad                       (replicateM)
+import           Control.Monad                       (replicateM, (<=<))
 import           Data.Aeson                          (eitherDecode)
-import           Data.List                           (uncons)
-import           Data.List                           (groupBy, sortBy)
+import           Data.Default                        (Default (..))
+import           Data.List                           (groupBy, sortBy, uncons)
 import           Data.Monoid                         ((<>))
 import           Data.Tagged                         (Tagged)
 import           Data.Text                           (Text)
@@ -63,7 +47,9 @@ import           Language.Haskell.TH.Quote
 
 import           Data.String.Extra                   (toLowerFirst,
                                                       toUpperFirst)
-import           Network.Ethereum.ABI.Event          (IndexedEvent)
+import           Network.Ethereum.ABI.Class          (ABIGet, ABIPut,
+                                                      ABIType (..))
+import           Network.Ethereum.ABI.Event          (IndexedEvent (..))
 import           Network.Ethereum.ABI.Json           (ContractABI (..),
                                                       Declaration (..),
                                                       EventArg (..),
@@ -71,9 +57,16 @@ import           Network.Ethereum.ABI.Json           (ContractABI (..),
                                                       SolidityType (..),
                                                       eventId, methodId,
                                                       parseSolidityType)
+import           Network.Ethereum.ABI.Prim.Address   (Address)
+import           Network.Ethereum.ABI.Prim.Bytes     (Bytes, BytesN)
+import           Network.Ethereum.ABI.Prim.Int       (IntN, UIntN)
+import           Network.Ethereum.ABI.Prim.List      (ListN)
 import           Network.Ethereum.ABI.Prim.Singleton (Singleton (..))
+import           Network.Ethereum.ABI.Prim.Tagged    ()
+import           Network.Ethereum.Contract.Method    (Method (..), call)
 import           Network.Ethereum.Web3.Provider      (Web3)
-import           Network.Ethereum.Web3.Types         (Call, TxHash)
+import           Network.Ethereum.Web3.Types         (Call, DefaultBlock (..),
+                                                      Filter (..), TxHash)
 
 -- | Read contract ABI from file
 abiFrom :: QuasiQuoter
@@ -109,13 +102,13 @@ funD' name p f = funD name [clause p (normalB f) []]
 -- | ABI and Haskell types association
 toHSType :: SolidityType -> TypeQ
 toHSType s = case s of
-    SolidityBool        -> conT (mkName "Bool")
-    SolidityAddress     -> conT (mkName "Address")
-    SolidityUint n      -> appT (conT (mkName "UIntN")) (numLit n)
-    SolidityInt n       -> appT (conT (mkName "IntN")) (numLit n)
-    SolidityString      -> conT (mkName "Text")
-    SolidityBytesN n    -> appT (conT (mkName "BytesN")) (numLit n)
-    SolidityBytes       -> conT (mkName "Bytes")
+    SolidityBool        -> conT ''Bool
+    SolidityAddress     -> conT ''Address
+    SolidityUint n      -> appT (conT ''UIntN) (numLit n)
+    SolidityInt n       -> appT (conT ''IntN) (numLit n)
+    SolidityString      -> conT ''Text
+    SolidityBytesN n    -> appT (conT ''BytesN) (numLit n)
+    SolidityBytes       -> conT ''Bytes
     SolidityVector ns a -> expandVector ns a
     SolidityArray a     -> appT listT $ toHSType a
   where
@@ -124,9 +117,9 @@ toHSType s = case s of
     expandVector ns a = case uncons ns of
       Just (n, rest) ->
         if length rest == 0
-          then (conT $ mkName "Vector") `appT` numLit n `appT` toHSType a
-          else (conT $ mkName "Vector") `appT` numLit n `appT` expandVector rest a
-      _ -> error $ "impossible Nothing branch in `expandVector`: " ++ show ns ++ " " ++ show a
+          then (conT ''ListN) `appT` numLit n `appT` toHSType a
+          else (conT ''ListN) `appT` numLit n `appT` expandVector rest a
+      _ -> error $ "Impossible Nothing branch in `expandVector`: " ++ show ns ++ " " ++ show a
 
 typeQ :: Text -> TypeQ
 typeQ t = case parseSolidityType t of
@@ -137,18 +130,6 @@ typeQ t = case parseSolidityType t of
 funBangType :: FunctionArg -> BangTypeQ
 funBangType (FunctionArg _ typ) =
     bangType (bang sourceNoUnpack sourceStrict) (typeQ typ)
-
-eventFilterD :: String -> Int -> [DecQ]
-eventFilterD topic0 n =
-  let addr = mkName "a"
-      indexedArgs = replicate n Nothing :: [Maybe String]
-  in [ funD' (mkName "eventFilter") [varP addr]
-       [|Filter (Just $(varE addr))
-                (Just $ [Just topic0] <> indexedArgs)
-                Latest
-                Latest
-       |]
-     ]
 
 funWrapper :: Bool
            -- ^ Is constant?
@@ -193,19 +174,26 @@ mkDecl :: Declaration -> Q [Dec]
 
 mkDecl ev@(DEvent name inputs anonymous) = sequence
     [ dataD' indexedName (normalC indexedName (map (toBang <=< tag) indexedArgs)) derivingD
-    , instanceD' indexedName (conT (mkName "Generic")) []
+    , instanceD' indexedName (conT ''Generic) []
+    , instanceD' indexedName (conT ''ABIType) [funD' 'isDynamic [] [|const False|]]
+    , instanceD' indexedName (conT ''ABIGet) []
     , dataD' nonIndexedName (normalC nonIndexedName (map (toBang <=< tag) nonIndexedArgs)) derivingD
-    , instanceD' nonIndexedName (conT (mkName "Generic")) []
+    , instanceD' nonIndexedName (conT ''Generic) []
+    , instanceD' nonIndexedName (conT ''ABIType) [funD' 'isDynamic [] [|const False|]]
+    , instanceD' nonIndexedName (conT ''ABIGet) []
     , dataD' allName (recC allName (map (\(n, a) -> ((\(b,t) -> return (n,b,t)) <=< toBang <=< typeQ $ a)) allArgs)) derivingD
-    , instanceD' allName (conT (mkName "Generic")) []
+    , instanceD' allName (conT ''Generic) []
     , instanceD (cxt [])
-        (return $ (ConT $ mkName "IndexedEvent") `AppT` ConT indexedName `AppT` ConT nonIndexedName `AppT` ConT allName)
-        [funD' (mkName "isAnonymous") [] [|const anonymous|]]
-    , instanceD' allName eventT (eventFilterD (T.unpack $ eventId ev) (length indexedArgs))
+        (pure $ ConT ''IndexedEvent `AppT` ConT indexedName `AppT` ConT nonIndexedName `AppT` ConT allName)
+        [funD' 'isAnonymous [] [|const anonymous|]]
+    , instanceD (cxt [])
+        (pure $ ConT ''Default `AppT` (ConT ''Filter `AppT` ConT allName))
+        [funD' 'def [] [|Filter Nothing (Just topics) Latest Latest|] ]
     ]
   where
+    topics    = [Just (T.unpack $ eventId ev)] <> replicate (length indexedArgs) Nothing
     toBang ty = bangType (bang sourceNoUnpack sourceStrict) (return ty)
-    tag (n, ty) = AppT (AppT (ConT $ mkName "Tagged") (LitT $ NumTyLit n)) <$> typeQ ty
+    tag (n, ty) = AppT (AppT (ConT ''Tagged) (LitT $ NumTyLit n)) <$> typeQ ty
     labeledArgs = zip [1..] inputs
     indexedArgs = map (\(n, ea) -> (n, eveArgType ea)) . filter (eveArgIndexed . snd) $ labeledArgs
     indexedName = mkName $ toUpperFirst (T.unpack name) <> "Indexed"
@@ -213,23 +201,26 @@ mkDecl ev@(DEvent name inputs anonymous) = sequence
     nonIndexedName = mkName $ toUpperFirst (T.unpack name) <> "NonIndexed"
     allArgs = makeArgs name $ map (\i -> (eveArgName i, eveArgType i)) inputs
     allName = mkName $ toUpperFirst (T.unpack name)
-    derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
-    eventT = conT (mkName "Event")
+    derivingD = [''Show, ''Eq, ''Ord, ''GHC.Generic]
 
 -- | Method delcarations maker
 mkDecl fun@(DFunction name constant inputs outputs) = (++)
   <$> funWrapper constant fnName dataName inputs outputs
   <*> sequence
         [ dataD' dataName (normalC dataName bangInput) derivingD
-        , instanceD' dataName (conT (mkName "Generic")) []
-        , instanceD' dataName  (conT (mkName "Method"))
-          [funD' (mkName "selector") [] [|const mIdent|]]
+        , instanceD' dataName (conT ''Generic) []
+        , instanceD' dataName (conT ''ABIType)
+          [funD' 'isDynamic [] [|const False|]]
+        , instanceD' dataName (conT ''ABIPut) []
+        , instanceD' dataName (conT ''ABIGet) []
+        , instanceD' dataName (conT ''Method)
+          [funD' 'selector [] [|const mIdent|]]
         ]
   where mIdent    = T.unpack (methodId $ fun {funName = T.replace "'" "" name})
         dataName  = mkName (toUpperFirst (T.unpack $ name <> "Data"))
         fnName    = mkName (toLowerFirst (T.unpack name))
         bangInput = fmap funBangType inputs
-        derivingD = [mkName "Show", mkName "Eq", mkName "Ord", ''GHC.Generic]
+        derivingD = [''Show, ''Eq, ''Ord, ''GHC.Generic]
 
 mkDecl _ = return []
 
@@ -245,7 +236,7 @@ makeArgs prefix ns = go 1 ns
     go :: Int -> [(Text, Text)] -> [(Name, Text)]
     go _ [] = []
     go i ((h, ty) : tail') = if T.null h
-                        then (mkName $  prefixStr ++ show i, ty) : go (i + 1) tail'
+                        then (mkName $ prefixStr ++ show i, ty) : go (i + 1) tail'
                         else (mkName . (++ "_") . (++) prefixStr . toUpperFirst . T.unpack $ h, ty) : go (i + 1) tail'
 
 escape :: [Declaration] -> [Declaration]

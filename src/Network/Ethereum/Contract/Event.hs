@@ -17,34 +17,31 @@
 
 module Network.Ethereum.Contract.Event (
     EventAction(..)
-  , Event(..)
   , event
   , event'
   , eventMany'
   ) where
 
-import           Control.Concurrent                (threadDelay)
-import           Control.Monad                     (forM, void, when)
-import           Control.Monad.IO.Class            (liftIO)
-import           Control.Monad.Trans.Class         (lift)
-import           Control.Monad.Trans.Reader        (ReaderT (..))
-import           Data.Either                       (rights)
-import           Data.Machine                      (MachineT, asParts, autoM,
-                                                    await, construct, final,
-                                                    mapping, repeatedly, runT,
-                                                    unfoldPlan, (~>))
-import           Data.Machine.Plan                 (PlanT, stop, yield)
-import           Data.Maybe                        (listToMaybe)
+import           Control.Concurrent             (threadDelay)
+import           Control.Monad                  (forM, void, when)
+import           Control.Monad.IO.Class         (liftIO)
+import           Control.Monad.Trans.Class      (lift)
+import           Control.Monad.Trans.Reader     (ReaderT (..))
+import           Data.Either                    (rights)
+import           Data.Machine                   (MachineT, asParts, autoM,
+                                                 await, construct, final,
+                                                 mapping, repeatedly, runT,
+                                                 unfoldPlan, (~>))
+import           Data.Machine.Plan              (PlanT, stop, yield)
+import           Data.Maybe                     (listToMaybe)
 
-import           Control.Concurrent.Async          (Async)
-import           Network.Ethereum.ABI.Event        (DecodeEvent (..))
-import           Network.Ethereum.ABI.Prim.Address (Address)
-import qualified Network.Ethereum.Web3.Eth         as Eth
-import           Network.Ethereum.Web3.Provider    (Web3, forkWeb3)
-import           Network.Ethereum.Web3.Types       (BlockNumber (..),
-                                                    Change (..),
-                                                    DefaultBlock (..),
-                                                    Filter (..), FilterId)
+import           Control.Concurrent.Async       (Async)
+import           Network.Ethereum.ABI.Event     (DecodeEvent (..))
+import qualified Network.Ethereum.Web3.Eth      as Eth
+import           Network.Ethereum.Web3.Provider (Web3, forkWeb3)
+import           Network.Ethereum.Web3.Types    (BlockNumber (..), Change (..),
+                                                 DefaultBlock (..), Filter (..),
+                                                 FilterId)
 
 -- | Event callback control response
 data EventAction = ContinueEvent
@@ -53,24 +50,19 @@ data EventAction = ContinueEvent
                  -- ^ Terminate event listener
   deriving (Show, Eq)
 
--- | Contract event listener
-class Event e where
-    -- | Event filter structure used by low-level subscription methods
-    eventFilter :: Address -> Filter e
-
 -- | Run 'event\'' one block at a time.
-event :: (DecodeEvent i ni e, Event e)
+event :: DecodeEvent i ni e
       => Filter e
       -> (e -> ReaderT Change Web3 EventAction)
       -> Web3 (Async ())
-event fltr handler = forkWeb3 $ event' fltr handler
+event fltr = forkWeb3 . event' fltr
 
 -- | Same as 'event', but does not immediately spawn a new thread.
-event' :: (DecodeEvent i ni e, Event e)
+event' :: DecodeEvent i ni e
        => Filter e
        -> (e -> ReaderT Change Web3 EventAction)
        -> Web3 ()
-event' fltr handler = eventMany' fltr 0 handler
+event' fltr = eventMany' fltr 0
 
 -- | 'eventMany\'' take s a filter, a window size, and a handler.
 --
@@ -78,7 +70,7 @@ event' fltr handler = eventMany' fltr 0 handler
 -- 'reduceEventStream'. If no 'TerminateEvent' action is thrown and
 -- the toBlock is not yet reached, it then transitions to polling.
 --
-eventMany' :: (DecodeEvent i ni e, Event e)
+eventMany' :: DecodeEvent i ni e
            => Filter e
            -> Integer
            -> (e -> ReaderT Change Web3 EventAction)
@@ -135,7 +127,7 @@ data FilterChange a = FilterChange { filterChangeRawChange :: Change
                                    }
 
 -- | 'playLogs' streams the 'filterStream' and calls eth_getLogs on these 'Filter' objects.
-playLogs :: (DecodeEvent i ni e, Event e)
+playLogs :: DecodeEvent i ni e
          => FilterStreamState e
          -> MachineT Web3 k [FilterChange e]
 playLogs s = filterStream s
@@ -143,8 +135,7 @@ playLogs s = filterStream s
           ~> mapping mkFilterChanges
 
 -- | Polls a filter from the given filterId until the target toBlock is reached.
-pollFilter :: forall i ni e k .
-              (DecodeEvent i ni e, Event e)
+pollFilter :: forall i ni e k . DecodeEvent i ni e
            => FilterId
            -> DefaultBlock
            -> MachineT Web3 k [FilterChange e]
@@ -163,7 +154,7 @@ pollFilter i = construct . pollPlan i
           yield $ mkFilterChanges changes
           pollPlan fid end
 
-mkFilterChanges :: (Event e, DecodeEvent i ni e)
+mkFilterChanges :: DecodeEvent i ni e
                 => [Change]
                 -> [FilterChange e]
 mkFilterChanges = rights

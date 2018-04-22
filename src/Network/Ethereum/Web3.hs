@@ -19,11 +19,20 @@
 
 module Network.Ethereum.Web3 (
 
-  -- ** Web3 monad as base of any Ethereum communication
+  -- ** Monad as base of any Ethereum node communication
     Web3
   , runWeb3
 
-  -- ** Ethereum data types
+  -- ** Basic transaction sending
+  , sendTx
+  , Call(..)
+
+  -- ** Basic event listening
+  , EventAction(..)
+  , event
+  , event'
+
+  -- ** Primitive data types
   , Address
   , Bytes
   , BytesN
@@ -31,10 +40,7 @@ module Network.Ethereum.Web3 (
   , UIntN
   , ListN
 
-  -- ** Ethereum transactions
-  , sendTx
-
-  -- ** Ethereum metric unit system
+  -- ** Metric unit system
   , module Network.Ethereum.Unit
 
   ) where
@@ -45,6 +51,9 @@ import           Network.Ethereum.ABI.Prim.Bytes   (Bytes, BytesN)
 import           Network.Ethereum.ABI.Prim.Int     (IntN, UIntN)
 import           Network.Ethereum.ABI.Prim.List    (ListN)
 import           Network.Ethereum.ABI.Prim.String  ()
+import           Network.Ethereum.Contract.Event   (EventAction (..), event,
+                                                    event')
 import           Network.Ethereum.Contract.Method  (sendTx)
 import           Network.Ethereum.Unit
 import           Network.Ethereum.Web3.Provider    (Web3, runWeb3)
+import           Network.Ethereum.Web3.Types       (Call (..))
