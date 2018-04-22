@@ -53,8 +53,7 @@ sendTx call' (dat :: a) =
     let sel = selector (Proxy :: Proxy a)
     in Eth.sendTransaction (call' { callData = Just $ sel <> encode dat })
 
--- | 'call' is used to call contract methods that have no state changing effects,
--- | or to call m
+-- | 'call' is used to call contract methods that have no state changing effects.
 call :: (Method a, ABIGet b)
      => Call
      -- ^ Call configuration

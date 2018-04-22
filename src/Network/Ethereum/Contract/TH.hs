@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP               #-}
-{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
@@ -30,43 +29,41 @@
 
 module Network.Ethereum.Contract.TH (abi, abiFrom) where
 
-import           Control.Monad                       (replicateM, (<=<))
-import           Data.Aeson                          (eitherDecode)
-import           Data.Default                        (Default (..))
-import           Data.List                           (groupBy, sortBy, uncons)
-import           Data.Monoid                         ((<>))
-import           Data.Tagged                         (Tagged)
-import           Data.Text                           (Text)
-import qualified Data.Text                           as T
-import qualified Data.Text.Lazy                      as LT
-import qualified Data.Text.Lazy.Encoding             as LT
-import           Generics.SOP                        (Generic)
-import qualified GHC.Generics                        as GHC (Generic)
+import           Control.Monad                     (replicateM, (<=<))
+import           Data.Aeson                        (eitherDecode)
+import           Data.Default                      (Default (..))
+import           Data.List                         (groupBy, sortBy, uncons)
+import           Data.Monoid                       ((<>))
+import           Data.Tagged                       (Tagged)
+import           Data.Text                         (Text)
+import qualified Data.Text                         as T
+import qualified Data.Text.Lazy                    as LT
+import qualified Data.Text.Lazy.Encoding           as LT
+import           Generics.SOP                      (Generic)
+import qualified GHC.Generics                      as GHC (Generic)
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Quote
 
-import           Data.String.Extra                   (toLowerFirst,
-                                                      toUpperFirst)
-import           Network.Ethereum.ABI.Class          (ABIGet, ABIPut,
-                                                      ABIType (..))
-import           Network.Ethereum.ABI.Event          (IndexedEvent (..))
-import           Network.Ethereum.ABI.Json           (ContractABI (..),
-                                                      Declaration (..),
-                                                      EventArg (..),
-                                                      FunctionArg (..),
-                                                      SolidityType (..),
-                                                      eventId, methodId,
-                                                      parseSolidityType)
-import           Network.Ethereum.ABI.Prim.Address   (Address)
-import           Network.Ethereum.ABI.Prim.Bytes     (Bytes, BytesN)
-import           Network.Ethereum.ABI.Prim.Int       (IntN, UIntN)
-import           Network.Ethereum.ABI.Prim.List      (ListN)
-import           Network.Ethereum.ABI.Prim.Singleton (Singleton (..))
-import           Network.Ethereum.ABI.Prim.Tagged    ()
-import           Network.Ethereum.Contract.Method    (Method (..), call)
-import           Network.Ethereum.Web3.Provider      (Web3)
-import           Network.Ethereum.Web3.Types         (Call, DefaultBlock (..),
-                                                      Filter (..), TxHash)
+import           Data.String.Extra                 (toLowerFirst, toUpperFirst)
+import           Network.Ethereum.ABI.Class        (ABIGet, ABIPut,
+                                                    ABIType (..))
+import           Network.Ethereum.ABI.Event        (IndexedEvent (..))
+import           Network.Ethereum.ABI.Json         (ContractABI (..),
+                                                    Declaration (..),
+                                                    EventArg (..),
+                                                    FunctionArg (..),
+                                                    SolidityType (..), eventId,
+                                                    methodId, parseSolidityType)
+import           Network.Ethereum.ABI.Prim.Address (Address)
+import           Network.Ethereum.ABI.Prim.Bytes   (Bytes, BytesN)
+import           Network.Ethereum.ABI.Prim.Int     (IntN, UIntN)
+import           Network.Ethereum.ABI.Prim.List    (ListN)
+import           Network.Ethereum.ABI.Prim.Tagged  ()
+import           Network.Ethereum.ABI.Prim.Tuple   (Singleton (..))
+import           Network.Ethereum.Contract.Method  (Method (..), call)
+import           Network.Ethereum.Web3.Provider    (Web3)
+import           Network.Ethereum.Web3.Types       (Call, DefaultBlock (..),
+                                                    Filter (..), TxHash)
 
 -- | Read contract ABI from file
 abiFrom :: QuasiQuoter

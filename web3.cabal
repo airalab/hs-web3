@@ -51,10 +51,11 @@ library
                      , Network.Ethereum.ABI.Prim.Bool
                      , Network.Ethereum.ABI.Prim.List
                      , Network.Ethereum.ABI.Prim.Bytes
+                     , Network.Ethereum.ABI.Prim.Tuple
+                     , Network.Ethereum.ABI.Prim.Tuple.TH
                      , Network.Ethereum.ABI.Prim.String
                      , Network.Ethereum.ABI.Prim.Tagged
                      , Network.Ethereum.ABI.Prim.Address
-                     , Network.Ethereum.ABI.Prim.Singleton
                      , Network.Ethereum.Contract.TH
                      , Network.Ethereum.Contract.Event
                      , Network.Ethereum.Contract.Method
