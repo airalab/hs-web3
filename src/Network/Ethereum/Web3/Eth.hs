@@ -169,9 +169,9 @@ getTransactionByBlockNumberAndIndex :: DefaultBlock -> Quantity -> Web3 (Maybe T
 getTransactionByBlockNumberAndIndex = remote "eth_getTransactionByBlockNumberAndIndex"
 
 -- | Returns the receipt of a transaction by transaction hash.
--- TODO must create new type, TxReceipt
--- getTransactionReceipt :: Text -> Web3 TxReceipt
--- getTransactionReceipt = remote "getTransactionReceipt"
+getTransactionReceipt :: TxHash -> Web3 (Maybe TxReceipt)
+{-# INLINE getTransactionReceipt #-}
+getTransactionReceipt = remote "eth_getTransactionReceipt"
 
 -- | Returns a list of addresses owned by client.
 accounts :: Web3 [Address]
