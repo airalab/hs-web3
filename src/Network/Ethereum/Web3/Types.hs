@@ -35,6 +35,8 @@ import           Network.Ethereum.ABI.Prim.Address (Address)
 import           Network.Ethereum.ABI.Prim.Bytes   (Bytes)
 import           Network.Ethereum.Unit
 
+type TxHash = Bytes
+
 -- | Should be viewed as type to representing QUANTITY in Web3 JSON RPC docs
 --
 --  When encoding QUANTITIES (integers, numbers): encode as hex, prefix with "0x",
@@ -198,25 +200,25 @@ instance Ord DefaultBlock where
 
 -- | The Receipt of a Transaction
 data TxReceipt = TxReceipt
-  { receiptTransactionHash     :: !TxHash
+  { receiptTransactionHash   :: !TxHash
   -- ^ DATA, 32 Bytes - hash of the transaction.
-  , receiptTransactionIndex    :: !Text
+  , receiptTransactionIndex  :: !Quantity
   -- ^ QUANTITY - index of the transaction.
-  , receiptBlockHash           :: !Text
+  , receiptBlockHash         :: !Bytes
   -- ^ DATA, 32 Bytes - hash of the block where this transaction was in. null when its pending.
-  , receiptBlockNumber         :: !BlockNumber
+  , receiptBlockNumber       :: !BlockNumber
   -- ^ QUANTITY - block number where this transaction was in.
-  , receiptCumulativeGasUsed   :: !Text
+  , receiptCumulativeGasUsed :: !Quantity
   -- ^ QUANTITY - The total amount of gas used when this transaction was executed in the block.
-  , receiptGasUsed             :: !Text
+  , receiptGasUsed           :: !Quantity
   -- ^ QUANTITY - The amount of gas used by this specific transaction alone.
-  , receiptContractAddress     :: !(Maybe Text)
+  , receiptContractAddress   :: !(Maybe Address)
   -- ^ DATA, 20 Bytes - The contract address created, if the transaction was a contract creation, otherwise null.
-  , receiptLogs                :: ![Value]
+  , receiptLogs              :: ![Value]
   -- ^ Array - Array of log objects, which this transaction generated.
-  , receiptLogsBloom           :: !Text
+  , receiptLogsBloom         :: !Bytes
   -- ^ DATA, 256 Bytes - Bloom filter for light clients to quickly retrieve related logs.
-  , receiptStatus              :: !Text
+  , receiptStatus            :: !Quantity
   -- ^ QUANTITY either 1 (success) or 0 (failure)
   } deriving (Show, Generic)
 
@@ -296,5 +298,3 @@ data Block = Block
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 5 }) ''Block)
-
-type TxHash = Bytes
