@@ -59,7 +59,7 @@ library
                      , Network.Ethereum.Contract.Method
                      , Network.JsonRpc.TinyClient
                      , Data.String.Extra
-  build-depends:       base >4.8 && <4.11
+  build-depends:       base >4.9 && <4.12
                      , template-haskell
                      , data-default
                      , generics-sop
