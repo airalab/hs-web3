@@ -1,5 +1,6 @@
 sudo: required
 language: haskell
+
 services:
 - docker
 
@@ -31,7 +32,8 @@ install:
   $HOME/.cabal/bin installplan.txt $HOME/.cabsnap/; fi;
 
 script:
-- docker run --rm -d -p 8545:8545 foamspace/cliquebait:latest
+- docker run --rm -d -p 8545:8545 foamspace/cliquebait:latest && sleep 30
+- export EXPORT_STORE=.detected-contract-addresses && cd test-support && truffle deploy && ./convertAbi.sh && ./inject-contract-addresses.sh && cd ..
 - if [ $STACK ]; then stack -j2 --no-terminal --install-ghc test;
   else cabal update && cabal install --only-dependencies --enable-tests $CABALCONFOPTS && cabal configure --enable-tests $CABALCONFOPTS -v2 && cabal build web3 $CABALBUILDOPTS && cabal test;
   fi
@@ -40,15 +42,11 @@ matrix:
   include:
     - env: GHCVER=8.0.2 CABALVER=1.24
       addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.2], sources: [hvr-ghc]}}
-    - env: GHCVER=8.2.1 CABALVER=2.0
-      addons: {apt: {packages: [cabal-install-2.0,ghc-8.2.1], sources: [hvr-ghc]}}
     - env: GHCVER=8.2.2 CABALVER=2.0
       addons: {apt: {packages: [cabal-install-2.0,ghc-8.2.2], sources: [hvr-ghc]}}
-    - env: GHCVER=head CABALVER=head
-      addons: {apt: {packages: [cabal-install-head,ghc-head], sources: [hvr-ghc]}}
+    - env: GHCVER=8.4.2 CABALVER=2.2
+      addons: {apt: {packages: [cabal-install-2.2,ghc-8.4.2], sources: [hvr-ghc]}}
     - env: STACK=YES
-  allow_failures:
-    - env: GHCVER=head CABALVER=head
 
 before_cache:
   - rm -fv $HOME/.cabal/packages/hackage.haskell.org/build-reports.log
