@@ -1,15 +1,16 @@
 -- |
--- Module      :  Network.Ethereum.Web3.Internal
--- Copyright   :  Alexander Krupenkin 2016
+-- Module      :  Data.String.Extra
+-- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- Common used internal functions.
+-- Extra string manipulation functions.
 --
-module Network.Ethereum.Web3.Internal where
+
+module Data.String.Extra where
 
 import           Data.Char (toLower, toUpper)
 

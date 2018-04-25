@@ -41,11 +41,10 @@ Function `runWeb3` use default `Web3` provider at `localhost:8545`.
 
 ### TemplateHaskell generator
 
-[Quasiquotation](https://wiki.haskell.org/Quasiquotation) is used to parse
-contract ABI or load from JSON file. [TemplateHaskell](https://wiki.haskell.org/Template_Haskell) driven Haskell contract API generator can automatical create instances for `Event` and `Method`
-typeclasses and function helpers.
+[Quasiquotation](https://wiki.haskell.org/Quasiquotation) is used to parse contract ABI or load from JSON file. [TemplateHaskell](https://wiki.haskell.org/Template_Haskell) driven Haskell contract API generator can automatical create ABI encoding instances and contract method helpers.
 
     > :set -XQuasiQuotes
+    > import Network.Ethereum.Contract.TH
     > putStr [abiFrom|data/sample.json|]
     Contract:
             Events:
@@ -55,48 +54,10 @@ typeclasses and function helpers.
                     0x03de48b3 runA1()
                     0x90126c7a runA2(string,uint256)
 
-See example of usage below. Use `-ddump-splices` to see generated code during compilation or in GHCi.
-
-```haskell
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes #-}
-
-module Main where
-
-import Data.Default
-import Data.Text (Text, unpack)
-import Text.Printf
-
-import Network.Ethereum.Web3 hiding (name)
-import Network.Ethereum.Web3.Encoding
-import Network.Ethereum.Web3.TH
-import Network.Ethereum.Web3.Types
-
-[abiFrom|data/ERC20.json|]
-
-main :: IO ()
-main = do
-    result <- runWeb3 $ do
-        n <- name tokenCall
-        s <- symbol tokenCall
-        d <- decimals tokenCall
-        return $ printf "Token %s with symbol %s and decimals %d"
-                   (unpack n) (unpack s) (fromIntegral d :: Int)
-    case result of
-      Left error -> print error
-      Right info -> putStrLn info
-  where 
-    token :: Address
-    token = "0x237D60A8b41aFD2a335305ed458B609D7667D789"
-
-    tokenCall :: Call
-    tokenCall = def { callTo = token }
-```
+Use `-ddump-splices` to see generated code during compilation or in GHCi. See `examples` folder for more use cases.
 
 ### Testing
+
 Testing the `web3` is split up into two suites: `unit` and `live`.
 The `unit` suite tests internal library facilities, while the `live` tests that
 the library adequately interacts with a Web3 provider.
