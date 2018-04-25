@@ -23,27 +23,28 @@ This is the Ethereum compatible Haskell API which implements the [Generic JSON R
 
 Any Ethereum node communication wrapped with `Web3` monadic type.
 
-    > :t web3_clientVersion
-    web3_clientVersion :: Provider a => Web3 a Text
+    > import Network.Ethereum.Web3.Web3
+    > :t clientVersion
+    clientVersion :: Web3 Text
 
 To run this computation used `runWeb3'` or `runWeb3` functions.
 
-    > runWeb3 web3_clientVersion
+    > import Network.Ethereum.Web3
+    > runWeb3 clientVersion
     Right "Parity//v1.4.5-beta-a028d04-20161126/x86_64-linux-gnu/rustc1.13.0"
 
 Function `runWeb3` use default `Web3` provider at `localhost:8545`.
 
     > :t runWeb3
     runWeb3
-      :: MonadIO m => Web3 DefaultProvider b -> m (Either Web3Error b)
+      :: MonadIO m => Web3 a -> m (Either Web3Error a)
 
 ### TemplateHaskell generator
 
-[Quasiquotation](https://wiki.haskell.org/Quasiquotation) is used to parse
-contract ABI or load from JSON file. [TemplateHaskell](https://wiki.haskell.org/Template_Haskell) driven Haskell contract API generator can automatical create instances for `Event` and `Method`
-typeclasses and function helpers.
+[Quasiquotation](https://wiki.haskell.org/Quasiquotation) is used to parse contract ABI or load from JSON file. [TemplateHaskell](https://wiki.haskell.org/Template_Haskell) driven Haskell contract API generator can automatical create ABI encoding instances and contract method helpers.
 
     > :set -XQuasiQuotes
+    > import Network.Ethereum.Contract.TH
     > putStr [abiFrom|data/sample.json|]
     Contract:
             Events:
@@ -53,27 +54,10 @@ typeclasses and function helpers.
                     0x03de48b3 runA1()
                     0x90126c7a runA2(string,uint256)
 
-See example of usage.
-
-```haskell
-import Data.Text (unpack)
-import Text.Printf
-
-[abiFrom|data/ERC20.json|]
-
-main :: IO ()
-main = do
-    Right s <- runWeb3 $ do
-        n <- name token
-        s <- symbol token
-        d <- decimals token
-        return $ printf "Token %s with symbol %s and decimals %d"
-                        (unpack n) (unpack s) d
-    putStrLn s
-  where token = "0x237D60A8b41aFD2a335305ed458B609D7667D789"
-```
+Use `-ddump-splices` to see generated code during compilation or in GHCi. See `examples` folder for more use cases.
 
 ### Testing
+
 Testing the `web3` is split up into two suites: `unit` and `live`.
 The `unit` suite tests internal library facilities, while the `live` tests that
 the library adequately interacts with a Web3 provider.

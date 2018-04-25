@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 -- |
 -- Module      :  Network.Ethereum.Web3.Net
 -- Copyright   :  Alexander Krupenkin 2016
@@ -9,24 +11,24 @@
 --
 -- Ethereum node JSON-RPC API methods with `net_` prefix.
 --
+
 module Network.Ethereum.Web3.Net where
 
-import           Data.Text                      (Text)
-import           Network.Ethereum.Web3.JsonRpc
-import           Network.Ethereum.Web3.Provider
-import           Network.Ethereum.Web3.Types
+import           Network.Ethereum.Web3.Provider (Web3)
+import           Network.Ethereum.Web3.Types    (Quantity)
+import           Network.JsonRpc.TinyClient     (remote)
 
 -- | Returns the current network id.
-version :: Provider a => Web3 a Text
+version :: Web3 Int
 {-# INLINE version #-}
 version = remote "net_version"
 
 -- | Returns true if client is actively listening for network connections.
-listening :: Provider a => Web3 a Bool
+listening :: Web3 Bool
 {-# INLINE listening #-}
 listening = remote "net_listening"
 
 -- | Returns number of peers currently connected to the client.
-peerCount :: Provider a => Web3 a Text
+peerCount :: Web3 Quantity
 {-# INLINE peerCount #-}
 peerCount = remote "net_peerCount"

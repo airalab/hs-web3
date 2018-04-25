@@ -1,11 +1,11 @@
--- 
+-- |
 -- Module      :  Network.Ethereum.Web3
--- Copyright   :  Alexander Krupenkin 2016
+-- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
 -- Stability   :  experimental
--- Portability :  unknown
+-- Portability :  unportable
 --
 -- An Ethereum node offers a RPC interface. This interface gives Ðapp’s
 -- access to the Ethereum blockchain and functionality that the node provides,
@@ -16,46 +16,44 @@
 --
 -- Web3 Haskell library currently use JSON-RPC over HTTP to access node functionality.
 --
+
 module Network.Ethereum.Web3 (
-  -- ** Web3 monad and service provider
+
+  -- ** Monad as base of any Ethereum node communication
     Web3
-  , Provider(..)
-  , DefaultProvider
-  , Web3Error(..)
-  , forkWeb3
-  , runWeb3'
   , runWeb3
-  -- ** Contract actions
-  , EventAction(..)
-  , Event(..)
-  , event
-  , Method(..)
+
+  -- ** Basic transaction sending
   , sendTx
-  , call
-  , NoMethod(..)
-  , nopay
-  -- ** Ethereum data types
-  , BytesN(..)
-  , BytesD(..)
-  , IntN(..)
-  , intNFromInteger
-  , UIntN(..)
-  , uIntNFromInteger
+  , Call(..)
+
+  -- ** Basic event listening
+  , EventAction(..)
+  , event
+  , event'
+
+  -- ** Primitive data types
   , Address
-  , Vector
-  -- ** Ethereum unit conversion utils
+  , Bytes
+  , BytesN
+  , IntN
+  , UIntN
+  , ListN
+
+  -- ** Metric unit system
   , module Network.Ethereum.Unit
-  , IndexedEvent(..)
+
   ) where
 
+import           Network.Ethereum.ABI.Prim.Address (Address)
+import           Network.Ethereum.ABI.Prim.Bool    ()
+import           Network.Ethereum.ABI.Prim.Bytes   (Bytes, BytesN)
+import           Network.Ethereum.ABI.Prim.Int     (IntN, UIntN)
+import           Network.Ethereum.ABI.Prim.List    (ListN)
+import           Network.Ethereum.ABI.Prim.String  ()
+import           Network.Ethereum.Contract.Event   (EventAction (..), event,
+                                                    event')
+import           Network.Ethereum.Contract.Method  (sendTx)
 import           Network.Ethereum.Unit
-import           Network.Ethereum.Web3.Address
-import           Network.Ethereum.Web3.Contract
-import           Network.Ethereum.Web3.Encoding
-import           Network.Ethereum.Web3.Encoding.Bytes
-import           Network.Ethereum.Web3.Encoding.Event
-import           Network.Ethereum.Web3.Encoding.Generic
-import           Network.Ethereum.Web3.Encoding.Int
-import           Network.Ethereum.Web3.Encoding.Vector
-import           Network.Ethereum.Web3.Provider
-import           Network.Ethereum.Web3.Types
+import           Network.Ethereum.Web3.Provider    (Web3, runWeb3)
+import           Network.Ethereum.Web3.Types       (Call (..))

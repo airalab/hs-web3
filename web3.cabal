@@ -1,5 +1,5 @@
 name:                web3
-version:             0.6.0.0
+version:             0.7.0.0
 synopsis:            Ethereum API for Haskell
 description:         Web3 is a Haskell client library for Ethereum
 homepage:            https://github.com/airalab/hs-web3#readme
@@ -9,11 +9,12 @@ author:              Alexander Krupenkin
 maintainer:          mail@akru.me
 copyright:           Alexander Krupenkin
 category:            Network
-build-type:          Custom
+build-type:          Simple
 cabal-version:       >=1.10
 
 extra-source-files:
   README.md
+  CHANGELOG.md
   test-support/contracts/Migrations.sol
   test-support/contracts/SimpleStorage.sol
   test-support/truffle.js
@@ -21,63 +22,74 @@ extra-source-files:
   test-support/migrations/2_deploy_contracts.js
   test-support/convertAbi.sh
   test-support/inject-contract-addresses.sh
+  examples/ERC20.hs
+  examples/ERC20.json
+  examples/TokenInfo.hs
 
 source-repository head
   type:     git
   location: https://github.com/airalab/hs-web3
 
-custom-setup
-  setup-depends:
-    base,
-    Cabal,
-    directory
-
 library
   hs-source-dirs:      src
   exposed-modules:     Network.Ethereum.Web3
-                     , Network.Ethereum.Unit
-                     , Network.Ethereum.Web3.TH
-                     , Network.Ethereum.Web3.Web3
                      , Network.Ethereum.Web3.Eth
                      , Network.Ethereum.Web3.Net
                      , Network.Ethereum.Web3.Shh
+                     , Network.Ethereum.Web3.Web3
                      , Network.Ethereum.Web3.Types
-                     , Network.Ethereum.Web3.Address
-                     , Network.Ethereum.Web3.JsonAbi
                      , Network.Ethereum.Web3.Provider
-                     , Network.Ethereum.Web3.Encoding
-                     , Network.Ethereum.Web3.Contract
-                     , Network.Ethereum.Web3.Encoding.Bytes
-                     , Network.Ethereum.Web3.Encoding.Event
-                     , Network.Ethereum.Web3.Encoding.Event.Internal
-                     , Network.Ethereum.Web3.Encoding.Generic
-                     , Network.Ethereum.Web3.Encoding.Int
-                     , Network.Ethereum.Web3.Encoding.Vector
-  other-modules:       Network.Ethereum.Web3.JsonRpc
-                     , Network.Ethereum.Web3.Internal
-                     , Network.Ethereum.Web3.Encoding.Internal
-  build-depends:       base >4.8 && <4.11
-                     , aeson
-                     , base16-bytestring
+                     , Network.Ethereum.Unit
+                     , Network.Ethereum.ABI.Json
+                     , Network.Ethereum.ABI.Class
+                     , Network.Ethereum.ABI.Codec
+                     , Network.Ethereum.ABI.Event
+                     , Network.Ethereum.ABI.Event.Internal
+                     , Network.Ethereum.ABI.Generic
+                     , Network.Ethereum.ABI.Prim.Int
+                     , Network.Ethereum.ABI.Prim.Bool
+                     , Network.Ethereum.ABI.Prim.List
+                     , Network.Ethereum.ABI.Prim.Bytes
+                     , Network.Ethereum.ABI.Prim.Tuple
+                     , Network.Ethereum.ABI.Prim.Tuple.TH
+                     , Network.Ethereum.ABI.Prim.String
+                     , Network.Ethereum.ABI.Prim.Tagged
+                     , Network.Ethereum.ABI.Prim.Address
+                     , Network.Ethereum.Contract.TH
+                     , Network.Ethereum.Contract.Event
+                     , Network.Ethereum.Contract.Method
+                     , Network.JsonRpc.TinyClient
+                     , Data.String.Extra
+  build-depends:       base >4.9 && <4.12
+                     , template-haskell
+                     , data-default
+                     , generics-sop
+                     , transformers
+                     , http-client
+                     , http-client-tls
+                     , exceptions
                      , bytestring
                      , cryptonite
-                     , errors
-                     , generics-sop
-                     , http-client-tls
-                     , http-client
-                     , data-default
-                     , memory
-                     , mtl
-                     , parsec
-                     , singletons
-                     , sized
+                     , basement
+                     , machines
                      , tagged
-                     , template-haskell
+                     , parsec
+                     , memory
+                     , cereal 
+                     , aeson
+                     , async
                      , text
-                     , transformers
-                     , vector
-  default-extensions:  OverloadedStrings
+                     , mtl
   default-language:    Haskell2010
+  ghc-options:         -Wduplicate-exports -Whi-shadowing -Widentities -Wnoncanonical-monoid-instances
+                       -Woverlapping-patterns -Wtabs -Wpartial-type-signatures -Wderiving-typeable
+                       -Wunrecognised-pragmas -Wunticked-promoted-constructors -Wtyped-holes
+                       -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods
+                       -Wmissing-exported-signatures -Wmissing-monadfail-instances -Wmissing-signatures
+                       -Wname-shadowing -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances
+                       -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds
+                       -Wunused-imports -Wunused-matches -Wunused-foralls -Wunused-do-bind -Wwrong-do-bind
+                       -Wtrustworthy-safe -Wwarnings-deprecations -Wdeferred-type-errors
 
 test-suite unit
   type:                exitcode-stdio-1.0
@@ -87,25 +99,21 @@ test-suite unit
                        Network.Ethereum.Web3.Test.EncodingSpec
                        Network.Ethereum.Web3.Test.EventSpec
   build-depends:       base
-                     , base16-bytestring
-                     , bytestring
+                     , hspec-expectations
+                     , hspec-discover
+                     , hspec-contrib
+                     , hspec
                      , data-default
                      , generics-sop
-                     , hspec
-                     , hspec-contrib
-                     , hspec-discover
-                     , hspec-expectations
+                     , transformers
+                     , bytestring
                      , memory
-                     , sized
-                     , split
-                     , stm
                      , tagged
+                     , split
                      , time
                      , text
-                     , transformers
                      , web3
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -ddump-splices
-  default-extensions:  DataKinds LambdaCase DeriveGeneric QuasiQuotes TemplateHaskell OverloadedStrings ScopedTypeVariables TypeApplications
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
 test-suite live
@@ -122,15 +130,19 @@ test-suite live
                      , hspec-contrib
                      , hspec-discover
                      , hspec-expectations
+                     , hspec-discover
+                     , hspec-contrib
+                     , hspec
+                     , transformers
+                     , data-default
+                     , bytestring
                      , memory
-                     , text
-                     , sized
                      , split
-                     , stm
+                     , async
+                     , text
                      , time
                      , text
-                     , transformers
                      , web3
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -ddump-splices
-  default-extensions:  DataKinds LambdaCase DeriveGeneric QuasiQuotes TemplateHaskell OverloadedStrings ScopedTypeVariables TypeApplications
+                     , stm
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010

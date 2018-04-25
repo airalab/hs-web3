@@ -1,7 +1,9 @@
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE TemplateHaskell            #-}
+
 -- |
 -- Module      :  Network.Ethereum.Web3.Types
 -- Copyright   :  Alexander Krupenkin 2016
@@ -11,52 +13,29 @@
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- Commonly used types and instances.
+-- Ethereum generic JSON-RPC types.
 --
+
 module Network.Ethereum.Web3.Types where
 
-import           Control.Exception                       (Exception)
-import           Control.Monad.IO.Class                  (MonadIO)
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Default
-import           Data.Monoid                             ((<>))
-import           Data.Text                               (Text)
-import qualified Data.Text.Lazy.Builder                  as B
-import qualified Data.Text.Lazy.Builder.Int              as B
-import qualified Data.Text.Read                          as R
-import           Data.Typeable                           (Typeable)
-import           GHC.Generics
+import           Data.Monoid                       ((<>))
+import           Data.Ord                          (Down (..))
+import           Data.String                       (IsString (..))
+import qualified Data.Text                         as T
+import qualified Data.Text.Lazy.Builder            as B
+import qualified Data.Text.Lazy.Builder.Int        as B
+import qualified Data.Text.Read                    as R
+import           GHC.Generics                      (Generic)
+
+import           Data.String.Extra                 (toLowerFirst)
+import           Network.Ethereum.ABI.Prim.Address (Address)
+import           Network.Ethereum.ABI.Prim.Bytes   (Bytes)
 import           Network.Ethereum.Unit
-import           Network.Ethereum.Web3.Address           (Address, zero)
-import           Network.Ethereum.Web3.Encoding.Internal (toQuantityHexText)
-import           Network.Ethereum.Web3.Internal          (toLowerFirst)
 
--- | Any communication with Ethereum node wrapped with 'Web3' monad
-newtype Web3 a b = Web3 { unWeb3 :: IO b }
-  deriving (Functor, Applicative, Monad, MonadIO)
-
--- | Some peace of error response
-data Web3Error
-  = JsonRpcFail !RpcError
-  -- ^ JSON-RPC communication error
-  | ParserFail  !String
-  -- ^ Error in parser state
-  | UserFail    !String
-  -- ^ Common head for user errors
-  deriving (Typeable, Show, Eq, Generic)
-
-instance Exception Web3Error
-
--- | JSON-RPC error message
-data RpcError = RpcError
-  { errCode    :: !Int
-  , errMessage :: !Text
-  , errData    :: !(Maybe Value)
-  } deriving (Show, Eq, Generic)
-
-$(deriveJSON (defaultOptions
-    { fieldLabelModifier = toLowerFirst . drop 3 }) ''RpcError)
+type TxHash = Bytes
 
 -- | Should be viewed as type to representing QUANTITY in Web3 JSON RPC docs
 --
@@ -70,13 +49,29 @@ $(deriveJSON (defaultOptions
 --  WRONG: 0x0400 (no leading zeroes allowed)
 --  WRONG: ff (must be prefixed 0x)
 newtype Quantity = Quantity { unQuantity :: Integer }
-    deriving (Show, Read, Num, Integral, Real, Enum, Eq, Ord, Generic)
+    deriving (Show, Read, Num, Real, Enum, Eq, Ord, Generic)
+
+instance IsString Quantity where
+    fromString ('0' : 'x' : hex) =
+        case R.hexadecimal (T.pack hex) of
+            Right (x, "") -> Quantity x
+            _             -> error "Unable to parse Quantity!"
+    fromString str =
+        case R.decimal (T.pack str) of
+            Right (x, "") -> Quantity x
+            _             -> error "Unable to parse Quantity!"
 
 instance ToJSON Quantity where
-    toJSON = String . toQuantityHexText
+    toJSON (Quantity x) =
+        let hexValue = B.toLazyText (B.hexadecimal x)
+        in  toJSON ("0x" <> hexValue)
 
 instance FromJSON Quantity where
-    parseJSON = undefined
+    parseJSON (String v) =
+        case R.hexadecimal v of
+            Right (x, "") -> return (Quantity x)
+            _             -> fail "Unable to parse Quantity"
+    parseJSON _ = fail "Quantity may only be parsed from a JSON String"
 
 instance Fractional Quantity where
     (/) a b = Quantity $ div (unQuantity a) (unQuantity b)
@@ -90,16 +85,33 @@ instance UnitSpec Quantity where
     divider = const 1
     name = const "quantity"
 
--- | Low-level event filter data structure
-data Filter = Filter
-  { filterAddress   :: !(Maybe Address)
-  , filterTopics    :: !(Maybe [Maybe Text])
-  , filterFromBlock :: !(Maybe Text)
-  , filterToBlock   :: !(Maybe Text)
-  } deriving (Show, Generic)
+newtype BlockNumber = BlockNumber Integer deriving (Eq, Show, Generic, Ord, Read, Num)
 
-$(deriveJSON (defaultOptions
-    { fieldLabelModifier = toLowerFirst . drop 6 }) ''Filter)
+instance FromJSON BlockNumber where
+    parseJSON (String v) =
+        case R.hexadecimal v of
+            Right (x, "") -> return (BlockNumber x)
+            _             -> fail "Unable to parse BlockNumber!"
+    parseJSON _ = fail "The string is required!"
+
+instance ToJSON BlockNumber where
+    toJSON (BlockNumber x) =
+        let hexValue = B.toLazyText (B.hexadecimal x)
+        in  toJSON ("0x" <> hexValue)
+
+
+data SyncActive = SyncActive { syncStartingBlock :: BlockNumber
+                             , syncCurrentBlock  :: BlockNumber
+                             , syncHighestBlock  :: BlockNumber
+                             } deriving (Eq, Generic, Show)
+$(deriveJSON (defaultOptions { fieldLabelModifier = toLowerFirst . drop 4 }) ''SyncActive)
+
+data SyncingState = Syncing SyncActive | NotSyncing deriving (Eq, Generic, Show)
+
+instance FromJSON SyncingState where
+    parseJSON (Bool _) = pure NotSyncing
+    parseJSON v        = Syncing <$> parseJSON v
+
 
 -- | Event filter identifier
 newtype FilterId = FilterId Integer
@@ -120,14 +132,14 @@ instance ToJSON FilterId where
 -- | Changes pulled by low-level call 'eth_getFilterChanges', 'eth_getLogs',
 -- and 'eth_getFilterLogs'
 data Change = Change
-  { changeLogIndex         :: !Text
-  , changeTransactionIndex :: !Text
-  , changeTransactionHash  :: !Text
-  , changeBlockHash        :: !Text
-  , changeBlockNumber      :: !Text
+  { changeLogIndex         :: !Quantity
+  , changeTransactionIndex :: !Quantity
+  , changeTransactionHash  :: !Bytes
+  , changeBlockHash        :: !Bytes
+  , changeBlockNumber      :: !BlockNumber
   , changeAddress          :: !Address
-  , changeData             :: !Text
-  , changeTopics           :: ![Text]
+  , changeData             :: !Bytes
+  , changeTopics           :: ![Bytes]
   } deriving (Show, Generic)
 
 $(deriveJSON (defaultOptions
@@ -136,11 +148,11 @@ $(deriveJSON (defaultOptions
 -- | The contract call params
 data Call = Call
   { callFrom     :: !(Maybe Address)
-  , callTo       :: !Address
+  , callTo       :: !(Maybe Address)
   , callGas      :: !(Maybe Quantity)
   , callGasPrice :: !(Maybe Quantity)
-  , callValue    :: !(Maybe Quantity) -- expressed in wei
-  , callData     :: !(Maybe Text)
+  , callValue    :: !(Maybe Quantity)  -- expressed in wei
+  , callData     :: !(Maybe Bytes)
   } deriving (Show, Generic)
 
 $(deriveJSON (defaultOptions
@@ -148,44 +160,94 @@ $(deriveJSON (defaultOptions
     , omitNothingFields = True }) ''Call)
 
 instance Default Call where
-    def = Call Nothing zero (Just 3000000) Nothing (Just 0) Nothing
+    def = Call Nothing Nothing (Just 3000000) Nothing (Just 0) Nothing
 
 
 -- | The contract call mode describe used state: latest or pending
-data DefaultBlock = BlockNumberHex Text | Earliest | Latest | Pending
+data DefaultBlock = BlockWithNumber BlockNumber | Earliest | Latest | Pending
   deriving (Show, Eq)
 
 instance ToJSON DefaultBlock where
-    toJSON (BlockNumberHex hex) = toJSON hex
+    toJSON (BlockWithNumber bn) = toJSON bn
     toJSON parameter            = toJSON . toLowerFirst . show $ parameter
 
--- TODO: Wrap
--- | Transaction hash text string
-type TxHash = Text
+-- | Low-level event filter data structure
+data Filter e = Filter
+  { filterAddress   :: !(Maybe Address)
+  , filterTopics    :: !(Maybe [Maybe Bytes])
+  , filterFromBlock :: !DefaultBlock
+  , filterToBlock   :: !DefaultBlock
+  } deriving (Show, Generic)
+
+
+instance ToJSON (Filter e) where
+  toJSON f = object [ "address" .= filterAddress f
+                    , "topics" .= filterTopics f
+                    , "fromBlock" .= filterFromBlock f
+                    , "toBlock" .= filterToBlock f
+                    ]
+
+instance Ord DefaultBlock where
+    compare Pending Pending                         = EQ
+    compare Latest Latest                           = EQ
+    compare Earliest Earliest                       = EQ
+    compare (BlockWithNumber a) (BlockWithNumber b) = compare a b
+    compare _ Pending                               = LT
+    compare Pending Latest                          = GT
+    compare _ Latest                                = LT
+    compare Earliest _                              = LT
+    compare a b                                     = compare (Down b) (Down a)
+
+-- | The Receipt of a Transaction
+data TxReceipt = TxReceipt
+  { receiptTransactionHash   :: !TxHash
+  -- ^ DATA, 32 Bytes - hash of the transaction.
+  , receiptTransactionIndex  :: !Quantity
+  -- ^ QUANTITY - index of the transaction.
+  , receiptBlockHash         :: !Bytes
+  -- ^ DATA, 32 Bytes - hash of the block where this transaction was in. null when its pending.
+  , receiptBlockNumber       :: !BlockNumber
+  -- ^ QUANTITY - block number where this transaction was in.
+  , receiptCumulativeGasUsed :: !Quantity
+  -- ^ QUANTITY - The total amount of gas used when this transaction was executed in the block.
+  , receiptGasUsed           :: !Quantity
+  -- ^ QUANTITY - The amount of gas used by this specific transaction alone.
+  , receiptContractAddress   :: !(Maybe Address)
+  -- ^ DATA, 20 Bytes - The contract address created, if the transaction was a contract creation, otherwise null.
+  , receiptLogs              :: ![Value]
+  -- ^ Array - Array of log objects, which this transaction generated.
+  , receiptLogsBloom         :: !Bytes
+  -- ^ DATA, 256 Bytes - Bloom filter for light clients to quickly retrieve related logs.
+  , receiptStatus            :: !Quantity
+  -- ^ QUANTITY either 1 (success) or 0 (failure)
+  } deriving (Show, Generic)
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 7 }) ''TxReceipt)
 
 -- | Transaction information
 data Transaction = Transaction
-  { txHash             :: !TxHash
+  { txHash             :: !Bytes
   -- ^ DATA, 32 Bytes - hash of the transaction.
-  , txNonce            :: !Text
+  , txNonce            :: !Quantity
   -- ^ QUANTITY - the number of transactions made by the sender prior to this one.
-  , txBlockHash        :: !Text
+  , txBlockHash        :: !Bytes
   -- ^ DATA, 32 Bytes - hash of the block where this transaction was in. null when its pending.
-  , txBlockNumber      :: !Text
+  , txBlockNumber      :: !BlockNumber
   -- ^ QUANTITY - block number where this transaction was in. null when its pending.
-  , txTransactionIndex :: !Text
+  , txTransactionIndex :: !Quantity
   -- ^ QUANTITY - integer of the transactions index position in the block. null when its pending.
   , txFrom             :: !Address
   -- ^ DATA, 20 Bytes - address of the sender.
   , txTo               :: !(Maybe Address)
   -- ^ DATA, 20 Bytes - address of the receiver. null when its a contract creation transaction.
-  , txValue            :: !Text
+  , txValue            :: !Quantity
   -- ^ QUANTITY - value transferred in Wei.
-  , txGasPrice         :: !Text
+  , txGasPrice         :: !Quantity
   -- ^ QUANTITY - gas price provided by the sender in Wei.
-  , txGas              :: !Text
+  , txGas              :: !Quantity
   -- ^ QUANTITY - gas provided by the sender.
-  , txInput            :: !Text
+  , txInput            :: !Bytes
   -- ^ DATA - the data send along with the transaction.
   } deriving (Show, Generic)
 
@@ -194,43 +256,43 @@ $(deriveJSON (defaultOptions
 
 -- | Block information
 data Block = Block
-  { blockNumber           :: !Text
+  { blockNumber           :: !BlockNumber
   -- ^ QUANTITY - the block number. null when its pending block.
-  , blockHash             :: !Text
+  , blockHash             :: !Bytes
   -- ^ DATA, 32 Bytes - hash of the block. null when its pending block.
-  , blockParentHash       :: !Text
+  , blockParentHash       :: !Bytes
   -- ^ DATA, 32 Bytes - hash of the parent block.
-  , blockNonce            :: !(Maybe Text)
+  , blockNonce            :: !(Maybe Bytes)
   -- ^ DATA, 8 Bytes - hash of the generated proof-of-work. null when its pending block.
-  , blockSha3Uncles       :: !Text
+  , blockSha3Uncles       :: !Bytes
   -- ^ DATA, 32 Bytes - SHA3 of the uncles data in the block.
-  , blockLogsBloom        :: !Text
+  , blockLogsBloom        :: !Bytes
   -- ^ DATA, 256 Bytes - the bloom filter for the logs of the block. null when its pending block.
-  , blockTransactionsRoot :: !Text
+  , blockTransactionsRoot :: !Bytes
   -- ^ DATA, 32 Bytes - the root of the transaction trie of the block.
-  , blockStateRoot        :: !Text
+  , blockStateRoot        :: !Bytes
   -- ^ DATA, 32 Bytes - the root of the final state trie of the block.
-  , blockReceiptRoot      :: !(Maybe Text)
+  , blockReceiptRoot      :: !(Maybe Bytes)
   -- ^ DATA, 32 Bytes - the root of the receipts trie of the block.
   , blockMiner            :: !Address
   -- ^ DATA, 20 Bytes - the address of the beneficiary to whom the mining rewards were given.
-  , blockDifficulty       :: !Text
+  , blockDifficulty       :: !Quantity
   -- ^ QUANTITY - integer of the difficulty for this block.
-  , blockTotalDifficulty  :: !Text
+  , blockTotalDifficulty  :: !Quantity
   -- ^ QUANTITY - integer of the total difficulty of the chain until this block.
-  , blockExtraData        :: !Text
+  , blockExtraData        :: !Bytes
   -- ^ DATA - the "extra data" field of this block.
-  , blockSize             :: !Text
+  , blockSize             :: !Quantity
   -- ^ QUANTITY - integer the size of this block in bytes.
-  , blockGasLimit         :: !Text
+  , blockGasLimit         :: !Quantity
   -- ^ QUANTITY - the maximum gas allowed in this block.
-  , blockGasUsed          :: !Text
+  , blockGasUsed          :: !Quantity
   -- ^ QUANTITY - the total used gas by all transactions in this block.
-  , blockTimestamp        :: !Text
+  , blockTimestamp        :: !Quantity
   -- ^ QUANTITY - the unix timestamp for when the block was collated.
   , blockTransactions     :: ![Transaction]
   -- ^ Array of transaction objects.
-  , blockUncles           :: ![Text]
+  , blockUncles           :: ![Bytes]
   -- ^ Array - Array of uncle hashes.
   } deriving (Show, Generic)
 
@@ -241,70 +303,67 @@ $(deriveJSON (defaultOptions
 
 -- | Whisper node information
 data NodeInfo = NodeInfo
-  { nodeInfoMemory       :: !Int
+  { nodeInfoMemory       :: !Quantity
   -- ^ Memory used by messages in the pool.
-  , nodeInfoTargetMemory :: !Int
+  , nodeInfoTargetMemory :: !Quantity
   -- ^ Target memory of the pool.
-  , nodeInfoMessages     :: !Int
+  , nodeInfoMessages     :: !Quantity
   -- ^ Number of messages in the pool.
-  } deriving Show
+  } deriving (Generic, Show)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 8 }) ''NodeInfo)
 
--- | 32-byte local identity.
-type ShhIdentity = Integer
-
 -- | Request to post the message to the whisper network.
 data ShhPost = ShhPost
-  { shhPostTo       :: !(Maybe Text)
+  { shhPostTo       :: !(Maybe Bytes)
   -- ^ Receiver of the message.
-  , shhPostFrom     :: !(Maybe ShhIdentity)
+  , shhPostFrom     :: !(Maybe Bytes)
   -- ^ Sender of the message.
-  , shhPostTopics   :: ![Text]
+  , shhPostTopics   :: ![Bytes]
   -- ^ Full topic to identify the message by.
-  , shhPostPayload  :: !Text
+  , shhPostPayload  :: !Bytes
   -- ^ Payload of the message.
-  , shhPostPadding  :: !(Maybe Text)
+  , shhPostPadding  :: !(Maybe Bytes)
   -- ^ Optional padding of the message.
-  , shhPostPriority :: !Int
+  , shhPostPriority :: !Quantity
   -- ^ Priority of the message.
-  , shhPostTtl      :: !Int
+  , shhPostTtl      :: !Quantity
   -- ^ Time to life ot the message in seconds.
-  } deriving Show
+  } deriving (Generic, Show)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 7 }) ''ShhPost)
 
 -- | Request for filter or subscription creation
 data ShhFilter = ShhFilter
-  { shhFilterDecryptWith :: !(Maybe ShhIdentity)
+  { shhFilterDecryptWith :: !(Maybe Bytes)
   -- ^ ID of key used for decryption.
-  , shhFilterFrom        :: !(Maybe Text)
+  , shhFilterFrom        :: !(Maybe Bytes)
   -- ^ Accept only messages signed by given public key.
-  , shhFilterTopics      :: ![Text]
+  , shhFilterTopics      :: ![Bytes]
   -- ^ Possible topics, cannot be empty if identity is none.
-  } deriving Show
+  } deriving (Generic, Show)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 9 }) ''ShhFilter)
 
 data ShhMessage = ShhMessage
-  { shhMessageFrom      :: !(Maybe Text)
+  { shhMessageFrom      :: !(Maybe Bytes)
   -- ^ Public key that signed this message.
-  , shhMessageRecipient :: !(Maybe ShhIdentity)
+  , shhMessageRecipient :: !(Maybe Bytes)
   -- ^ Identity of recipient.
-  , shhMessageTtl       :: !Integer
+  , shhMessageTtl       :: !Quantity
   -- ^ Time to live in seconds.
-  , shhMessageTopics    :: ![Text]
+  , shhMessageTopics    :: ![Bytes]
   -- ^ Topics that matched the filter.
-  , shhMessageTimestamp :: !Int
+  , shhMessageTimestamp :: !Quantity
   -- ^ UNIX timestamp of the message generation.
-  , shhMessagePayload   :: !Text
+  , shhMessagePayload   :: !Bytes
   -- ^ Encrypted/Interpreted payload.
-  , shhMessagePadding   :: !(Maybe Text)
+  , shhMessagePadding   :: !(Maybe Bytes)
   -- ^ Optional padding data.
-  } deriving Show
+  } deriving (Generic, Show)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 10 }) ''ShhMessage)
