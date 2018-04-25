@@ -10,5 +10,5 @@ import           Text.Printf
 spec :: Spec
 spec = describe "methodDump" $
     it "can dump an ABI" $  do
-        let theApiDump = [abiFrom|data/ERC20.json|]
+        let theApiDump = [abiFrom|examples/ERC20.json|]
          in theApiDump `shouldNotBe` ""

@@ -15,7 +15,7 @@
 -- Stability   :  experimental
 -- Portability :  noportable
 --
--- Ethereum ABI bytes and bytes<N> types.
+-- Ethereum ABI bytes and bytesN types.
 --
 
 module Network.Ethereum.ABI.Prim.Bytes (

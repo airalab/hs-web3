@@ -54,46 +54,7 @@ Function `runWeb3` use default `Web3` provider at `localhost:8545`.
                     0x03de48b3 runA1()
                     0x90126c7a runA2(string,uint256)
 
-See example of usage below. Use `-ddump-splices` to see generated code during compilation or in GHCi.
-
-```haskell
-{-# LANGUAGE DataKinds             #-}
-{-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE QuasiQuotes           #-}
-module Main where
-
-import           Data.Default                 (def)
-import           Data.Text                    (unpack)
-import           Text.Printf                  (printf)
-
-import           Network.Ethereum.Contract.TH
-import           Network.Ethereum.Web3        hiding (name)
-
-[abiFrom|data/ERC20.json|]
-
-main :: IO ()
-main = do
-    result <- runWeb3 $ do
-        n <- name tokenCall
-        s <- symbol tokenCall
-        d <- decimals tokenCall
-        return $ printf "Token %s with symbol %s and decimals %d"
-                   (unpack n) (unpack s) (fromIntegral d :: Int)
-    case result of
-      Left error -> print error
-      Right info -> putStrLn info
-  where
-    token :: Address
-    token = "0xA2f4FCb0FDe2dD59f7a1873e121bc5623e3164Eb"
-
-    tokenCall :: Call
-    tokenCall = def { callTo = Just token }
-```
-
-Additional minimalistic example of JSON ABI code genration available in `data/ERC20.hs`.
+Use `-ddump-splices` to see generated code during compilation or in GHCi. See `examples` folder for more use cases.
 
 ### Testing
 

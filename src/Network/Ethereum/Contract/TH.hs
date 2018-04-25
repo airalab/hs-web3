@@ -13,18 +13,27 @@
 -- Stability   :  experimental
 -- Portability :  unportable
 --
--- TemplateHaskell based generator for Ethereum contract ABI.
+-- Contract abstraction is a high level interface of web3 library.
+--
+-- The Application Binary Interface is the standard way to interact
+-- with contracts in the Ethereum ecosystem. It can be described by
+-- specially JSON file, like @ERC20.json@. This module use TemplateHaskell
+-- for generation described in ABI contract methods and events. Helper
+-- functions and instances inserted in haskell module and can be used in
+-- another modules or in place.
 --
 -- @
--- [abiFrom|data/sample.json|]
+-- import Network.Ethereum.Contract.TH
+--
+-- [abiFrom|examples/ERC20.json|]
 --
 -- main = do
---     runWeb3 $ event "0x..." $
---        \(Action2 n x) -> liftIO $ do print n
---                                      print x
---     wait
---   where wait = threadDelay 1000000 >> wait
+--     runWeb3 $ event' def $
+--        \(Transfer _ to val) -> liftIO $ do print to
+--                                            print val
 -- @
+--
+-- Full code example available in examples folder.
 --
 
 module Network.Ethereum.Contract.TH (abi, abiFrom) where

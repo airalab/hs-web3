@@ -21,8 +21,9 @@ extra-source-files:
   test-support/migrations/2_deploy_contracts.js
   test-support/convertAbi.sh
   test-support/inject-contract-addresses.sh
-  data/ERC20.hs
-  data/ERC20.json
+  examples/ERC20.hs
+  examples/ERC20.json
+  examples/TokenInfo.hs
 
 source-repository head
   type:     git

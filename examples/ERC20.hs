@@ -8,4 +8,4 @@ module ERC20 where
 
 import           Network.Ethereum.Contract.TH
 
-[abiFrom|data/ERC20.json|]
+[abiFrom|examples/ERC20.json|]

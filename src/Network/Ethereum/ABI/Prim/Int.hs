@@ -16,7 +16,7 @@
 -- Stability   :  experimental
 -- Portability :  noportable
 --
--- Ethereum ABI int<N> and uint<N> types.
+-- Ethereum ABI intN and uintN types.
 --
 
 module Network.Ethereum.ABI.Prim.Int (
