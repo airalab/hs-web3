@@ -97,7 +97,7 @@ test-suite unit
   other-modules:       Network.Ethereum.Web3.Test.MethodDumpSpec
                        Network.Ethereum.Web3.Test.EncodingSpec
                        Network.Ethereum.Web3.Test.EventSpec
-  build-depends:       base >4.8 && <4.11
+  build-depends:       base
                      , hspec-expectations
                      , hspec-discover
                      , hspec-contrib
@@ -122,8 +122,7 @@ test-suite live
   other-modules:       Network.Ethereum.Web3.Test.ComplexStorageSpec
                      , Network.Ethereum.Web3.Test.SimpleStorageSpec
                      , Network.Ethereum.Web3.Test.Utils
-  build-depends:       async
-                     , base
+  build-depends:       base
                      , bytestring
                      , data-default
                      , hspec
@@ -138,6 +137,7 @@ test-suite live
                      , bytestring
                      , memory
                      , split
+                     , async
                      , text
                      , time
                      , text
