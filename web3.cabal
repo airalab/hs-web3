@@ -30,6 +30,10 @@ source-repository head
   type:     git
   location: https://github.com/airalab/hs-web3
 
+flag tls
+  description: Enable TLS support
+  default: False
+
 library
   hs-source-dirs:      src
   exposed-modules:     Network.Ethereum.Web3
@@ -59,26 +63,30 @@ library
                      , Network.Ethereum.Contract.Method
                      , Network.JsonRpc.TinyClient
                      , Data.String.Extra
-  build-depends:       base >4.9 && <4.12
-                     , template-haskell
-                     , data-default
-                     , generics-sop
-                     , transformers
-                     , http-client
-                     , http-client-tls
-                     , exceptions
-                     , bytestring
-                     , cryptonite
-                     , basement
-                     , machines
-                     , tagged
-                     , parsec
-                     , memory
-                     , cereal 
-                     , aeson
-                     , async
-                     , text
-                     , mtl
+  build-depends:       base                 >4.9       && <4.12
+                     , template-haskell     >=2.12.0.0 && <2.14
+                     , data-default         >=0.7.1.1  && <0.8
+                     , generics-sop         >=0.3.2.0  && <0.4
+                     , transformers         >=0.5.2.0  && <0.6
+                     , http-client          >=0.5.12.1 && <0.6
+                     , exceptions           >=0.8.3    && <0.9
+                     , bytestring           >=0.10.8.2 && <0.11
+                     , cryptonite           ==0.25.*
+                     , basement             >=0.0.7    && <0.1
+                     , machines             >=0.6.3    && <0.7
+                     , tagged               >=0.8.5    && <0.9
+                     , parsec               >=3.1.13.0 && <3.2
+                     , memory               >=0.14.16  && <0.15
+                     , cereal               >=0.5.5.0  && <0.6
+                     , aeson                >=1.2.4.0  && <1.3
+                     , async                >=2.1.1.1  && <2.3
+                     , text                 >=1.2.3.0  && <1.3
+                     , mtl                  >=2.2.2    && <2.3
+
+  if flag(tls)
+    build-depends:     http-client-tls      >=0.3.5.3   && <0.4
+    cpp-options:       -DTLS_MANAGER
+
   default-language:    Haskell2010
   ghc-options:         -Wduplicate-exports -Whi-shadowing -Widentities -Wnoncanonical-monoid-instances
                        -Woverlapping-patterns -Wtabs -Wpartial-type-signatures -Wderiving-typeable
@@ -97,20 +105,20 @@ test-suite unit
   other-modules:       Network.Ethereum.Web3.Test.MethodDumpSpec
                        Network.Ethereum.Web3.Test.EncodingSpec
                        Network.Ethereum.Web3.Test.EventSpec
-  build-depends:       base
-                     , hspec-expectations
-                     , hspec-discover
-                     , hspec-contrib
-                     , hspec
-                     , data-default
-                     , generics-sop
-                     , transformers
-                     , bytestring
-                     , memory
-                     , tagged
-                     , split
-                     , time
-                     , text
+  build-depends:       base                 >4.9       && <4.12
+                     , hspec-expectations   >=0.8.2    && <0.9
+                     , hspec-discover       >=2.4.8    && <2.6
+                     , hspec-contrib        >=0.4.0    && <0.6
+                     , hspec                >=2.4.8    && <2.6
+                     , data-default         >=0.7.1.1  && <0.8
+                     , generics-sop         >=0.3.2.0  && <0.4
+                     , transformers         >=0.5.2.0  && <0.6
+                     , bytestring           >=0.10.8.2 && <0.11
+                     , memory               >=0.14.16  && <0.15
+                     , tagged               >=0.8.5    && <0.9
+                     , split                >=0.2.3.3  && <0.3
+                     , time                 >=1.8.0.2  && <1.9
+                     , text                 >=1.2.3.0  && <1.3
                      , web3
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
@@ -122,26 +130,21 @@ test-suite live
   other-modules:       Network.Ethereum.Web3.Test.ComplexStorageSpec
                      , Network.Ethereum.Web3.Test.SimpleStorageSpec
                      , Network.Ethereum.Web3.Test.Utils
-  build-depends:       base
-                     , bytestring
-                     , data-default
-                     , hspec
-                     , hspec-contrib
-                     , hspec-discover
-                     , hspec-expectations
-                     , hspec-discover
-                     , hspec-contrib
-                     , hspec
-                     , transformers
-                     , data-default
-                     , bytestring
-                     , memory
-                     , split
-                     , async
-                     , text
-                     , time
-                     , text
+  build-depends:       base                 >4.9       && <4.12
+                     , hspec-expectations   >=0.8.2    && <0.9
+                     , hspec-discover       >=2.4.8    && <2.6
+                     , hspec-contrib        >=0.4.0    && <0.6
+                     , hspec                >=2.4.8    && <2.6
+                     , transformers         >=0.5.2.0  && <0.6
+                     , data-default         >=0.7.1.1  && <0.8
+                     , bytestring           >=0.10.8.2 && <0.11
+                     , memory               >=0.14.16  && <0.15
+                     , tagged               >=0.8.5    && <0.9
+                     , split                >=0.2.3.3  && <0.3
+                     , async                >=2.1.1.1  && <2.3
+                     , time                 >=1.8.0.2  && <1.9
+                     , text                 >=1.2.3.0  && <1.3
+                     , stm                  >=2.4.5.0  && <2.5
                      , web3
-                     , stm
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010

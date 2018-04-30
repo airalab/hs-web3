@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP               #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
@@ -96,11 +95,7 @@ instanceD' name insType =
 -- | Simple data type declaration with one constructor
 dataD' :: Name -> ConQ -> [Name] -> DecQ
 dataD' name rec derive =
-#if MIN_VERSION_template_haskell(2,12,0)
     dataD (cxt []) name [] Nothing [rec] [derivClause Nothing (conT <$> derive)]
-#else
-    dataD (cxt []) name [] Nothing [rec] $ cxt (conT <$> derive)
-#endif
 
 -- | Simple function declaration
 funD' :: Name -> [PatQ] -> ExpQ -> DecQ
