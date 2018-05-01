@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - TxReceipt and Eth.getTransactionReceipt JSON-RPC method.
 - Keyword escaper for TH generated names.
+- Build flag to enable TLS support.
 
 ### Changed
 - Library dependencies bounds fixed for GHC 8.2.2-8.4.2 (stackage LTS + Nightly).
