@@ -37,6 +37,9 @@
 
 module Network.Ethereum.Contract.TH (abi, abiFrom) where
 
+import           Control.Applicative               ((<|>))
+import           Control.Lens                      ((^?))
+import           Data.Aeson.Lens                   (_JSON, key)
 import           Control.Monad                     (replicateM, (<=<))
 import           Data.Aeson                        (eitherDecode)
 import           Data.Default                      (Default (..))
@@ -255,13 +258,20 @@ escapeNames = fmap go
         hats = [T.replicate n "'" | n <- [1..]]
         appendToName dfn addition = dfn { funName = funName dfn <> addition }
 
--- | ABI to declarations converter
 quoteAbiDec :: String -> Q [Dec]
 quoteAbiDec abi_string =
-    case eitherDecode abi_lbs of
-        Left e                -> fail $ "Error: " ++ show e
-        Right (ContractABI a) -> concat <$> mapM mkDecl (escape a)
-  where abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
+    let abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
+        eabi = abiDec abi_lbs <|> abiDecNested abi_lbs
+    in case eabi of
+      Left e -> fail e
+      Right a -> concat <$> mapM mkDecl (escape a)
+  where
+    abiDec _abi_lbs = case eitherDecode _abi_lbs of
+      Left e                -> Left $ "Error: " ++ show e
+      Right (ContractABI a) -> Right a
+    abiDecNested _abi_lbs = case _abi_lbs ^? key "abi" . _JSON of
+      Nothing                -> Left $ "Error: Failed to find ABI at 'abi' key in JSON object."
+      Just (ContractABI a) -> Right a
 
 -- | ABI information string
 quoteAbiExp :: String -> ExpQ
