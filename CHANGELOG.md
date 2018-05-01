@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.7.1.0] 2018-05-02
+### Added
+- TxReceipt and Eth.getTransactionReceipt JSON-RPC method.
+- Keyword escaper for TH generated names.
+
+### Changed
+- Library dependencies bounds fixed for GHC 8.2.2-8.4.2 (stackage LTS + Nightly).
+
 ## [0.7.0.0] 2018-04-22
 ### Added
 - This CHANGELOG.md file for significant changes tracking.
