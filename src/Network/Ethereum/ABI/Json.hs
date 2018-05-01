@@ -83,7 +83,19 @@ data Declaration
   -- ^ Event
   | DFallback { falPayable :: Bool }
   -- ^ Fallback function
-  deriving (Show, Eq, Ord)
+  deriving Show
+
+instance Eq Declaration where
+    (DConstructor a) == (DConstructor b) = length a == length b
+    (DFunction a _ _ _) == (DFunction b _ _ _) = a == b
+    (DEvent a _ _) == (DEvent b _ _) = a == b
+    (==) _ _ = True
+
+instance Ord Declaration where
+    compare (DConstructor a) (DConstructor b) = compare (length a) (length b)
+    compare (DFunction a _ _ _) (DFunction b _ _ _) = compare a b
+    compare (DEvent a _ _) (DEvent b _ _) = compare a b
+    compare _ _ = EQ
 
 $(deriveJSON (defaultOptions {
     sumEncoding = TaggedObject "type" "contents"
