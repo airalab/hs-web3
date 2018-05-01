@@ -1,17 +1,19 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 -- |
--- Module      :  Network.Ethereum.Web3.JsonAbi
--- Copyright   :  Alexander Krupenkin 2016
+-- Module      :  Network.Ethereum.ABI.Json
+-- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
 -- Stability   :  experimental
--- Portability :  portable
+-- Portability :  noportable
 --
--- Ethereum smart contract JSON ABI types.
+-- JSON encoded contract ABI parsers.
 --
-module Network.Ethereum.Web3.JsonAbi (
+
+module Network.Ethereum.ABI.Json (
     ContractABI(..)
   , Declaration(..)
   , FunctionArg(..)
@@ -23,17 +25,22 @@ module Network.Ethereum.Web3.JsonAbi (
   , parseSolidityType
   ) where
 
-import           Control.Monad                  (void)
-import           Crypto.Hash                    (Digest, Keccak_256, hash)
-import           Data.Aeson
-import           Data.Aeson.TH
-import           Data.Monoid                    ((<>))
-import           Data.Text                      (Text)
-import qualified Data.Text                      as T
-import qualified Data.Text.Encoding             as T
-import           Network.Ethereum.Web3.Internal
-import           Text.Parsec
-import           Text.Parsec.Text
+import           Control.Monad      (void)
+import           Crypto.Hash        (Digest, Keccak_256, hash)
+import           Data.Aeson         (FromJSON (parseJSON), Options (constructorTagModifier, fieldLabelModifier, sumEncoding),
+                                     SumEncoding (TaggedObject),
+                                     ToJSON (toJSON), defaultOptions)
+import           Data.Aeson.TH      (deriveJSON)
+import           Data.Monoid        ((<>))
+import           Data.Text          (Text)
+import qualified Data.Text          as T (dropEnd, pack, take, unlines, unpack)
+import           Data.Text.Encoding (encodeUtf8)
+import           Text.Parsec        (ParseError, char, choice, digit, eof,
+                                     lookAhead, many1, manyTill, optionMaybe,
+                                     parse, string, try, (<|>))
+import           Text.Parsec.Text   (Parser)
+
+import           Data.String.Extra  (toLowerFirst)
 
 -- | Method argument
 data FunctionArg = FunctionArg
@@ -79,7 +86,7 @@ data Declaration
   deriving (Show, Eq, Ord)
 
 $(deriveJSON (defaultOptions {
-    sumEncoding = defaultTaggedObject { tagFieldName = "type" }
+    sumEncoding = TaggedObject "type" "contents"
   , constructorTagModifier = toLowerFirst . drop 1
   , fieldLabelModifier = toLowerFirst . drop 3 })
     ''Declaration)
@@ -87,6 +94,12 @@ $(deriveJSON (defaultOptions {
 -- | Contract ABI is a list of method / event declarations
 newtype ContractABI = ContractABI { unABI :: [Declaration] }
   deriving (Eq, Ord)
+
+instance FromJSON ContractABI where
+    parseJSON = fmap ContractABI . parseJSON
+
+instance ToJSON ContractABI where
+    toJSON = toJSON . unABI
 
 instance Show ContractABI where
     show (ContractABI c) = T.unpack $ T.unlines $
@@ -96,12 +109,6 @@ instance Show ContractABI where
         ++ foldMap showEvent c ++
         [ "\tMethods:" ]
         ++ foldMap showMethod c
-
-instance FromJSON ContractABI where
-    parseJSON = fmap ContractABI . parseJSON
-
-instance ToJSON ContractABI where
-    toJSON (ContractABI x) = toJSON x
 
 showConstructor :: Declaration -> [Text]
 showConstructor x = case x of
@@ -123,22 +130,28 @@ showMethod x = case x of
 signature :: Declaration -> Text
 
 signature (DConstructor inputs) = "(" <> args inputs <> ")"
-  where args = T.dropEnd 1 . foldMap (<> ",") . fmap funArgType
+  where
+    args :: [FunctionArg] -> Text
+    args = T.dropEnd 1 . foldMap (<> ",") . fmap funArgType
 
 signature (DFallback _) = "()"
 
 signature (DFunction name _ inputs _) = name <> "(" <> args inputs <> ")"
-  where args = T.dropEnd 1 . foldMap (<> ",") . fmap funArgType
+  where
+    args :: [FunctionArg] -> Text
+    args = T.dropEnd 1 . foldMap (<> ",") . fmap funArgType
 
 signature (DEvent name inputs _) = name <> "(" <> args inputs <> ")"
-  where args = T.dropEnd 1 . foldMap (<> ",") . fmap eveArgType
+  where
+    args :: [EventArg] -> Text
+    args = T.dropEnd 1 . foldMap (<> ",") . fmap eveArgType
 
 -- | Localy compute Keccak-256 hash of given text
 sha3 :: Text -> Text
 {-# INLINE sha3 #-}
 sha3 x = T.pack (show digest)
   where digest :: Digest Keccak_256
-        digest = hash (T.encodeUtf8 x)
+        digest = hash (encodeUtf8 x)
 
 -- | Generate method selector by given method 'Delcaration'
 methodId :: Declaration -> Text
@@ -151,7 +164,6 @@ eventId :: Declaration -> Text
 eventId = ("0x" <>) . sha3 . signature
 
 -- | Solidity types and parsers
-
 data SolidityType =
     SolidityBool
   | SolidityAddress
@@ -159,7 +171,7 @@ data SolidityType =
   | SolidityInt Int
   | SolidityString
   | SolidityBytesN Int
-  | SolidityBytesD
+  | SolidityBytes
   | SolidityVector [Int] SolidityType
   | SolidityArray SolidityType
     deriving (Eq, Show)
@@ -189,7 +201,7 @@ parseBytes :: Parser SolidityType
 parseBytes = do
   _ <- string "bytes"
   mn <- optionMaybe numberParser
-  pure $ maybe SolidityBytesD SolidityBytesN  mn
+  pure $ maybe SolidityBytes SolidityBytesN mn
 
 parseAddress :: Parser SolidityType
 parseAddress = string "address" >> pure SolidityAddress
@@ -210,10 +222,12 @@ parseVector = do
     ns <- many1Till lengthParser ((lookAhead $ void (string "[]")) <|> eof)
     pure $ SolidityVector ns s
   where
+    many1Till :: Parser Int -> Parser () -> Parser [Int]
     many1Till p end = do
       a <- p
       as <- manyTill p end
       return (a : as)
+
     lengthParser = do
           _ <- char '['
           n <- numberParser
@@ -234,4 +248,4 @@ solidityTypeParser =
            ]
 
 parseSolidityType :: Text -> Either ParseError SolidityType
-parseSolidityType = parse solidityTypeParser ""
+parseSolidityType = parse solidityTypeParser "Solidity"

@@ -1,5 +1,9 @@
 {-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedLists       #-}
+{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE QuasiQuotes           #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
@@ -28,13 +32,12 @@ import           Data.ByteString                  (ByteString)
 import           Data.Default
 import           Data.Either                      (isRight)
 import           Data.Maybe
-import           Data.Sized
 import           Data.String                      (fromString)
+import           Network.Ethereum.Contract.TH
 import           Network.Ethereum.Web3            hiding (convert)
 import qualified Network.Ethereum.Web3.Eth        as Eth
 import           Network.Ethereum.Web3.Test.Utils
-import           Network.Ethereum.Web3.TH
-import           Network.Ethereum.Web3.Types      (Call (..))
+import           Network.Ethereum.Web3.Types      (Call (..), Filter (..))
 import           System.Environment               (getEnv)
 import           System.IO.Unsafe                 (unsafePerformIO)
 import           Test.Hspec
@@ -50,26 +53,26 @@ complexStorageSpec :: SpecWith Address
 complexStorageSpec = do
   describe "can interact with a ComplexStorage contract" $ do
         -- todo: these should ideally be arbitrary!
-        let sUint   = fromJust $ uIntNFromInteger 1
-            sInt    = fromJust $ intNFromInteger $ -1
-            sBool   =  True
-            sInt224 = fromJust $ intNFromInteger $ 221
-            sBools   = True :< False :< NilL
-            sInts    = Prelude.map (fromJust . intNFromInteger) [1, 1, -3]
+        let sUint   = 1
+            sInt    = -1
+            sBool   = True
+            sInt224 = 221
+            sBools   = [True, False]
+            sInts    = [1, 1, -3]
             sString  = "hello"
-            sBytes16 = BytesN $ convert ("\x12\x34\x56\x78\x12\x34\x56\x78\x12\x34\x56\x78\x12\x34\x56\x78" :: ByteString)
-            sByte2sElem  = (BytesN (convert ("\x12\x34" :: ByteString)) :: BytesN 2)
-            sByte2sVec = sByte2sElem :< sByte2sElem :< sByte2sElem :< sByte2sElem :< NilL
+            sBytes16 = "\x12\x34\x56\x78\x12\x34\x56\x78\x12\x34\x56\x78\x12\x34\x56\x78"
+            sByte2sElem = "\x12\x34"
+            sByte2sVec = [sByte2sElem, sByte2sElem, sByte2sElem, sByte2sElem]
             sByte2s = [sByte2sVec, sByte2sVec]
 
         it "can set the values of a ComplexStorage and validate them with an event" $ \primaryAccount -> do
             contractAddress <- Prelude.fmap fromString . liftIO $ getEnv "COMPLEXSTORAGE_CONTRACT_ADDRESS"
             let theCall = callFromTo primaryAccount contractAddress
-                fltr    = eventFilter contractAddress
+                fltr    = (def :: Filter ValsSet) { filterAddress = Just contractAddress }
             -- kick off listening for the ValsSet event
             vals <- newEmptyMVar
             fiber <- runWeb3Configured' $
-                event fltr $ \(vs :: ValsSet) -> do
+                event fltr $ \vs -> do
                     liftIO $ putMVar vals vs
                     pure TerminateEvent
             -- kick off tx
@@ -105,11 +108,11 @@ complexStorageSpec = do
             intVal'     <- runGetterCall intVal
             boolVal'    <- runGetterCall boolVal
             int224Val'  <- runGetterCall int224Val
-            boolsVal    <- runGetterCall $ \c -> boolVectorVal c (fromJust $ uIntNFromInteger 0)
-            intsVal     <- runGetterCall $ \c -> intListVal c (fromJust $ uIntNFromInteger 0)
+            boolsVal    <- runGetterCall $ \c -> boolVectorVal c 0
+            intsVal     <- runGetterCall $ \c -> intListVal c 0
             stringVal'  <- runGetterCall stringVal
             bytes16Val' <- runGetterCall bytes16Val
-            bytes2s     <- runGetterCall $ \c -> bytes2VectorListVal c (fromJust $ uIntNFromInteger 0) (fromJust $ uIntNFromInteger 0)
+            bytes2s     <- runGetterCall $ \c -> bytes2VectorListVal c 0 0
             uintVal'    `shouldBe` sUint
             intVal'     `shouldBe` sInt
             boolVal'    `shouldBe` sBool

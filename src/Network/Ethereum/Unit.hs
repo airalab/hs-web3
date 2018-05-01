@@ -1,9 +1,12 @@
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE OverloadedStrings    #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+
 -- |
 -- Module      :  Network.Ethereum.Unit
--- Copyright   :  Alexander Krupenkin 2016
+-- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
@@ -43,6 +46,7 @@
 --      Actual type: Szabo
 -- @
 --
+
 module Network.Ethereum.Unit (
     Unit(..)
   , UnitSpec(..)
@@ -56,7 +60,7 @@ module Network.Ethereum.Unit (
   , KEther
   ) where
 
-import           Data.Monoid                     ((<>))
+import           Data.Proxy                      (Proxy (..))
 import           Data.Text.Lazy                  (Text, unpack)
 import           GHC.Generics                    (Generic)
 import           GHC.Read
@@ -77,26 +81,23 @@ class (Read a, Show a, UnitSpec a, Fractional a) => Unit a where
 
 -- | Unit specification
 class UnitSpec a where
-    divider :: RealFrac b => Value a -> b
-    name    :: Value a -> Text
+    divider :: RealFrac b => proxy a -> b
+    name    :: proxy a -> Text
 
 -- | Value abstraction
 newtype Value a = MkValue { unValue :: Integer }
   deriving (Eq, Ord, Generic)
 
-mkValue :: (UnitSpec a, RealFrac b) => b -> Value a
-mkValue = modify res . round . (divider res *)
-  where res = undefined :: UnitSpec a => Value a
-        modify :: Value a -> Integer -> Value a
-        modify _ = MkValue
+mkValue :: forall a b . (UnitSpec a, RealFrac b) => b -> Value a
+mkValue = MkValue . round . (* divider (Proxy :: Proxy a))
 
 instance UnitSpec a => Unit (Value a) where
     fromWei = MkValue
     toWei   = unValue
 
 instance UnitSpec a => UnitSpec (Value a) where
-    divider = divider . (undefined :: Value (Value a) -> Value a)
-    name    = name . (undefined :: Value (Value a) -> Value a)
+    divider = const $ divider (Proxy :: Proxy a)
+    name    = const $ name (Proxy :: Proxy a)
 
 instance UnitSpec a => Num (Value a) where
    a + b = MkValue (unValue a + unValue b)

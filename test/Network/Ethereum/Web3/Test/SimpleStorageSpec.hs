@@ -1,7 +1,12 @@
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE KindSignatures        #-}
 {-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE QuasiQuotes           #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
 -- Module      :  Network.Ethereum.Web3.Test.SimpleStorage
@@ -37,10 +42,10 @@ import qualified Data.Text                        as T
 import           Data.Traversable                 (for)
 import           GHC.TypeLits
 
+import           Network.Ethereum.Contract.TH
 import           Network.Ethereum.Web3            hiding (convert)
-import           Network.Ethereum.Web3.Contract   (Event (..))
 import qualified Network.Ethereum.Web3.Eth        as Eth
-import           Network.Ethereum.Web3.TH
+import           Network.Ethereum.Web3.Provider   (forkWeb3)
 import           Network.Ethereum.Web3.Types
 
 import           Numeric                          (showHex)
@@ -48,7 +53,7 @@ import           System.Environment               (getEnv)
 import           System.IO.Unsafe                 (unsafePerformIO)
 import           Test.Hspec
 
-import Network.Ethereum.Web3.Test.Utils
+import           Network.Ethereum.Web3.Test.Utils
 
 [abiFrom|test-support/build/contracts/abis/SimpleStorage.json|]
 
@@ -86,10 +91,10 @@ events = describe "can interact with a SimpleStorage contract across block inter
     it "can stream events starting and ending in the future, unbounded" $ \primaryAccount -> do
         var <- newMVar []
         let theCall = callFromTo primaryAccount contractAddress
-            theSets = map (fromJust . uIntNFromInteger) [1, 2, 3]
+            theSets = [1, 2, 3]
         print "Setting up the filter..."
         fiber <- runWeb3Configured' $ do
-          let fltr = eventFilter contractAddress
+          let fltr = (def :: Filter CountSet) { filterAddress = Just contractAddress }
           forkWeb3 $ processUntil' var fltr ((3 ==) . length)
         print "Setting the values..."
         setValues theCall theSets
@@ -102,13 +107,13 @@ events = describe "can interact with a SimpleStorage contract across block inter
         runWeb3Configured Eth.blockNumber >>= \bn -> awaitBlock (bn + 1)
         var <- newMVar []
         let theCall = callFromTo primaryAccount contractAddress
-            theSets = map (fromJust . uIntNFromInteger) [13, 14, 15]
+            theSets = [13, 14, 15]
         start <- runWeb3Configured Eth.blockNumber
         let later = BlockWithNumber (start + 3)
             latest = BlockWithNumber (start + 8)
-            fltr = (eventFilter contractAddress :: Filter CountSet) { filterFromBlock = later
-                                                                    , filterToBlock = latest
-                                                                    }
+            fltr = (def :: Filter CountSet) { filterAddress = Just contractAddress
+                                            , filterFromBlock = later
+                                            , filterToBlock = latest }
         print "Setting up the filter..."
         fiber <- runWeb3Configured' $
           forkWeb3 $ processUntil' var fltr ((3 ==) . length)
@@ -125,10 +130,10 @@ events = describe "can interact with a SimpleStorage contract across block inter
         var <- newMVar []
         blockNumberVar <- newEmptyMVar
         let theCall = callFromTo primaryAccount contractAddress
-            theSets1 = map (fromJust . uIntNFromInteger) [7, 8, 9]
-            theSets2 = map (fromJust . uIntNFromInteger) [10, 11, 12]
+            theSets1 = [7, 8, 9]
+            theSets2 = [10, 11, 12]
         start <- runWeb3Configured Eth.blockNumber
-        let fltr = eventFilter contractAddress :: Filter CountSet
+        let fltr = (def :: Filter CountSet) { filterAddress = Just contractAddress }
         fiber <- runWeb3Configured' $ do
           forkWeb3 $ processUntil var fltr ((3 ==) . length) (liftIO . putMVar blockNumberVar . changeBlockNumber)
         print "Running first transactions as past transactions..."
@@ -139,7 +144,8 @@ events = describe "can interact with a SimpleStorage contract across block inter
         awaitBlock $ end + 1 -- make past transactions definitively in past
         var' <- newMVar []
         fiber <- runWeb3Configured' $ do
-          let fltr = (eventFilter contractAddress :: Filter CountSet) {filterFromBlock = BlockWithNumber start}
+          let fltr = (def :: Filter CountSet) { filterAddress = Just contractAddress
+                                              , filterFromBlock = BlockWithNumber start}
           forkWeb3 $ processUntil' var' fltr ((6 ==) . length)
         print "Setting more values"
         setValues theCall theSets2
@@ -152,10 +158,10 @@ events = describe "can interact with a SimpleStorage contract across block inter
         runWeb3Configured Eth.blockNumber >>= \bn -> awaitBlock (bn + 1)
         var <- newMVar []
         let theCall = callFromTo primaryAccount contractAddress
-            theSets = map (fromJust . uIntNFromInteger) [4, 5, 6]
+            theSets = [4, 5, 6]
         start <- runWeb3Configured Eth.blockNumber
         blockNumberVar <- newEmptyMVar
-        let fltr = eventFilter contractAddress
+        let fltr = (def :: Filter CountSet) { filterAddress = Just contractAddress }
         print "Setting up filter for past transactions..."
         fiber <- runWeb3Configured' $ do
           forkWeb3 $ processUntil var fltr ((3 ==) . length) (liftIO . putMVar blockNumberVar . changeBlockNumber)
@@ -168,14 +174,14 @@ events = describe "can interact with a SimpleStorage contract across block inter
         let fltr' = fltr { filterFromBlock = BlockWithNumber start
                          , filterToBlock = BlockWithNumber end
                          }
-        awaitBlock $ end + 1 -- make it definitively in the past
+        awaitBlock $ end + 1  -- make it definitively in the past
         runWeb3Configured $ processUntil' var' fltr' ((3 ==) . length)
         vals <- takeMVar var'
         sort (unCountSet <$> vals) `shouldBe` sort theSets
 
 processUntil :: MVar [CountSet]
              -> Filter CountSet
-             -> ([CountSet] -> Bool) -- TODO: make it work for any event
+             -> ([CountSet] -> Bool)  -- TODO: make it work for any event
              -> (Change -> Web3 ())
              -> Web3 ()
 processUntil var filter predicate action = do

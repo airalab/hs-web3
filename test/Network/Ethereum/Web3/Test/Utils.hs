@@ -11,24 +11,26 @@ module Network.Ethereum.Web3.Test.Utils
   , awaitBlock
   ) where
 
-import           Control.Concurrent          (MVar, threadDelay, tryTakeMVar)
-import           Control.Monad.IO.Class      (liftIO)
+import           Control.Concurrent                (MVar, threadDelay,
+                                                    tryTakeMVar)
+import           Control.Monad.IO.Class            (liftIO)
 import           Data.Default
-import           Data.Either                 (isRight)
-import           Data.List.Split             (splitOn)
-import           Data.Maybe                  (fromMaybe)
-import           Data.Ratio                  (numerator)
-import           Data.String                 (IsString, fromString)
-import qualified Data.Text                   as T
-import           Data.Time.Clock.POSIX       (getPOSIXTime)
-import           Data.Traversable            (for)
-import           Network.Ethereum.Web3       (Address, Web3, Web3Error,
-                                              runWeb3')
-import           Network.Ethereum.Web3.Eth   (accounts, blockNumber)
-import           Network.Ethereum.Web3.Types (BlockNumber, Call (..),
-                                              Provider (..))
-import           System.Environment          (lookupEnv, setEnv)
-import           Test.Hspec.Expectations     (shouldSatisfy)
+import           Data.Either                       (isRight)
+import           Data.List.Split                   (splitOn)
+import           Data.Maybe                        (fromMaybe)
+import           Data.Ratio                        (numerator)
+import           Data.String                       (IsString, fromString)
+import qualified Data.Text                         as T
+import           Data.Time.Clock.POSIX             (getPOSIXTime)
+import           Data.Traversable                  (for)
+
+import           Network.Ethereum.ABI.Prim.Address (Address)
+import           Network.Ethereum.Web3.Eth         (accounts, blockNumber)
+import           Network.Ethereum.Web3.Provider    (Provider (..), Web3,
+                                                    Web3Error, runWeb3')
+import           Network.Ethereum.Web3.Types       (BlockNumber, Call (..))
+import           System.Environment                (lookupEnv, setEnv)
+import           Test.Hspec.Expectations           (shouldSatisfy)
 
 rpcUri :: IO String
 rpcUri =  liftIO (fromMaybe "http://localhost:8545" <$> lookupEnv "WEB3_PROVIDER")
@@ -81,7 +83,7 @@ withPrimaryEthereumAccount = withAccounts (pure . head)
 callFromTo :: Address -> Address -> Call
 callFromTo from to =
     def { callFrom = Just from
-        , callTo   = to
+        , callTo   = Just to
         , callGasPrice = Just 4000000000
         }
 
