@@ -263,20 +263,28 @@ quoteAbiDec abi_string =
     let abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
         eabi = abiDec abi_lbs <|> abiDecNested abi_lbs
     in case eabi of
-      Left e -> fail e
+      Left e -> fail ("Error in quoteAbiDec: " ++ e)
       Right a -> concat <$> mapM mkDecl (escape a)
   where
     abiDec _abi_lbs = case eitherDecode _abi_lbs of
-      Left e                -> Left $ "Error: " ++ show e
+      Left e                -> Left e
       Right (ContractABI a) -> Right a
     abiDecNested _abi_lbs = case _abi_lbs ^? key "abi" . _JSON of
-      Nothing                -> Left $ "Error: Failed to find ABI at 'abi' key in JSON object."
+      Nothing                -> Left $ "Failed to find ABI at 'abi' key in JSON object."
       Just (ContractABI a) -> Right a
 
 -- | ABI information string
 quoteAbiExp :: String -> ExpQ
 quoteAbiExp abi_string = stringE $
-    case eitherDecode abi_lbs of
-        Left e  -> "Error: " ++ show e
-        Right a -> show (a :: ContractABI)
-  where abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
+    let abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
+        eabi = abiDec abi_lbs <|> abiDecNested abi_lbs
+    in case eabi of
+      Left e -> "Error in 'quoteAbiExp' : " ++ e
+      Right a -> a
+  where
+    abiDec _abi_lbs = case eitherDecode _abi_lbs of
+      Left e                -> Left e
+      Right a -> Right $ show (a :: ContractABI)
+    abiDecNested _abi_lbs = case _abi_lbs ^? key "abi" . _JSON of
+      Nothing                -> Left $ "Failed to find ABI at 'abi' key in JSON object."
+      Just a -> Right $ show (a :: ContractABI)
