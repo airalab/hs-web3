@@ -28,7 +28,7 @@ import           Network.Ethereum.ABI.Prim.Address (Address)
 import           Network.Ethereum.Web3.Eth         (accounts, blockNumber)
 import           Network.Ethereum.Web3.Provider    (Provider (..), Web3,
                                                     Web3Error, runWeb3')
-import           Network.Ethereum.Web3.Types       (BlockNumber, Call (..))
+import           Network.Ethereum.Web3.Types       (Call (..), Quantity)
 import           System.Environment                (lookupEnv, setEnv)
 import           Test.Hspec.Expectations           (shouldSatisfy)
 
@@ -93,7 +93,7 @@ sleepSeconds = threadDelay . (* 1000000)
 microtime :: IO Integer
 microtime = numerator . toRational . (* 1000000) <$> getPOSIXTime
 
-awaitBlock :: BlockNumber -> IO ()
+awaitBlock :: Quantity -> IO ()
 awaitBlock bn = do
     bn' <- runWeb3Configured blockNumber
     putStrLn $ "awaiting block " ++ show bn ++ ", currently " ++ show bn'
