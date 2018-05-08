@@ -190,7 +190,7 @@ mkDecl ev@(DEvent name inputs anonymous) = sequence
         [funD' 'isAnonymous [] [|const anonymous|]]
     , instanceD (cxt [])
         (pure $ ConT ''Default `AppT` (ConT ''Filter `AppT` ConT allName))
-        [funD' 'def [] [|Filter Nothing (Just topics) Latest Latest|] ]
+        [funD' 'def [] [|Filter Nothing Latest Latest $ Just topics|] ]
     ]
   where
     topics    = [Just (T.unpack $ eventId ev)] <> replicate (length indexedArgs) Nothing
