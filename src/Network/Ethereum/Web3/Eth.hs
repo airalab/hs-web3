@@ -136,7 +136,7 @@ getLogs = remote "eth_getLogs"
 
 -- | Executes a new message call immediately without creating a
 -- transaction on the block chain.
-call :: Call -> DefaultBlock -> Web3 Hash
+call :: Call -> DefaultBlock -> Web3 Bytes
 {-# INLINE call #-}
 call = remote "eth_call"
 
