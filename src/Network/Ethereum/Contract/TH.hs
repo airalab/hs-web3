@@ -72,7 +72,7 @@ import           Network.Ethereum.ABI.Prim.Tuple   (Singleton (..))
 import           Network.Ethereum.Contract.Method  (Method (..), call, sendTx)
 import           Network.Ethereum.Web3.Provider    (Web3)
 import           Network.Ethereum.Web3.Types       (Call, DefaultBlock (..),
-                                                    Filter (..), TxHash)
+                                                    Filter (..), Hash)
 
 -- | Read contract ABI from file
 abiFrom :: QuasiQuoter
@@ -158,7 +158,7 @@ funWrapper c name dname args result = do
           ]
 
         else
-          [ sigD name $ [t|$(arrowing $ [t|Call|] : inputT ++ [[t|Web3 TxHash|]])|]
+          [ sigD name $ [t|$(arrowing $ [t|Call|] : inputT ++ [[t|Web3 Hash|]])|]
           , funD' name (varP <$> a : vars) $
                 [|sendTx $(varE a) $(params)|] ]
   where

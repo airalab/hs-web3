@@ -14,12 +14,13 @@
 
 module Network.Ethereum.Web3.Net where
 
+import           Data.Text                      (Text)
 import           Network.Ethereum.Web3.Provider (Web3)
 import           Network.Ethereum.Web3.Types    (Quantity)
 import           Network.JsonRpc.TinyClient     (remote)
 
 -- | Returns the current network id.
-version :: Web3 Int
+version :: Web3 Text
 {-# INLINE version #-}
 version = remote "net_version"
 

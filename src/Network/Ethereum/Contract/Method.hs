@@ -28,7 +28,7 @@ import           Network.Ethereum.ABI.Prim.Bytes (Bytes)
 import qualified Network.Ethereum.Web3.Eth       as Eth
 import           Network.Ethereum.Web3.Provider  (Web3, Web3Error (ParserFail))
 import           Network.Ethereum.Web3.Types     (Call (callData), DefaultBlock,
-                                                  TxHash)
+                                                  Hash)
 
 class ABIPut a => Method a where
   selector :: Proxy a -> Bytes
@@ -48,7 +48,7 @@ sendTx :: Method a
        -- ^ Call configuration
        -> a
        -- ^ method data
-       -> Web3 TxHash
+       -> Web3 Hash
 sendTx call' (dat :: a) =
     let sel = selector (Proxy :: Proxy a)
     in Eth.sendTransaction (call' { callData = Just $ sel <> encode dat })

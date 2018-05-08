@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 -- |
@@ -15,9 +16,12 @@
 module Network.Ethereum.Web3.Eth where
 
 import           Network.Ethereum.ABI.Prim.Address (Address)
-import           Network.Ethereum.ABI.Prim.Bytes   (Bytes)
+import           Network.Ethereum.ABI.Prim.Bytes   (Bytes, BytesN)
 import           Network.Ethereum.Web3.Provider    (Web3)
-import           Network.Ethereum.Web3.Types
+import           Network.Ethereum.Web3.Types       (Block, Call, Change,
+                                                    DefaultBlock, Filter, Hash,
+                                                    Quantity, SyncingState,
+                                                    Transaction, TxReceipt)
 import           Network.JsonRpc.TinyClient        (remote)
 
 -- | Returns the current ethereum protocol version.
@@ -46,7 +50,7 @@ hashrate :: Web3 Quantity
 hashrate = remote "eth_hashrate"
 
 -- | Returns the value from a storage position at a given address.
-getStorageAt :: Address -> Quantity -> DefaultBlock -> Web3 Bytes
+getStorageAt :: Address -> Quantity -> DefaultBlock -> Web3 (BytesN 32)
 {-# INLINE getStorageAt #-}
 getStorageAt = remote "eth_getStorageAt"
 
@@ -56,7 +60,7 @@ getTransactionCount :: Address -> DefaultBlock -> Web3 Quantity
 getTransactionCount = remote "eth_getTransactionCount"
 
 -- | Returns the number of transactions in a block from a block matching the given block hash.
-getBlockTransactionCountByHash :: Bytes -> Web3 Quantity
+getBlockTransactionCountByHash :: Hash -> Web3 Quantity
 {-# INLINE getBlockTransactionCountByHash #-}
 getBlockTransactionCountByHash = remote "eth_getBlockTransactionCountByHash"
 
@@ -68,7 +72,7 @@ getBlockTransactionCountByNumber = remote "eth_getBlockTransactionCountByNumber"
 
 -- | Returns the number of uncles in a block from a block matching the given
 -- block hash.
-getUncleCountByBlockHash :: Bytes -> Web3 Quantity
+getUncleCountByBlockHash :: Hash -> Web3 Quantity
 {-# INLINE getUncleCountByBlockHash #-}
 getUncleCountByBlockHash = remote "eth_getUncleCountByBlockHash"
 
@@ -91,13 +95,13 @@ sign = remote "eth_sign"
 
 -- | Creates new message call transaction or a contract creation,
 -- if the data field contains code.
-sendTransaction :: Call -> Web3 Bytes
+sendTransaction :: Call -> Web3 Hash
 {-# INLINE sendTransaction #-}
 sendTransaction = remote "eth_sendTransaction"
 
 -- | Creates new message call transaction or a contract creation for signed
 -- transactions.
-sendRawTransaction :: Bytes -> Web3 Bytes
+sendRawTransaction :: Bytes -> Web3 Hash
 {-# INLINE sendRawTransaction #-}
 sendRawTransaction = remote "eth_sendRawTransaction"
 
@@ -109,19 +113,19 @@ getBalance = remote "eth_getBalance"
 -- | Creates a filter object, based on filter options, to notify when the
 -- state changes (logs). To check if the state has changed, call
 -- 'getFilterChanges'.
-newFilter :: Filter e -> Web3 FilterId
+newFilter :: Filter e -> Web3 Quantity
 {-# INLINE newFilter #-}
 newFilter = remote "eth_newFilter"
 
 -- | Polling method for a filter, which returns an array of logs which
 -- occurred since last poll.
-getFilterChanges :: FilterId -> Web3 [Change]
+getFilterChanges :: Quantity -> Web3 [Change]
 {-# INLINE getFilterChanges #-}
 getFilterChanges = remote "eth_getFilterChanges"
 
 -- | Uninstalls a filter with given id.
 -- Should always be called when watch is no longer needed.
-uninstallFilter :: FilterId -> Web3 Bool
+uninstallFilter :: Quantity -> Web3 Bool
 {-# INLINE uninstallFilter #-}
 uninstallFilter = remote "eth_uninstallFilter"
 
@@ -132,7 +136,7 @@ getLogs = remote "eth_getLogs"
 
 -- | Executes a new message call immediately without creating a
 -- transaction on the block chain.
-call :: Call -> DefaultBlock -> Web3 Bytes
+call :: Call -> DefaultBlock -> Web3 Hash
 {-# INLINE call #-}
 call = remote "eth_call"
 
@@ -143,7 +147,7 @@ estimateGas :: Call -> Web3 Quantity
 estimateGas = remote "eth_estimateGas"
 
 -- | Returns information about a block by hash.
-getBlockByHash :: Bytes -> Web3 Block
+getBlockByHash :: Hash -> Web3 Block
 {-# INLINE getBlockByHash #-}
 getBlockByHash = flip (remote "eth_getBlockByHash") True
 
@@ -153,12 +157,12 @@ getBlockByNumber :: Quantity -> Web3 Block
 getBlockByNumber = flip (remote "eth_getBlockByNumber") True
 
 -- | Returns the information about a transaction requested by transaction hash.
-getTransactionByHash :: Bytes -> Web3 (Maybe Transaction)
+getTransactionByHash :: Hash -> Web3 (Maybe Transaction)
 {-# INLINE getTransactionByHash #-}
 getTransactionByHash = remote "eth_getTransactionByHash"
 
 -- | Returns information about a transaction by block hash and transaction index position.
-getTransactionByBlockHashAndIndex :: Bytes -> Quantity -> Web3 (Maybe Transaction)
+getTransactionByBlockHashAndIndex :: Hash -> Quantity -> Web3 (Maybe Transaction)
 {-# INLINE getTransactionByBlockHashAndIndex #-}
 getTransactionByBlockHashAndIndex = remote "eth_getTransactionByBlockHashAndIndex"
 
@@ -169,7 +173,7 @@ getTransactionByBlockNumberAndIndex :: DefaultBlock -> Quantity -> Web3 (Maybe T
 getTransactionByBlockNumberAndIndex = remote "eth_getTransactionByBlockNumberAndIndex"
 
 -- | Returns the receipt of a transaction by transaction hash.
-getTransactionReceipt :: TxHash -> Web3 (Maybe TxReceipt)
+getTransactionReceipt :: Hash -> Web3 (Maybe TxReceipt)
 {-# INLINE getTransactionReceipt #-}
 getTransactionReceipt = remote "eth_getTransactionReceipt"
 
@@ -178,18 +182,19 @@ accounts :: Web3 [Address]
 {-# INLINE accounts #-}
 accounts = remote "eth_accounts"
 
-newBlockFilter :: Web3 Bytes
+-- | Creates a filter in the node, to notify when a new block arrives.
+newBlockFilter :: Web3 Quantity
 {-# INLINE newBlockFilter #-}
 newBlockFilter = remote "eth_newBlockFilter"
 
 -- | Polling method for a block filter, which returns an array of block hashes
 -- occurred since last poll.
-getBlockFilterChanges :: Quantity -> Web3 [Bytes]
+getBlockFilterChanges :: Quantity -> Web3 [Hash]
 {-# INLINE getBlockFilterChanges #-}
 getBlockFilterChanges = remote "eth_getFilterChanges"
 
 -- | Returns the number of most recent block.
-blockNumber :: Web3 BlockNumber
+blockNumber :: Web3 Quantity
 {-# INLINE blockNumber #-}
 blockNumber = remote "eth_blockNumber"
 
@@ -200,7 +205,7 @@ gasPrice = remote "eth_gasPrice"
 
 -- | Returns information about a uncle of a block by hash and uncle index
 -- position.
-getUncleByBlockHashAndIndex :: Bytes -> Quantity -> Web3 Block
+getUncleByBlockHashAndIndex :: Hash -> Quantity -> Web3 Block
 {-# INLINE getUncleByBlockHashAndIndex #-}
 getUncleByBlockHashAndIndex = remote "eth_getUncleByBlockHashAndIndex"
 
@@ -231,7 +236,7 @@ getWork = remote "eth_getWork"
 -- 1. DATA, 8 Bytes - The nonce found (64 bits)
 -- 2. DATA, 32 Bytes - The header's pow-hash (256 bits)
 -- 3. DATA, 32 Bytes - The mix digest (256 bits)
-submitWork :: Bytes -> Bytes -> Bytes -> Web3 Bool
+submitWork :: BytesN 8 -> BytesN 32 -> BytesN 32 -> Web3 Bool
 {-# INLINE submitWork #-}
 submitWork = remote "eth_submitWork"
 
@@ -239,6 +244,6 @@ submitWork = remote "eth_submitWork"
 -- Parameters:
 -- 1. Hashrate, a hexadecimal string representation (32 bytes) of the hash rate
 -- 2. ID, String - A random hexadecimal(32 bytes) ID identifying the client
-submitHashrate :: Bytes -> Bytes -> Web3 Bool
+submitHashrate :: BytesN 32 -> BytesN 32 -> Web3 Bool
 {-# INLINE submitHashrate #-}
 submitHashrate = remote "eth_submitHashrate"

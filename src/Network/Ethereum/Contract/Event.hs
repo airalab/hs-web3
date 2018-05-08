@@ -39,9 +39,8 @@ import           Control.Concurrent.Async       (Async)
 import           Network.Ethereum.ABI.Event     (DecodeEvent (..))
 import qualified Network.Ethereum.Web3.Eth      as Eth
 import           Network.Ethereum.Web3.Provider (Web3, forkWeb3)
-import           Network.Ethereum.Web3.Types    (BlockNumber (..), Change (..),
-                                                 DefaultBlock (..), Filter (..),
-                                                 FilterId)
+import           Network.Ethereum.Web3.Types    (Change (..), DefaultBlock (..),
+                                                 Filter (..), Quantity)
 
 -- | Event callback control response
 data EventAction = ContinueEvent
@@ -99,7 +98,7 @@ eventMany' fltr window handler = do
 reduceEventStream :: Monad m
                   => MachineT m k [FilterChange a]
                   -> (a -> ReaderT Change m EventAction)
-                  -> m (Maybe (EventAction, BlockNumber))
+                  -> m (Maybe (EventAction, Quantity))
 reduceEventStream filterChanges handler = fmap listToMaybe . runT $
        filterChanges
     ~> autoM (processChanges handler)
@@ -115,7 +114,7 @@ reduceEventStream filterChanges handler = fmap listToMaybe . runT $
     processChanges :: Monad m
                    => (a -> ReaderT Change m EventAction)
                    -> [FilterChange a]
-                   -> m [(EventAction, BlockNumber)]
+                   -> m [(EventAction, Quantity)]
     processChanges handler' changes =
         forM changes $ \FilterChange{..} -> do
             act <- flip runReaderT filterChangeRawChange $
@@ -136,12 +135,12 @@ playLogs s = filterStream s
 
 -- | Polls a filter from the given filterId until the target toBlock is reached.
 pollFilter :: forall i ni e k . DecodeEvent i ni e
-           => FilterId
+           => Quantity
            -> DefaultBlock
            -> MachineT Web3 k [FilterChange e]
 pollFilter i = construct . pollPlan i
   where
-    pollPlan :: FilterId -> DefaultBlock -> PlanT k [FilterChange e] Web3 ()
+    pollPlan :: Quantity -> DefaultBlock -> PlanT k [FilterChange e] Web3 ()
     pollPlan fid end = do
       bn <- lift $ Eth.blockNumber
       if BlockWithNumber bn > end
@@ -161,7 +160,7 @@ mkFilterChanges = rights
                 . fmap (\c@Change{..} -> FilterChange c <$> decodeEvent c)
 
 data FilterStreamState e =
-  FilterStreamState { fssCurrentBlock  :: BlockNumber
+  FilterStreamState { fssCurrentBlock  :: Quantity
                     , fssInitialFilter :: Filter e
                     , fssWindowSize    :: Integer
                     }
@@ -169,10 +168,10 @@ data FilterStreamState e =
 
 -- | 'filterStream' is a machine which represents taking an initial filter
 -- over a range of blocks b1, ... bn (where bn is possibly `Latest` or `Pending`,
--- but b1 is an actual `BlockNumber`), and making a stream of filter objects
+-- but b1 is an actual block number), and making a stream of filter objects
 -- which cover this filter in intervals of size `windowSize`. The machine
 -- halts whenever the `fromBlock` of a spanning filter either (1) excedes then
--- initial filter's `toBlock` or (2) is greater than the chain head's `BlockNumber`.
+-- initial filter's `toBlock` or (2) is greater than the chain head's block number.
 filterStream :: FilterStreamState e
              -> MachineT Web3 k (Filter e)
 filterStream initialPlan = unfoldPlan initialPlan filterPlan
@@ -183,19 +182,15 @@ filterStream initialPlan = unfoldPlan initialPlan filterPlan
       if fssCurrentBlock > end
         then stop
         else do
-          let to' = newTo end fssCurrentBlock fssWindowSize
+          let to' = min end $ fssCurrentBlock + fromInteger fssWindowSize
               filter' = fssInitialFilter { filterFromBlock = BlockWithNumber fssCurrentBlock
                                          , filterToBlock = BlockWithNumber to'
                                          }
           yield filter'
-          filterPlan $ initialState { fssCurrentBlock = succBn to' }
-    succBn :: BlockNumber -> BlockNumber
-    succBn (BlockNumber bn) = BlockNumber $ bn + 1
-    newTo :: BlockNumber -> BlockNumber -> Integer -> BlockNumber
-    newTo upper (BlockNumber current) window = min upper . BlockNumber $ current + window
+          filterPlan $ initialState { fssCurrentBlock = to' + 1 }
 
 -- | Coerce a 'DefaultBlock' into a numerical block number.
-mkBlockNumber :: DefaultBlock -> Web3 BlockNumber
+mkBlockNumber :: DefaultBlock -> Web3 Quantity
 mkBlockNumber bm = case bm of
   BlockWithNumber bn -> return bn
   Earliest           -> return 0
