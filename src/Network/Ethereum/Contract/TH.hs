@@ -250,6 +250,7 @@ escapeEqualNames = concat . fmap go . group . sort
         go (x : xs) = x : zipWith appendToName xs hats
         hats = [T.replicate n "'" | n <- [1..]]
         appendToName d@(DFunction n _ _ _) a = d { funName = n <> a }
+        appendToName d@(DEvent n _ _) a      = d { eveName = n <> a }
         appendToName d _                     = d
 
 escapeReservedNames :: Declaration -> Declaration
