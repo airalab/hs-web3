@@ -110,6 +110,7 @@ test-suite unit
                        Network.Ethereum.Web3.Test.EncodingSpec
                        Network.Ethereum.Web3.Test.EventSpec
   build-depends:       base                 >4.9       && <4.12
+                     , base16-bytestring    >=0.1.1.6  && <0.2
                      , hspec-expectations   >=0.8.2    && <0.9
                      , hspec-discover       >=2.4.8    && <2.6
                      , hspec-contrib        >=0.4.0    && <0.6
