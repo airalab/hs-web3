@@ -34,7 +34,7 @@ createRawTransaction call chainId privateKey = do
                                             , 0 :: Integer
                                             , 0 :: Integer
                                             )
-    let rlpHash = convert (hash rlpEndcoding :: Digest Keccak_256)
+        rlpHash = convert (hash rlpEndcoding :: Digest Keccak_256)
     recSig <- ecsign rlpHash privateKey
     let r = fromShort $ getCompactRecSigR recSig
         s = fromShort $ getCompactRecSigS recSig
