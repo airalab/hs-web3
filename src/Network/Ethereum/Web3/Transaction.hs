@@ -12,16 +12,19 @@ import           Data.RLP
 import           Network.Ethereum.Web3.Types
 import           Network.Ethereum.ABI.Prim.Address (toHexString)
 
-unpackCallParameters :: Call -> Maybe (Integer, Integer, Integer, ByteString, Integer, ByteString)
-unpackCallParameters call = (,,,,,) <$> (unQuantity <$> callNonce call)
-                                    <*> (unQuantity <$> callGasPrice call)
-                                    <*> (unQuantity <$> callGas call)
-                                    <*> (fst . BS16.decode . BS.drop 2 . toHexString <$> callTo call)
-                                    <*> (unQuantity <$> callValue call)
-                                    <*> (pure . fromMaybe empty $ convert <$> callData call)
+unpackCallParameters :: Call -> Either String (Integer, Integer, Integer, ByteString, Integer, ByteString)
+unpackCallParameters call = do
+    nonce <- toError "nonce" $ unQuantity <$> callNonce call
+    gasPrice <- toError "gasPrice" $ unQuantity <$> callGasPrice call
+    gasLimit <- toError "gas" $ unQuantity <$> callGas call
+    to <- toError "to" $ (fst . BS16.decode . BS.drop 2 . toHexString <$> callTo call)
+    value <- toError "value" $ (unQuantity <$> callValue call)
+    let txData = fromMaybe empty $ convert <$> callData call
+    return $ (nonce, gasPrice, gasLimit, to, value, txData)
+        where toError field =
+                maybe (Left $ field ++ " must be set when creating raw transaction") pure
 
-
-createRawTransaction :: Call -> Integer -> ByteString -> Maybe Bytes
+createRawTransaction :: Call -> Integer -> ByteString -> Either String Bytes
 createRawTransaction call chainId privateKey = do
     (nonce, gasPrice, gasLimit, to, value, txData) <- unpackCallParameters call
     let rlpEndcoding =  packRLP $ rlpEncode ( nonce
@@ -35,7 +38,7 @@ createRawTransaction call chainId privateKey = do
                                             , 0 :: Integer
                                             )
         rlpHash = convert (hash rlpEndcoding :: Digest Keccak_256)
-    recSig <- ecsign rlpHash privateKey
+    recSig <- maybe (Left "Cannot create transaction signature") pure $ ecsign rlpHash privateKey
     let r = fromShort $ getCompactRecSigR recSig
         s = fromShort $ getCompactRecSigS recSig
         v = getCompactRecSigV recSig

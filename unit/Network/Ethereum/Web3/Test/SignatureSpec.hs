@@ -17,7 +17,7 @@ spec :: Spec
 spec = describe "transaction signing" $
     it "can create valid raw transaction" $ do
         let rawTx = T.decodeUtf8 . BS16.encode . convert <$> createRawTransaction testCall 1 privKey
-        rawTx `shouldBe` (Just correctSignedTx)
+        rawTx `shouldBe` (Right correctSignedTx)
     where testCall = Call Nothing
                           (Just "0x3535353535353535353535353535353535353535")
                           (Just . Quantity $ 21000)

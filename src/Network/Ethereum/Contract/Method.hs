@@ -57,7 +57,7 @@ sendTx call' (dat :: a) = do
     signingConfigM <- asks (signingConfiguration . fst)
     case signingConfigM of
         Just (SigningConfiguration privKey chainId) -> do
-            txBytes <- maybe (throwM $ UserFail "Unable to create raw transaction") return $
+            txBytes <- either (throwM . UserFail) pure $
                 createRawTransaction (call' { callData = Just $ sel <> encode dat }) chainId privKey
             Eth.sendRawTransaction txBytes
         Nothing -> Eth.sendTransaction (call' { callData = Just $ sel <> encode dat })
