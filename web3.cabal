@@ -107,8 +107,9 @@ test-suite unit
   hs-source-dirs:      unit
   main-is:             Spec.hs
   other-modules:       Network.Ethereum.Web3.Test.MethodDumpSpec
-                       Network.Ethereum.Web3.Test.EncodingSpec
-                       Network.Ethereum.Web3.Test.EventSpec
+                     , Network.Ethereum.Web3.Test.EncodingSpec
+                     , Network.Ethereum.Web3.Test.EventSpec
+                     , Network.Ethereum.Web3.Test.SignatureSpec
   build-depends:       base                 >4.9       && <4.12
                      , base16-bytestring    >=0.1.1.6  && <0.2
                      , hspec-expectations   >=0.8.2    && <0.9

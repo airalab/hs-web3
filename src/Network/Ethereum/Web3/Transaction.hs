@@ -20,27 +20,21 @@ unpackCallParameters call = (,,,,,) <$> (unQuantity <$> callNonce call)
                                     <*> (unQuantity <$> callValue call)
                                     <*> (pure . fromMaybe empty $ convert <$> callData call)
 
--- initial rlpHash of transaction data
-rlpHashTransaction :: Call -> Integer -> Maybe ByteString
-rlpHashTransaction call chainId = do
-    (nonce, gasPrice, gasLimit, to, value, txData) <- unpackCallParameters call
-    return . packRLP $ rlpEncode ( nonce
-                                 , gasPrice
-                                 , gasLimit
-                                 , to
-                                 , value
-                                 , txData
-                                 , chainId
-                                 , 0 :: Integer
-                                 , 0 :: Integer
-                                 )
-
 
 createRawTransaction :: Call -> Integer -> ByteString -> Maybe Bytes
 createRawTransaction call chainId privateKey = do
-    rlpEndcoding <- rlpHashTransaction call chainId
-    let rlpHash = convert (hash rlpEndcoding :: Digest Keccak_256)
     (nonce, gasPrice, gasLimit, to, value, txData) <- unpackCallParameters call
+    let rlpEndcoding =  packRLP $ rlpEncode ( nonce
+                                            , gasPrice
+                                            , gasLimit
+                                            , to
+                                            , value
+                                            , txData
+                                            , chainId
+                                            , 0 :: Integer
+                                            , 0 :: Integer
+                                            )
+    let rlpHash = convert (hash rlpEndcoding :: Digest Keccak_256)
     recSig <- ecsign rlpHash privateKey
     let r = fromShort $ getCompactRecSigR recSig
         s = fromShort $ getCompactRecSigS recSig
