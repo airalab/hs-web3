@@ -63,6 +63,7 @@ import           Network.Ethereum.ABI.Json         (ContractABI (..),
                                                     SolidityType (..), eventId,
                                                     methodId, parseSolidityType)
 import           Network.Ethereum.ABI.Prim.Address (Address)
+import           Network.Ethereum.ABI.Prim.Bool ()
 import           Network.Ethereum.ABI.Prim.Bytes   (Bytes, BytesN)
 import           Network.Ethereum.ABI.Prim.Int     (IntN, UIntN)
 import           Network.Ethereum.ABI.Prim.List    (ListN)
