@@ -1,6 +1,26 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.7.2.0] 2018-05-13
+### Added
+- Generic JSON-RPC API documentation improvements.
+- TH generator bug fixes.
+
+### Changed
+- Generic JSON-RPC API use fixed size byte arrays.
+
+### Removed
+- 'BlockNumber', 'FilterId' types replaced by 'Quantity' type
+
+## [0.7.1.0] 2018-05-02
+### Added
+- TxReceipt and Eth.getTransactionReceipt JSON-RPC method.
+- Keyword escaper for TH generated names.
+- Build flag to enable TLS support.
+
+### Changed
+- Library dependencies bounds fixed for GHC 8.2.2-8.4.2 (stackage LTS + Nightly).
+
 ## [0.7.0.0] 2018-04-22
 ### Added
 - This CHANGELOG.md file for significant changes tracking.

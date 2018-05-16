@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP               #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
@@ -41,7 +40,7 @@ module Network.Ethereum.Contract.TH (abi, abiFrom) where
 import           Control.Monad                     (replicateM, (<=<))
 import           Data.Aeson                        (eitherDecode)
 import           Data.Default                      (Default (..))
-import           Data.List                         (groupBy, sortBy, uncons)
+import           Data.List                         (group, sort, uncons)
 import           Data.Monoid                       ((<>))
 import           Data.Tagged                       (Tagged)
 import           Data.Text                         (Text)
@@ -73,7 +72,7 @@ import           Network.Ethereum.ABI.Prim.Tuple   (Singleton (..))
 import           Network.Ethereum.Contract.Method  (Method (..), call, sendTx)
 import           Network.Ethereum.Web3.Provider    (Web3)
 import           Network.Ethereum.Web3.Types       (Call, DefaultBlock (..),
-                                                    Filter (..), TxHash)
+                                                    Filter (..), Hash)
 
 -- | Read contract ABI from file
 abiFrom :: QuasiQuoter
@@ -96,11 +95,7 @@ instanceD' name insType =
 -- | Simple data type declaration with one constructor
 dataD' :: Name -> ConQ -> [Name] -> DecQ
 dataD' name rec derive =
-#if MIN_VERSION_template_haskell(2,12,0)
     dataD (cxt []) name [] Nothing [rec] [derivClause Nothing (conT <$> derive)]
-#else
-    dataD (cxt []) name [] Nothing [rec] $ cxt (conT <$> derive)
-#endif
 
 -- | Simple function declaration
 funD' :: Name -> [PatQ] -> ExpQ -> DecQ
@@ -148,7 +143,7 @@ funWrapper :: Bool
            -- ^ Parameters
            -> Maybe [FunctionArg]
            -- ^ Results
-           -> Q [Dec]
+           -> DecsQ
 funWrapper c name dname args result = do
     a : _ : vars <- replicateM (length args + 2) (newName "t")
     let params = appsE $ conE dname : fmap varE vars
@@ -163,7 +158,7 @@ funWrapper c name dname args result = do
           ]
 
         else
-          [ sigD name $ [t|$(arrowing $ [t|Call|] : inputT ++ [[t|Web3 TxHash|]])|]
+          [ sigD name $ [t|$(arrowing $ [t|Call|] : inputT ++ [[t|Web3 Hash|]])|]
           , funD' name (varP <$> a : vars) $
                 [|sendTx $(varE a) $(params)|] ]
   where
@@ -177,7 +172,7 @@ funWrapper c name dname args result = do
         Just xs  -> let outs = fmap (typeQ . funArgType) xs
                     in  [t|Web3 $(foldl appT (tupleT (length xs)) outs)|]
 
-mkDecl :: Declaration -> Q [Dec]
+mkDecl :: Declaration -> DecsQ
 
 mkDecl ev@(DEvent name inputs anonymous) = sequence
     [ dataD' indexedName (normalC indexedName (map (toBang <=< tag) indexedArgs)) derivingD
@@ -195,7 +190,7 @@ mkDecl ev@(DEvent name inputs anonymous) = sequence
         [funD' 'isAnonymous [] [|const anonymous|]]
     , instanceD (cxt [])
         (pure $ ConT ''Default `AppT` (ConT ''Filter `AppT` ConT allName))
-        [funD' 'def [] [|Filter Nothing (Just topics) Latest Latest|] ]
+        [funD' 'def [] [|Filter Nothing Latest Latest $ Just topics|] ]
     ]
   where
     topics    = [Just (T.unpack $ eventId ev)] <> replicate (length indexedArgs) Nothing
@@ -247,21 +242,36 @@ makeArgs prefix ns = go 1 ns
                         else (mkName . (++ "_") . (++) prefixStr . toUpperFirst . T.unpack $ h, ty) : go (i + 1) tail'
 
 escape :: [Declaration] -> [Declaration]
-escape = concat . escapeNames . groupBy fnEq . sortBy fnCompare
-  where fnEq (DFunction n1 _ _ _) (DFunction n2 _ _ _) = n1 == n2
-        fnEq _ _                                       = False
-        fnCompare (DFunction n1 _ _ _) (DFunction n2 _ _ _) = compare n1 n2
-        fnCompare _ _                                       = GT
+escape = escapeEqualNames . fmap escapeReservedNames
 
-escapeNames :: [[Declaration]] -> [[Declaration]]
-escapeNames = fmap go
+escapeEqualNames :: [Declaration] -> [Declaration]
+escapeEqualNames = concat . fmap go . group . sort
   where go []       = []
         go (x : xs) = x : zipWith appendToName xs hats
         hats = [T.replicate n "'" | n <- [1..]]
-        appendToName dfn addition = dfn { funName = funName dfn <> addition }
+        appendToName d@(DFunction n _ _ _) a = d { funName = n <> a }
+        appendToName d@(DEvent n _ _) a      = d { eveName = n <> a }
+        appendToName d _                     = d
+
+escapeReservedNames :: Declaration -> Declaration
+escapeReservedNames d@(DFunction n _ _ _)
+  | isKeyword n = d { funName = n <> "'" }
+  | otherwise = d
+escapeReservedNames d = d
+
+isKeyword :: Text -> Bool
+isKeyword = flip elem [ "as", "case", "of", "class"
+                      , "data", "family", "instance"
+                      , "default", "deriving", "do"
+                      , "forall", "foreign", "hiding"
+                      , "if", "then", "else", "import"
+                      , "infix", "infixl", "infixr"
+                      , "let", "in", "mdo", "module"
+                      , "newtype", "proc", "qualified"
+                      , "rec", "type", "where"]
 
 -- | ABI to declarations converter
-quoteAbiDec :: String -> Q [Dec]
+quoteAbiDec :: String -> DecsQ
 quoteAbiDec abi_string =
     case eitherDecode abi_lbs of
         Left e                -> fail $ "Error: " ++ show e

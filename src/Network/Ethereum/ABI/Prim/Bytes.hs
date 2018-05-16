@@ -29,6 +29,7 @@ import           Data.ByteArray                (Bytes, convert, length, zero)
 import           Data.ByteArray.Encoding       (Base (Base16), convertFromBase,
                                                 convertToBase)
 import           Data.ByteArray.Sized          (SizedByteArray,
+                                                unSizedByteArray,
                                                 unsafeFromByteArrayAccess)
 import qualified Data.ByteArray.Sized          as S (take)
 import           Data.ByteString               (ByteString)
@@ -95,6 +96,13 @@ instance (KnownNat n, n <= 32) => ABIPut (BytesN n) where
 
 instance (KnownNat n, n <= 32) => IsString (BytesN n) where
     fromString = unsafeFromByteArrayAccess . (fromString :: String -> Bytes)
+
+instance (KnownNat n, n <= 32) => FromJSON (BytesN n) where
+    parseJSON v = do ba <- parseJSON v
+                     return $ unsafeFromByteArrayAccess (ba :: Bytes)
+
+instance (KnownNat n, n <= 32) => ToJSON (BytesN n) where
+    toJSON ba = toJSON (unSizedByteArray ba :: Bytes)
 
 abiGetByteString :: Get ByteString
 abiGetByteString = do

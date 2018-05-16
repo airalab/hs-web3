@@ -83,7 +83,36 @@ data Declaration
   -- ^ Event
   | DFallback { falPayable :: Bool }
   -- ^ Fallback function
-  deriving (Show, Eq, Ord)
+  deriving Show
+
+instance Eq Declaration where
+    (DConstructor a) == (DConstructor b) = length a == length b
+    (DFunction a _ _ _) == (DFunction b _ _ _) = a == b
+    (DEvent a _ _) == (DEvent b _ _) = a == b
+    (DFallback _) == (DFallback _) = True
+    (==) _ _ = False
+
+instance Ord Declaration where
+    compare (DConstructor a) (DConstructor b) = compare (length a) (length b)
+    compare (DFunction a _ _ _) (DFunction b _ _ _) = compare a b
+    compare (DEvent a _ _) (DEvent b _ _) = compare a b
+    compare (DFallback _) (DFallback _) = EQ
+
+    compare DConstructor {} DFunction {} = LT
+    compare DConstructor {} DEvent {} = LT
+    compare DConstructor {} DFallback {} = LT
+
+    compare DFunction {} DConstructor {} = GT
+    compare DFunction {} DEvent {} = LT
+    compare DFunction {} DFallback {} = LT
+
+    compare DEvent {} DConstructor {} = GT
+    compare DEvent {} DFunction {} = GT
+    compare DEvent {} DFallback {} = LT
+
+    compare DFallback {} DConstructor {} = GT
+    compare DFallback {} DFunction {} = GT
+    compare DFallback {} DEvent {} = GT
 
 $(deriveJSON (defaultOptions {
     sumEncoding = TaggedObject "type" "contents"

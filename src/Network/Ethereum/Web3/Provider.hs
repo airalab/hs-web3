@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE CPP #-}
 
 -- |
 -- Module      :  Network.Ethereum.Web3.Provider
@@ -27,7 +28,12 @@ import           Data.Aeson                 (FromJSON)
 import           Data.Default               (Default (..))
 import           GHC.Generics               (Generic)
 import           Network.HTTP.Client        (Manager, newManager)
+
+#ifdef TLS_MANAGER
 import           Network.HTTP.Client.TLS    (tlsManagerSettings)
+#else
+import           Network.HTTP.Client        (defaultManagerSettings)
+#endif
 
 import           Network.JsonRpc.TinyClient (Remote, ServerUri)
 
@@ -69,7 +75,12 @@ runWeb3With manager (HttpProvider uri) f =
 -- | 'Web3' monad runner
 runWeb3' :: MonadIO m => Provider -> Web3 a -> m (Either Web3Error a)
 runWeb3' provider f = do
-    manager <- liftIO $ newManager tlsManagerSettings
+    manager <- liftIO $
+#ifdef TLS_MANAGER
+        newManager tlsManagerSettings
+#else
+        newManager defaultManagerSettings
+#endif
     runWeb3With manager provider f
 
 -- | 'Web3' runner for default provider
