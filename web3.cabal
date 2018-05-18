@@ -72,7 +72,6 @@ library
                      , http-client          >=0.5.12.1 && <0.6
                      , exceptions           >=0.8.3    && <0.9
                      , bytestring           >=0.10.8.2 && <0.11
-                     , base16-bytestring    >=0.1.1.6  && <0.2
                      , cryptonite           ==0.25.*
                      , basement             >=0.0.7    && <0.1
                      , machines             >=0.6.3    && <0.7
@@ -111,7 +110,6 @@ test-suite unit
                      , Network.Ethereum.Web3.Test.EventSpec
                      , Network.Ethereum.Web3.Test.SignatureSpec
   build-depends:       base                 >4.9       && <4.12
-                     , base16-bytestring    >=0.1.1.6  && <0.2
                      , hspec-expectations   >=0.8.2    && <0.9
                      , hspec-discover       >=2.4.8    && <2.6
                      , hspec-contrib        >=0.4.0    && <0.6

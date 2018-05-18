@@ -3,10 +3,10 @@ module Network.Ethereum.Web3.Transaction where
 import           Crypto.Hash                       (Digest, Keccak_256, hash)
 import           Crypto.Secp256k1
 import           Data.ByteArray                    (Bytes, convert)
+import           Data.ByteArray.Encoding
 import           Data.ByteString
 import qualified Data.ByteString                   as BS
 import           Data.ByteString.Short             (fromShort)
-import qualified Data.ByteString.Base16            as BS16
 import           Data.Maybe                        (fromMaybe)
 import           Data.RLP
 import           Network.Ethereum.Web3.Types
@@ -17,10 +17,10 @@ unpackCallParameters call = do
     nonce <- toError "nonce" $ unQuantity <$> callNonce call
     gasPrice <- toError "gasPrice" $ unQuantity <$> callGasPrice call
     gasLimit <- toError "gas" $ unQuantity <$> callGas call
-    to <- toError "to" $ (fst . BS16.decode . BS.drop 2 . toHexString <$> callTo call)
-    value <- toError "value" $ (unQuantity <$> callValue call)
+    to <- convertFromBase Base16 =<< toError "to" (BS.drop 2 . toHexString <$> callTo call)
+    value <- toError "value" (unQuantity <$> callValue call)
     let txData = fromMaybe empty $ convert <$> callData call
-    return $ (nonce, gasPrice, gasLimit, to, value, txData)
+    return (nonce, gasPrice, gasLimit, to, value, txData)
         where toError field =
                 maybe (Left $ field ++ " must be set when creating raw transaction") pure
 
