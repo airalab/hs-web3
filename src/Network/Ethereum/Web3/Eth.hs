@@ -25,7 +25,7 @@ import           Network.Ethereum.Web3.Types       (Block, Call, Change,
 import           Network.JsonRpc.TinyClient        (remote)
 
 -- | Returns the current ethereum protocol version.
-protocolVersion :: Web3 Int
+protocolVersion :: Web3 String
 {-# INLINE protocolVersion #-}
 protocolVersion = remote "eth_protocolVersion"
 
