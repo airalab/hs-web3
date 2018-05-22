@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.7.3.0] 2018-05-22
+### Added
+- 'Network.Ethereum.ABI.Prim' meta-module as primitive types and instances aggregator.
+- Stackage nightly build compatibility.
+
+### Changed
+- Potential nullable web3 type ('Change', 'Block', 'Transaction', etc.) fields are encoded as 'Maybe'.
+
 ## [0.7.2.0] 2018-05-13
 ### Added
 - Generic JSON-RPC API documentation improvements.
