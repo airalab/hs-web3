@@ -140,7 +140,7 @@ events = describe "can interact with a SimpleStorage contract across block inter
         setValues theCall theSets1
         wait fiber
         print "All past transactions succeeded... "
-        end <- takeMVar blockNumberVar
+        Just end <- takeMVar blockNumberVar
         awaitBlock $ end + 1 -- make past transactions definitively in past
         var' <- newMVar []
         fiber <- runWeb3Configured' $ do
@@ -169,7 +169,7 @@ events = describe "can interact with a SimpleStorage contract across block inter
         setValues theCall theSets
         wait fiber
         print "All values have been set"
-        end <- takeMVar blockNumberVar
+        Just end <- takeMVar blockNumberVar
         var' <- newMVar []
         let fltr' = fltr { filterFromBlock = BlockWithNumber start
                          , filterToBlock = BlockWithNumber end

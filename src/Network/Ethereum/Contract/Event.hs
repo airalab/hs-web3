@@ -33,7 +33,7 @@ import           Data.Machine                   (MachineT, asParts, autoM,
                                                  mapping, repeatedly, runT,
                                                  unfoldPlan, (~>))
 import           Data.Machine.Plan              (PlanT, stop, yield)
-import           Data.Maybe                     (listToMaybe)
+import           Data.Maybe                     (catMaybes, listToMaybe)
 
 import           Control.Concurrent.Async       (Async)
 import           Network.Ethereum.ABI.Event     (DecodeEvent (..))
@@ -115,11 +115,11 @@ reduceEventStream filterChanges handler = fmap listToMaybe . runT $
                    => (a -> ReaderT Change m EventAction)
                    -> [FilterChange a]
                    -> m [(EventAction, Quantity)]
-    processChanges handler' changes =
+    processChanges handler' changes = fmap catMaybes $
         forM changes $ \FilterChange{..} -> do
             act <- flip runReaderT filterChangeRawChange $
                 handler' filterChangeEvent
-            return (act, changeBlockNumber filterChangeRawChange)
+            return ((,) act <$> changeBlockNumber filterChangeRawChange)
 
 data FilterChange a = FilterChange { filterChangeRawChange :: Change
                                    , filterChangeEvent     :: a
