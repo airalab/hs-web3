@@ -318,11 +318,11 @@ $(deriveJSON (defaultOptions
 
 -- | Whisper node information
 data NodeInfo = NodeInfo
-  { nodeInfoMemory       :: !Quantity
+  { nodeInfoMemory       :: !Integer
   -- ^ Memory used by messages in the pool.
-  , nodeInfoTargetMemory :: !Quantity
+  , nodeInfoTargetMemory :: !Integer
   -- ^ Target memory of the pool.
-  , nodeInfoMessages     :: !Quantity
+  , nodeInfoMessages     :: !Integer
   -- ^ Number of messages in the pool.
   } deriving (Generic, Show)
 
@@ -341,9 +341,9 @@ data ShhPost = ShhPost
   -- ^ Payload of the message.
   , shhPostPadding  :: !(Maybe Bytes)
   -- ^ Optional padding of the message.
-  , shhPostPriority :: !Quantity
+  , shhPostPriority :: !Integer
   -- ^ Priority of the message.
-  , shhPostTtl      :: !Quantity
+  , shhPostTtl      :: !Integer
   -- ^ Time to life ot the message in seconds.
   } deriving (Generic, Show)
 
