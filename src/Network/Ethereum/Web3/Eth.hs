@@ -15,6 +15,7 @@
 
 module Network.Ethereum.Web3.Eth where
 
+import           Data.Text                         (Text)
 import           Network.Ethereum.ABI.Prim.Address (Address)
 import           Network.Ethereum.ABI.Prim.Bytes   (Bytes, BytesN)
 import           Network.Ethereum.Web3.Provider    (Web3)
@@ -25,7 +26,7 @@ import           Network.Ethereum.Web3.Types       (Block, Call, Change,
 import           Network.JsonRpc.TinyClient        (remote)
 
 -- | Returns the current ethereum protocol version.
-protocolVersion :: Web3 Int
+protocolVersion :: Web3 Text
 {-# INLINE protocolVersion #-}
 protocolVersion = remote "eth_protocolVersion"
 

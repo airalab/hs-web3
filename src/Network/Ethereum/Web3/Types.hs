@@ -246,11 +246,11 @@ data Transaction = Transaction
   -- ^ DATA, 32 Bytes - hash of the transaction.
   , txNonce            :: !Quantity
   -- ^ QUANTITY - the number of transactions made by the sender prior to this one.
-  , txBlockHash        :: !Hash
+  , txBlockHash        :: !(Maybe Hash)
   -- ^ DATA, 32 Bytes - hash of the block where this transaction was in. null when its pending.
-  , txBlockNumber      :: !Quantity
+  , txBlockNumber      :: !(Maybe Quantity)
   -- ^ QUANTITY - block number where this transaction was in. null when its pending.
-  , txTransactionIndex :: !Quantity
+  , txTransactionIndex :: !(Maybe Quantity)
   -- ^ QUANTITY - integer of the transactions index position in the block. null when its pending.
   , txFrom             :: !Address
   -- ^ DATA, 20 Bytes - address of the sender.
