@@ -1,8 +1,8 @@
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE CPP #-}
 
 -- |
 -- Module      :  Network.Ethereum.Web3.Provider

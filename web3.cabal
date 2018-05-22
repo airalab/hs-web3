@@ -49,6 +49,7 @@ library
                      , Network.Ethereum.ABI.Event
                      , Network.Ethereum.ABI.Event.Internal
                      , Network.Ethereum.ABI.Generic
+                     , Network.Ethereum.ABI.Prim
                      , Network.Ethereum.ABI.Prim.Int
                      , Network.Ethereum.ABI.Prim.Bool
                      , Network.Ethereum.ABI.Prim.List
