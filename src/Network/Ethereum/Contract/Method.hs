@@ -18,17 +18,20 @@ module Network.Ethereum.Contract.Method (
   , sendTx
   ) where
 
-import           Control.Monad.Catch             (throwM)
-import           Data.Monoid                     ((<>))
-import           Data.Proxy                      (Proxy (..))
+import           Control.Monad.Catch               (throwM)
+import           Control.Monad.Reader
+import           Data.Monoid                       ((<>))
+import           Data.Proxy                        (Proxy (..))
 
-import           Network.Ethereum.ABI.Class      (ABIGet, ABIPut, ABIType (..))
-import           Network.Ethereum.ABI.Codec      (decode, encode)
-import           Network.Ethereum.ABI.Prim.Bytes (Bytes)
-import qualified Network.Ethereum.Web3.Eth       as Eth
-import           Network.Ethereum.Web3.Provider  (Web3, Web3Error (ParserFail))
-import           Network.Ethereum.Web3.Types     (Call (callData), DefaultBlock,
-                                                  Hash)
+import           Network.Ethereum.ABI.Class        (ABIGet, ABIPut, ABIType (..))
+import           Network.Ethereum.ABI.Codec        (decode, encode)
+import           Network.Ethereum.ABI.Prim.Bytes   (Bytes)
+import qualified Network.Ethereum.Web3.Eth         as Eth
+import           Network.Ethereum.Web3.Provider    (Provider (..), SigningConfiguration (..),
+                                                    Web3, Web3Error (ParserFail, UserFail))
+import           Network.Ethereum.Web3.Transaction (createRawTransaction)
+import           Network.Ethereum.Web3.Types       (Call (callData), DefaultBlock,
+                                                    Hash)
 
 class ABIPut a => Method a where
   selector :: Proxy a -> Bytes
@@ -49,9 +52,15 @@ sendTx :: Method a
        -> a
        -- ^ method data
        -> Web3 Hash
-sendTx call' (dat :: a) =
+sendTx call' (dat :: a) = do
     let sel = selector (Proxy :: Proxy a)
-    in Eth.sendTransaction (call' { callData = Just $ sel <> encode dat })
+    signingConfigM <- asks (signingConfiguration . fst)
+    case signingConfigM of
+        Just (SigningConfiguration privKey chainId) -> do
+            txBytes <- either (throwM . UserFail) pure $
+                createRawTransaction (call' { callData = Just $ sel <> encode dat }) chainId privKey
+            Eth.sendRawTransaction txBytes
+        Nothing -> Eth.sendTransaction (call' { callData = Just $ sel <> encode dat })
 
 -- | 'call' is used to call contract methods that have no state changing effects.
 call :: (Method a, ABIGet b)

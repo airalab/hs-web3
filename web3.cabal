@@ -42,6 +42,7 @@ library
                      , Network.Ethereum.Web3.Web3
                      , Network.Ethereum.Web3.Types
                      , Network.Ethereum.Web3.Provider
+                     , Network.Ethereum.Web3.Transaction
                      , Network.Ethereum.Unit
                      , Network.Ethereum.ABI.Json
                      , Network.Ethereum.ABI.Class
@@ -81,6 +82,8 @@ library
                      , cereal               >=0.5.5.0  && <0.6
                      , aeson                >=1.2.4.0  && <1.4
                      , async                >=2.1.1.1  && <2.3
+                     , relapse              ==1.0.0.0
+                     , secp256k1            >=0.5.2    && <0.6
                      , text                 >=1.2.3.0  && <1.3
                      , mtl                  >=2.2.2    && <2.3
 
@@ -104,8 +107,9 @@ test-suite unit
   hs-source-dirs:      unit
   main-is:             Spec.hs
   other-modules:       Network.Ethereum.Web3.Test.MethodDumpSpec
-                       Network.Ethereum.Web3.Test.EncodingSpec
-                       Network.Ethereum.Web3.Test.EventSpec
+                     , Network.Ethereum.Web3.Test.EncodingSpec
+                     , Network.Ethereum.Web3.Test.EventSpec
+                     , Network.Ethereum.Web3.Test.SignatureSpec
   build-depends:       base                 >4.9       && <4.12
                      , hspec-expectations   >=0.8.2    && <0.9
                      , hspec-discover       >=2.4.8    && <2.6

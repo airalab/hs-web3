@@ -16,6 +16,7 @@
 
 module Network.Ethereum.ABI.Prim.Address (
     Address
+  , toHexString
   ) where
 
 import           Control.Monad                 ((<=<))
