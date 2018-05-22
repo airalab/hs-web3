@@ -34,6 +34,10 @@ flag tls
   description: Enable TLS support
   default: False
 
+flag solidity
+  description: Solidity language compiler support
+  default: True
+
 library
   hs-source-dirs:      src
   exposed-modules:     Network.Ethereum.Web3
@@ -87,6 +91,14 @@ library
   if flag(tls)
     build-depends:     http-client-tls      >=0.3.5.3   && <0.4
     cpp-options:       -DTLS_MANAGER
+
+  if flag(solidity)
+    c-sources:         cbits/solidity_lite.cpp
+    include-dirs:      cbits
+    extra-libraries:   solidity
+    exposed-modules:   Language.Solidity.Compiler
+    other-modules:     Language.Solidity.Compiler.Foreign
+    build-depends:     containers
 
   default-language:    Haskell2010
   ghc-options:         -Wduplicate-exports -Whi-shadowing -Widentities -Wnoncanonical-monoid-instances
