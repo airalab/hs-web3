@@ -17,12 +17,13 @@
 module Network.Ethereum.ABI.Prim.Address (
     Address
   , toHexString
+  , fromHexString
   ) where
 
 import           Control.Monad                 ((<=<))
 import           Data.Aeson                    (FromJSON (..), ToJSON (..),
                                                 Value (String))
-import           Data.ByteArray                (Bytes, zero)
+import           Data.ByteArray                (Bytes, length, zero)
 import           Data.ByteArray.Encoding       (Base (Base16), convertFromBase,
                                                 convertToBase)
 import           Data.ByteString               (ByteString)
@@ -37,6 +38,7 @@ import           Network.Ethereum.ABI.Class    (ABIGet (..), ABIPut (..),
                                                 ABIType (..))
 import           Network.Ethereum.ABI.Codec    (decode, encode)
 import           Network.Ethereum.ABI.Prim.Int (UIntN)
+import           Prelude                       hiding (length)
 
 -- | Ethereum account address
 newtype Address = Address { unAddress :: UIntN 160 }
@@ -51,9 +53,11 @@ fromPublic = undefined
 -}
 
 fromHexString :: ByteString -> Either String Address
-fromHexString = decode . align <=< convertFromBase Base16 . trim0x
+fromHexString = decode . align <=< lenck <=< convertFromBase Base16 . trim0x
   where trim0x s | C8.take 2 s == "0x" = C8.drop 2 s
                  | otherwise = s
+        lenck a | length a == 20 = pure a
+                | otherwise = Left "Invalid address length"
         align = (zero 12 <>) :: Bytes -> Bytes
 
 toHexString :: Address -> ByteString
