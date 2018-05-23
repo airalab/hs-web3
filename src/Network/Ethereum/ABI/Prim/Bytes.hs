@@ -95,7 +95,10 @@ instance (KnownNat n, n <= 32) => ABIPut (BytesN n) where
       where len = fromIntegral $ natVal (Proxy :: Proxy n)
 
 instance (KnownNat n, n <= 32) => IsString (BytesN n) where
-    fromString = unsafeFromByteArrayAccess . (fromString :: String -> Bytes)
+    fromString s = unsafeFromByteArrayAccess padded
+      where bytes = fromString s :: Bytes
+            len = fromIntegral $ natVal (Proxy :: Proxy n)
+            padded = bytes <> zero (len - length bytes)
 
 instance (KnownNat n, n <= 32) => FromJSON (BytesN n) where
     parseJSON v = do ba <- parseJSON v
