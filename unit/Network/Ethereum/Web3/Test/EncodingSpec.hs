@@ -6,6 +6,7 @@
 
 module Network.Ethereum.Web3.Test.EncodingSpec where
 
+import           Control.Exception                (evaluate)
 import           Data.Monoid                      ((<>))
 import           Data.Text                        (Text)
 import           Generics.SOP                     (Generic, Rep)
@@ -84,6 +85,20 @@ bytesNTest =
          let decoded = "0x6761766f66796f726b000000" :: BytesN 12
              encoded = "0x6761766f66796f726b0000000000000000000000000000000000000000000000"
          roundTrip decoded encoded
+
+      it "can pad shorter hex-literals" $ do
+         let literal = "0xc3a4" :: BytesN 4
+             expected = "0xc3a40000" :: BytesN 4
+         literal `shouldBe` expected
+
+      it "can pad shorter string-literals" $ do
+         let literal = "hello" :: BytesN 8
+             expected = "0x68656c6c6f000000" :: BytesN 8
+         literal `shouldBe` expected
+
+      it "fails on too long literals" $ do
+         let literal = "hello" :: BytesN 4
+         evaluate literal `shouldThrow` errorCall "Invalid Size"
 
 vectorTest :: Spec
 vectorTest =
