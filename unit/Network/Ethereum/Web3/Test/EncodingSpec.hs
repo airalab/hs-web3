@@ -54,6 +54,12 @@ bytesTest :: Spec
 bytesTest = do
     describe "bytes tests" $ do
 
+      it "can encode empty bytes" $ do
+         let decoded :: Bytes
+             decoded = "0x"
+             encoded = "0x0000000000000000000000000000000000000000000000000000000000000000"
+          in roundTrip decoded encoded
+
       it "can encode short bytes" $ do
          let decoded :: Bytes
              decoded = "0xc3a40000c3a4"

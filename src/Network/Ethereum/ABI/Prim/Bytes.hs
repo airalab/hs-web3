@@ -23,6 +23,7 @@ module Network.Ethereum.ABI.Prim.Bytes (
   , BytesN
   ) where
 
+import           Control.Monad                 (unless)
 import           Data.Aeson                    (FromJSON (..), ToJSON (..),
                                                 Value (String))
 import           Data.ByteArray                (Bytes, convert, length, zero)
@@ -110,12 +111,16 @@ instance (KnownNat n, n <= 32) => ToJSON (BytesN n) where
 abiGetByteString :: Get ByteString
 abiGetByteString = do
     len <- fromIntegral <$> getWord256
-    ba <- getBytes len
-    _ <- getBytes $ 32 - len `mod` 32
-    return ba
+    if len == 0 then
+      return ""
+    else do
+      ba <- getBytes len
+      _ <- getBytes $ 32 - len `mod` 32
+      return ba
 
 abiPutByteString :: Putter ByteString
 abiPutByteString bs = do
     putWord256 $ fromIntegral len
-    putByteString $ bs <> zero (32 - len `mod` 32)
+    unless (len == 0) $
+      putByteString $ bs <> zero (32 - len `mod` 32)
   where len = length bs
