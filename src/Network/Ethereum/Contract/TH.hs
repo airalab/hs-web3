@@ -37,10 +37,14 @@
 
 module Network.Ethereum.Contract.TH (abi, abiFrom) where
 
+import           Control.Applicative               ((<|>))
+import           Control.Lens                      ((^?))
+import           Data.Aeson.Lens                   (_JSON, key)
 import           Control.Monad                     (replicateM, (<=<))
 import           Data.Aeson                        (eitherDecode)
+import qualified Data.Char                         as Char
 import           Data.Default                      (Default (..))
-import           Data.List                         (groupBy, sortBy, uncons)
+import           Data.List                         (group, sort, uncons)
 import           Data.Monoid                       ((<>))
 import           Data.Tagged                       (Tagged)
 import           Data.Text                         (Text)
@@ -143,7 +147,7 @@ funWrapper :: Bool
            -- ^ Parameters
            -> Maybe [FunctionArg]
            -- ^ Results
-           -> Q [Dec]
+           -> DecsQ
 funWrapper c name dname args result = do
     a : _ : vars <- replicateM (length args + 2) (newName "t")
     let params = appsE $ conE dname : fmap varE vars
@@ -172,9 +176,9 @@ funWrapper c name dname args result = do
         Just xs  -> let outs = fmap (typeQ . funArgType) xs
                     in  [t|Web3 $(foldl appT (tupleT (length xs)) outs)|]
 
-mkDecl :: Declaration -> Q [Dec]
+mkDecl :: Declaration -> DecsQ
 
-mkDecl ev@(DEvent name inputs anonymous) = sequence
+mkDecl ev@(DEvent uncheckedName inputs anonymous) = sequence
     [ dataD' indexedName (normalC indexedName (map (toBang <=< tag) indexedArgs)) derivingD
     , instanceD' indexedName (conT ''Generic) []
     , instanceD' indexedName (conT ''ABIType) [funD' 'isDynamic [] [|const False|]]
@@ -193,6 +197,7 @@ mkDecl ev@(DEvent name inputs anonymous) = sequence
         [funD' 'def [] [|Filter Nothing (Just topics) Latest Latest|] ]
     ]
   where
+    name = if Char.toLower (T.head uncheckedName) == Char.toUpper (T.head uncheckedName) then "EvT" <> uncheckedName else uncheckedName
     topics    = [Just (T.unpack $ eventId ev)] <> replicate (length indexedArgs) Nothing
     toBang ty = bangType (bang sourceNoUnpack sourceStrict) (return ty)
     tag (n, ty) = AppT (AppT (ConT ''Tagged) (LitT $ NumTyLit n)) <$> typeQ ty
@@ -205,6 +210,7 @@ mkDecl ev@(DEvent name inputs anonymous) = sequence
     allName = mkName $ toUpperFirst (T.unpack name)
     derivingD = [''Show, ''Eq, ''Ord, ''GHC.Generic]
 
+-- TODO change this type name also
 -- | Method delcarations maker
 mkDecl fun@(DFunction name constant inputs outputs) = (++)
   <$> funWrapper constant fnName dataName inputs outputs
@@ -242,31 +248,60 @@ makeArgs prefix ns = go 1 ns
                         else (mkName . (++ "_") . (++) prefixStr . toUpperFirst . T.unpack $ h, ty) : go (i + 1) tail'
 
 escape :: [Declaration] -> [Declaration]
-escape = concat . escapeNames . groupBy fnEq . sortBy fnCompare
-  where fnEq (DFunction n1 _ _ _) (DFunction n2 _ _ _) = n1 == n2
-        fnEq _ _                                       = False
-        fnCompare (DFunction n1 _ _ _) (DFunction n2 _ _ _) = compare n1 n2
-        fnCompare _ _                                       = GT
+escape = escapeEqualNames . fmap escapeReservedNames
 
-escapeNames :: [[Declaration]] -> [[Declaration]]
-escapeNames = fmap go
+escapeEqualNames :: [Declaration] -> [Declaration]
+escapeEqualNames = concat . fmap go . group . sort
   where go []       = []
         go (x : xs) = x : zipWith appendToName xs hats
         hats = [T.replicate n "'" | n <- [1..]]
-        appendToName dfn addition = dfn { funName = funName dfn <> addition }
+        appendToName d@(DFunction n _ _ _) a = d { funName = n <> a }
+        appendToName d _                     = d
 
--- | ABI to declarations converter
+escapeReservedNames :: Declaration -> Declaration
+escapeReservedNames d@(DFunction n _ _ _)
+  | isKeyword n = d { funName = n <> "'" }
+  | otherwise = d
+escapeReservedNames d = d
+
+isKeyword :: Text -> Bool
+isKeyword = flip elem [ "as", "case", "of", "class"
+                      , "data", "family", "instance"
+                      , "default", "deriving", "do"
+                      , "forall", "foreign", "hiding"
+                      , "if", "then", "else", "import"
+                      , "infix", "infixl", "infixr"
+                      , "let", "in", "mdo", "module"
+                      , "newtype", "proc", "qualified"
+                      , "rec", "type", "where"]
+
 quoteAbiDec :: String -> Q [Dec]
 quoteAbiDec abi_string =
-    case eitherDecode abi_lbs of
-        Left e                -> fail $ "Error: " ++ show e
-        Right (ContractABI a) -> concat <$> mapM mkDecl (escape a)
-  where abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
+    let abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
+        eabi = abiDec abi_lbs <|> abiDecNested abi_lbs
+    in case eabi of
+      Left e -> fail ("Error in quoteAbiDec: " ++ e)
+      Right a -> concat <$> mapM mkDecl (escape a)
+  where
+    abiDec _abi_lbs = case eitherDecode _abi_lbs of
+      Left e                -> Left e
+      Right (ContractABI a) -> Right a
+    abiDecNested _abi_lbs = case _abi_lbs ^? key "abi" . _JSON of
+      Nothing                -> Left $ "Failed to find ABI at 'abi' key in JSON object."
+      Just (ContractABI a) -> Right a
 
 -- | ABI information string
 quoteAbiExp :: String -> ExpQ
 quoteAbiExp abi_string = stringE $
-    case eitherDecode abi_lbs of
-        Left e  -> "Error: " ++ show e
-        Right a -> show (a :: ContractABI)
-  where abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
+    let abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
+        eabi = abiDec abi_lbs <|> abiDecNested abi_lbs
+    in case eabi of
+      Left e -> "Error in 'quoteAbiExp' : " ++ e
+      Right a -> a
+  where
+    abiDec _abi_lbs = case eitherDecode _abi_lbs of
+      Left e                -> Left e
+      Right a -> Right $ show (a :: ContractABI)
+    abiDecNested _abi_lbs = case _abi_lbs ^? key "abi" . _JSON of
+      Nothing                -> Left $ "Failed to find ABI at 'abi' key in JSON object."
+      Just a -> Right $ show (a :: ContractABI)
