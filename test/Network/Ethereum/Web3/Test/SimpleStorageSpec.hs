@@ -60,27 +60,21 @@ import           Network.Ethereum.Web3.Test.Utils
 unEvT_CountSet :: EvT_CountSet -> UIntN 256
 unEvT_CountSet (EvT_CountSet n) = n
 
-
-
-contractAddress :: Address
-contractAddress = fromString . unsafePerformIO $ getEnv "SIMPLESTORAGE_CONTRACT_ADDRESS"
-
 spec :: Spec
-spec = describe "Simple Storage" $ do
-    it "should inject contract addresses" injectExportedEnvironmentVariables
-    withPrimaryEthereumAccount `before` interactions
-    withPrimaryEthereumAccount `before` events
+spec = makeEnv `before` do
+  interactions
+  events
 
-interactions :: SpecWith Address
+interactions :: SpecWith (ContractsEnv, Address)
 interactions = describe "can interact with a SimpleStorage contract" $ do
     -- todo: this should ideally be arbitrary!
     let theValue = 12345
-    it "can set the value of a SimpleStorage contract" $ \primaryAccount -> do
+    it "can set the value of a SimpleStorage contract" $ \(ContractsEnv contractAddress _, primaryAccount) -> do
         let theCall = callFromTo primaryAccount contractAddress
         ret <- runWeb3Configured $ setCount theCall theValue
         True `shouldBe` True -- we need to get this far
 
-    it "can read the value back" $ \primaryAccount -> do
+    it "can read the value back" $ \(ContractsEnv contractAddress _, primaryAccount) -> do
         let theCall = callFromTo primaryAccount contractAddress
         now <- runWeb3Configured Eth.blockNumber
         let later = now + 3
@@ -88,9 +82,9 @@ interactions = describe "can interact with a SimpleStorage contract" $ do
         v <- runWeb3Configured (count theCall)
         v `shouldBe` theValue
 
-events :: SpecWith Address
+events :: SpecWith (ContractsEnv, Address)
 events = describe "can interact with a SimpleStorage contract across block intervals" $ do
-    it "can stream events starting and ending in the future, unbounded" $ \primaryAccount -> do
+    it "can stream events starting and ending in the future, unbounded" $ \(ContractsEnv contractAddress _, primaryAccount) -> do
         var <- newMVar []
         let theCall = callFromTo primaryAccount contractAddress
             theSets = [1, 2, 3]
@@ -105,7 +99,7 @@ events = describe "can interact with a SimpleStorage contract across block inter
         vals <- takeMVar var
         sort (unEvT_CountSet <$> vals) `shouldBe` sort theSets
 
-    it "can stream events starting and ending in the future, bounded" $ \primaryAccount -> do
+    it "can stream events starting and ending in the future, bounded" $ \(ContractsEnv contractAddress _, primaryAccount) -> do
         runWeb3Configured Eth.blockNumber >>= \bn -> awaitBlock (bn + 1)
         var <- newMVar []
         let theCall = callFromTo primaryAccount contractAddress
@@ -127,7 +121,7 @@ events = describe "can interact with a SimpleStorage contract across block inter
         vals <- takeMVar var
         sort (unEvT_CountSet <$> vals) `shouldBe` sort theSets
 
-    it "can stream events starting in the past and ending in the future" $ \primaryAccount -> do
+    it "can stream events starting in the past and ending in the future" $ \(ContractsEnv contractAddress _, primaryAccount) -> do
         runWeb3Configured Eth.blockNumber >>= \bn -> awaitBlock (bn + 1)
         var <- newMVar []
         blockNumberVar <- newEmptyMVar
@@ -156,7 +150,7 @@ events = describe "can interact with a SimpleStorage contract across block inter
         vals <- takeMVar var'
         sort (unEvT_CountSet <$> vals) `shouldBe` sort (theSets1 <> theSets2)
 
-    it "can stream events starting and ending in the past, bounded" $ \primaryAccount -> do
+    it "can stream events starting and ending in the past, bounded" $ \(ContractsEnv contractAddress _, primaryAccount) -> do
         runWeb3Configured Eth.blockNumber >>= \bn -> awaitBlock (bn + 1)
         var <- newMVar []
         let theCall = callFromTo primaryAccount contractAddress

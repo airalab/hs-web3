@@ -12,7 +12,7 @@ import Chanterelle.Internal.Types (ContractConfig, NoArgs, noArgs, constructorNo
 simpleStorageConfig
   :: ContractConfig NoArgs
 simpleStorageConfig =
-    { filepath : "./build/contracts/SimpleStorage.json"
+    { filepath : "build/contracts/abis/SimpleStorage.json"
     , name : "SimpleStorage"
     , constructor : constructorNoArgs
     , unvalidatedArgs : noArgs
@@ -25,7 +25,7 @@ simpleStorageConfig =
 complexStorageConfig
   :: ContractConfig NoArgs
 complexStorageConfig =
-  { filepath : "./build/contracts/ComplexStorage.json"
+  { filepath : "build/contracts/abis/ComplexStorage.json"
   , name : "ComplexStorage"
   , constructor : constructorNoArgs
   , unvalidatedArgs : noArgs
