@@ -1,0 +1,16 @@
+{
+    "name": "hs-web3-test-support",
+    "version": "0.0.1",
+    "source-dir": "contracts",
+    "artifacts-dir": "build/contracts",
+    "modules": [ "ComplexStorage"
+               , "SimpleStorage"
+               ],
+    "dependencies": [],
+    "libraries": {
+    },
+    "purescript-generator": {
+        "output-path": "src",
+        "module-prefix": "Contracts"
+    }
+}
