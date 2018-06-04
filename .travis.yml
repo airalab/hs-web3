@@ -33,7 +33,7 @@ install:
 
 script:
 - docker run --rm -d -p 8545:8545 foamspace/cliquebait:latest && sleep 30
-- export EXPORT_STORE=.detected-contract-addresses && cd test-support && truffle deploy && ./convertAbi.sh && ./inject-contract-addresses.sh && cd ..
+- export cd test-support && make compile-contracts && make deploy
 - if [ $STACK ]; then stack -j2 --no-terminal --install-ghc test;
   else cabal update && cabal install --only-dependencies --enable-tests $CABALCONFOPTS && cabal configure --enable-tests $CABALCONFOPTS -v2 && cabal build web3 $CABALBUILDOPTS && cabal test;
   fi
