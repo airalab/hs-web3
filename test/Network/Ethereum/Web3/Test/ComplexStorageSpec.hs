@@ -67,7 +67,7 @@ complexStorageSpec = do
         it "can set the values of a ComplexStorage and validate them with an event" $
           \(ContractsEnv _ contractAddress, primaryAccount) -> do
             let theCall = callFromTo primaryAccount contractAddress
-                fltr    = (def :: Filter ValsSet) { filterAddress = Just contractAddress }
+                fltr    = (def :: Filter ValsSet) { filterAddress = Just [contractAddress] }
             -- kick off listening for the ValsSet event
             vals <- newEmptyMVar
             fiber <- runWeb3Configured' $
