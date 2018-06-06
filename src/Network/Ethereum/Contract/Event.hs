@@ -27,7 +27,7 @@ import           Control.Monad                  (forM, void, when)
 import           Control.Monad.IO.Class         (liftIO)
 import           Control.Monad.Trans.Class      (lift)
 import           Control.Monad.Trans.Reader     (ReaderT (..))
-import           Data.Either                    (rights)
+import           Data.Either                    (rights, lefts)
 import           Data.Machine                   (MachineT, asParts, autoM,
                                                  await, construct, final,
                                                  mapping, repeatedly, runT,
@@ -157,8 +157,11 @@ pollFilter i = construct . pollPlan i
 mkFilterChanges :: DecodeEvent i ni e
                 => [Change]
                 -> [FilterChange e]
-mkFilterChanges = rights
-                . fmap (\c@Change{..} -> FilterChange c <$> decodeEvent c)
+mkFilterChanges changes = 
+  let eChanges = map (\c@Change{..} -> FilterChange c <$> decodeEvent c) changes
+      ls = lefts eChanges
+      rs = rights eChanges
+  in if ls /= [] then error (show ls) else rs
 
 data FilterStreamState e =
   FilterStreamState { fssCurrentBlock  :: BlockNumber

@@ -59,14 +59,14 @@ data ContractsEnv =
 
 makeContractsEnv :: IO ContractsEnv
 makeContractsEnv = do
-    net <- runWeb3Configured' $ Net.version
-    ss <- grabAddress net <$> BSL.readFile "abis/SimpleStorage.json"
-    cs <- grabAddress net <$> BSL.readFile "abis/ComplexStorage.json"
+    net <- runWeb3Configured' Net.version
+    ss <- grabAddress net <$> BSL.readFile "test-support/build/contracts/abis/SimpleStorage.json"
+    cs <- grabAddress net <$> BSL.readFile "test-support/build/contracts/abis/ComplexStorage.json"
     pure $ ContractsEnv ss cs
   where
     grabAddress :: T.Text -> BSL.ByteString -> Address
     grabAddress nid bs = case eitherDecode bs :: Either String Value of
-      Right val -> fromMaybe (error "address key missing") (val ^? key nid . key "address" . _JSON)
+      Right val -> fromMaybe (error "address key missing") (val ^? key "networks" . key nid . key "address" . _JSON)
       Left e -> error e
 
 runWeb3Configured :: Show a => Web3 a -> IO a
