@@ -7,7 +7,7 @@ services:
 before_install:
 - nvm install 8.9.4
 - nvm use 8.9.4
-- npm i -g truffle
+- npm i -g purescript@0.11.7 bower pulp
 - if [ $STACK ]; then mkdir -p ~/.local/bin; export PATH=$HOME/.local/bin:$PATH;
   travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack';
   else export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH;
