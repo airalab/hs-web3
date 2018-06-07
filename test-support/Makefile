@@ -7,7 +7,8 @@ all: install
 	@echo prereqs that are newer than install: $?
 
 install: ## Install all dependencies
-	npm install
+	npm install;
+	bower install
 
 build: ## Builds the application
 	./node_modules/.bin/pulp build
