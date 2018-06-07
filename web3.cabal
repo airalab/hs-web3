@@ -17,8 +17,8 @@ extra-source-files:
   CHANGELOG.md
   test-support/contracts/SimpleStorage.sol
   test-support/contracts/ComplexStorage.sol
-  test-support/chanterelle.js
-  test-support/compile/Main.purs
+  test-support/chanterelle.json
+  test-support/compile/Compile.purs
   test-support/src/ContractConfig.purs
   test-support/src/Main.purs
   examples/ERC20.hs
