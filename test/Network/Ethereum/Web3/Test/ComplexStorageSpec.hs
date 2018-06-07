@@ -46,7 +46,7 @@ import           Test.Hspec
 [abiFrom|test-support/build/contracts/abis/ComplexStorage.json|]
 
 spec :: Spec
-spec = return () -- makeEnv `before` complexStorageSpec
+spec = makeEnv `before` complexStorageSpec
 
 complexStorageSpec :: SpecWith (ContractsEnv, Address)
 complexStorageSpec = do

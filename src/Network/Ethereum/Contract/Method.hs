@@ -18,6 +18,7 @@ module Network.Ethereum.Contract.Method (
   , sendTx
   ) where
 
+import Data.Aeson (toJSON)
 import           Control.Monad.Catch               (throwM)
 import           Control.Monad.Reader
 import           Data.Monoid                       ((<>))
@@ -74,7 +75,10 @@ call :: (Method a, ABIGet b)
      -- ^ 'Web3' wrapped result
 call call' mode (dat :: a) = do
     let sel = selector (Proxy :: Proxy a)
-    res <- Eth.call (call' { callData = Just $ sel <> encode dat }) mode
+        c = (call' { callData = Just $ sel <> encode dat })
+    liftIO $ print $ show $ toJSON c
+    res <- Eth.call c mode
+    liftIO $ print res
     case decode res of
         Left e  -> throwM $ ParserFail $ "Unable to parse response: " ++ e
         Right x -> return x
