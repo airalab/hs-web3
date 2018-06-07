@@ -23,6 +23,7 @@ module Network.Ethereum.Contract.Event (
   ) where
 
 import           Control.Concurrent             (threadDelay)
+import           Control.Exception              (Exception, throwIO)
 import           Control.Monad                  (forM, void, when)
 import           Control.Monad.IO.Class         (liftIO)
 import           Control.Monad.Trans.Class      (lift)
@@ -30,11 +31,10 @@ import           Control.Monad.Trans.Reader     (ReaderT (..))
 import           Data.Either                    (rights, lefts)
 import           Data.Machine                   (MachineT, asParts, autoM,
                                                  await, construct, final,
-                                                 mapping, repeatedly, runT,
+                                                 repeatedly, runT,
                                                  unfoldPlan, (~>))
 import           Data.Machine.Plan              (PlanT, stop, yield)
 import           Data.Maybe                     (catMaybes, listToMaybe)
-
 import           Control.Concurrent.Async       (Async)
 import           Network.Ethereum.ABI.Event     (DecodeEvent (..))
 import qualified Network.Ethereum.Web3.Eth      as Eth
@@ -131,7 +131,7 @@ playLogs :: DecodeEvent i ni e
          -> MachineT Web3 k [FilterChange e]
 playLogs s = filterStream s
           ~> autoM Eth.getLogs
-          ~> mapping mkFilterChanges
+          ~> autoM (liftIO . mkFilterChanges)
 
 -- | Polls a filter from the given filterId until the target toBlock is reached.
 pollFilter :: forall i ni e k . DecodeEvent i ni e
@@ -149,18 +149,22 @@ pollFilter i = construct . pollPlan i
           stop
         else do
           liftIO $ threadDelay 1000000
-          changes <- lift $ Eth.getFilterChanges fid
-          yield $ mkFilterChanges changes
+          changes <- lift $ Eth.getFilterChanges fid >>= liftIO . mkFilterChanges
+          yield $ changes
           pollPlan fid end
+
+data EventParseFailure = EventParseFailure String deriving (Show)
+
+instance Exception EventParseFailure
 
 mkFilterChanges :: DecodeEvent i ni e
                 => [Change]
-                -> [FilterChange e]
-mkFilterChanges changes = 
+                -> IO [FilterChange e]
+mkFilterChanges changes =
   let eChanges = map (\c@Change{..} -> FilterChange c <$> decodeEvent c) changes
       ls = lefts eChanges
       rs = rights eChanges
-  in if ls /= [] then error (show ls) else rs
+  in if ls /= [] then throwIO (EventParseFailure $ (show ls)) else pure rs
 
 data FilterStreamState e =
   FilterStreamState { fssCurrentBlock  :: Quantity
