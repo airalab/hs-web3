@@ -39,19 +39,19 @@ import           Control.Monad.Reader   (MonadReader, ask)
 import           Data.Aeson
 import           Data.ByteString.Lazy   (ByteString)
 import           Data.Text              (Text, unpack)
+import           Network.Ethereum.Web3.Provider
 import           Network.HTTP.Client    (Manager, RequestBody (RequestBodyLBS),
                                          httpLbs, method, parseRequest,
                                          requestBody, requestHeaders,
                                          responseBody)
 
+instance FromJSON a => Remote Web3 (Web3 a)
+
 -- | Name of called method.
 type MethodName = Text
 
--- | JSON-RPC server URI
-type ServerUri  = String
-
 -- | JSON-RPC minimal client config
-type Config = (ServerUri, Manager)
+type Config = (Provider, Manager)
 
 -- | JSON-RPC request.
 data Request = Request { rqMethod :: !Text
@@ -142,7 +142,7 @@ call :: (MonadIO m,
 call n = connection . encode . Request n 1 . toJSON
   where
     connection body = do
-        (uri, manager) <- ask
+        ((Provider (HttpProvider uri) _), manager) <- ask
         request <- parseRequest uri
         let request' = request
                      { requestBody = RequestBodyLBS body

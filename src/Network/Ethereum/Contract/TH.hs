@@ -56,27 +56,21 @@ import qualified GHC.Generics                      as GHC (Generic)
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Quote
 
-import           Data.String.Extra                 (toLowerFirst, toUpperFirst)
-import           Network.Ethereum.ABI.Class        (ABIGet, ABIPut,
-                                                    ABIType (..))
-import           Network.Ethereum.ABI.Event        (IndexedEvent (..))
-import           Network.Ethereum.ABI.Json         (ContractABI (..),
-                                                    Declaration (..),
-                                                    EventArg (..),
-                                                    FunctionArg (..),
-                                                    SolidityType (..), eventId,
-                                                    methodId, parseSolidityType)
-import           Network.Ethereum.ABI.Prim.Address (Address)
-import           Network.Ethereum.ABI.Prim.Bytes   (Bytes, BytesN)
-import           Network.Ethereum.ABI.Prim.Int     (IntN, UIntN)
-import           Network.Ethereum.ABI.Prim.List    (ListN)
-import           Network.Ethereum.ABI.Prim.String  ()
-import           Network.Ethereum.ABI.Prim.Tagged  ()
-import           Network.Ethereum.ABI.Prim.Tuple   (Singleton (..))
-import           Network.Ethereum.Contract.Method  (Method (..), call, sendTx)
-import           Network.Ethereum.Web3.Provider    (Web3)
-import           Network.Ethereum.Web3.Types       (Call, DefaultBlock (..),
-                                                    Filter (..), TxHash)
+import           Data.String.Extra                (toLowerFirst, toUpperFirst)
+import           Network.Ethereum.ABI.Class       (ABIGet, ABIPut, ABIType (..))
+import           Network.Ethereum.ABI.Event       (IndexedEvent (..))
+import           Network.Ethereum.ABI.Json        (ContractABI (..),
+                                                   Declaration (..),
+                                                   EventArg (..),
+                                                   FunctionArg (..),
+                                                   SolidityType (..), eventId,
+                                                   methodId, parseSolidityType)
+import           Network.Ethereum.ABI.Prim        (Address, Bytes, BytesN, IntN,
+                                                   ListN, Singleton (..), UIntN)
+import           Network.Ethereum.Contract.Method (Method (..), call, sendTx)
+import           Network.Ethereum.Web3.Provider   (Web3)
+import           Network.Ethereum.Web3.Types      (Call, DefaultBlock (..),
+                                                   Filter (..), Hash)
 
 -- | Read contract ABI from file
 abiFrom :: QuasiQuoter
@@ -162,7 +156,7 @@ funWrapper c name dname args result = do
           ]
 
         else
-          [ sigD name $ [t|$(arrowing $ [t|Call|] : inputT ++ [[t|Web3 TxHash|]])|]
+          [ sigD name $ [t|$(arrowing $ [t|Call|] : inputT ++ [[t|Web3 Hash|]])|]
           , funD' name (varP <$> a : vars) $
                 [|sendTx $(varE a) $(params)|] ]
   where
@@ -194,7 +188,7 @@ mkDecl ev@(DEvent uncheckedName inputs anonymous) = sequence
         [funD' 'isAnonymous [] [|const anonymous|]]
     , instanceD (cxt [])
         (pure $ ConT ''Default `AppT` (ConT ''Filter `AppT` ConT allName))
-        [funD' 'def [] [|Filter Nothing (Just topics) Latest Latest|] ]
+        [funD' 'def [] [|Filter Nothing Latest Latest $ Just topics|] ]
     ]
   where
     name = if Char.toLower (T.head uncheckedName) == Char.toUpper (T.head uncheckedName) then "EvT" <> uncheckedName else uncheckedName
@@ -256,6 +250,7 @@ escapeEqualNames = concat . fmap go . group . sort
         go (x : xs) = x : zipWith appendToName xs hats
         hats = [T.replicate n "'" | n <- [1..]]
         appendToName d@(DFunction n _ _ _) a = d { funName = n <> a }
+        appendToName d@(DEvent n _ _) a      = d { eveName = n <> a }
         appendToName d _                     = d
 
 escapeReservedNames :: Declaration -> Declaration

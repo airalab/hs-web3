@@ -6,21 +6,25 @@
 
 module Network.Ethereum.Web3.Test.EncodingSpec where
 
-import           Data.Monoid                      ((<>))
-import           Data.Text                        (Text)
-import           Generics.SOP                     (Generic, Rep)
+import           Control.Exception                 (evaluate)
+import           Data.Monoid                       ((<>))
+import           Data.Text                         (Text)
+import           Generics.SOP                      (Generic, Rep)
 import           Test.Hspec
 
-import           Network.Ethereum.ABI.Class       (ABIGet, ABIPut,
-                                                   GenericABIGet, GenericABIPut)
-import           Network.Ethereum.ABI.Codec       (decode, decode', encode,
-                                                   encode')
-import           Network.Ethereum.ABI.Prim.Bool   ()
-import           Network.Ethereum.ABI.Prim.Bytes  (Bytes, BytesN)
-import           Network.Ethereum.ABI.Prim.Int    (IntN, UIntN)
-import           Network.Ethereum.ABI.Prim.List   (ListN)
-import           Network.Ethereum.ABI.Prim.String ()
-import           Network.Ethereum.ABI.Prim.Tuple  (Singleton (..))
+import           Network.Ethereum.ABI.Class        (ABIGet, ABIPut,
+                                                    GenericABIGet,
+                                                    GenericABIPut)
+import           Network.Ethereum.ABI.Codec        (decode, decode', encode,
+                                                    encode')
+import           Network.Ethereum.ABI.Prim.Address (Address, fromHexString,
+                                                    toHexString)
+import           Network.Ethereum.ABI.Prim.Bool    ()
+import           Network.Ethereum.ABI.Prim.Bytes   (Bytes, BytesN)
+import           Network.Ethereum.ABI.Prim.Int     (IntN, UIntN)
+import           Network.Ethereum.ABI.Prim.List    (ListN)
+import           Network.Ethereum.ABI.Prim.String  ()
+import           Network.Ethereum.ABI.Prim.Tuple   (Singleton (..))
 
 spec :: Spec
 spec = do
@@ -30,6 +34,7 @@ spec = do
   vectorTest
   dynamicArraysTest
   tuplesTest
+  addressTest
 
 intNTest :: Spec
 intNTest =
@@ -48,6 +53,12 @@ intNTest =
 bytesTest :: Spec
 bytesTest = do
     describe "bytes tests" $ do
+
+      it "can encode empty bytes" $ do
+         let decoded :: Bytes
+             decoded = "0x"
+             encoded = "0x0000000000000000000000000000000000000000000000000000000000000000"
+          in roundTrip decoded encoded
 
       it "can encode short bytes" $ do
          let decoded :: Bytes
@@ -84,6 +95,20 @@ bytesNTest =
          let decoded = "0x6761766f66796f726b000000" :: BytesN 12
              encoded = "0x6761766f66796f726b0000000000000000000000000000000000000000000000"
          roundTrip decoded encoded
+
+      it "can pad shorter hex-literals" $ do
+         let literal = "0xc3a4" :: BytesN 4
+             expected = "0xc3a40000" :: BytesN 4
+         literal `shouldBe` expected
+
+      it "can pad shorter string-literals" $ do
+         let literal = "hello" :: BytesN 8
+             expected = "0x68656c6c6f000000" :: BytesN 8
+         literal `shouldBe` expected
+
+      it "fails on too long literals" $ do
+         let literal = "hello" :: BytesN 4
+         evaluate literal `shouldThrow` errorCall "Invalid Size"
 
 vectorTest :: Spec
 vectorTest =
@@ -194,6 +219,28 @@ tuplesTest =
                  <> "0x1234000000000000000000000000000000000000000000000000000000000000"
 
        in roundTripGeneric decoded encoded
+
+addressTest :: Spec
+addressTest =
+  describe "address test" $ do
+    it "can abi encode address" $ do
+      let decoded = "0x4af013AfBAdb22D8A88c92D68Fc96B033b9Ebb8a" :: Address
+          encoded = "0x0000000000000000000000004af013AfBAdb22D8A88c92D68Fc96B033b9Ebb8a"
+       in roundTrip decoded encoded
+
+    it "can decode address from/to bytestring" $ do
+      fromHexString "0x4af013AfBAdb22D8A88c92D68Fc96B033b9Ebb8a"
+        `shouldBe` Right ("0x4af013AfBAdb22D8A88c92D68Fc96B033b9Ebb8a" :: Address)
+
+      fromHexString "0x4af013AfBAdb22D8A88c92D68Fc96B033b9Ebb8a"
+        `shouldBe` fromHexString "4af013AfBAdb22D8A88c92D68Fc96B033b9Ebb8a"
+
+      toHexString "0x4af013AfBAdb22D8A88c92D68Fc96B033b9Ebb8a"
+        `shouldBe` "0x4af013afbadb22d8a88c92d68fc96b033b9ebb8a"
+
+    it "fails for invalid address length" $ do
+      fromHexString "0x0" `shouldBe` Left "base16: input: invalid length"
+      fromHexString "0x4af013AfBAdb22D8A88c92D68Fc96B033b9Ebb8a00" `shouldBe` Left "Invalid address length"
 
 -- | Run encoded/decoded comaration
 roundTrip :: ( Show a
