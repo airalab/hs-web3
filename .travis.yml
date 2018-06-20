@@ -40,10 +40,10 @@ script:
 
 matrix:
   include:
-    - env: GHCVER=8.2.2 CABALVER=2.0
-      addons: {apt: {packages: [cabal-install-2.0,ghc-8.2.2], sources: [hvr-ghc]}}
-    - env: GHCVER=8.4.2 CABALVER=2.2
-      addons: {apt: {packages: [cabal-install-2.2,ghc-8.4.2], sources: [hvr-ghc]}}
+#    - env: GHCVER=8.2.2 CABALVER=2.0
+#      addons: {apt: {packages: [cabal-install-2.0,ghc-8.2.2], sources: [hvr-ghc]}}
+#    - env: GHCVER=8.4.2 CABALVER=2.2
+#      addons: {apt: {packages: [cabal-install-2.2,ghc-8.4.2], sources: [hvr-ghc]}}
     - env: STACK=YES
 
 before_cache:
