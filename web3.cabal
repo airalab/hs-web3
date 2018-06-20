@@ -104,7 +104,8 @@ test-suite unit
   type:                exitcode-stdio-1.0
   hs-source-dirs:      unit
   main-is:             Spec.hs
-  other-modules:       Network.Ethereum.Web3.Test.MethodDumpSpec
+  other-modules:       Network.Ethereum.ABI.Prim.Test.AddressSpec
+                       Network.Ethereum.Web3.Test.MethodDumpSpec
                        Network.Ethereum.Web3.Test.EncodingSpec
                        Network.Ethereum.Web3.Test.EventSpec
   build-depends:       base                 >4.9       && <4.12
