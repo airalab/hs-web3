@@ -68,15 +68,15 @@ data Provider = Provider { jsonRpc :: JsonRpcProvider
                          } deriving (Show, Eq)
 
 data SigningConfiguration = SigningConfiguration { privateKey      :: ByteString
-                                                 , chainIdentifier :: Integer }
+                                                 , chainIdentifier :: Integer } deriving (Show, Eq)
 
 instance Default Provider where
   def = Provider (HttpProvider "http://localhost:8545") Nothing
 
 -- | 'Web3' monad runner, using the supplied Manager
 runWeb3With :: MonadIO m => Manager -> Provider -> Web3 a -> m (Either Web3Error a)
-runWeb3With manager provider f =
-    liftIO . try .  flip runReaderT (provider, manager) . unWeb3 $ f
+runWeb3With manager provider =
+    liftIO . try .  flip runReaderT (provider, manager) . unWeb3
 
 -- | 'Web3' monad runner
 runWeb3' :: MonadIO m => Provider -> Web3 a -> m (Either Web3Error a)
