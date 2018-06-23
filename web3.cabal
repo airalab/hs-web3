@@ -38,6 +38,7 @@ library
   exposed-modules:     Network.Ethereum.Web3
                      , Network.Ethereum.Web3.Eth
                      , Network.Ethereum.Web3.Net
+                     , Network.Ethereum.Web3.Personal
                      , Network.Ethereum.Web3.Web3
                      , Network.Ethereum.Web3.Types
                      , Network.Ethereum.Web3.Provider
