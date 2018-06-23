@@ -1,6 +1,10 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
+
 module Network.Ethereum.Web3.Test.Utils
-  ( injectExportedEnvironmentVariables
+  ( makeEnv
+  , ContractsEnv(..)
   , runWeb3Configured
   , runWeb3Configured'
   , withAccounts
@@ -14,8 +18,13 @@ module Network.Ethereum.Web3.Test.Utils
 import           Control.Concurrent                (MVar, threadDelay,
                                                     tryTakeMVar)
 import           Control.Monad.IO.Class            (liftIO)
+import           Data.Aeson                        (FromJSON, eitherDecode)
+import           Data.Aeson.Types                  (Value(..))
+import           Data.Aeson.Lens                   (_Object, key, _JSON)
+import qualified Data.ByteString.Lazy              as BSL
 import           Data.Default
 import           Data.Either                       (isRight)
+import           Control.Lens                      ((^?))
 import           Data.List.Split                   (splitOn)
 import           Data.Maybe                        (fromMaybe)
 import           Data.Ratio                        (numerator)
@@ -23,7 +32,7 @@ import           Data.String                       (IsString, fromString)
 import qualified Data.Text                         as T
 import           Data.Time.Clock.POSIX             (getPOSIXTime)
 import           Data.Traversable                  (for)
-
+import           GHC.Generics                      (Generic)
 import           Network.Ethereum.ABI.Prim.Address (Address)
 import           Network.Ethereum.Web3.Eth         (accounts, blockNumber)
 import           Network.Ethereum.Web3.Provider    (Provider (..), JsonRpcProvider(..)
@@ -31,35 +40,34 @@ import           Network.Ethereum.Web3.Provider    (Provider (..), JsonRpcProvid
 import           Network.Ethereum.Web3.Types       (Call (..), Quantity)
 import           System.Environment                (lookupEnv, setEnv)
 import           Test.Hspec.Expectations           (shouldSatisfy)
+import           Network.Ethereum.Web3.Net         as Net
+
+
+makeEnv :: IO (ContractsEnv, Address)
+makeEnv = do
+  cenv <- makeContractsEnv
+  a <- withPrimaryEthereumAccount
+  pure (cenv, a)
 
 rpcUri :: IO String
 rpcUri =  liftIO (fromMaybe "http://localhost:8545" <$> lookupEnv "WEB3_PROVIDER")
 
-exportStore :: String
-exportStore = "./test-support/.detected-contract-addresses"
+data ContractsEnv =
+  ContractsEnv { simpleStorage :: Address
+               , complexStorage :: Address
+               }
 
-loadExportedEnvironmentVariables :: IO [(String, String)]
-loadExportedEnvironmentVariables = do
-    exportables <- lines <$> readFile exportStore
-    detecteds <- for exportables $ \line -> case words line of
-        ["export", e] -> case splitOn "=" e of
-            [x]    -> detectedEnv x ""
-            [k, v] -> detectedEnv k v
-            _      -> warnMalformation $ "oddly structured export statement " ++ line
-        _ -> warnMalformation $ "no export in line " ++ line
-    return $ concat detecteds
-
-    where warnMalformation m = do
-            putStrLn $ m ++ ". are you sure you're using the right inject-contract-addresses.sh?"
-            pure []
-          detectedEnv k v = do
-              -- putStrLn $ "detected " ++ k ++ "=" ++ v
-              pure [(k, v)]
-
-injectExportedEnvironmentVariables :: IO ()
-injectExportedEnvironmentVariables = do
-    detectedEnvs <- loadExportedEnvironmentVariables
-    sequence_ (uncurry setEnv <$> detectedEnvs)
+makeContractsEnv :: IO ContractsEnv
+makeContractsEnv = do
+    net <- runWeb3Configured' Net.version
+    ss <- grabAddress net <$> BSL.readFile "test-support/build/contracts/abis/SimpleStorage.json"
+    cs <- grabAddress net <$> BSL.readFile "test-support/build/contracts/abis/ComplexStorage.json"
+    pure $ ContractsEnv ss cs
+  where
+    grabAddress :: T.Text -> BSL.ByteString -> Address
+    grabAddress nid bs = case eitherDecode bs :: Either String Value of
+      Right val -> fromMaybe (error "address key missing") (val ^? key "networks" . key nid . key "address" . _JSON)
+      Left e -> error e
 
 runWeb3Configured :: Show a => Web3 a -> IO a
 runWeb3Configured f = do

@@ -37,18 +37,22 @@
 
 module Network.Ethereum.Contract.TH (abi, abiFrom) where
 
-import           Control.Monad                    (replicateM, (<=<))
-import           Data.Aeson                       (eitherDecode)
-import           Data.Default                     (Default (..))
-import           Data.List                        (group, sort, uncons)
-import           Data.Monoid                      ((<>))
-import           Data.Tagged                      (Tagged)
-import           Data.Text                        (Text)
-import qualified Data.Text                        as T
-import qualified Data.Text.Lazy                   as LT
-import qualified Data.Text.Lazy.Encoding          as LT
-import           Generics.SOP                     (Generic)
-import qualified GHC.Generics                     as GHC (Generic)
+import           Control.Applicative               ((<|>))
+import           Control.Lens                      ((^?))
+import           Data.Aeson.Lens                   (_JSON, key)
+import           Control.Monad                     (replicateM, (<=<))
+import           Data.Aeson                        (eitherDecode)
+import qualified Data.Char                         as Char
+import           Data.Default                      (Default (..))
+import           Data.List                         (group, sort, uncons)
+import           Data.Monoid                       ((<>))
+import           Data.Tagged                       (Tagged)
+import           Data.Text                         (Text)
+import qualified Data.Text                         as T
+import qualified Data.Text.Lazy                    as LT
+import qualified Data.Text.Lazy.Encoding           as LT
+import           Generics.SOP                      (Generic)
+import qualified GHC.Generics                      as GHC (Generic)
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Quote
 
@@ -168,7 +172,7 @@ funWrapper c name dname args result = do
 
 mkDecl :: Declaration -> DecsQ
 
-mkDecl ev@(DEvent name inputs anonymous) = sequence
+mkDecl ev@(DEvent uncheckedName inputs anonymous) = sequence
     [ dataD' indexedName (normalC indexedName (map (toBang <=< tag) indexedArgs)) derivingD
     , instanceD' indexedName (conT ''Generic) []
     , instanceD' indexedName (conT ''ABIType) [funD' 'isDynamic [] [|const False|]]
@@ -187,6 +191,7 @@ mkDecl ev@(DEvent name inputs anonymous) = sequence
         [funD' 'def [] [|Filter Nothing Latest Latest $ Just topics|] ]
     ]
   where
+    name = if Char.toLower (T.head uncheckedName) == Char.toUpper (T.head uncheckedName) then "EvT" <> uncheckedName else uncheckedName
     topics    = [Just (T.unpack $ eventId ev)] <> replicate (length indexedArgs) Nothing
     toBang ty = bangType (bang sourceNoUnpack sourceStrict) (return ty)
     tag (n, ty) = AppT (AppT (ConT ''Tagged) (LitT $ NumTyLit n)) <$> typeQ ty
@@ -199,6 +204,7 @@ mkDecl ev@(DEvent name inputs anonymous) = sequence
     allName = mkName $ toUpperFirst (T.unpack name)
     derivingD = [''Show, ''Eq, ''Ord, ''GHC.Generic]
 
+-- TODO change this type name also
 -- | Method delcarations maker
 mkDecl fun@(DFunction name constant inputs outputs) = (++)
   <$> funWrapper constant fnName dataName inputs outputs
@@ -264,18 +270,33 @@ isKeyword = flip elem [ "as", "case", "of", "class"
                       , "newtype", "proc", "qualified"
                       , "rec", "type", "where"]
 
--- | ABI to declarations converter
-quoteAbiDec :: String -> DecsQ
+quoteAbiDec :: String -> Q [Dec]
 quoteAbiDec abi_string =
-    case eitherDecode abi_lbs of
-        Left e                -> fail $ "Error: " ++ show e
-        Right (ContractABI a) -> concat <$> mapM mkDecl (escape a)
-  where abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
+    let abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
+        eabi = abiDec abi_lbs <|> abiDecNested abi_lbs
+    in case eabi of
+      Left e -> fail ("Error in quoteAbiDec: " ++ e)
+      Right a -> concat <$> mapM mkDecl (escape a)
+  where
+    abiDec _abi_lbs = case eitherDecode _abi_lbs of
+      Left e                -> Left e
+      Right (ContractABI a) -> Right a
+    abiDecNested _abi_lbs = case _abi_lbs ^? key "abi" . _JSON of
+      Nothing                -> Left $ "Failed to find ABI at 'abi' key in JSON object."
+      Just (ContractABI a) -> Right a
 
 -- | ABI information string
 quoteAbiExp :: String -> ExpQ
 quoteAbiExp abi_string = stringE $
-    case eitherDecode abi_lbs of
-        Left e  -> "Error: " ++ show e
-        Right a -> show (a :: ContractABI)
-  where abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
+    let abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
+        eabi = abiDec abi_lbs <|> abiDecNested abi_lbs
+    in case eabi of
+      Left e -> "Error in 'quoteAbiExp' : " ++ e
+      Right a -> a
+  where
+    abiDec _abi_lbs = case eitherDecode _abi_lbs of
+      Left e                -> Left e
+      Right a -> Right $ show (a :: ContractABI)
+    abiDecNested _abi_lbs = case _abi_lbs ^? key "abi" . _JSON of
+      Nothing                -> Left $ "Failed to find ABI at 'abi' key in JSON object."
+      Just a -> Right $ show (a :: ContractABI)

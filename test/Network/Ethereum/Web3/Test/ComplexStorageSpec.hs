@@ -38,18 +38,17 @@ import           Network.Ethereum.Web3            hiding (convert)
 import qualified Network.Ethereum.Web3.Eth        as Eth
 import           Network.Ethereum.Web3.Test.Utils
 import           Network.Ethereum.Web3.Types      (Call (..), Filter (..))
-import           System.Environment               (getEnv)
 import           System.IO.Unsafe                 (unsafePerformIO)
+
+
 import           Test.Hspec
 
 [abiFrom|test-support/build/contracts/abis/ComplexStorage.json|]
 
 spec :: Spec
-spec = describe "Complex Storage" $ do
-    it "should inject contract addresses" injectExportedEnvironmentVariables
-    withPrimaryEthereumAccount `before` complexStorageSpec
+spec = makeEnv `before` complexStorageSpec
 
-complexStorageSpec :: SpecWith Address
+complexStorageSpec :: SpecWith (ContractsEnv, Address)
 complexStorageSpec = do
   describe "can interact with a ComplexStorage contract" $ do
         -- todo: these should ideally be arbitrary!
@@ -65,8 +64,8 @@ complexStorageSpec = do
             sByte2sVec = [sByte2sElem, sByte2sElem, sByte2sElem, sByte2sElem]
             sByte2s = [sByte2sVec, sByte2sVec]
 
-        it "can set the values of a ComplexStorage and validate them with an event" $ \primaryAccount -> do
-            contractAddress <- Prelude.fmap fromString . liftIO $ getEnv "COMPLEXSTORAGE_CONTRACT_ADDRESS"
+        it "can set the values of a ComplexStorage and validate them with an event" $
+          \(ContractsEnv _ contractAddress, primaryAccount) -> do
             let theCall = callFromTo primaryAccount contractAddress
                 fltr    = (def :: Filter ValsSet) { filterAddress = Just [contractAddress] }
             -- kick off listening for the ValsSet event
@@ -99,8 +98,7 @@ complexStorageSpec = do
             vsH `shouldBe` sBytes16
             vsI `shouldBe` sByte2s
 
-        it "can verify that it set the values correctly" $ \primaryAccount -> do
-            contractAddress <- Prelude.fmap fromString . liftIO $ getEnv "COMPLEXSTORAGE_CONTRACT_ADDRESS"
+        it "can verify that it set the values correctly" $ \(ContractsEnv _ contractAddress, primaryAccount) -> do
             let theCall = callFromTo primaryAccount contractAddress
                 runGetterCall f = runWeb3Configured (f theCall)
             -- there really has to be a better way to do this
@@ -123,8 +121,7 @@ complexStorageSpec = do
             bytes16Val' `shouldBe` sBytes16
             bytes2s `shouldBe` sByte2sElem
 
-        it "can decode a complicated value correctly" $ \primaryAccount -> do
-            contractAddress <- Prelude.fmap fromString . liftIO $ getEnv "COMPLEXSTORAGE_CONTRACT_ADDRESS"
+        it "can decode a complicated value correctly" $ \(ContractsEnv _ contractAddress, primaryAccount) -> do
             let theCall = callFromTo primaryAccount contractAddress
                 runGetterCall f = runWeb3Configured (f theCall)
             allVals <- runGetterCall getVals
