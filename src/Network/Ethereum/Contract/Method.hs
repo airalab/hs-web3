@@ -58,6 +58,7 @@ sendTx :: Method a
        -> Web3 Hash
 sendTx = sendTx' Nothing
 
+-- | 'sendTx' with optional first argument for account password
 sendTx' :: Method a
         => Maybe Text
         -- ^ Optional Password for account unlocking
