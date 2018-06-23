@@ -65,7 +65,7 @@ data JsonRpcProvider = HttpProvider ServerUri
 -- | Web3 Provider
 data Provider = Provider { jsonRpc :: JsonRpcProvider
                          , signingConfiguration :: Maybe SigningConfiguration
-                         }
+                         } deriving (Show, Eq)
 
 data SigningConfiguration = SigningConfiguration { privateKey      :: ByteString
                                                  , chainIdentifier :: Integer }
