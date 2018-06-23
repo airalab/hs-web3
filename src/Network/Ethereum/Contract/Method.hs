@@ -56,18 +56,7 @@ sendTx :: Method a
        -> a
        -- ^ method data
        -> Web3 Hash
-sendTx = sendTx' Nothing
-
--- | 'sendTx' with optional first argument for account password
-sendTx' :: Method a
-        => Maybe Text
-        -- ^ Optional Password for account unlocking
-        -> Call
-        -- ^ Call configuration
-        -> a
-        -- ^ method data
-        -> Web3 Hash
-sendTx' passM call' (dat :: a) = do
+sendTx call' (dat :: a) = do
     let sel = selector (Proxy :: Proxy a)
         callArgs = call' { callData = Just $ sel <> encode dat }
     signingConfigM <- asks (signingConfiguration . fst)
@@ -76,10 +65,20 @@ sendTx' passM call' (dat :: a) = do
             txBytes <- either (throwM . UserFail) pure $
                 createRawTransaction callArgs chainId privKey
             Eth.sendRawTransaction txBytes
-        Nothing -> case passM of
-            Just pass -> Personal.sendTransaction callArgs pass
-            Nothing -> Eth.sendTransaction callArgs
+        Nothing -> Eth.sendTransaction callArgs
 
+sendTx' :: Method a
+        => Text
+        -- ^ Password for account unlocking
+        -> Call
+        -- ^ Call configuration
+        -> a
+        -- ^ method data
+        -> Web3 Hash
+sendTx' pass call' (dat :: a) = do
+    let sel = selector (Proxy :: Proxy a)
+        callArgs = call' { callData = Just $ sel <> encode dat }
+    Personal.sendTransaction callArgs pass
 
 -- | 'call' is used to call contract methods that have no state changing effects.
 call :: (Method a, ABIGet b)
