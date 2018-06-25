@@ -37,6 +37,7 @@ importRawKey = remote "personal_importRawKey"
 
 -- | Returns all the Ethereum account addresses of all keys in the key store.
 listAccounts :: Web3 [Address]
+{-# INLINE listAccounts #-}
 listAccounts = remote "personal_listAccounts"
 
 -- | Removes the private key with given address from memory. The account can no longer be used to send transactions.
@@ -47,6 +48,7 @@ lockAccount = remote "personal_lockAccount"
 -- | Generates a new private key and stores it in the key store directory. The key file is encrypted with the given 
 -- passphrase. Returns the address of the new account.
 newAccount :: Text -> Web3 Address
+{-# INLINE newAccount #-}
 newAccount = remote "personal_newAccount"
 
 -- | Decrypts the key with the given address from the key store.
@@ -55,6 +57,7 @@ newAccount = remote "personal_newAccount"
 --
 -- The account can be used with eth_sign and eth_sendTransaction while it is unlocked.
 unlockAccount :: Address -> Text -> Web3 Bool
+{-# INLINE unlockAccount #-}
 unlockAccount = remote "personal_unlockAccount"
 
 -- | Validate the given passphrase and submit transaction.
@@ -63,6 +66,7 @@ unlockAccount = remote "personal_unlockAccount"
 -- be used to decrypt the private key belonging to the transaction 'callFrom', the transaction is verified, signed and 
 -- send onto the network. The account is not unlocked globally in the node and cannot be used in other RPC calls.
 sendTransaction :: Call -> Text -> Web3 Hash
+{-# INLINE sendTransaction #-}
 sendTransaction = remote "personal_sendTransaction"
 
 -- | Returns an Ethereum specific signature with:
@@ -71,6 +75,7 @@ sendTransaction = remote "personal_sendTransaction"
 --
 -- when given a passphrase to decrypt the account's private key
 sign :: Bytes -> Address -> Text -> Web3 Bytes
+{-# INLINE sign #-}
 sign = remote "personal_sign"
 
 -- | Recovers address given message and signature data
@@ -83,4 +88,5 @@ sign = remote "personal_sign"
 --
 -- Returns: Address
 ecRecover :: Bytes -> Bytes -> Web3 Address
+{-# INLINE ecRecover #-}
 ecRecover = remote "personal_ecRecover"
