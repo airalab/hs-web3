@@ -136,6 +136,7 @@ test-suite live
   main-is:             Spec.hs
   other-modules:       Network.Ethereum.Web3.Test.ComplexStorageSpec
                      , Network.Ethereum.Web3.Test.SimpleStorageSpec
+                     , Network.Ethereum.Web3.Test.ERC20Spec
                      , Network.Ethereum.Web3.Test.Utils
   build-depends:       base                 >4.9       && <4.12
                      , aeson

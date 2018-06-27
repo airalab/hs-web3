@@ -37,7 +37,7 @@ import           Network.Ethereum.Contract.TH
 import           Network.Ethereum.Web3            hiding (convert)
 import qualified Network.Ethereum.Web3.Eth        as Eth
 import           Network.Ethereum.Web3.Test.Utils
-import           Network.Ethereum.Web3.Types      (Call (..), Filter (..))
+import           Network.Ethereum.Web3.Types
 import           System.IO.Unsafe                 (unsafePerformIO)
 
 
@@ -102,15 +102,15 @@ complexStorageSpec = do
             let theCall = callFromTo primaryAccount contractAddress
                 runGetterCall f = runWeb3Configured (f theCall)
             -- there really has to be a better way to do this
-            uintVal'    <- runGetterCall uintVal
-            intVal'     <- runGetterCall intVal
-            boolVal'    <- runGetterCall boolVal
-            int224Val'  <- runGetterCall int224Val
-            boolsVal    <- runGetterCall $ \c -> boolVectorVal c 0
-            intsVal     <- runGetterCall $ \c -> intListVal c 0
-            stringVal'  <- runGetterCall stringVal
-            bytes16Val' <- runGetterCall bytes16Val
-            bytes2s     <- runGetterCall $ \c -> bytes2VectorListVal c 0 0
+            uintVal'    <- runWeb3Configured $ uintVal theCall Latest
+            intVal'     <- runWeb3Configured $ intVal theCall Latest
+            boolVal'    <- runWeb3Configured $ boolVal theCall Latest
+            int224Val'  <- runWeb3Configured $ int224Val theCall Latest
+            boolsVal    <- runWeb3Configured $ boolVectorVal theCall Latest 0
+            intsVal     <- runWeb3Configured $ intListVal theCall Latest 0
+            stringVal'  <- runWeb3Configured $ stringVal theCall Latest
+            bytes16Val' <- runWeb3Configured $ bytes16Val theCall Latest
+            bytes2s     <- runWeb3Configured $ bytes2VectorListVal theCall Latest 0 0
             uintVal'    `shouldBe` sUint
             intVal'     `shouldBe` sInt
             boolVal'    `shouldBe` sBool
@@ -123,6 +123,5 @@ complexStorageSpec = do
 
         it "can decode a complicated value correctly" $ \(ContractsEnv _ contractAddress, primaryAccount) -> do
             let theCall = callFromTo primaryAccount contractAddress
-                runGetterCall f = runWeb3Configured (f theCall)
-            allVals <- runGetterCall getVals
+            allVals <- runWeb3Configured $ getVals theCall Latest
             allVals `shouldBe` (sUint, sInt, sBool, sInt224, sBools, sInts, sString, sBytes16, sByte2s)
