@@ -17,7 +17,7 @@ import           Network.Ethereum.Web3
 
 import           Test.Hspec
 
-[abiFrom|test-support/build/contracts/abis/ERC20.json|]
+[abiFrom|test-support/abis/ERC20.json|]
 
 spec :: Spec
 spec = return ()
