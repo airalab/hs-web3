@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 -- |
@@ -14,22 +15,21 @@
 
 module Network.Ethereum.Web3.Net where
 
-import           Data.Text                      (Text)
-import           Network.Ethereum.Web3.Provider (Web3)
-import           Network.Ethereum.Web3.Types    (Quantity)
-import           Network.JsonRpc.TinyClient     (remote)
+import           Data.Text                   (Text)
+import           Network.Ethereum.Web3.Types (Quantity)
+import           Network.JsonRpc.TinyClient  (JsonRpcM, remote)
 
 -- | Returns the current network id.
-version :: Web3 Text
+version :: JsonRpcM m => m Text
 {-# INLINE version #-}
 version = remote "net_version"
 
 -- | Returns true if client is actively listening for network connections.
-listening :: Web3 Bool
+listening :: JsonRpcM m => m Bool
 {-# INLINE listening #-}
 listening = remote "net_listening"
 
 -- | Returns number of peers currently connected to the client.
-peerCount :: Web3 Quantity
+peerCount :: JsonRpcM m => m Quantity
 {-# INLINE peerCount #-}
 peerCount = remote "net_peerCount"

@@ -1,9 +1,12 @@
-{-# LANGUAGE DefaultSignatures      #-}
+{-# LANGUAGE CPP                    #-}
+{-# LANGUAGE ConstraintKinds        #-}
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 {-# LANGUAGE OverloadedStrings      #-}
+{-# LANGUAGE RecordWildCards        #-}
+{-# LANGUAGE TemplateHaskell        #-}
 {-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE UndecidableInstances   #-}
 
@@ -20,38 +23,94 @@
 -- Functions for implementing the client side of JSON-RPC 2.0.
 -- See <http://www.jsonrpc.org/specification>.
 --
+-- If you have monad with 'MonadIO', 'MonadThrow' and 'MonadReader' instances,
+-- it can be used as base for JSON-RPC calls.
+--
+-- Example:
+--
+-- @
+--   newtype MyMonad a = ...
+--
+--   foo :: Int -> Bool -> Mymonad Text
+--   foo = remote "foo"
+-- @
+--
+-- Arguments of function are stored into @params@ request array.
+--
+-- Example:
+--
+-- @
+--   myMethod :: JsonRpcM m => Int -> Bool -> m String
+--   myMethod = remote "myMethod"
+-- @
+--
 
 module Network.JsonRpc.TinyClient (
     JsonRpcException(..)
+  , defaultSettings
+  , JsonRpcClient
+  , jsonRpcServer
+  , jsonRpcManager
   , RpcError(..)
   , MethodName
-  , ServerUri
-  , Remote
+  , JsonRpcM
   , remote
   ) where
 
-import           Control.Applicative    ((<|>))
-import           Control.Exception      (Exception)
-import           Control.Monad          ((<=<))
-import           Control.Monad.Catch    (MonadThrow, throwM)
-import           Control.Monad.IO.Class (MonadIO, liftIO)
-import           Control.Monad.Reader   (MonadReader, ask)
-import           Data.Aeson
-import           Data.ByteString.Lazy   (ByteString)
-import           Data.Text              (Text, unpack)
-import           Network.HTTP.Client    (Manager, RequestBody (RequestBodyLBS),
-                                         httpLbs, method, parseRequest,
-                                         requestBody, requestHeaders,
-                                         responseBody)
+import           Control.Applicative     ((<|>))
+import           Control.Exception       (Exception)
+import           Control.Monad           ((<=<))
+import           Control.Monad.Catch     (MonadThrow, throwM)
+import           Control.Monad.IO.Class  (MonadIO, liftIO)
+import           Control.Monad.State     (MonadState)
+import           Data.Aeson              (FromJSON (..), ToJSON (..),
+                                          Value (String), eitherDecode, encode,
+                                          object, withObject, (.:), (.:?), (.=))
+import           Data.ByteString.Lazy    (ByteString)
+import           Data.Text               (Text, unpack)
+import           Lens.Micro.Mtl          (use)
+import           Lens.Micro.TH           (makeLenses)
+import           Network.HTTP.Client     (Manager, RequestBody (RequestBodyLBS),
+                                          httpLbs, method, newManager,
+                                          parseRequest, requestBody,
+                                          requestHeaders, responseBody)
+
+#ifdef TLS_MANAGER
+import           Network.HTTP.Client.TLS (tlsManagerSettings)
+#else
+import           Network.HTTP.Client     (defaultManagerSettings)
+#endif
 
 -- | Name of called method.
 type MethodName = Text
 
--- | JSON-RPC server URI
-type ServerUri  = String
+-- | Remote call monad constrait
+type JsonRpcM m = (MonadIO m, MonadThrow m, MonadState JsonRpcClient m)
 
--- | JSON-RPC minimal client config
-type Config = (ServerUri, Manager)
+-- | JSON-RPC client state vars
+data JsonRpcClient = JsonRpcClient
+  { _jsonRpcManager :: Manager
+  -- ^ HTTP connection manager
+  , _jsonRpcServer  :: String
+  -- ^ Remote server URI
+  }
+
+$(makeLenses ''JsonRpcClient)
+
+defaultSettings :: MonadIO m
+                => String
+                -- ^ JSON-RPC server URI
+                -> m JsonRpcClient
+defaultSettings srv = liftIO $ JsonRpcClient
+#ifdef TLS_MANAGER
+  <$> newManager tlsManagerSettings
+#else
+  <$> newManager defaultManagerSettings
+#endif
+  <*> pure srv
+
+instance Show JsonRpcClient where
+    show JsonRpcClient{..} = "JsonRpcClient<" ++ _jsonRpcServer ++ ">"
 
 -- | JSON-RPC request.
 data Request = Request { rqMethod :: !Text
@@ -93,69 +152,41 @@ instance FromJSON RpcError where
                        <*> v .: "message"
                        <*> v .:? "data"
 
--- | Typeclass for JSON-RPC monad base.
---
--- If you have monad with 'MonadIO', 'MonadThrow' and 'MonadReader' instances,
--- it can be used as base for JSON-RPC calls.
---
--- Example:
---
--- @
---   newtype MyMonad a = ...
---
---   instance Remote MyMonad (Mymonad a)
---
---   foo :: Int -> Bool -> Mymonad Text
---   foo = remote "foo"
--- @
---
-class (MonadIO m, MonadThrow m, MonadReader Config m) => Remote m a | a -> m where
-    remote_ :: ([Value] -> m ByteString) -> a
-
-    default remote_ :: (FromJSON b, m b ~ a) => ([Value] -> m ByteString) -> a
-    remote_ f = decodeResponse =<< f []
-
-instance (ToJSON a, Remote m b) => Remote m (a -> b) where
-    remote_ f x = remote_ (\xs -> f (toJSON x : xs))
-
--- | Remote call of JSON-RPC method.
---
--- Arguments of function are stored into @params@ request array.
---
--- Example:
---
--- @
---   myMethod :: Int -> Bool -> m String
---   myMethod = remote "myMethod"
--- @
---
-remote :: Remote m a => MethodName -> a
-{-# INLINE remote #-}
-remote = remote_ . call
-
-call :: (MonadIO m,
-         MonadThrow m,
-         MonadReader Config m)
-     => MethodName
-     -> [Value]
-     -> m ByteString
-call n = connection . encode . Request n 1 . toJSON
-  where
-    connection body = do
-        (uri, manager) <- ask
-        request <- parseRequest uri
-        let request' = request
-                     { requestBody = RequestBodyLBS body
-                     , requestHeaders = [("Content-Type", "application/json")]
-                     , method = "POST" }
-        responseBody <$> liftIO (httpLbs request' manager)
-
 data JsonRpcException
     = ParsingException String
     | CallException RpcError
     deriving (Eq, Show)
 
 instance Exception JsonRpcException
+
+class JsonRpcM m => Remote m a | a -> m where
+    remote' :: ([Value] -> m ByteString) -> a
+
+instance (ToJSON a, Remote m b) => Remote m (a -> b) where
+    remote' f x = remote' (\xs -> f (toJSON x : xs))
+
+instance {-# INCOHERENT #-} (JsonRpcM m, FromJSON b) => Remote m (m b) where
+    remote' f = decodeResponse =<< f []
+
+-- | Remote call of JSON-RPC method.
+remote :: Remote m a => MethodName -> a
+remote = remote' . call
+
+call :: JsonRpcM m
+     => MethodName
+     -> [Value]
+     -> m ByteString
+call n = connection . encode . Request n 1 . toJSON
+  where
+    connection body = do
+        serverUri <- use jsonRpcServer
+        request <- parseRequest serverUri
+        let request' = request
+                     { requestBody = RequestBodyLBS body
+                     , requestHeaders = [("Content-Type", "application/json")]
+                     , method = "POST" }
+        manager <- use jsonRpcManager
+        responseBody <$> liftIO (httpLbs request' manager)
 
 decodeResponse :: (MonadThrow m, FromJSON a)
                => ByteString
