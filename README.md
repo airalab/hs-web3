@@ -68,8 +68,5 @@ The `unit` suite has no external dependencies, while the `live` suite requires T
 to be available on your machine.
 
 The `live` suite also requires a Web3 provider with Ethereum capabilities, as well as
-an unlocked account with ether to send transactions from. It uses Truffle to deploy testing contracts,
+an unlocked account with ether to send transactions from. It uses Chanterelle to deploy testing contracts,
 generating ABIs for them in the process, then using said ABIs as part of a TemplateHaskell step in the suite.
-It is assumed that the provider is available at `http://localhost:8545`. If that's not the case, you must update `truffle.js`
-so that Truffle can deploy the contracts correctly, and pass the `WEB3_PROVIDER=http://host:port` environment variable
-when running the tests so that the `web3` library can interact with the chain that's being tested against.
