@@ -142,23 +142,24 @@ funWrapper :: Bool
            -> Maybe [FunctionArg]
            -- ^ Results
            -> DecsQ
-funWrapper c name dname args result = do
-    a : _ : vars <- replicateM (length args + 2) (newName "t")
-    let params = appsE $ conE dname : fmap varE vars
+funWrapper c name dname args result =
+    if c
+      then do
+        a : b : vars <- replicateM (length args + 2) (newName "t")
+        let params = appsE $ conE dname : fmap varE vars
+        sequence  [ sigD name $ [t|$(arrowing $ [t|Call|] : [t|DefaultBlock|] : inputT ++ [outputT])|]
+                  , funD' name (varP <$> a : b : vars) $
+                      case result of
+                        Just [_] -> [|unSingleton <$> call $(varE a) $(varE b) $(params)|]
+                        _        -> [|call $(varE a) $(varE b) $(params)|]
+                  ]
 
-    sequence $ if c
-        then
-          [ sigD name $ [t|$(arrowing $ [t|Call|] : inputT ++ [outputT])|]
-          , funD' name (varP <$> a : vars) $
-              case result of
-                Just [_] -> [|unSingleton <$> call $(varE a) Latest $(params)|]
-                _        -> [|call $(varE a) Latest $(params)|]
-          ]
-
-        else
-          [ sigD name $ [t|$(arrowing $ [t|Call|] : inputT ++ [[t|Web3 Hash|]])|]
-          , funD' name (varP <$> a : vars) $
-                [|sendTx $(varE a) $(params)|] ]
+      else do
+        a : _ : vars <- replicateM (length args + 2) (newName "t")
+        let params = appsE $ conE dname : fmap varE vars
+        sequence  [ sigD name $ [t|$(arrowing $ [t|Call|] : inputT ++ [[t|Web3 Hash|]])|]
+                  , funD' name (varP <$> a : vars) $
+                        [|sendTx $(varE a) $(params)|] ]
   where
     arrowing []       = error "Impossible branch call"
     arrowing [x]      = x

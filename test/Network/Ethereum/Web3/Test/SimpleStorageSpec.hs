@@ -79,7 +79,7 @@ interactions = describe "can interact with a SimpleStorage contract" $ do
         now <- runWeb3Configured Eth.blockNumber
         let later = now + 3
         awaitBlock later
-        v <- runWeb3Configured (count theCall)
+        v <- runWeb3Configured (count theCall Latest)
         v `shouldBe` theValue
 
 events :: SpecWith (ContractsEnv, Address)
