@@ -1,5 +1,5 @@
 # Resolver to choose a 'specific' stackage snapshot or a compiler version.
-resolver: lts-11.10
+resolver: lts-11.7
 # User packages to be built.
 packages:
 - '.'
@@ -8,6 +8,10 @@ packages:
 extra-deps:
     - relapse-1.0.0.0
     - secp256k1-0.5.2
+    - type-list-0.5.0.0
+
+
+allow-newer: true
 
 # Override default flag values for local packages and extra-deps
 flags: {}
