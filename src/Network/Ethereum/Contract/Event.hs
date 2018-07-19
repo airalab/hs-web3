@@ -1,7 +1,19 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE FunctionalDependencies   #-}
 {-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE TypeOperators         #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+
 
 -- |
 -- Module      :  Network.Ethereum.Contract.Event
@@ -15,12 +27,7 @@
 -- Ethereum contract event support.
 --
 
-module Network.Ethereum.Contract.Event (
-    EventAction(..)
-  , event
-  , event'
-  , eventMany'
-  ) where
+module Network.Ethereum.Contract.Event where
 
 import           Control.Concurrent             (threadDelay)
 import           Control.Exception              (Exception, throwIO)
@@ -28,13 +35,22 @@ import           Control.Monad                  (forM, void, when)
 import           Control.Monad.IO.Class         (liftIO)
 import           Control.Monad.Trans.Class      (lift)
 import           Control.Monad.Trans.Reader     (ReaderT (..))
+import           Data.Type.List
 import           Data.Either                    (rights, lefts)
 import           Data.Machine                   (MachineT, asParts, autoM,
                                                  await, construct, final,
                                                  repeatedly, runT,
                                                  unfoldPlan, (~>))
+import Data.Vinyl.Functor (Identity(..))
+import Data.List (sortOn)
+import Unsafe.Coerce (unsafeCoerce)
+import Data.Singletons (TyCon1)
+import Data.Monoid ((<>))
 import           Data.Machine.Plan              (PlanT, stop, yield)
 import           Data.Maybe                     (catMaybes, listToMaybe)
+import Data.Proxy (Proxy(..))
+import           Data.Vinyl.CoRec
+import           Data.Vinyl
 import           Control.Concurrent.Async       (Async)
 import           Network.Ethereum.ABI.Event     (DecodeEvent (..))
 import qualified Network.Ethereum.Web3.Eth      as Eth
@@ -123,7 +139,7 @@ reduceEventStream filterChanges handler = fmap listToMaybe . runT $
 
 data FilterChange a = FilterChange { filterChangeRawChange :: Change
                                    , filterChangeEvent     :: a
-                                   }
+                                   } deriving Functor
 
 -- | 'playLogs' streams the 'filterStream' and calls eth_getLogs on these 'Filter' objects.
 playLogs :: DecodeEvent i ni e
@@ -202,3 +218,115 @@ mkBlockNumber bm = case bm of
   BlockWithNumber bn -> return bn
   Earliest           -> return 0
   _                  -> Eth.blockNumber
+
+--------------------------------------------------------------------------------
+
+
+data Filters (es :: [*]) where
+  NilFilters :: Filters '[]
+  (:?) :: Filter e -> Filters es -> Filters (e ': es)
+
+data FiltersStreamState es =
+  FiltersStreamState { fsssCurrentBlock   :: Quantity
+                     , fsssInitialFilters :: Filters es
+                     , fsssWindowSize     :: Integer
+                     }
+
+filtersStream :: FiltersStreamState es
+              -> MachineT Web3 k (Filters es)
+filtersStream initialPlan = do
+  unfoldPlan initialPlan $ \s -> do
+    end <- lift . mkBlockNumber . minEndBlock . fsssInitialFilters $ initialPlan
+    filterPlan end s
+  where
+    filterPlan :: Quantity -> FiltersStreamState es -> PlanT k (Filters es) Web3 (FiltersStreamState es)
+    filterPlan end initialState@FiltersStreamState{..} = do
+      if fsssCurrentBlock > end
+        then stop
+        else do
+          let to' = min end $ fsssCurrentBlock + fromInteger fsssWindowSize
+              h :: forall e . Filter e -> Filter e
+              h f = f { filterFromBlock = BlockWithNumber fsssCurrentBlock
+                      , filterToBlock = BlockWithNumber to'
+                      }
+          yield (modifyFilters h fsssInitialFilters)
+          filterPlan end initialState { fsssCurrentBlock = to' + 1 }
+    minEndBlock :: Filters es -> DefaultBlock
+    minEndBlock NilFilters = Pending
+    minEndBlock (Filter _ _ e _ :? fs) = e `min` minEndBlock fs
+    modifyFilters :: (forall e. Filter e -> Filter e) -> Filters es -> Filters es
+    modifyFilters _ NilFilters = NilFilters
+    modifyFilters h (f :? fs) = (h f :? modifyFilters h fs)
+
+class QueryAllLogs (es :: [*]) where
+  queryAllLogs :: Filters es -> Web3 [Field (Map (TyCon1 FilterChange) es)]
+
+instance QueryAllLogs '[] where
+  queryAllLogs NilFilters = pure []
+
+-- The unsafeCoerce should actually be safe, it just needs to preserve
+-- `RElem a es (RIndex a es) => RElem a (e:es) (RIndex a (e:es))` for any a in es. But I think
+-- this is true since the type list is updated in both arguments of RElem in the same way.
+instance forall e i ni es. (DecodeEvent i ni e, QueryAllLogs es) => QueryAllLogs (e:es) where
+  queryAllLogs ((f  :: Filter e) :? (fs :: Filters es)) = do
+    changes <- Eth.getLogs f
+    filterChanges :: [FilterChange e] <- liftIO . mkFilterChanges $ changes
+    filterChanges' :: [Field (Map (TyCon1 FilterChange) es)] <- queryAllLogs fs
+    pure $ map (CoRec . Identity) filterChanges <> unsafeCoerce filterChanges'
+
+-- Is unsafeCoerce actually safe here? If you can't resolve every variant to (Map (TyCon1 FilterChange))
+-- then doesn't typecheck.
+sortChanges
+  :: Proxy es
+  -> [Field (Map (TyCon1 FilterChange) es)]
+  -> [Field (Map (TyCon1 FilterChange) es)]
+sortChanges _ changes =
+  let sorterProj :: forall e. FilterChange e -> Maybe (Quantity, Quantity)
+      sorterProj = \FilterChange{..} ->
+        (,) <$> changeBlockNumber filterChangeRawChange <*> changeLogIndex filterChangeRawChange
+  in sortOn (\(CoRec (Identity fc)) -> sorterProj $ unsafeCoerce fc) changes
+
+-- | Effectively a mapM_ over the machine using the given handler.
+reduceEventStream'
+  :: (Monad m, MapHandlers m es (Map (TyCon1 FilterChange) es))
+  => MachineT m k [Field (Map (TyCon1 FilterChange) es)]
+  -> Handlers es (ReaderT Change m EventAction)
+  -> m (Maybe (EventAction, Quantity))
+reduceEventStream' filterChanges handlers = fmap listToMaybe . runT $
+       filterChanges
+    ~> autoM (processChanges handlers)
+    ~> asParts
+    ~> runWhile (\(act, _) -> act /= TerminateEvent)
+    ~> final
+  where
+    runWhile p = repeatedly $ do
+      v <- await
+      if p v
+        then yield v
+        else yield v >> stop
+    processChanges handlers' changes = fmap catMaybes $
+        forM changes $ \fc -> match fc (mapHandlers handlers')
+
+class MapHandlers m es es' where
+  mapHandlers
+    :: Handlers es (ReaderT Change m EventAction)
+    -> Handlers es' (m (Maybe (EventAction, Quantity)))
+
+instance Monad m => MapHandlers m '[] '[] where
+  mapHandlers RNil = RNil
+
+instance (Monad m, MapHandlers m es es', es' ~ Map (TyCon1 FilterChange) es) => MapHandlers m (e : es) (FilterChange e : es') where
+  mapHandlers ((H f) :& fs) =
+    let f' = \FilterChange{..} -> do
+          act <- runReaderT (f filterChangeEvent) filterChangeRawChange
+          return ((,) act <$> changeBlockNumber filterChangeRawChange)
+    in (H f') :& mapHandlers fs
+
+-- | 'playLogs' streams the 'filterStream' and calls eth_getLogs on these 'Filter' objects.
+playLogs' :: forall es k.
+            QueryAllLogs es
+         => FiltersStreamState es
+         -> MachineT Web3 k [Field (Map (TyCon1 FilterChange) es)]
+playLogs' s = filtersStream s
+          ~> autoM queryAllLogs
+          ~> autoM (return . sortChanges (Proxy @es))
