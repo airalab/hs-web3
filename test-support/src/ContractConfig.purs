@@ -1,6 +1,7 @@
 module ContractConfig
   ( simpleStorageConfig
   , complexStorageConfig
+  , linearizationConfig
   ) where
 
 import Chanterelle.Internal.Types (ContractConfig, NoArgs, noArgs, constructorNoArgs)
@@ -14,6 +15,19 @@ simpleStorageConfig
 simpleStorageConfig =
     { filepath : "build/contracts/abis/SimpleStorage.json"
     , name : "SimpleStorage"
+    , constructor : constructorNoArgs
+    , unvalidatedArgs : noArgs
+    }
+
+--------------------------------------------------------------------------------
+-- | Linearization
+--------------------------------------------------------------------------------
+
+linearizationConfig
+  :: ContractConfig NoArgs
+linearizationConfig =
+    { filepath : "build/contracts/abis/Linearization.json"
+    , name : "Linearization"
     , constructor : constructorNoArgs
     , unvalidatedArgs : noArgs
     }

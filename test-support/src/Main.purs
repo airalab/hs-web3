@@ -5,7 +5,7 @@ import Prelude
 import Chanterelle (deployMain)
 import Chanterelle.Deploy (deployContract)
 import Chanterelle.Internal.Types (DeployM, DeployConfig(..))
-import ContractConfig (simpleStorageConfig, complexStorageConfig)
+import ContractConfig (simpleStorageConfig, complexStorageConfig, linearizationConfig)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE)
 import Control.Monad.Eff.Exception (EXCEPTION)
@@ -26,6 +26,7 @@ main = deployMain deployScript
 type DeployResults =
   ( simpleStorage :: Address
   , complexStorage :: Address
+  , linearization :: Address
   )
 
 deployScript :: forall eff. DeployM eff (Record DeployResults)
@@ -36,6 +37,8 @@ deployScript = do
                                          # _gas ?~ bigGasLimit
   simpleStorage <- deployContract txOpts simpleStorageConfig
   complexStorage <- deployContract txOpts complexStorageConfig
+  linearization <- deployContract txOpts linearizationConfig
   pure { simpleStorage: simpleStorage.deployAddress
        , complexStorage: complexStorage.deployAddress
+       , linearization: linearization.deployAddress
        }

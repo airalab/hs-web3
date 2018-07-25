@@ -25,16 +25,19 @@ import           Data.Monoid                       ((<>))
 import           Data.Proxy                        (Proxy (..))
 import           Data.Text                         (Text)
 
-import           Network.Ethereum.ABI.Class        (ABIGet, ABIPut, ABIType (..))
+import           Network.Ethereum.ABI.Class        (ABIGet, ABIPut,
+                                                    ABIType (..))
 import           Network.Ethereum.ABI.Codec        (decode, encode)
 import           Network.Ethereum.ABI.Prim.Bytes   (Bytes)
 import qualified Network.Ethereum.Web3.Eth         as Eth
 import qualified Network.Ethereum.Web3.Personal    as Personal
-import           Network.Ethereum.Web3.Provider    (Provider (..), SigningConfiguration (..),
-                                                    Web3, Web3Error (ParserFail, UserFail))
+import           Network.Ethereum.Web3.Provider    (Provider (..),
+                                                    SigningConfiguration (..),
+                                                    Web3,
+                                                    Web3Error (ParserFail, UserFail))
 import           Network.Ethereum.Web3.Transaction (createRawTransaction)
-import           Network.Ethereum.Web3.Types       (Call (callData), DefaultBlock,
-                                                    Hash)
+import           Network.Ethereum.Web3.Types       (Call (callData),
+                                                    DefaultBlock, Hash)
 
 class ABIPut a => Method a where
   selector :: Proxy a -> Bytes

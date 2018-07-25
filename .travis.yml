@@ -34,8 +34,8 @@ install:
 script:
 - docker run --rm -d -p 8545:8545 foamspace/cliquebait:latest && sleep 15
 - cd test-support && make install && make compile-contracts && make deploy && cd ..
-- if [ $STACK ]; then stack -j2 --no-terminal --install-ghc test;
-  else cabal update && cabal install --only-dependencies --enable-tests $CABALCONFOPTS && cabal configure --enable-tests $CABALCONFOPTS -v2 && cabal build web3 $CABALBUILDOPTS && cabal test;
+- if [ $STACK ]; then stack -j2 --no-terminal --install-ghc test --test-arguments="--skip=multiEvent";
+  else cabal update && cabal install --only-dependencies --enable-tests $CABALCONFOPTS && cabal configure --enable-tests $CABALCONFOPTS -v2 && cabal build web3 $CABALBUILDOPTS && cabal test --test-option="--skip=multiEvent";
   fi
 
 matrix:

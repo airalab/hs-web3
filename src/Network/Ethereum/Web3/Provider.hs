@@ -63,7 +63,7 @@ data JsonRpcProvider = HttpProvider ServerUri
   deriving (Show, Eq, Generic)
 
 -- | Web3 Provider
-data Provider = Provider { jsonRpc :: JsonRpcProvider
+data Provider = Provider { jsonRpc              :: JsonRpcProvider
                          , signingConfiguration :: Maybe SigningConfiguration
                          } deriving (Show, Eq)
 

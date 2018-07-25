@@ -2,6 +2,7 @@
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedLists       #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE QuasiQuotes           #-}
@@ -65,9 +66,9 @@ complexStorageSpec = do
             sByte2s = [sByte2sVec, sByte2sVec]
 
         it "can set the values of a ComplexStorage and validate them with an event" $
-          \(ContractsEnv _ contractAddress, primaryAccount) -> do
-            let theCall = callFromTo primaryAccount contractAddress
-                fltr    = (def :: Filter ValsSet) { filterAddress = Just [contractAddress] }
+          \(ContractsEnv{complexStorage}, primaryAccount) -> do
+            let theCall = callFromTo primaryAccount complexStorage
+                fltr    = (def :: Filter ValsSet) { filterAddress = Just [complexStorage] }
             -- kick off listening for the ValsSet event
             vals <- newEmptyMVar
             fiber <- runWeb3Configured' $
@@ -98,8 +99,8 @@ complexStorageSpec = do
             vsH `shouldBe` sBytes16
             vsI `shouldBe` sByte2s
 
-        it "can verify that it set the values correctly" $ \(ContractsEnv _ contractAddress, primaryAccount) -> do
-            let theCall = callFromTo primaryAccount contractAddress
+        it "can verify that it set the values correctly" $ \(ContractsEnv{complexStorage}, primaryAccount) -> do
+            let theCall = callFromTo primaryAccount complexStorage
                 runGetterCall f = runWeb3Configured (f theCall)
             -- there really has to be a better way to do this
             uintVal'    <- runWeb3Configured $ uintVal theCall Latest
@@ -121,7 +122,7 @@ complexStorageSpec = do
             bytes16Val' `shouldBe` sBytes16
             bytes2s `shouldBe` sByte2sElem
 
-        it "can decode a complicated value correctly" $ \(ContractsEnv _ contractAddress, primaryAccount) -> do
-            let theCall = callFromTo primaryAccount contractAddress
+        it "can decode a complicated value correctly" $ \(ContractsEnv{complexStorage}, primaryAccount) -> do
+            let theCall = callFromTo primaryAccount complexStorage
             allVals <- runWeb3Configured $ getVals theCall Latest
             allVals `shouldBe` (sUint, sInt, sBool, sInt224, sBools, sInts, sString, sBytes16, sByte2s)

@@ -9,8 +9,8 @@ import qualified Data.ByteString                   as BS
 import           Data.ByteString.Short             (fromShort)
 import           Data.Maybe                        (fromMaybe)
 import           Data.RLP
-import           Network.Ethereum.Web3.Types
 import           Network.Ethereum.ABI.Prim.Address (toHexString)
+import           Network.Ethereum.Web3.Types
 
 unpackCallParameters :: Call -> Either String (Integer, Integer, Integer, ByteString, Integer, ByteString)
 unpackCallParameters call = do

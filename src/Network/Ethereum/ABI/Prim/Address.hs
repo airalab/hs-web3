@@ -23,7 +23,7 @@ module Network.Ethereum.ABI.Prim.Address (
   ) where
 
 import           Control.Monad                 ((<=<))
-import           Crypto.Hash                   (hashWith, Keccak_256(..))
+import           Crypto.Hash                   (Keccak_256 (..), hashWith)
 import           Data.Aeson                    (FromJSON (..), ToJSON (..),
                                                 Value (String))
 import           Data.Bits                     ((.&.))
@@ -32,7 +32,7 @@ import           Data.ByteArray                (Bytes, convert, length, zero)
 import           Data.ByteArray.Encoding       (Base (Base16), convertFromBase,
                                                 convertToBase)
 import           Data.ByteString               (ByteString)
-import qualified Data.ByteString               as BS (unpack, take)
+import qualified Data.ByteString               as BS (take, unpack)
 import qualified Data.ByteString.Char8         as C8 (drop, pack, take, unpack)
 import qualified Data.Char                     as C (toLower, toUpper)
 import           Data.Monoid                   ((<>))

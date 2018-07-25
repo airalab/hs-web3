@@ -45,7 +45,7 @@ lockAccount :: Address -> Web3 Bool
 {-# INLINE lockAccount #-}
 lockAccount = remote "personal_lockAccount"
 
--- | Generates a new private key and stores it in the key store directory. The key file is encrypted with the given 
+-- | Generates a new private key and stores it in the key store directory. The key file is encrypted with the given
 -- passphrase. Returns the address of the new account.
 newAccount :: Text -> Web3 Address
 {-# INLINE newAccount #-}
@@ -63,7 +63,7 @@ unlockAccount = remote "personal_unlockAccount"
 -- | Validate the given passphrase and submit transaction.
 --
 -- The transaction is the same argument as for eth_sendTransaction and contains the from address. If the passphrase can
--- be used to decrypt the private key belonging to the transaction 'callFrom', the transaction is verified, signed and 
+-- be used to decrypt the private key belonging to the transaction 'callFrom', the transaction is verified, signed and
 -- send onto the network. The account is not unlocked globally in the node and cannot be used in other RPC calls.
 sendTransaction :: Call -> Text -> Web3 Hash
 {-# INLINE sendTransaction #-}

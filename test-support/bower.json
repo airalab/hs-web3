@@ -7,6 +7,6 @@
     "output"
   ],
   "devDependencies": {
-    "purescript-chanterelle": "f-o-a-m/chanterelle#77ed0a2a561c9c53fcbe8879db47a19ecefbf3ff"
+    "purescript-chanterelle": "f-o-a-m/chanterelle#v0.11.0"
   }
 }

@@ -5,6 +5,7 @@
     "artifacts-dir": "build/contracts/abis",
     "modules": [ "ComplexStorage"
                , "SimpleStorage"
+               , "Linearization"
                ],
     "dependencies": [],
     "extra-abis": "abis",

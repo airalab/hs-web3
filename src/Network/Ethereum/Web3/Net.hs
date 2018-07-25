@@ -14,7 +14,7 @@
 
 module Network.Ethereum.Web3.Net where
 
-import           Data.Text (Text)
+import           Data.Text                      (Text)
 import           Network.Ethereum.Web3.Provider (Web3)
 import           Network.Ethereum.Web3.Types    (Quantity)
 import           Network.JsonRpc.TinyClient     (remote)

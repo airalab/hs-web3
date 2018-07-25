@@ -4,6 +4,7 @@
 {-# LANGUAGE KindSignatures        #-}
 {-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE QuasiQuotes           #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
@@ -69,13 +70,13 @@ interactions :: SpecWith (ContractsEnv, Address)
 interactions = describe "can interact with a SimpleStorage contract" $ do
     -- todo: this should ideally be arbitrary!
     let theValue = 12345
-    it "can set the value of a SimpleStorage contract" $ \(ContractsEnv contractAddress _, primaryAccount) -> do
-        let theCall = callFromTo primaryAccount contractAddress
+    it "can set the value of a SimpleStorage contract" $ \(ContractsEnv{simpleStorage}, primaryAccount) -> do
+        let theCall = callFromTo primaryAccount simpleStorage
         ret <- runWeb3Configured $ setCount theCall theValue
         True `shouldBe` True -- we need to get this far
 
-    it "can read the value back" $ \(ContractsEnv contractAddress _, primaryAccount) -> do
-        let theCall = callFromTo primaryAccount contractAddress
+    it "can read the value back" $ \(ContractsEnv{simpleStorage}, primaryAccount) -> do
+        let theCall = callFromTo primaryAccount simpleStorage
         now <- runWeb3Configured Eth.blockNumber
         let later = now + 3
         awaitBlock later
@@ -84,13 +85,13 @@ interactions = describe "can interact with a SimpleStorage contract" $ do
 
 events :: SpecWith (ContractsEnv, Address)
 events = describe "can interact with a SimpleStorage contract across block intervals" $ do
-    it "can stream events starting and ending in the future, unbounded" $ \(ContractsEnv contractAddress _, primaryAccount) -> do
+    it "can stream events starting and ending in the future, unbounded" $ \(ContractsEnv{simpleStorage}, primaryAccount) -> do
         var <- newMVar []
-        let theCall = callFromTo primaryAccount contractAddress
+        let theCall = callFromTo primaryAccount simpleStorage
             theSets = [1, 2, 3]
         print "Setting up the filter..."
         fiber <- runWeb3Configured' $ do
-          let fltr = (def :: Filter EvT_CountSet) { filterAddress = Just [contractAddress] }
+          let fltr = (def :: Filter EvT_CountSet) { filterAddress = Just [simpleStorage] }
           forkWeb3 $ processUntil' var fltr ((3 ==) . length)
         print "Setting the values..."
         setValues theCall theSets
@@ -99,15 +100,15 @@ events = describe "can interact with a SimpleStorage contract across block inter
         vals <- takeMVar var
         sort (unEvT_CountSet <$> vals) `shouldBe` sort theSets
 
-    it "can stream events starting and ending in the future, bounded" $ \(ContractsEnv contractAddress _, primaryAccount) -> do
+    it "can stream events starting and ending in the future, bounded" $ \(ContractsEnv{simpleStorage}, primaryAccount) -> do
         runWeb3Configured Eth.blockNumber >>= \bn -> awaitBlock (bn + 1)
         var <- newMVar []
-        let theCall = callFromTo primaryAccount contractAddress
+        let theCall = callFromTo primaryAccount simpleStorage
             theSets = [13, 14, 15]
         start <- runWeb3Configured Eth.blockNumber
         let later = BlockWithNumber (start + 3)
             latest = BlockWithNumber (start + 8)
-            fltr = (def :: Filter EvT_CountSet) { filterAddress = Just [contractAddress]
+            fltr = (def :: Filter EvT_CountSet) { filterAddress = Just [simpleStorage]
                                                 , filterFromBlock = later
                                                 , filterToBlock = latest
                                                 }
@@ -122,15 +123,15 @@ events = describe "can interact with a SimpleStorage contract across block inter
         vals <- takeMVar var
         sort (unEvT_CountSet <$> vals) `shouldBe` sort theSets
 
-    it "can stream events starting in the past and ending in the future" $ \(ContractsEnv contractAddress _, primaryAccount) -> do
+    it "can stream events starting in the past and ending in the future" $ \(ContractsEnv{simpleStorage}, primaryAccount) -> do
         runWeb3Configured Eth.blockNumber >>= \bn -> awaitBlock (bn + 1)
         var <- newMVar []
         blockNumberVar <- newEmptyMVar
-        let theCall = callFromTo primaryAccount contractAddress
+        let theCall = callFromTo primaryAccount simpleStorage
             theSets1 = [7, 8, 9]
             theSets2 = [10, 11, 12]
         start <- runWeb3Configured Eth.blockNumber
-        let fltr = (def :: Filter EvT_CountSet) { filterAddress = Just [contractAddress] }
+        let fltr = (def :: Filter EvT_CountSet) { filterAddress = Just [simpleStorage] }
         fiber <- runWeb3Configured' $ do
           forkWeb3 $ processUntil var fltr ((3 ==) . length) (liftIO . putMVar blockNumberVar . changeBlockNumber)
         print "Running first transactions as past transactions..."
@@ -141,7 +142,8 @@ events = describe "can interact with a SimpleStorage contract across block inter
         awaitBlock $ end + 1 -- make past transactions definitively in past
         var' <- newMVar []
         fiber <- runWeb3Configured' $ do
-          let fltr = (def :: Filter EvT_CountSet) { filterAddress = Just [contractAddress]
+          let fltr = (def :: Filter EvT_CountSet) { filterAddress = Just [simpleStorage
+                                                                         ]
                                               , filterFromBlock = BlockWithNumber start}
           forkWeb3 $ processUntil' var' fltr ((6 ==) . length)
         print "Setting more values"
@@ -151,14 +153,14 @@ events = describe "can interact with a SimpleStorage contract across block inter
         vals <- takeMVar var'
         sort (unEvT_CountSet <$> vals) `shouldBe` sort (theSets1 <> theSets2)
 
-    it "can stream events starting and ending in the past, bounded" $ \(ContractsEnv contractAddress _, primaryAccount) -> do
+    it "can stream events starting and ending in the past, bounded" $ \(ContractsEnv{simpleStorage}, primaryAccount) -> do
         runWeb3Configured Eth.blockNumber >>= \bn -> awaitBlock (bn + 1)
         var <- newMVar []
-        let theCall = callFromTo primaryAccount contractAddress
+        let theCall = callFromTo primaryAccount simpleStorage
             theSets = [4, 5, 6]
         start <- runWeb3Configured Eth.blockNumber
         blockNumberVar <- newEmptyMVar
-        let fltr = (def :: Filter EvT_CountSet) { filterAddress = Just [contractAddress] }
+        let fltr = (def :: Filter EvT_CountSet) { filterAddress = Just [simpleStorage] }
         print "Setting up filter for past transactions..."
         fiber <- runWeb3Configured' $ do
           forkWeb3 $ processUntil var fltr ((3 ==) . length) (liftIO . putMVar blockNumberVar . changeBlockNumber)
