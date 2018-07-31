@@ -6,6 +6,7 @@
     "modules": [ "ComplexStorage"
                , "SimpleStorage"
                , "Linearization"
+               , "Registry"
                ],
     "dependencies": [],
     "extra-abis": "abis",
