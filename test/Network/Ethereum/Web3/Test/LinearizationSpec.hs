@@ -131,7 +131,6 @@ monitorE1OrE2
   -> IO (MVar (Either E1 E2))
 monitorE1OrE2 addr = do
   var <- newEmptyMVar
-  print "created mvar"
   let fltr1 = (def :: Filter E1) { filterAddress = Just [addr] }
       fltr2 = (def :: Filter E2) { filterAddress = Just [addr] }
       filters = fltr1 :? fltr2 :? NilFilters
@@ -142,7 +141,6 @@ monitorE1OrE2 addr = do
         liftIO $ putMVar var (Right e2)
         pure TerminateEvent
       handlers = H handler1 :& H handler2 :& RNil
-  print "running filter"
   _ <- runWeb3Configured' $ multiEvent filters handlers
   pure var
 
