@@ -62,6 +62,8 @@ library
                      , Network.Ethereum.ABI.Prim.Address
                      , Network.Ethereum.Contract.TH
                      , Network.Ethereum.Contract.Event
+                     , Network.Ethereum.Contract.Event.MultiFilter
+                     , Network.Ethereum.Contract.Event.Common
                      , Network.Ethereum.Contract.Method
                      , Network.JsonRpc.TinyClient
                      , Data.String.Extra
@@ -141,6 +143,7 @@ test-suite live
                      , Network.Ethereum.Web3.Test.SimpleStorageSpec
                      , Network.Ethereum.Web3.Test.LinearizationSpec
                      , Network.Ethereum.Web3.Test.ERC20Spec
+                     , Network.Ethereum.Web3.Test.RegistrySpec
                      , Network.Ethereum.Web3.Test.Utils
   build-depends:       base                 >4.9       && <4.12
                      , aeson
