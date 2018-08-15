@@ -13,7 +13,14 @@
 {-# LANGUAGE TypeOperators          #-}
 {-# LANGUAGE UndecidableInstances   #-}
 
-module Network.Ethereum.Contract.Event.SingleFilter where
+module Network.Ethereum.Contract.Event.SingleFilter
+  ( event
+  , event'
+  , eventNoFilter
+  , eventNoFilter'
+  )
+
+  where
 
 import           Control.Concurrent                     (threadDelay)
 import           Control.Concurrent.Async               (Async)
@@ -67,7 +74,7 @@ eventMany' fltr window handler = do
                                       , fssInitialFilter = fltr
                                       , fssWindowSize = window
                                       }
-    mLastProcessedFilterState <- reduceEventStream (playLogs initState) handler
+    mLastProcessedFilterState <- reduceEventStream (playOldLogs initState) handler
     case mLastProcessedFilterState of
       Nothing -> startPolling fltr {filterFromBlock = BlockWithNumber start}
       Just (act, lastBlock) -> do
@@ -109,10 +116,11 @@ reduceEventStream filterChanges handler = fmap listToMaybe . runT $
             return ((,) act <$> changeBlockNumber filterChangeRawChange)
 
 -- | 'playLogs' streams the 'filterStream' and calls eth_getLogs on these 'Filter' objects.
-playLogs :: DecodeEvent i ni e
-         => FilterStreamState e
-         -> MachineT Web3 k [FilterChange e]
-playLogs s = filterStream s
+playOldLogs
+  :: DecodeEvent i ni e
+  => FilterStreamState e
+  -> MachineT Web3 k [FilterChange e]
+playOldLogs s = filterStream s
           ~> autoM Eth.getLogs
           ~> autoM (liftIO . mkFilterChanges)
 
@@ -162,19 +170,35 @@ filterStream initialPlan = unfoldPlan initialPlan filterPlan
 
 --------------------------------------------------------------------------------
 
-eventManyNoFilter
+-- | Run 'event\'' one block at a time.
+eventNoFilter
+  :: DecodeEvent i ni e
+  => Filter e
+  -> (e -> ReaderT Change Web3 EventAction)
+  -> Web3 (Async ())
+eventNoFilter fltr = forkWeb3 . event' fltr
+
+-- | Same as 'event', but does not immediately spawn a new thread.
+eventNoFilter'
+  :: DecodeEvent i ni e
+  => Filter e
+  -> (e -> ReaderT Change Web3 EventAction)
+  -> Web3 ()
+eventNoFilter' fltr = eventManyNoFilter' fltr 0
+
+eventManyNoFilter'
   :: DecodeEvent i ni e
   => Filter e
   -> Integer
   -> (e -> ReaderT Change Web3 EventAction)
   -> Web3 ()
-eventManyNoFilter fltr window handler = do
+eventManyNoFilter' fltr window handler = do
     start <- mkBlockNumber $ filterFromBlock fltr
     let initState = FilterStreamState { fssCurrentBlock = start
                                       , fssInitialFilter = fltr
                                       , fssWindowSize = window
                                       }
-    mLastProcessedFilterState <- reduceEventStream (playLogs initState) handler
+    mLastProcessedFilterState <- reduceEventStream (playOldLogs initState) handler
     case mLastProcessedFilterState of
       Nothing ->
         let pollingFilterState = FilterStreamState { fssCurrentBlock = start
@@ -198,14 +222,14 @@ playNewLogs
   => FilterStreamState e
   -> MachineT Web3 k [FilterChange e]
 playNewLogs s =
-     newEventsFilterStream s
+     newFilterStream s
   ~> autoM Eth.getLogs
-  ~> autoM (liftIO . matchRelevantChanges (fssInitialFilter s))
+  ~> autoM (liftIO . mkFilterChanges)
 
-newEventsFilterStream
+newFilterStream
   :: FilterStreamState e
   -> MachineT Web3 k (Filter e)
-newEventsFilterStream initialState = unfoldPlan initialState filterPlan
+newFilterStream initialState = unfoldPlan initialState filterPlan
   where
     filterPlan :: FilterStreamState e -> PlanT k (Filter e) Web3 (FilterStreamState e)
     filterPlan s@FilterStreamState{..} = do
@@ -219,51 +243,4 @@ newEventsFilterStream initialState = unfoldPlan initialState filterPlan
                                          , filterToBlock = BlockWithNumber to'
                                          }
           yield filter'
-          filterPlan $ s { fssCurrentBlock = nextBlock + 1 }
-
-pollTillBlockProgress
-  :: Quantity
-  -> Web3 Quantity
-pollTillBlockProgress currentBlock = do
-  bn <- Eth.blockNumber
-  if currentBlock >= bn
-    then do
-      liftIO $ threadDelay 1000000
-      pollTillBlockProgress currentBlock
-    else pure bn
-
-
-matchRelevantChanges
-  :: DecodeEvent i ni e
-  => Filter e
-  -> [Change]
-  -> IO [FilterChange e]
-matchRelevantChanges fltr changes =
-  let relevantChanges = filter (\c -> matchesAddress fltr c && matchesTopics fltr c ) changes
-  -- in rights $ map (\c@Change{..} -> FilterChange c <$> decodeEvent c) relevantChanges
-  in mkFilterChanges relevantChanges
-
-matchesTopics
-  :: Filter e
-  -> Change
-  -> Bool
-matchesTopics fltr c =
-    case filterTopics fltr of
-      Nothing -> True
-      Just ts -> matchTops ts (changeTopics c)
-  where
-    matchTops [] [] = True
-    matchTops (a:as) (b:bs) =
-      case a of
-        Just a' -> a' == b && matchTops as bs
-        Nothing -> matchTops as bs
-    matchTops _ _ = False
-
-matchesAddress
-  :: Filter e
-  -> Change
-  -> Bool
-matchesAddress fltr c =
-  case filterAddress fltr of
-    Nothing -> True
-    Just as -> changeAddress c `elem` as
+          filterPlan $ s { fssCurrentBlock = to' + 1 }

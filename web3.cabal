@@ -63,6 +63,7 @@ library
                      , Network.Ethereum.Contract.TH
                      , Network.Ethereum.Contract.Event
                      , Network.Ethereum.Contract.Event.MultiFilter
+                     , Network.Ethereum.Contract.Event.SingleFilter
                      , Network.Ethereum.Contract.Event.Common
                      , Network.Ethereum.Contract.Method
                      , Network.JsonRpc.TinyClient

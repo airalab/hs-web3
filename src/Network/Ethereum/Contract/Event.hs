@@ -27,26 +27,9 @@
 --
 
 module Network.Ethereum.Contract.Event
-  ( EventAction(..)
-
-  -- * Single event monitors
-  , event
-  , event'
-  , eventMany'
-
-  -- * MultiEventMonitors
-  , MultiFilter(..)
-  , minBlock
-  , modifyMultiFilter
-  , multiEvent
-  , multiEvent'
-  , multiEventMany'
-
-  -- * ReExports
-  , Handlers
-  , Handler(..)
-  , Rec(..)
-
+  ( module Network.Ethereum.Contract.Event.Common
+  , module Network.Ethereum.Contract.Event.SingleFilter
+  , module Network.Ethereum.Contract.Event.MultiFilter
   ) where
 
 import           Network.Ethereum.Contract.Event.Common
