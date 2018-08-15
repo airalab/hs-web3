@@ -10,9 +10,9 @@
 
 module Network.Ethereum.Contract.Event.Common  where
 
-import Control.Concurrent (threadDelay)
-import Control.Monad.IO.Class (liftIO)
+import           Control.Concurrent             (threadDelay)
 import           Control.Exception              (Exception, throwIO)
+import           Control.Monad.IO.Class         (liftIO)
 import           Data.Either                    (lefts, rights)
 import           Network.Ethereum.ABI.Event     (DecodeEvent (..))
 import qualified Network.Ethereum.Web3.Eth      as Eth

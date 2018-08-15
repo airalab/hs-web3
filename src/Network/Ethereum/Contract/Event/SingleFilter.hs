@@ -18,6 +18,7 @@ module Network.Ethereum.Contract.Event.SingleFilter
   , event'
   , eventNoFilter
   , eventNoFilter'
+  , eventMany'
   )
 
   where
@@ -55,7 +56,7 @@ event' :: DecodeEvent i ni e
        => Filter e
        -> (e -> ReaderT Change Web3 EventAction)
        -> Web3 ()
-event' fltr = eventMany' fltr 0
+event' fltr = eventManyNoFilter' fltr 0
 
 -- | 'eventMany\'' take s a filter, a window size, and a handler.
 --
