@@ -75,7 +75,6 @@ linearizationSpec = describe "can bundle and linearize events" $ do
       var <- monitorE1OrE2 linearization
       _ <- runWeb3Configured' (e12 theCall)
       res <- takeMVar var
-      liftIO $ print res
       res `shouldSatisfy` isLeft
     it "can call e21" $ \(ContractsEnv{linearization}, primaryAccount) -> do
       -- wait on the next block
@@ -84,7 +83,6 @@ linearizationSpec = describe "can bundle and linearize events" $ do
       var <- monitorE1OrE2 linearization
       _ <- runWeb3Configured' (e21 theCall)
       res <- takeMVar var
-      liftIO $ print res
       res `shouldSatisfy` isRight
 
 singleFlood :: forall m. (MonadIO m) => Address -> Address -> m Hash

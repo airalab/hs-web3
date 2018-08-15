@@ -116,7 +116,7 @@ multiEvent'
   => MultiFilter es
   -> Handlers es (ReaderT Change Web3 EventAction)
   -> Web3 ()
-multiEvent' fltrs = multiEventManyNoFilter' fltrs 0
+multiEvent' fltrs = multiEventMany' fltrs 0
 
 data MultiFilterStreamState es =
   MultiFilterStreamState { mfssCurrentBlock       :: Quantity

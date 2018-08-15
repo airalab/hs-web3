@@ -61,33 +61,6 @@ mkBlockNumber bm = case bm of
   Earliest           -> return 0
   _                  -> Eth.blockNumber
 
-matchRelevantChanges
-  :: DecodeEvent i ni e
-  => Filter e
-  -> [Change]
-  -> IO [FilterChange e]
-matchRelevantChanges fltr changes =
-    let relevantChanges = filter (\c -> matchesAddress fltr c && matchesTopics fltr c ) changes
-    -- in rights $ map (\c@Change{..} -> FilterChange c <$> decodeEvent c) relevantChanges
-    in mkFilterChanges relevantChanges
-  where
-    matchesTopics :: Filter e -> Change -> Bool
-    matchesTopics f c =
-        case filterTopics f of
-          Nothing -> True
-          Just ts -> matchTops ts (changeTopics c)
-      where
-        matchTops [] [] = True
-        matchTops (a:as) (b:bs) =
-          case a of
-            Just a' -> a' == b && matchTops as bs
-            Nothing -> matchTops as bs
-        matchTops _ _ = False
-    matchesAddress :: Filter e -> Change -> Bool
-    matchesAddress f c =
-      case filterAddress f of
-        Nothing -> True
-        Just as -> changeAddress c `elem` as
 
 pollTillBlockProgress
   :: Quantity
