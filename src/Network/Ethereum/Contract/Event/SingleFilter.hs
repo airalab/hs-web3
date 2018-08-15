@@ -234,14 +234,12 @@ newFilterStream initialState = unfoldPlan initialState filterPlan
   where
     filterPlan :: FilterStreamState e -> PlanT k (Filter e) Web3 (FilterStreamState e)
     filterPlan s@FilterStreamState{..} = do
-      end <- lift . mkBlockNumber $ filterToBlock fssInitialFilter
-      if fssCurrentBlock > end
+      if BlockWithNumber fssCurrentBlock > filterToBlock fssInitialFilter
         then stop
         else do
-          nextBlock <- lift . pollTillBlockProgress $ fssCurrentBlock
-          let to' = min end nextBlock
-              filter' = fssInitialFilter { filterFromBlock = BlockWithNumber fssCurrentBlock
-                                         , filterToBlock = BlockWithNumber to'
+          newestBlockNumber <- lift . pollTillBlockProgress $ fssCurrentBlock
+          let filter' = fssInitialFilter { filterFromBlock = BlockWithNumber fssCurrentBlock
+                                         , filterToBlock = BlockWithNumber newestBlockNumber
                                          }
           yield filter'
-          filterPlan $ s { fssCurrentBlock = to' + 1 }
+          filterPlan $ s { fssCurrentBlock = newestBlockNumber + 1 }

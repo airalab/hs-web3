@@ -96,6 +96,6 @@ pollTillBlockProgress currentBlock = do
   bn <- Eth.blockNumber
   if currentBlock >= bn
     then do
-      liftIO $ threadDelay 1000000
+      liftIO $ threadDelay 3000000
       pollTillBlockProgress currentBlock
        else pure bn

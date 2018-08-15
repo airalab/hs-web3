@@ -83,7 +83,7 @@ minEndBlock (Filter _ _ e _ :? fs) = e `min` minEndBlock fs
 minStartBlock
   :: MultiFilter es
   -> DefaultBlock
-minStartBlock NilFilters             = Earliest
+minStartBlock NilFilters             = Pending
 minStartBlock (Filter _ s _ _ :? fs) = s `min` minStartBlock fs
 
 modifyMultiFilter
@@ -390,7 +390,7 @@ multiEventManyNoFilter' fltrs window handlers = do
         let pollingFilterState =
               MultiFilterStreamState { mfssCurrentBlock = start
                                      , mfssInitialMultiFilter = fltrs
-                                     , mfssWindowSize = 1
+                                     , mfssWindowSize = 0
                                      }
         in void $ reduceMultiEventStream (playNewMultiLogs pollingFilterState) handlers
       Just (act, lastBlock) -> do
@@ -398,7 +398,7 @@ multiEventManyNoFilter' fltrs window handlers = do
         when (act /= TerminateEvent && lastBlock < end) $
           let pollingFilterState = MultiFilterStreamState { mfssCurrentBlock = lastBlock + 1
                                                           , mfssInitialMultiFilter = fltrs
-                                                          , mfssWindowSize = 1
+                                                          , mfssWindowSize = 0
                                                           }
           in void $ reduceMultiEventStream (playNewMultiLogs pollingFilterState) handlers
 
@@ -407,22 +407,21 @@ newMultiFilterStream
   -> MachineT Web3 k (MultiFilter es)
 newMultiFilterStream initialPlan = do
   unfoldPlan initialPlan $ \s -> do
-    end <- lift . mkBlockNumber . minEndBlock . mfssInitialMultiFilter $ initialPlan
+    let end = minEndBlock . mfssInitialMultiFilter $ initialPlan
     filterPlan end s
   where
-    filterPlan :: Quantity -> MultiFilterStreamState es -> PlanT k (MultiFilter es) Web3 (MultiFilterStreamState es)
+    filterPlan :: DefaultBlock -> MultiFilterStreamState es -> PlanT k (MultiFilter es) Web3 (MultiFilterStreamState es)
     filterPlan end initialState@MultiFilterStreamState{..} = do
-      if mfssCurrentBlock > end
+      if BlockWithNumber mfssCurrentBlock > end
         then stop
         else do
-          nextBlock <- lift . pollTillBlockProgress $ mfssCurrentBlock
-          let to' = min end nextBlock
-              h :: forall e. Filter e -> Filter e
+          newestBlockNumber <- lift . pollTillBlockProgress $ mfssCurrentBlock
+          let h :: forall e. Filter e -> Filter e
               h f = f { filterFromBlock = BlockWithNumber mfssCurrentBlock
-                      , filterToBlock = BlockWithNumber to'
+                      , filterToBlock = BlockWithNumber newestBlockNumber
                       }
           yield (modifyMultiFilter h mfssInitialMultiFilter)
-          filterPlan end initialState { mfssCurrentBlock = to' + 1 }
+          filterPlan end initialState { mfssCurrentBlock = newestBlockNumber + 1 }
 
 playNewMultiLogs
   :: forall es k.
