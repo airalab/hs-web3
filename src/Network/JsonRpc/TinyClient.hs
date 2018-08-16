@@ -142,7 +142,7 @@ call :: (MonadIO m,
      -> [Value]
      -> m ByteString
 call m r = do
-  rid <- liftIO randomIO
+  rid <- abs <$> liftIO randomIO
   connection . encode $ Request m rid (toJSON r)
   where
     connection body = do
