@@ -1,7 +1,7 @@
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE PolyKinds           #-}
-{-# LANGUAGE TypeFamilies        #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies        #-}
 
 -- |
 -- Module      :  Network.Ethereum.ABI.Prim.Tagged
@@ -21,7 +21,8 @@ module Network.Ethereum.ABI.Prim.Tagged (
 
 import           Data.Proxy                 (Proxy (..))
 import           Data.Tagged                (Tagged (..))
-import           Generics.SOP               (Generic(..), Code, NS(..), NP(..), I(..), SOP(..))
+import           Generics.SOP               (Code, Generic (..), I (..),
+                                             NP (..), NS (..), SOP (..))
 
 import           Network.Ethereum.ABI.Class (ABIGet (..), ABIPut (..),
                                              ABIType (..))
@@ -39,4 +40,4 @@ instance Generic (Tagged t a) where
   type Code (Tagged t a) = '[ '[a]]
   from (Tagged a) = SOP (Z (I a :* Nil))
   to (SOP (Z (I a :* Nil))) = Tagged a
-  to _ = error "Invalid Tagged SOP decomposition"
+  to _                      = error "Invalid Tagged SOP decomposition"
