@@ -12,7 +12,7 @@
 {-# LANGUAGE UndecidableInstances   #-}
 
 -- |
--- Module      :  Network.Ethereum.ABI.Event.Internal
+-- Module      :  Data.Solidity.Event.Internal
 -- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
@@ -25,7 +25,7 @@
 -- this directly in application code.
 --
 
-module Network.Ethereum.ABI.Event.Internal where
+module Data.Solidity.Event.Internal where
 
 import           Data.Kind    (Type)
 import           Data.Proxy   (Proxy (..))

@@ -6,8 +6,8 @@
 {-# LANGUAGE TemplateHaskell            #-}
 
 -- |
--- Module      :  Network.Ethereum.Web3.Types
--- Copyright   :  Alexander Krupenkin 2016
+-- Module      :  Network.Ethereum.Api.Types
+-- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
@@ -17,31 +17,25 @@
 -- Ethereum generic JSON-RPC types.
 --
 
-module Network.Ethereum.Web3.Types where
+module Network.Ethereum.Api.Types where
 
-import           Data.Aeson                        (FromJSON (..), Options (fieldLabelModifier, omitNothingFields),
-                                                    ToJSON (..),
-                                                    Value (Bool, String),
-                                                    defaultOptions, object,
-                                                    (.=))
-import           Data.Aeson.TH                     (deriveJSON)
-import           Data.Default                      (Default (..))
-import           Data.Monoid                       ((<>))
-import           Data.Ord                          (Down (..))
-import           Data.String                       (IsString (..))
-import qualified Data.Text                         as T (pack)
-import qualified Data.Text.Lazy.Builder            as B (toLazyText)
-import qualified Data.Text.Lazy.Builder.Int        as B (hexadecimal)
-import qualified Data.Text.Read                    as R (decimal, hexadecimal)
-import           GHC.Generics                      (Generic)
+import           Data.Aeson                 (FromJSON (..), Options (fieldLabelModifier, omitNothingFields),
+                                             ToJSON (..), Value (Bool, String),
+                                             defaultOptions, object, (.=))
+import           Data.Aeson.TH              (deriveJSON)
+import           Data.Default               (Default (..))
+import           Data.Monoid                ((<>))
+import           Data.Ord                   (Down (..))
+import           Data.Solidity.Prim.Address (Address)
+import           Data.String                (IsString (..))
+import qualified Data.Text                  as T (pack)
+import qualified Data.Text.Lazy.Builder     as B (toLazyText)
+import qualified Data.Text.Lazy.Builder.Int as B (hexadecimal)
+import qualified Data.Text.Read             as R (decimal, hexadecimal)
+import           GHC.Generics               (Generic)
 
-import           Data.String.Extra                 (toLowerFirst)
-import           Network.Ethereum.ABI.Prim.Address (Address)
-import           Network.Ethereum.ABI.Prim.Bytes   (Bytes, BytesN)
-import           Network.Ethereum.Unit
-
--- | 32 byte type synonym for transaction and block hashes.
-type Hash = BytesN 32
+import           Data.HexString             (HexString)
+import           Data.String.Extra          (toLowerFirst)
 
 -- | Should be viewed as type to representing QUANTITY in Web3 JSON RPC docs
 --
@@ -55,7 +49,7 @@ type Hash = BytesN 32
 --  WRONG: 0x0400 (no leading zeroes allowed)
 --  WRONG: ff (must be prefixed 0x)
 newtype Quantity = Quantity { unQuantity :: Integer }
-    deriving (Read, Num, Real, Enum, Eq, Ord, Generic)
+    deriving (Num, Real, Integral, Enum, Eq, Ord, Generic)
 
 instance Show Quantity where
     show = show . unQuantity
@@ -64,11 +58,11 @@ instance IsString Quantity where
     fromString ('0' : 'x' : hex) =
         case R.hexadecimal (T.pack hex) of
             Right (x, "") -> Quantity x
-            _             -> error "Unable to parse Quantity!"
-    fromString str =
-        case R.decimal (T.pack str) of
+            _             -> error ("Quantity " ++ show hex ++ " is not valid hex")
+    fromString num =
+        case R.decimal (T.pack num) of
             Right (x, "") -> Quantity x
-            _             -> error "Unable to parse Quantity!"
+            _             -> error ("Quantity " ++ show num ++ " is not valid decimal")
 
 instance ToJSON Quantity where
     toJSON (Quantity x) =
@@ -79,20 +73,8 @@ instance FromJSON Quantity where
     parseJSON (String v) =
         case R.hexadecimal v of
             Right (x, "") -> return (Quantity x)
-            _             -> fail "Unable to parse Quantity"
-    parseJSON _ = fail "Quantity may only be parsed from a JSON String"
-
-instance Fractional Quantity where
-    (/) a b = Quantity $ div (unQuantity a) (unQuantity b)
-    fromRational = Quantity . floor
-
-instance Unit Quantity where
-    fromWei = Quantity
-    toWei = unQuantity
-
-instance UnitSpec Quantity where
-    divider = const 1
-    name = const "quantity"
+            _             -> fail $ "Quantity " ++ show v <> " is not valid hex"
+    parseJSON _ = fail "Quantity should be a JSON String"
 
 -- | An object with sync status data.
 data SyncActive = SyncActive
@@ -122,17 +104,17 @@ data Change = Change
   -- ^ QUANTITY - integer of the log index position in the block. null when its pending log.
   , changeTransactionIndex :: !Quantity
   -- ^ QUANTITY - integer of the transactions index position log was created from. null when its pending log.
-  , changeTransactionHash  :: !Hash
+  , changeTransactionHash  :: !HexString
   -- ^ DATA, 32 Bytes - hash of the transactions this log was created from. null when its pending log.
-  , changeBlockHash        :: !Hash
+  , changeBlockHash        :: !HexString
   -- ^ DATA, 32 Bytes - hash of the block where this log was in. null when its pending. null when its pending log.
   , changeBlockNumber      :: !Quantity
   -- ^ QUANTITY - the block number where this log was in. null when its pending. null when its pending log.
   , changeAddress          :: !Address
   -- ^ DATA, 20 Bytes - address from which this log originated.
-  , changeData             :: !Bytes
+  , changeData             :: !HexString
   -- ^ DATA - contains one or more 32 Bytes non-indexed arguments of the log.
-  , changeTopics           :: ![BytesN 32]
+  , changeTopics           :: ![HexString]
   -- ^ Array of DATA - Array of 0 to 4 32 Bytes DATA of indexed log arguments.
   -- (In solidity: The first topic is the hash of the signature of the event
   -- (e.g. Deposit(address, bytes32, uint256)), except you declared the event with
@@ -154,7 +136,7 @@ data Call = Call
   -- ^ QUANTITY - (optional, default: To-Be-Determined) Integer of the gasPrice used for each paid gas.
   , callValue    :: !(Maybe Quantity)
   -- ^ QUANTITY - (optional) Integer of the value sent with this transaction.
-  , callData     :: !(Maybe Bytes)
+  , callData     :: !(Maybe HexString)
   -- ^ DATA - The compiled code of a contract OR the hash of the invoked method signature and encoded parameters.
   , callNonce    :: !(Maybe Quantity)
   -- ^ QUANTITY - (optional) Integer of a nonce. This allows to overwrite your own pending transactions that use the same nonce.
@@ -186,7 +168,7 @@ data Filter e = Filter
   -- ^ QUANTITY|TAG - (optional, default: "latest") Integer block number, or "latest" for the last mined block or "pending", "earliest" for not yet mined transactions.
   , filterToBlock   :: !DefaultBlock
   -- ^ QUANTITY|TAG - (optional, default: "latest") Integer block number, or "latest" for the last mined block or "pending", "earliest" for not yet mined transactions.
-  , filterTopics    :: !(Maybe [Maybe (BytesN 32)])
+  , filterTopics    :: !(Maybe [Maybe HexString])
   -- ^ Array of DATA, - (optional) Array of 32 Bytes DATA topics. Topics are order-dependent. Each topic can also be an array of DATA with "or" options.
   -- Topics are order-dependent. A transaction with a log with topics [A, B] will be matched by the following topic filters:
   -- * [] "anything"
@@ -215,11 +197,11 @@ instance Ord DefaultBlock where
 
 -- | The Receipt of a Transaction
 data TxReceipt = TxReceipt
-  { receiptTransactionHash   :: !Hash
+  { receiptTransactionHash   :: !HexString
   -- ^ DATA, 32 Bytes - hash of the transaction.
   , receiptTransactionIndex  :: !Quantity
   -- ^ QUANTITY - index of the transaction.
-  , receiptBlockHash         :: !Hash
+  , receiptBlockHash         :: !HexString
   -- ^ DATA, 32 Bytes - hash of the block where this transaction was in. null when its pending.
   , receiptBlockNumber       :: !Quantity
   -- ^ QUANTITY - block number where this transaction was in.
@@ -231,7 +213,7 @@ data TxReceipt = TxReceipt
   -- ^ DATA, 20 Bytes - The contract address created, if the transaction was a contract creation, otherwise null.
   , receiptLogs              :: ![Change]
   -- ^ Array - Array of log objects, which this transaction generated.
-  , receiptLogsBloom         :: !Bytes
+  , receiptLogsBloom         :: !HexString
   -- ^ DATA, 256 Bytes - Bloom filter for light clients to quickly retrieve related logs.
   , receiptStatus            :: !(Maybe Quantity)
   -- ^ QUANTITY either 1 (success) or 0 (failure)
@@ -242,11 +224,11 @@ $(deriveJSON (defaultOptions
 
 -- | Transaction information.
 data Transaction = Transaction
-  { txHash             :: !Hash
+  { txHash             :: !HexString
   -- ^ DATA, 32 Bytes - hash of the transaction.
   , txNonce            :: !Quantity
   -- ^ QUANTITY - the number of transactions made by the sender prior to this one.
-  , txBlockHash        :: !Hash
+  , txBlockHash        :: !HexString
   -- ^ DATA, 32 Bytes - hash of the block where this transaction was in. null when its pending.
   , txBlockNumber      :: !Quantity
   -- ^ QUANTITY - block number where this transaction was in. null when its pending.
@@ -262,7 +244,7 @@ data Transaction = Transaction
   -- ^ QUANTITY - gas price provided by the sender in Wei.
   , txGas              :: !Quantity
   -- ^ QUANTITY - gas provided by the sender.
-  , txInput            :: !Bytes
+  , txInput            :: !HexString
   -- ^ DATA - the data send along with the transaction.
   } deriving (Eq, Show, Generic)
 
@@ -273,21 +255,21 @@ $(deriveJSON (defaultOptions
 data Block = Block
   { blockNumber           :: !Quantity
   -- ^ QUANTITY - the block number. null when its pending block.
-  , blockHash             :: !Hash
+  , blockHash             :: !HexString
   -- ^ DATA, 32 Bytes - hash of the block. null when its pending block.
-  , blockParentHash       :: !Hash
+  , blockParentHash       :: !HexString
   -- ^ DATA, 32 Bytes - hash of the parent block.
-  , blockNonce            :: !(Maybe Bytes)
+  , blockNonce            :: !(Maybe HexString)
   -- ^ DATA, 8 Bytes - hash of the generated proof-of-work. null when its pending block.
-  , blockSha3Uncles       :: !(BytesN 32)
+  , blockSha3Uncles       :: !HexString
   -- ^ DATA, 32 Bytes - SHA3 of the uncles data in the block.
-  , blockLogsBloom        :: !Bytes
+  , blockLogsBloom        :: !HexString
   -- ^ DATA, 256 Bytes - the bloom filter for the logs of the block. null when its pending block.
-  , blockTransactionsRoot :: !(BytesN 32)
+  , blockTransactionsRoot :: !HexString
   -- ^ DATA, 32 Bytes - the root of the transaction trie of the block.
-  , blockStateRoot        :: !(BytesN 32)
+  , blockStateRoot        :: !HexString
   -- ^ DATA, 32 Bytes - the root of the final state trie of the block.
-  , blockReceiptRoot      :: !(Maybe (BytesN 32))
+  , blockReceiptRoot      :: !(Maybe HexString)
   -- ^ DATA, 32 Bytes - the root of the receipts trie of the block.
   , blockMiner            :: !Address
   -- ^ DATA, 20 Bytes - the address of the beneficiary to whom the mining rewards were given.
@@ -295,7 +277,7 @@ data Block = Block
   -- ^ QUANTITY - integer of the difficulty for this block.
   , blockTotalDifficulty  :: !Quantity
   -- ^ QUANTITY - integer of the total difficulty of the chain until this block.
-  , blockExtraData        :: !Bytes
+  , blockExtraData        :: !HexString
   -- ^ DATA - the "extra data" field of this block.
   , blockSize             :: !Quantity
   -- ^ QUANTITY - integer the size of this block in bytes.
@@ -307,7 +289,7 @@ data Block = Block
   -- ^ QUANTITY - the unix timestamp for when the block was collated.
   , blockTransactions     :: ![Transaction]
   -- ^ Array of transaction objects.
-  , blockUncles           :: ![Hash]
+  , blockUncles           :: ![HexString]
   -- ^ Array - Array of uncle hashes.
   } deriving (Show, Generic)
 

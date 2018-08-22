@@ -17,7 +17,7 @@
 -- The Application Binary Interface is the standard way to interact
 -- with contracts in the Ethereum ecosystem. It can be described by
 -- specially JSON file, like @ERC20.json@. This module use TemplateHaskell
--- for generation described in ABI contract methods and events. Helper
+-- for generation described in Abi contract methods and events. Helper
 -- functions and instances inserted in haskell module and can be used in
 -- another modules or in place.
 --
@@ -37,42 +37,42 @@
 
 module Network.Ethereum.Contract.TH (abi, abiFrom) where
 
-import           Control.Monad                     (replicateM, (<=<))
-import           Data.Aeson                        (eitherDecode)
-import           Data.Default                      (Default (..))
-import           Data.List                         (group, sort, uncons)
-import           Data.Monoid                       ((<>))
-import           Data.Tagged                       (Tagged)
-import           Data.Text                         (Text)
-import qualified Data.Text                         as T
-import qualified Data.Text.Lazy                    as LT
-import qualified Data.Text.Lazy.Encoding           as LT
-import           Generics.SOP                      (Generic)
-import qualified GHC.Generics                      as GHC (Generic)
+import           Control.Monad                    (replicateM, (<=<))
+import           Data.Aeson                       (eitherDecode)
+import           Data.Default                     (Default (..))
+import           Data.List                        (group, sort, uncons)
+import           Data.Monoid                      ((<>))
+import           Data.Tagged                      (Tagged)
+import           Data.Text                        (Text)
+import qualified Data.Text                        as T
+import qualified Data.Text.Lazy                   as LT
+import qualified Data.Text.Lazy.Encoding          as LT
+import           Generics.SOP                     (Generic)
+import qualified GHC.Generics                     as GHC (Generic)
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Quote
 
-import           Data.String.Extra                 (toLowerFirst, toUpperFirst)
-import           Network.Ethereum.ABI.Class        (ABIGet, ABIPut,
-                                                    ABIType (..))
-import           Network.Ethereum.ABI.Event        (IndexedEvent (..))
-import           Network.Ethereum.ABI.Json         (ContractABI (..),
-                                                    Declaration (..),
-                                                    EventArg (..),
-                                                    FunctionArg (..),
-                                                    SolidityType (..), eventId,
-                                                    methodId, parseSolidityType)
-import           Network.Ethereum.ABI.Prim.Address (Address)
-import           Network.Ethereum.ABI.Prim.Bytes   (Bytes, BytesN)
-import           Network.Ethereum.ABI.Prim.Int     (IntN, UIntN)
-import           Network.Ethereum.ABI.Prim.List    (ListN)
-import           Network.Ethereum.ABI.Prim.String  ()
-import           Network.Ethereum.ABI.Prim.Tagged  ()
-import           Network.Ethereum.ABI.Prim.Tuple   (Singleton (..))
-import           Network.Ethereum.Contract.Method  (Method (..), call, sendTx)
-import           Network.Ethereum.Web3.Provider    (Web3)
-import           Network.Ethereum.Web3.Types       (Call, DefaultBlock (..),
-                                                    Filter (..), Hash)
+import           Data.HexString                   (HexString)
+import           Data.Solidity.Abi                (AbiGet, AbiPut, AbiType (..))
+import           Data.Solidity.Abi.Json           (ContractAbi (..),
+                                                   Declaration (..),
+                                                   EventArg (..),
+                                                   FunctionArg (..),
+                                                   SolidityType (..), eventId,
+                                                   methodId, parseSolidityType)
+import           Data.Solidity.Event              (IndexedEvent (..))
+import           Data.Solidity.Prim.Address       (Address)
+import           Data.Solidity.Prim.Bytes         (Bytes, BytesN)
+import           Data.Solidity.Prim.Int           (IntN, UIntN)
+import           Data.Solidity.Prim.List          (ListN)
+import           Data.Solidity.Prim.String        ()
+import           Data.Solidity.Prim.Tagged        ()
+import           Data.Solidity.Prim.Tuple         (Singleton (..))
+import           Data.String.Extra                (toLowerFirst, toUpperFirst)
+import           Network.Ethereum.Api.Provider    (Web3)
+import           Network.Ethereum.Api.Types       (Call, DefaultBlock (..),
+                                                   Filter (..))
+import           Network.Ethereum.Contract.Method (Method (..), call, sendTx)
 
 -- | Read contract ABI from file
 abiFrom :: QuasiQuoter
@@ -101,7 +101,7 @@ dataD' name rec derive =
 funD' :: Name -> [PatQ] -> ExpQ -> DecQ
 funD' name p f = funD name [clause p (normalB f) []]
 
--- | ABI and Haskell types association
+-- | Abi and Haskell types association
 toHSType :: SolidityType -> TypeQ
 toHSType s = case s of
     SolidityBool        -> conT ''Bool
@@ -158,7 +158,7 @@ funWrapper c name dname args result = do
           ]
 
         else
-          [ sigD name $ [t|$(arrowing $ [t|Call|] : inputT ++ [[t|Web3 Hash|]])|]
+          [ sigD name $ [t|$(arrowing $ [t|Call|] : inputT ++ [[t|Web3 HexString|]])|]
           , funD' name (varP <$> a : vars) $
                 [|sendTx $(varE a) $(params)|] ]
   where
@@ -177,12 +177,12 @@ mkDecl :: Declaration -> DecsQ
 mkDecl ev@(DEvent name inputs anonymous) = sequence
     [ dataD' indexedName (normalC indexedName (map (toBang <=< tag) indexedArgs)) derivingD
     , instanceD' indexedName (conT ''Generic) []
-    , instanceD' indexedName (conT ''ABIType) [funD' 'isDynamic [] [|const False|]]
-    , instanceD' indexedName (conT ''ABIGet) []
+    , instanceD' indexedName (conT ''AbiType) [funD' 'isDynamic [] [|const False|]]
+    , instanceD' indexedName (conT ''AbiGet) []
     , dataD' nonIndexedName (normalC nonIndexedName (map (toBang <=< tag) nonIndexedArgs)) derivingD
     , instanceD' nonIndexedName (conT ''Generic) []
-    , instanceD' nonIndexedName (conT ''ABIType) [funD' 'isDynamic [] [|const False|]]
-    , instanceD' nonIndexedName (conT ''ABIGet) []
+    , instanceD' nonIndexedName (conT ''AbiType) [funD' 'isDynamic [] [|const False|]]
+    , instanceD' nonIndexedName (conT ''AbiGet) []
     , dataD' allName (recC allName (map (\(n, a) -> ((\(b,t) -> return (n,b,t)) <=< toBang <=< typeQ $ a)) allArgs)) derivingD
     , instanceD' allName (conT ''Generic) []
     , instanceD (cxt [])
@@ -211,10 +211,10 @@ mkDecl fun@(DFunction name constant inputs outputs) = (++)
   <*> sequence
         [ dataD' dataName (normalC dataName bangInput) derivingD
         , instanceD' dataName (conT ''Generic) []
-        , instanceD' dataName (conT ''ABIType)
+        , instanceD' dataName (conT ''AbiType)
           [funD' 'isDynamic [] [|const False|]]
-        , instanceD' dataName (conT ''ABIPut) []
-        , instanceD' dataName (conT ''ABIGet) []
+        , instanceD' dataName (conT ''AbiPut) []
+        , instanceD' dataName (conT ''AbiGet) []
         , instanceD' dataName (conT ''Method)
           [funD' 'selector [] [|const mIdent|]]
         ]
@@ -270,18 +270,18 @@ isKeyword = flip elem [ "as", "case", "of", "class"
                       , "newtype", "proc", "qualified"
                       , "rec", "type", "where"]
 
--- | ABI to declarations converter
+-- | Abi to declarations converter
 quoteAbiDec :: String -> DecsQ
 quoteAbiDec abi_string =
     case eitherDecode abi_lbs of
         Left e                -> fail $ "Error: " ++ show e
-        Right (ContractABI a) -> concat <$> mapM mkDecl (escape a)
+        Right (ContractAbi a) -> concat <$> mapM mkDecl (escape a)
   where abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
 
--- | ABI information string
+-- | Abi information string
 quoteAbiExp :: String -> ExpQ
 quoteAbiExp abi_string = stringE $
     case eitherDecode abi_lbs of
         Left e  -> "Error: " ++ show e
-        Right a -> show (a :: ContractABI)
+        Right a -> show (a :: ContractAbi)
   where abi_lbs = LT.encodeUtf8 (LT.pack abi_string)

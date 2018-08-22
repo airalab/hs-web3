@@ -8,7 +8,7 @@
 {-# LANGUAGE TypeOperators       #-}
 
 -- |
--- Module      :  Network.Ethereum.ABI.Generic
+-- Module      :  Data.Solidity.Abi.Generic
 -- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
@@ -21,24 +21,21 @@
 -- The user of this library should have no need to use this directly in application code.
 --
 
-module Network.Ethereum.ABI.Generic () where
+module Data.Solidity.Abi.Generic () where
 
-import qualified Data.ByteString.Lazy          as LBS
-import           Data.Int                      (Int64)
-import qualified Data.List                     as L
-import           Data.Monoid                   ((<>))
-import           Data.Proxy                    (Proxy (..))
-import           Data.Serialize                (Get, Put)
-import           Data.Serialize.Get            (bytesRead, lookAheadE, skip)
-import           Data.Serialize.Put            (runPutLazy)
-import           Generics.SOP                  (I (..), NP (..), NS (..),
-                                                SOP (..))
+import qualified Data.ByteString.Lazy   as LBS
+import           Data.Int               (Int64)
+import qualified Data.List              as L
+import           Data.Monoid            ((<>))
+import           Data.Proxy             (Proxy (..))
+import           Data.Serialize         (Get, Put)
+import           Data.Serialize.Get     (bytesRead, lookAheadE, skip)
+import           Data.Serialize.Put     (runPutLazy)
+import           Generics.SOP           (I (..), NP (..), NS (..), SOP (..))
 
-import           Network.Ethereum.ABI.Class    (ABIGet (..), ABIPut (..),
-                                                ABIType (..),
-                                                GenericABIGet (..),
-                                                GenericABIPut (..))
-import           Network.Ethereum.ABI.Prim.Int (getWord256, putWord256)
+import           Data.Solidity.Abi      (AbiGet (..), AbiPut (..), AbiType (..),
+                                         GenericAbiGet (..), GenericAbiPut (..))
+import           Data.Solidity.Prim.Int (getWord256, putWord256)
 
 data EncodedValue =
   EncodedValue { order    :: Int64
@@ -80,13 +77,13 @@ combineEncodedValues encodings =
                                 Just _ -> acc + 32
                             ) 0 encodings
 
-class ABIData a where
+class AbiData a where
     _serialize :: [EncodedValue] -> a -> [EncodedValue]
 
-instance ABIData (NP f '[]) where
+instance AbiData (NP f '[]) where
     _serialize encoded _ = encoded
 
-instance (ABIType b, ABIPut b, ABIData (NP I as)) => ABIData (NP I (b :as)) where
+instance (AbiType b, AbiPut b, AbiData (NP I as)) => AbiData (NP I (b :as)) where
     _serialize encoded (I b :* a) =
         if isDynamic (Proxy :: Proxy b)
         then _serialize (dynEncoding  : encoded) a
@@ -101,20 +98,20 @@ instance (ABIType b, ABIPut b, ABIData (NP I as)) => ABIData (NP I (b :as)) wher
                                    , order = 1 + (fromInteger . toInteger . L.length $ encoded)
                                    }
 
-instance ABIData (NP f as) => GenericABIPut (SOP f '[as]) where
+instance AbiData (NP f as) => GenericAbiPut (SOP f '[as]) where
     gAbiPut (SOP (Z a)) = combineEncodedValues $ _serialize [] a
     gAbiPut _           = error "Impossible branch"
 
-instance GenericABIGet (NP f '[]) where
+instance GenericAbiGet (NP f '[]) where
     gAbiGet = return Nil
 
-instance (ABIGet a, GenericABIGet (NP I as)) => GenericABIGet (NP I (a : as)) where
+instance (AbiGet a, GenericAbiGet (NP I as)) => GenericAbiGet (NP I (a : as)) where
     gAbiGet = (:*) <$> (I <$> factorParser) <*> gAbiGet
 
-instance GenericABIGet (NP f as) => GenericABIGet (SOP f '[as]) where
+instance GenericAbiGet (NP f as) => GenericAbiGet (SOP f '[as]) where
     gAbiGet = SOP . Z <$> gAbiGet
 
-factorParser :: forall a . ABIGet a => Get a
+factorParser :: forall a . AbiGet a => Get a
 factorParser
   | not $ isDynamic (Proxy :: Proxy a) = abiGet
   | otherwise = do

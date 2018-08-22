@@ -7,7 +7,7 @@
 {-# LANGUAGE TypeOperators       #-}
 
 -- |
--- Module      :  Network.Ethereum.ABI.Prim.Bytes
+-- Module      :  Data.Solidity.Prim.Bytes
 -- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
@@ -15,55 +15,53 @@
 -- Stability   :  experimental
 -- Portability :  noportable
 --
--- Ethereum ABI bytes and bytesN types.
+-- Bytes and BytesN primitive types.
 --
 
-module Network.Ethereum.ABI.Prim.Bytes (
+module Data.Solidity.Prim.Bytes (
     Bytes
   , BytesN
   ) where
 
-import           Data.Aeson                    (FromJSON (..), ToJSON (..),
-                                                Value (String))
-import           Data.ByteArray                (Bytes, convert, length, zero)
-import           Data.ByteArray.Encoding       (Base (Base16), convertFromBase,
-                                                convertToBase)
-import           Data.ByteArray.Sized          (SizedByteArray,
-                                                unSizedByteArray,
-                                                unsafeFromByteArrayAccess)
-import qualified Data.ByteArray.Sized          as S (take)
-import           Data.ByteString               (ByteString)
-import qualified Data.ByteString.Char8         as C8
-import           Data.Monoid                   ((<>))
-import           Data.Proxy                    (Proxy (..))
-import           Data.Serialize                (Get, Putter, getBytes,
-                                                putByteString)
-import           Data.String                   (IsString (..))
-import qualified Data.Text                     as T (append, drop, take)
-import           Data.Text.Encoding            (decodeUtf8, encodeUtf8)
+import           Data.Aeson              (FromJSON (..), ToJSON (..),
+                                          Value (String))
+import           Data.ByteArray          (Bytes, convert, length, zero)
+import           Data.ByteArray.Encoding (Base (Base16), convertFromBase,
+                                          convertToBase)
+import           Data.ByteArray.Sized    (SizedByteArray, unSizedByteArray,
+                                          unsafeFromByteArrayAccess)
+import qualified Data.ByteArray.Sized    as S (take)
+import           Data.ByteString         (ByteString)
+import qualified Data.ByteString.Char8   as C8
+import           Data.Monoid             ((<>))
+import           Data.Proxy              (Proxy (..))
+import           Data.Serialize          (Get, Putter, getBytes, putByteString)
+import           Data.String             (IsString (..))
+import qualified Data.Text               as T (append, drop, take)
+import           Data.Text.Encoding      (decodeUtf8, encodeUtf8)
 import           GHC.TypeLits
-import           Prelude                       hiding (length)
+import           Prelude                 hiding (length)
 
-import           Network.Ethereum.ABI.Class    (ABIGet (..), ABIPut (..),
-                                                ABIType (..))
-import           Network.Ethereum.ABI.Prim.Int (getWord256, putWord256)
+import           Data.Solidity.Abi       (AbiGet (..), AbiPut (..),
+                                          AbiType (..))
+import           Data.Solidity.Prim.Int  (getWord256, putWord256)
 
-instance ABIType ByteString where
+instance AbiType ByteString where
     isDynamic _ = True
 
-instance ABIGet ByteString where
+instance AbiGet ByteString where
     abiGet = abiGetByteString
 
-instance ABIPut ByteString where
+instance AbiPut ByteString where
     abiPut = abiPutByteString
 
-instance ABIType Bytes where
+instance AbiType Bytes where
     isDynamic _ = True
 
-instance ABIGet Bytes where
+instance AbiGet Bytes where
     abiGet = convert <$> abiGetByteString
 
-instance ABIPut Bytes where
+instance AbiPut Bytes where
     abiPut = abiPutByteString . convert
 
 instance IsString Bytes where
@@ -82,15 +80,15 @@ instance ToJSON Bytes where
 
 type BytesN n = SizedByteArray n Bytes
 
-instance (n <= 32) => ABIType (BytesN n) where
+instance (n <= 32) => AbiType (BytesN n) where
     isDynamic _ = False
 
-instance (KnownNat n, n <= 32) => ABIGet (BytesN n) where
+instance (KnownNat n, n <= 32) => AbiGet (BytesN n) where
     abiGet = do
         ba <- unsafeFromByteArrayAccess <$> getBytes 32
         return $ S.take (ba :: BytesN 32)
 
-instance (KnownNat n, n <= 32) => ABIPut (BytesN n) where
+instance (KnownNat n, n <= 32) => AbiPut (BytesN n) where
     abiPut ba = putByteString $ convert ba <> zero (32 - len)
       where len = fromIntegral $ natVal (Proxy :: Proxy n)
 

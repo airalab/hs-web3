@@ -45,15 +45,15 @@ module Network.Ethereum.Web3 (
 
   ) where
 
-import           Network.Ethereum.ABI.Prim.Address (Address)
-import           Network.Ethereum.ABI.Prim.Bool    ()
-import           Network.Ethereum.ABI.Prim.Bytes   (Bytes, BytesN)
-import           Network.Ethereum.ABI.Prim.Int     (IntN, UIntN)
-import           Network.Ethereum.ABI.Prim.List    (ListN)
-import           Network.Ethereum.ABI.Prim.String  ()
-import           Network.Ethereum.Contract.Event   (EventAction (..), event,
-                                                    event')
-import           Network.Ethereum.Contract.Method  (sendTx)
+import           Data.Solidity.Prim.Address       (Address)
+import           Data.Solidity.Prim.Bool          ()
+import           Data.Solidity.Prim.Bytes         (Bytes, BytesN)
+import           Data.Solidity.Prim.Int           (IntN, UIntN)
+import           Data.Solidity.Prim.List          (ListN)
+import           Data.Solidity.Prim.String        ()
+import           Network.Ethereum.Api.Provider    (Web3, runWeb3)
+import           Network.Ethereum.Api.Types       (Call (..))
+import           Network.Ethereum.Contract.Event  (EventAction (..), event,
+                                                   event')
+import           Network.Ethereum.Contract.Method (sendTx)
 import           Network.Ethereum.Unit
-import           Network.Ethereum.Web3.Provider    (Web3, runWeb3)
-import           Network.Ethereum.Web3.Types       (Call (..))

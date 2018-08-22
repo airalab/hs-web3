@@ -2,7 +2,7 @@
 {-# LANGUAGE TemplateHaskell   #-}
 
 -- |
--- Module      :  Network.Ethereum.ABI.Json
+-- Module      :  Data.Solidity.Abi.Json
 -- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
@@ -13,8 +13,8 @@
 -- JSON encoded contract ABI parsers.
 --
 
-module Network.Ethereum.ABI.Json (
-    ContractABI(..)
+module Data.Solidity.Abi.Json (
+    ContractAbi(..)
   , Declaration(..)
   , FunctionArg(..)
   , EventArg(..)
@@ -120,18 +120,18 @@ $(deriveJSON (defaultOptions {
   , fieldLabelModifier = toLowerFirst . drop 3 })
     ''Declaration)
 
--- | Contract ABI is a list of method / event declarations
-newtype ContractABI = ContractABI { unABI :: [Declaration] }
+-- | Contract Abi is a list of method / event declarations
+newtype ContractAbi = ContractAbi { unAbi :: [Declaration] }
   deriving (Eq, Ord)
 
-instance FromJSON ContractABI where
-    parseJSON = fmap ContractABI . parseJSON
+instance FromJSON ContractAbi where
+    parseJSON = fmap ContractAbi . parseJSON
 
-instance ToJSON ContractABI where
-    toJSON = toJSON . unABI
+instance ToJSON ContractAbi where
+    toJSON = toJSON . unAbi
 
-instance Show ContractABI where
-    show (ContractABI c) = T.unpack $ T.unlines $
+instance Show ContractAbi where
+    show (ContractAbi c) = T.unpack $ T.unlines $
         [ "Contract:" ]
         ++ foldMap showConstructor c ++
         [ "\tEvents:" ]

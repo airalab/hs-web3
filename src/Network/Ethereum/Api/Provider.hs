@@ -4,8 +4,8 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 
 -- |
--- Module      :  Network.Ethereum.Web3.Provider
--- Copyright   :  Alexander Krupenkin 2016
+-- Module      :  Network.Ethereum.Api.Provider
+-- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
@@ -15,7 +15,7 @@
 -- Web3 service provider.
 --
 
-module Network.Ethereum.Web3.Provider where
+module Network.Ethereum.Api.Provider where
 
 import           Control.Concurrent.Async   (Async, async)
 import           Control.Exception          (Exception, try)

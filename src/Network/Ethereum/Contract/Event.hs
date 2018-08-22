@@ -22,25 +22,25 @@ module Network.Ethereum.Contract.Event (
   , eventMany'
   ) where
 
-import           Control.Concurrent             (threadDelay)
-import           Control.Monad                  (forM, void, when)
-import           Control.Monad.IO.Class         (liftIO)
-import           Control.Monad.Trans.Class      (lift)
-import           Control.Monad.Trans.Reader     (ReaderT (..))
-import           Data.Either                    (rights)
-import           Data.Machine                   (MachineT, asParts, autoM,
-                                                 await, construct, final,
-                                                 mapping, repeatedly, runT,
-                                                 unfoldPlan, (~>))
-import           Data.Machine.Plan              (PlanT, stop, yield)
-import           Data.Maybe                     (listToMaybe)
+import           Control.Concurrent            (threadDelay)
+import           Control.Monad                 (forM, void, when)
+import           Control.Monad.IO.Class        (liftIO)
+import           Control.Monad.Trans.Class     (lift)
+import           Control.Monad.Trans.Reader    (ReaderT (..))
+import           Data.Either                   (rights)
+import           Data.Machine                  (MachineT, asParts, autoM, await,
+                                                construct, final, mapping,
+                                                repeatedly, runT, unfoldPlan,
+                                                (~>))
+import           Data.Machine.Plan             (PlanT, stop, yield)
+import           Data.Maybe                    (listToMaybe)
 
-import           Control.Concurrent.Async       (Async)
-import           Network.Ethereum.ABI.Event     (DecodeEvent (..))
-import qualified Network.Ethereum.Web3.Eth      as Eth
-import           Network.Ethereum.Web3.Provider (Web3, forkWeb3)
-import           Network.Ethereum.Web3.Types    (Change (..), DefaultBlock (..),
-                                                 Filter (..), Quantity)
+import           Control.Concurrent.Async      (Async)
+import           Data.Solidity.Event           (DecodeEvent (..))
+import qualified Network.Ethereum.Api.Eth      as Eth
+import           Network.Ethereum.Api.Provider (Web3, forkWeb3)
+import           Network.Ethereum.Api.Types    (Change (..), DefaultBlock (..),
+                                                Filter (..), Quantity)
 
 -- | Event callback control response
 data EventAction = ContinueEvent

@@ -4,7 +4,7 @@
 
 -- |
 -- Module      :  Network.Ethereum.Web3.Eth
--- Copyright   :  Alexander Krupenkin 2016
+-- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
@@ -14,15 +14,14 @@
 -- Ethereum node JSON-RPC API methods with `eth_` prefix.
 --
 
-module Network.Ethereum.Web3.Eth where
+module Network.Ethereum.Api.Eth where
 
-import           Network.Ethereum.ABI.Prim.Address (Address)
-import           Network.Ethereum.ABI.Prim.Bytes   (Bytes, BytesN)
-import           Network.Ethereum.Web3.Types       (Block, Call, Change,
-                                                    DefaultBlock, Filter, Hash,
-                                                    Quantity, SyncingState,
-                                                    Transaction, TxReceipt)
-import           Network.JsonRpc.TinyClient        (JsonRpcM, remote)
+import           Data.HexString             (HexString)
+import           Data.Solidity.Prim.Address (Address)
+import           Network.Ethereum.Api.Types (Block, Call, Change, DefaultBlock,
+                                             Filter, Quantity, SyncingState,
+                                             Transaction, TxReceipt)
+import           Network.JsonRpc.TinyClient (JsonRpcM, remote)
 
 -- | Returns the current ethereum protocol version.
 protocolVersion :: JsonRpcM m => m Int
@@ -50,7 +49,7 @@ hashrate :: JsonRpcM m => m Quantity
 hashrate = remote "eth_hashrate"
 
 -- | Returns the value from a storage position at a given address.
-getStorageAt :: JsonRpcM m => Address -> Quantity -> DefaultBlock -> m (BytesN 32)
+getStorageAt :: JsonRpcM m => Address -> Quantity -> DefaultBlock -> m HexString
 {-# INLINE getStorageAt #-}
 getStorageAt = remote "eth_getStorageAt"
 
@@ -60,7 +59,7 @@ getTransactionCount :: JsonRpcM m => Address -> DefaultBlock -> m Quantity
 getTransactionCount = remote "eth_getTransactionCount"
 
 -- | Returns the number of transactions in a block from a block matching the given block hash.
-getBlockTransactionCountByHash :: JsonRpcM m => Hash -> m Quantity
+getBlockTransactionCountByHash :: JsonRpcM m => HexString -> m Quantity
 {-# INLINE getBlockTransactionCountByHash #-}
 getBlockTransactionCountByHash = remote "eth_getBlockTransactionCountByHash"
 
@@ -72,7 +71,7 @@ getBlockTransactionCountByNumber = remote "eth_getBlockTransactionCountByNumber"
 
 -- | Returns the number of uncles in a block from a block matching the given
 -- block hash.
-getUncleCountByBlockHash :: JsonRpcM m => Hash -> m Quantity
+getUncleCountByBlockHash :: JsonRpcM m => HexString -> m Quantity
 {-# INLINE getUncleCountByBlockHash #-}
 getUncleCountByBlockHash = remote "eth_getUncleCountByBlockHash"
 
@@ -83,25 +82,25 @@ getUncleCountByBlockNumber :: JsonRpcM m => Quantity -> m Quantity
 getUncleCountByBlockNumber = remote "eth_getUncleCountByBlockNumber"
 
 -- | Returns code at a given address.
-getCode :: JsonRpcM m => Address -> DefaultBlock -> m Bytes
+getCode :: JsonRpcM m => Address -> DefaultBlock -> m HexString
 {-# INLINE getCode #-}
 getCode = remote "eth_getCode"
 
 -- | Returns an Ethereum specific signature with:
 -- sign(keccak256("\x19Ethereum Signed Message:\n" + len(message) + message))).
-sign :: JsonRpcM m => Address -> Bytes -> m Bytes
+sign :: JsonRpcM m => Address -> HexString -> m HexString
 {-# INLINE sign #-}
 sign = remote "eth_sign"
 
 -- | Creates new message call transaction or a contract creation,
 -- if the data field contains code.
-sendTransaction :: JsonRpcM m => Call -> m Hash
+sendTransaction :: JsonRpcM m => Call -> m HexString
 {-# INLINE sendTransaction #-}
 sendTransaction = remote "eth_sendTransaction"
 
 -- | Creates new message call transaction or a contract creation for signed
 -- transactions.
-sendRawTransaction :: JsonRpcM m => Bytes -> m Hash
+sendRawTransaction :: JsonRpcM m => HexString -> m HexString
 {-# INLINE sendRawTransaction #-}
 sendRawTransaction = remote "eth_sendRawTransaction"
 
@@ -136,7 +135,7 @@ getLogs = remote "eth_getLogs"
 
 -- | Executes a new message call immediately without creating a
 -- transaction on the block chain.
-call :: JsonRpcM m => Call -> DefaultBlock -> m Bytes
+call :: JsonRpcM m => Call -> DefaultBlock -> m HexString
 {-# INLINE call #-}
 call = remote "eth_call"
 
@@ -147,7 +146,7 @@ estimateGas :: JsonRpcM m => Call -> m Quantity
 estimateGas = remote "eth_estimateGas"
 
 -- | Returns information about a block by hash.
-getBlockByHash :: JsonRpcM m => Hash -> m Block
+getBlockByHash :: JsonRpcM m => HexString -> m Block
 {-# INLINE getBlockByHash #-}
 getBlockByHash = flip (remote "eth_getBlockByHash") True
 
@@ -157,12 +156,12 @@ getBlockByNumber :: JsonRpcM m => Quantity -> m Block
 getBlockByNumber = flip (remote "eth_getBlockByNumber") True
 
 -- | Returns the information about a transaction requested by transaction hash.
-getTransactionByHash :: JsonRpcM m => Hash -> m (Maybe Transaction)
+getTransactionByHash :: JsonRpcM m => HexString -> m (Maybe Transaction)
 {-# INLINE getTransactionByHash #-}
 getTransactionByHash = remote "eth_getTransactionByHash"
 
 -- | Returns information about a transaction by block hash and transaction index position.
-getTransactionByBlockHashAndIndex :: JsonRpcM m => Hash -> Quantity -> m (Maybe Transaction)
+getTransactionByBlockHashAndIndex :: JsonRpcM m => HexString -> Quantity -> m (Maybe Transaction)
 {-# INLINE getTransactionByBlockHashAndIndex #-}
 getTransactionByBlockHashAndIndex = remote "eth_getTransactionByBlockHashAndIndex"
 
@@ -173,7 +172,7 @@ getTransactionByBlockNumberAndIndex :: JsonRpcM m => DefaultBlock -> Quantity ->
 getTransactionByBlockNumberAndIndex = remote "eth_getTransactionByBlockNumberAndIndex"
 
 -- | Returns the receipt of a transaction by transaction hash.
-getTransactionReceipt :: JsonRpcM m => Hash -> m (Maybe TxReceipt)
+getTransactionReceipt :: JsonRpcM m => HexString -> m (Maybe TxReceipt)
 {-# INLINE getTransactionReceipt #-}
 getTransactionReceipt = remote "eth_getTransactionReceipt"
 
@@ -189,7 +188,7 @@ newBlockFilter = remote "eth_newBlockFilter"
 
 -- | Polling method for a block filter, which returns an array of block hashes
 -- occurred since last poll.
-getBlockFilterChanges :: JsonRpcM m => Quantity -> m [Hash]
+getBlockFilterChanges :: JsonRpcM m => Quantity -> m [HexString]
 {-# INLINE getBlockFilterChanges #-}
 getBlockFilterChanges = remote "eth_getFilterChanges"
 
@@ -205,7 +204,7 @@ gasPrice = remote "eth_gasPrice"
 
 -- | Returns information about a uncle of a block by hash and uncle index
 -- position.
-getUncleByBlockHashAndIndex :: JsonRpcM m => Hash -> Quantity -> m Block
+getUncleByBlockHashAndIndex :: JsonRpcM m => HexString -> Quantity -> m Block
 {-# INLINE getUncleByBlockHashAndIndex #-}
 getUncleByBlockHashAndIndex = remote "eth_getUncleByBlockHashAndIndex"
 
@@ -227,7 +226,7 @@ getFilterLogs = remote "eth_getFilterLogs"
 
 -- | Returns the hash of the current block, the seedHash, and the boundary
 -- condition to be met ("target").
-getWork :: JsonRpcM m => m [Bytes]
+getWork :: JsonRpcM m => m [HexString]
 {-# INLINE getWork #-}
 getWork = remote "eth_getWork"
 
@@ -236,7 +235,7 @@ getWork = remote "eth_getWork"
 -- 1. DATA, 8 Bytes - The nonce found (64 bits)
 -- 2. DATA, 32 Bytes - The header's pow-hash (256 bits)
 -- 3. DATA, 32 Bytes - The mix digest (256 bits)
-submitWork :: JsonRpcM m => BytesN 8 -> BytesN 32 -> BytesN 32 -> m Bool
+submitWork :: JsonRpcM m => HexString -> HexString -> HexString -> m Bool
 {-# INLINE submitWork #-}
 submitWork = remote "eth_submitWork"
 
@@ -244,6 +243,6 @@ submitWork = remote "eth_submitWork"
 -- Parameters:
 -- 1. Hashrate, a hexadecimal string representation (32 bytes) of the hash rate
 -- 2. ID, String - A random hexadecimal(32 bytes) ID identifying the client
-submitHashrate :: JsonRpcM m => BytesN 32 -> BytesN 32 -> m Bool
+submitHashrate :: JsonRpcM m => HexString -> HexString -> m Bool
 {-# INLINE submitHashrate #-}
 submitHashrate = remote "eth_submitHashrate"

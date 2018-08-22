@@ -3,7 +3,7 @@
 {-# LANGUAGE TypeFamilies      #-}
 
 -- |
--- Module      :  Network.Ethereum.ABI.Class
+-- Module      :  Data.Solidity.Abi
 -- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
@@ -11,15 +11,15 @@
 -- Stability   :  experimental
 -- Portability :  noportable
 --
--- Ethereum ABI encoding base type classes.
+-- Solidity ABI encoding type classes.
 --
 
-module Network.Ethereum.ABI.Class (
-    ABIType(..)
-  , ABIPut(..)
-  , ABIGet(..)
-  , GenericABIPut(..)
-  , GenericABIGet(..)
+module Data.Solidity.Abi (
+    AbiType(..)
+  , AbiPut(..)
+  , AbiGet(..)
+  , GenericAbiPut(..)
+  , GenericAbiGet(..)
   ) where
 
 import           Data.Proxy     (Proxy)
@@ -27,7 +27,7 @@ import           Data.Serialize (Get, Putter)
 import           Generics.SOP   (Generic, Rep, from, to)
 
 -- | A class for abi encoding datatype descriptions
-class ABIType a where
+class AbiType a where
     isDynamic :: Proxy a -> Bool
 
 -- | A class for encoding datatypes to their abi encoding
@@ -37,17 +37,17 @@ class ABIType a where
 -- the 'abiPut' method will have default generic implementations.
 --
 -- To use this option, simply add a @deriving 'Generic'@ clause
--- to your datatype and declare a 'ABIPut' instance for it without
+-- to your datatype and declare a 'AbiPut' instance for it without
 -- giving a definition for 'abiPut'.
 --
-class ABIType a => ABIPut a where
+class AbiType a => AbiPut a where
     abiPut :: Putter a
 
-    default abiPut :: (Generic a, Rep a ~ rep, GenericABIPut rep) => Putter a
+    default abiPut :: (Generic a, Rep a ~ rep, GenericAbiPut rep) => Putter a
     abiPut = gAbiPut . from
 
 -- | A class for encoding generically composed datatypes to their abi encoding
-class GenericABIPut a where
+class GenericAbiPut a where
     gAbiPut :: Putter a
 
 -- | A class for decoding datatypes from their abi encoding
@@ -57,15 +57,15 @@ class GenericABIPut a where
 -- the 'abiGet' method will have default generic implementations.
 --
 -- To use this option, simply add a @deriving 'Generic'@ clause
--- to your datatype and declare a 'ABIGet' instance for it without
+-- to your datatype and declare a 'AbiGet' instance for it without
 -- giving a definition for 'abiGet'.
 --
-class ABIType a => ABIGet a where
+class AbiType a => AbiGet a where
     abiGet :: Get a
 
-    default abiGet :: (Generic a, Rep a ~ rep, GenericABIGet rep) => Get a
+    default abiGet :: (Generic a, Rep a ~ rep, GenericAbiGet rep) => Get a
     abiGet = to <$> gAbiGet
 
 -- | A class for decoding generically composed datatypes from their abi encoding
-class GenericABIGet a where
+class GenericAbiGet a where
     gAbiGet :: Get a

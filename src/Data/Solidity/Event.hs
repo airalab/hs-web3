@@ -10,7 +10,7 @@
 {-# LANGUAGE UndecidableInstances   #-}
 
 -- |
--- Module      :  Network.Ethereum.Web3.Encoding.Event
+-- Module      :  Data.Solidity.Event
 -- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
@@ -24,21 +24,20 @@
 -- this directly in application code.
 --
 
-module Network.Ethereum.ABI.Event(
+module Data.Solidity.Event (
     DecodeEvent(..)
   , IndexedEvent(..)
   ) where
 
-import           Data.ByteArray                      (ByteArrayAccess)
-import           Data.Proxy                          (Proxy (..))
-import           Generics.SOP                        (Generic, I (..), NP (..),
-                                                      NS (..), Rep, SOP (..),
-                                                      from, to)
+import           Data.ByteArray               (ByteArrayAccess)
+import           Data.Proxy                   (Proxy (..))
+import           Generics.SOP                 (Generic, I (..), NP (..),
+                                               NS (..), Rep, SOP (..), from, to)
 
-import           Network.Ethereum.ABI.Class          (GenericABIGet)
-import           Network.Ethereum.ABI.Codec          (decode')
-import           Network.Ethereum.ABI.Event.Internal
-import           Network.Ethereum.Web3.Types         (Change (..))
+import           Data.Solidity.Abi            (GenericAbiGet)
+import           Data.Solidity.Abi.Codec      (decode')
+import           Data.Solidity.Event.Internal
+import           Network.Ethereum.Api.Types   (Change (..))
 
 -- | Indexed event args come back in as a list of encoded values. 'ArrayParser'
 -- | is used to decode these values so that they can be used to reconstruct the
@@ -51,7 +50,7 @@ class ArrayParser a where
 instance ArrayParser (NP f '[]) where
   arrayParser _ = Right Nil
 
-instance (ArrayParser (NP I as), Generic a, Rep a ~ rep, GenericABIGet rep)
+instance (ArrayParser (NP I as), Generic a, Rep a ~ rep, GenericAbiGet rep)
        => ArrayParser (NP I (a : as)) where
   arrayParser [] = Left "Empty"
   arrayParser (a : as) = do
@@ -83,7 +82,7 @@ parseChange :: ( Generic i
                , ArrayParser irep
                , Generic ni
                , Rep ni ~ nirep
-               , GenericABIGet nirep
+               , GenericAbiGet nirep
                )
              => Change
              -> Bool
@@ -135,7 +134,7 @@ instance ( IndexedEvent i ni e
          , Generic e
          , Rep e ~ SOP I '[hle]
          , CombineChange i ni e
-         , GenericABIGet (SOP I '[hlni])
+         , GenericAbiGet (SOP I '[hlni])
          , ArrayParser (SOP I '[hli])
          ) => DecodeEvent i ni e where
   decodeEvent change = do

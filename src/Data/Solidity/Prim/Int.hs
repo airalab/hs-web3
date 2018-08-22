@@ -16,27 +16,27 @@
 -- Stability   :  experimental
 -- Portability :  noportable
 --
--- Ethereum ABI intN and uintN types.
+-- Ethereum Abi intN and uintN types.
 --
 
-module Network.Ethereum.ABI.Prim.Int (
+module Data.Solidity.Prim.Int (
     IntN
   , UIntN
   , getWord256
   , putWord256
   ) where
 
-import qualified Basement.Numerical.Number  as Basement (toInteger)
-import           Basement.Types.Word256     (Word256 (Word256))
-import qualified Basement.Types.Word256     as Basement (quot, rem)
-import           Data.Bits                  (Bits (testBit))
-import           Data.Proxy                 (Proxy (..))
-import           Data.Serialize             (Get, Putter, Serialize (get, put))
-import           GHC.Generics               (Generic)
+import qualified Basement.Numerical.Number as Basement (toInteger)
+import           Basement.Types.Word256    (Word256 (Word256))
+import qualified Basement.Types.Word256    as Basement (quot, rem)
+import           Data.Bits                 (Bits (testBit))
+import           Data.Proxy                (Proxy (..))
+import           Data.Serialize            (Get, Putter, Serialize (get, put))
+import           GHC.Generics              (Generic)
 import           GHC.TypeLits
 
-import           Network.Ethereum.ABI.Class (ABIGet (..), ABIPut (..),
-                                             ABIType (..))
+import           Data.Solidity.Abi         (AbiGet (..), AbiPut (..),
+                                            AbiType (..))
 
 instance Real Word256 where
     toRational = toRational . toInteger
@@ -62,13 +62,13 @@ instance (KnownNat n, n <= 256) => Integral (UIntN n) where
     toInteger = toInteger . unUIntN
     quotRem (UIntN a) (UIntN b) = (UIntN $ quot a b, UIntN $ rem a b)
 
-instance (n <= 256) => ABIType (UIntN n) where
+instance (n <= 256) => AbiType (UIntN n) where
     isDynamic _ = False
 
-instance (n <= 256) => ABIGet (UIntN n) where
+instance (n <= 256) => AbiGet (UIntN n) where
     abiGet = UIntN <$> getWord256
 
-instance (n <= 256) => ABIPut (UIntN n) where
+instance (n <= 256) => AbiPut (UIntN n) where
     abiPut = putWord256 . unUIntN
 
 -- TODO: Signed data type
@@ -102,13 +102,13 @@ instance (KnownNat n, n <= 256) => Integral (IntN n) where
       | testBit x 255 = toInteger (unIntN x) - 2 ^ 256
       | otherwise = toInteger $ unIntN x
 
-instance (n <= 256) => ABIType (IntN n) where
+instance (n <= 256) => AbiType (IntN n) where
     isDynamic _ = False
 
-instance (n <= 256) => ABIGet (IntN n) where
+instance (n <= 256) => AbiGet (IntN n) where
     abiGet = IntN <$> getWord256
 
-instance (n <= 256) => ABIPut (IntN n) where
+instance (n <= 256) => AbiPut (IntN n) where
     abiPut = putWord256 . unIntN
 
 putWord256 :: Putter Word256
