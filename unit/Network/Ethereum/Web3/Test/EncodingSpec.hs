@@ -6,21 +6,20 @@
 
 module Network.Ethereum.Web3.Test.EncodingSpec where
 
-import           Data.Monoid                      ((<>))
-import           Data.Text                        (Text)
-import           Generics.SOP                     (Generic, Rep)
+import           Data.Monoid               ((<>))
+import           Data.Text                 (Text)
+import           Generics.SOP              (Generic, Rep)
 import           Test.Hspec
 
-import           Network.Ethereum.ABI.Class       (ABIGet, ABIPut,
-                                                   GenericABIGet, GenericABIPut)
-import           Network.Ethereum.ABI.Codec       (decode, decode', encode,
-                                                   encode')
-import           Network.Ethereum.ABI.Prim.Bool   ()
-import           Network.Ethereum.ABI.Prim.Bytes  (Bytes, BytesN)
-import           Network.Ethereum.ABI.Prim.Int    (IntN, UIntN)
-import           Network.Ethereum.ABI.Prim.List   (ListN)
-import           Network.Ethereum.ABI.Prim.String ()
-import           Network.Ethereum.ABI.Prim.Tuple  (Singleton (..))
+import           Data.Solidity.Abi         (AbiGet, AbiPut, GenericAbiGet,
+                                            GenericAbiPut)
+import           Data.Solidity.Abi.Codec   (decode, decode', encode, encode')
+import           Data.Solidity.Prim.Bool   ()
+import           Data.Solidity.Prim.Bytes  (Bytes, BytesN)
+import           Data.Solidity.Prim.Int    (IntN, UIntN)
+import           Data.Solidity.Prim.List   (ListN)
+import           Data.Solidity.Prim.String ()
+import           Data.Solidity.Prim.Tuple  (Singleton (..))
 
 spec :: Spec
 spec = do
@@ -198,8 +197,8 @@ tuplesTest =
 -- | Run encoded/decoded comaration
 roundTrip :: ( Show a
              , Eq a
-             , ABIPut a
-             , ABIGet a
+             , AbiPut a
+             , AbiGet a
              )
           => a
           -> Bytes
@@ -213,8 +212,8 @@ roundTripGeneric :: ( Show a
                     , Eq a
                     , Generic a
                     , Rep a ~ rep
-                    , GenericABIPut rep
-                    , GenericABIGet rep
+                    , GenericAbiPut rep
+                    , GenericAbiGet rep
                     )
                  => a
                  -> Bytes

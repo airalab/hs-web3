@@ -4,7 +4,6 @@ module Network.Ethereum.Web3.Test.MethodDumpSpec where
 
 import           Network.Ethereum.Contract.TH
 import           Test.Hspec
-import           Text.Printf
 
 
 spec :: Spec

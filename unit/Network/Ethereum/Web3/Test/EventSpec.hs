@@ -5,20 +5,17 @@
 
 module Network.Ethereum.Web3.Test.EventSpec where
 
-import           Data.Tagged                       (Tagged)
-import           Generics.SOP                      (Generic)
-import qualified GHC.Generics                      as GHC (Generic)
-import           Test.Hspec                        (Spec, describe, it,
-                                                    shouldBe)
+import           Data.Tagged                (Tagged)
+import           Generics.SOP               (Generic)
+import qualified GHC.Generics               as GHC (Generic)
+import           Test.Hspec                 (Spec, describe, it, shouldBe)
 
-import           Network.Ethereum.ABI.Class        (ABIGet)
-import           Network.Ethereum.ABI.Event        (IndexedEvent (..),
-                                                    decodeEvent)
-import           Network.Ethereum.ABI.Prim.Address (Address)
-import           Network.Ethereum.ABI.Prim.Bytes   ()
-import           Network.Ethereum.ABI.Prim.Int     (UIntN)
-import           Network.Ethereum.ABI.Prim.Tagged  ()
-import           Network.Ethereum.Web3.Types       (Change (..))
+import           Data.Solidity.Event        (IndexedEvent (..), decodeEvent)
+import           Data.Solidity.Prim.Address (Address)
+import           Data.Solidity.Prim.Bytes   ()
+import           Data.Solidity.Prim.Int     (UIntN)
+import           Data.Solidity.Prim.Tagged  ()
+import           Network.Ethereum.Api.Types (Change (..))
 
 
 spec :: Spec

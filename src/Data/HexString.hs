@@ -16,6 +16,7 @@ import           Data.ByteString         (ByteString)
 import qualified Data.ByteString         as BS (drop, take)
 import           Data.Monoid             (Monoid, (<>))
 import           Data.Semigroup          (Semigroup)
+import           Data.String             (IsString (..))
 import           Data.Text               (Text)
 import qualified Data.Text.Encoding      as TE (decodeUtf8, encodeUtf8)
 
@@ -26,6 +27,9 @@ newtype HexString = HexString { unHexString :: ByteString }
 
 instance Show HexString where
     show = ("HexString " ++) . show . toText
+
+instance IsString HexString where
+    fromString = either error id . hexString . fromString
 
 instance FromJSON HexString where
   parseJSON = withText "HexString" $ hexString . TE.encodeUtf8
