@@ -18,13 +18,14 @@ module Network.Ethereum.Api.Eth where
 
 import           Data.HexString             (HexString)
 import           Data.Solidity.Prim.Address (Address)
+import           Data.Text                  (Text)
 import           Network.Ethereum.Api.Types (Block, Call, Change, DefaultBlock,
                                              Filter, Quantity, SyncingState,
                                              Transaction, TxReceipt)
 import           Network.JsonRpc.TinyClient (JsonRpcM, remote)
 
 -- | Returns the current ethereum protocol version.
-protocolVersion :: JsonRpcM m => m Int
+protocolVersion :: JsonRpcM m => m Text
 {-# INLINE protocolVersion #-}
 protocolVersion = remote "eth_protocolVersion"
 

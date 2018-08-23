@@ -33,11 +33,11 @@ import           Data.Default
 import           Data.Either                      (isRight)
 import           Data.Maybe
 import           Data.String                      (fromString)
+import qualified Network.Ethereum.Api.Eth         as Eth
+import           Network.Ethereum.Api.Types       (Call (..), Filter (..))
 import           Network.Ethereum.Contract.TH
 import           Network.Ethereum.Web3            hiding (convert)
-import qualified Network.Ethereum.Web3.Eth        as Eth
 import           Network.Ethereum.Web3.Test.Utils
-import           Network.Ethereum.Web3.Types      (Call (..), Filter (..))
 import           System.Environment               (getEnv)
 import           System.IO.Unsafe                 (unsafePerformIO)
 import           Test.Hspec

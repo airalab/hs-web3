@@ -7,7 +7,7 @@
 -- Stability   :  experimental
 -- Portability :  noportable
 --
--- Ethereum VM primitive types.
+-- Solidity primitive data types.
 --
 
 module Data.Solidity.Prim (

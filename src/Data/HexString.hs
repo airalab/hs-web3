@@ -32,17 +32,17 @@ instance IsString HexString where
     fromString = either error id . hexString . fromString
 
 instance FromJSON HexString where
-  parseJSON = withText "HexString" $ hexString . TE.encodeUtf8
+    parseJSON = withText "HexString" $ either fail pure . hexString . TE.encodeUtf8
 
 instance ToJSON HexString where
-  toJSON = String . toText
+    toJSON = String . toText
 
 -- | Smart constructor which validates that all the text are actually
 --   have `0x` prefix, hexadecimal characters and length is even.
-hexString :: Monad m => ByteString -> m HexString
+hexString :: ByteString -> Either String HexString
 hexString bs
-  | BS.take 2 bs == "0x" = either fail pure (HexString <$> bs')
-  | otherwise  = fail $ "Not a valid hex string: " ++ show bs
+  | BS.take 2 bs == "0x" = HexString <$> bs'
+  | otherwise  = Left $ "Hex string should be '0x' prefixed: " ++ show bs
   where
     bs' = convertFromBase Base16 (BS.drop 2 bs)
 

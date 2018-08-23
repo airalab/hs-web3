@@ -33,24 +33,14 @@ module Network.Ethereum.Web3 (
   , event'
 
   -- ** Primitive data types
-  , Address
-  , Bytes
-  , BytesN
-  , IntN
-  , UIntN
-  , ListN
+  , module Data.Solidity.Prim
 
   -- ** Metric unit system
   , module Network.Ethereum.Unit
 
   ) where
 
-import           Data.Solidity.Prim.Address       (Address)
-import           Data.Solidity.Prim.Bool          ()
-import           Data.Solidity.Prim.Bytes         (Bytes, BytesN)
-import           Data.Solidity.Prim.Int           (IntN, UIntN)
-import           Data.Solidity.Prim.List          (ListN)
-import           Data.Solidity.Prim.String        ()
+import           Data.Solidity.Prim
 import           Network.Ethereum.Api.Provider    (Web3, runWeb3)
 import           Network.Ethereum.Api.Types       (Call (..))
 import           Network.Ethereum.Contract.Event  (EventAction (..), event,

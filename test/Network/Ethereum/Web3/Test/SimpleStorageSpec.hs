@@ -42,11 +42,11 @@ import qualified Data.Text                        as T
 import           Data.Traversable                 (for)
 import           GHC.TypeLits
 
+import qualified Network.Ethereum.Api.Eth         as Eth
+import           Network.Ethereum.Api.Provider    (forkWeb3)
+import           Network.Ethereum.Api.Types
 import           Network.Ethereum.Contract.TH
 import           Network.Ethereum.Web3            hiding (convert)
-import qualified Network.Ethereum.Web3.Eth        as Eth
-import           Network.Ethereum.Web3.Provider   (forkWeb3)
-import           Network.Ethereum.Web3.Types
 
 import           Numeric                          (showHex)
 import           System.Environment               (getEnv)
@@ -140,7 +140,7 @@ events = describe "can interact with a SimpleStorage contract across block inter
         setValues theCall theSets1
         wait fiber
         print "All past transactions succeeded... "
-        end <- takeMVar blockNumberVar
+        Just end <- takeMVar blockNumberVar
         awaitBlock $ end + 1 -- make past transactions definitively in past
         var' <- newMVar []
         fiber <- runWeb3Configured' $ do
@@ -169,7 +169,7 @@ events = describe "can interact with a SimpleStorage contract across block inter
         setValues theCall theSets
         wait fiber
         print "All values have been set"
-        end <- takeMVar blockNumberVar
+        Just end <- takeMVar blockNumberVar
         var' <- newMVar []
         let fltr' = fltr { filterFromBlock = BlockWithNumber start
                          , filterToBlock = BlockWithNumber end

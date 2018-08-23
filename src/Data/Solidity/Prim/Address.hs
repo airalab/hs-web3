@@ -51,7 +51,7 @@ fromPublic = undefined
 fromHexString :: HexString -> Either String Address
 fromHexString bs
   | bslen == 20 = decode (zero 12 <> toBytes bs :: ByteString)
-  | otherwise = fail $ "Incorrect address length: " ++ show bslen
+  | otherwise = Left $ "Incorrect address length: " ++ show bslen
   where bslen = C8.length (toBytes bs)
 
 toHexString :: Address -> HexString

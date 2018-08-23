@@ -1,5 +1,5 @@
 name:                web3
-version:             0.7.1.0
+version:             0.7.3.0
 synopsis:            Ethereum API for Haskell
 description:         Web3 is a Haskell client library for Ethereum
 github:              "airalab/hs-web3"
@@ -7,7 +7,7 @@ license:             BSD3
 license-file:        LICENSE
 author:              Alexander Krupenkin
 maintainer:          mail@akru.me
-copyright:           "(c) Alexander Krupenkin 2016-2018"
+copyright:           "(c) Alexander Krupenkin 2016"
 category:            Network
 
 extra-source-files:
@@ -86,10 +86,10 @@ tests:
     main:             Spec.hs
     source-dirs:      unit
     dependencies:
-    - hspec-expectations   >=0.8.2    && <0.9
-    - hspec-discover       >=2.4.8    && <2.6
-    - hspec-contrib        >=0.4.0    && <0.6
-    - hspec                >=2.4.8    && <2.6
+    - hspec-expectations   >=0.8.2  && <0.9
+    - hspec-discover       >=2.4.8  && <2.6
+    - hspec-contrib        >=0.4.0  && <0.6
+    - hspec                >=2.4.8  && <2.6
     - web3
     ghc-options:
     - -threaded
@@ -100,11 +100,13 @@ tests:
     main:             Spec.hs
     source-dirs:      test
     dependencies:
-    - hspec-expectations   >=0.8.2    && <0.9
-    - hspec-discover       >=2.4.8    && <2.6
-    - hspec-contrib        >=0.4.0    && <0.6
-    - hspec                >=2.4.8    && <2.6
-    - stm                  >=2.4.5.0  && <2.5
+    - hspec-expectations   >=0.8.2  && <0.9
+    - hspec-discover       >=2.4.8  && <2.6
+    - hspec-contrib        >=0.4.0  && <0.6
+    - hspec                >=2.4.8  && <2.6
+    - split                >=0.2.3  && <0.3
+    - time
+    - stm                  >=2.4.5  && <2.5
     - web3
     ghc-options:
     - -threaded

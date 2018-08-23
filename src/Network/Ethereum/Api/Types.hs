@@ -100,15 +100,15 @@ instance FromJSON SyncingState where
 -- | Changes pulled by low-level call 'eth_getFilterChanges', 'eth_getLogs',
 -- and 'eth_getFilterLogs'
 data Change = Change
-  { changeLogIndex         :: !Quantity
+  { changeLogIndex         :: !(Maybe Quantity)
   -- ^ QUANTITY - integer of the log index position in the block. null when its pending log.
-  , changeTransactionIndex :: !Quantity
+  , changeTransactionIndex :: !(Maybe Quantity)
   -- ^ QUANTITY - integer of the transactions index position log was created from. null when its pending log.
-  , changeTransactionHash  :: !HexString
+  , changeTransactionHash  :: !(Maybe HexString)
   -- ^ DATA, 32 Bytes - hash of the transactions this log was created from. null when its pending log.
-  , changeBlockHash        :: !HexString
+  , changeBlockHash        :: !(Maybe HexString)
   -- ^ DATA, 32 Bytes - hash of the block where this log was in. null when its pending. null when its pending log.
-  , changeBlockNumber      :: !Quantity
+  , changeBlockNumber      :: !(Maybe Quantity)
   -- ^ QUANTITY - the block number where this log was in. null when its pending. null when its pending log.
   , changeAddress          :: !Address
   -- ^ DATA, 20 Bytes - address from which this log originated.
@@ -201,10 +201,10 @@ data TxReceipt = TxReceipt
   -- ^ DATA, 32 Bytes - hash of the transaction.
   , receiptTransactionIndex  :: !Quantity
   -- ^ QUANTITY - index of the transaction.
-  , receiptBlockHash         :: !HexString
+  , receiptBlockHash         :: !(Maybe HexString)
   -- ^ DATA, 32 Bytes - hash of the block where this transaction was in. null when its pending.
-  , receiptBlockNumber       :: !Quantity
-  -- ^ QUANTITY - block number where this transaction was in.
+  , receiptBlockNumber       :: !(Maybe Quantity)
+  -- ^ QUANTITY - block number where this transaction was in. null when its pending.
   , receiptCumulativeGasUsed :: !Quantity
   -- ^ QUANTITY - The total amount of gas used when this transaction was executed in the block.
   , receiptGasUsed           :: !Quantity
@@ -228,11 +228,11 @@ data Transaction = Transaction
   -- ^ DATA, 32 Bytes - hash of the transaction.
   , txNonce            :: !Quantity
   -- ^ QUANTITY - the number of transactions made by the sender prior to this one.
-  , txBlockHash        :: !HexString
+  , txBlockHash        :: !(Maybe HexString)
   -- ^ DATA, 32 Bytes - hash of the block where this transaction was in. null when its pending.
-  , txBlockNumber      :: !Quantity
+  , txBlockNumber      :: !(Maybe Quantity)
   -- ^ QUANTITY - block number where this transaction was in. null when its pending.
-  , txTransactionIndex :: !Quantity
+  , txTransactionIndex :: !(Maybe Quantity)
   -- ^ QUANTITY - integer of the transactions index position in the block. null when its pending.
   , txFrom             :: !Address
   -- ^ DATA, 20 Bytes - address of the sender.
@@ -253,9 +253,9 @@ $(deriveJSON (defaultOptions
 
 -- | Block information.
 data Block = Block
-  { blockNumber           :: !Quantity
+  { blockNumber           :: !(Maybe Quantity)
   -- ^ QUANTITY - the block number. null when its pending block.
-  , blockHash             :: !HexString
+  , blockHash             :: !(Maybe HexString)
   -- ^ DATA, 32 Bytes - hash of the block. null when its pending block.
   , blockParentHash       :: !HexString
   -- ^ DATA, 32 Bytes - hash of the parent block.
@@ -263,7 +263,7 @@ data Block = Block
   -- ^ DATA, 8 Bytes - hash of the generated proof-of-work. null when its pending block.
   , blockSha3Uncles       :: !HexString
   -- ^ DATA, 32 Bytes - SHA3 of the uncles data in the block.
-  , blockLogsBloom        :: !HexString
+  , blockLogsBloom        :: !(Maybe HexString)
   -- ^ DATA, 256 Bytes - the bloom filter for the logs of the block. null when its pending block.
   , blockTransactionsRoot :: !HexString
   -- ^ DATA, 32 Bytes - the root of the transaction trie of the block.

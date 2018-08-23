@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -ex
 
@@ -15,7 +15,7 @@ function detect_contract_addresses() {
       echo found address "${maybe_address}" for "${contract_name}" >&2
       contract_var=`echo $contract_name | tr '[:lower:]' '[:upper:]'`_CONTRACT_ADDRESS
       echo the var for "${contract_name}" is "${contract_var}" >&2
-      echo "export ${contract_var}=`echo ${maybe_address} | sed s/0x//`"
+      echo "export ${contract_var}=`echo ${maybe_address}`"
     fi
   done
 }
