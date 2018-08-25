@@ -11,22 +11,29 @@
 -- Stability   :  experimental
 -- Portability :  noportable
 --
--- Ethereum Abi address type.
+-- Ethreum account address.
 --
 
 module Data.Solidity.Prim.Address (
     Address
   , toHexString
   , fromHexString
+  , toChecksum
+  , verifyChecksum
   ) where
 
 import           Control.Monad           ((<=<))
+import           Crypto.Hash             (Keccak_256 (..), hashWith)
 import           Data.Aeson              (FromJSON (..), ToJSON (..))
-import           Data.ByteArray          (zero)
+import           Data.Bits               ((.&.))
+import           Data.Bool               (bool)
+import           Data.ByteArray          (convert, zero)
 import           Data.ByteString         (ByteString)
-import qualified Data.ByteString.Char8   as C8 (drop, length)
+import qualified Data.ByteString         as BS (take, unpack)
+import qualified Data.ByteString.Char8   as C8 (drop, length, pack, unpack)
+import qualified Data.Char               as C (toLower, toUpper)
 import           Data.HexString          (HexString, fromBytes, hexString,
-                                          toBytes, toText)
+                                          toBytes)
 import           Data.String             (IsString (..))
 import           Generics.SOP            (Generic)
 import qualified GHC.Generics            as GHC (Generic)
@@ -42,12 +49,6 @@ newtype Address = Address { unAddress :: UIntN 160 }
 
 instance Generic Address
 
--- TODO: Address . drop 12 . sha3
-{-
-fromPublic :: ByteArrayAccess bin => bin -> Maybe Address
-fromPublic = undefined
--}
-
 fromHexString :: HexString -> Either String Address
 fromHexString bs
   | bslen == 20 = decode (zero 12 <> toBytes bs :: ByteString)
@@ -57,8 +58,18 @@ fromHexString bs
 toHexString :: Address -> HexString
 toHexString = fromBytes . C8.drop 12 . encode
 
+toChecksum :: ByteString -> ByteString
+toChecksum addr = ("0x" <>) . C8.pack $ zipWith ($) upcaseVector lower
+  where
+    upcaseVector = (>>= fourthBits) . BS.unpack . BS.take 20 . convert $ hashWith Keccak_256 (C8.pack lower)
+    fourthBits n = bool id C.toUpper <$> [n .&. 0x80 /= 0, n .&. 0x08 /= 0]
+    lower = drop 2 . fmap C.toLower . C8.unpack $ addr
+
+verifyChecksum :: ByteString -> Bool
+verifyChecksum = toChecksum >>= (==)
+
 instance Show Address where
-    show = show . toText . toHexString
+    show = show . toChecksum . toBytes . toHexString
 
 instance IsString Address where
     fromString = either error id . (fromHexString <=< hexString) . fromString

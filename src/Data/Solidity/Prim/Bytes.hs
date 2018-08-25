@@ -113,7 +113,6 @@ abiGetByteString = do
       return ""
     else do
       ba <- getBytes len
-      _ <- getBytes $ 32 - len `mod` 32
       return ba
 
 abiPutByteString :: Putter ByteString

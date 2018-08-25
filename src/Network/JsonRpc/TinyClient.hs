@@ -63,6 +63,7 @@ import           Control.Monad           ((<=<))
 import           Control.Monad.Catch     (MonadThrow, throwM)
 import           Control.Monad.IO.Class  (MonadIO, liftIO)
 import           Control.Monad.State     (MonadState)
+import           Crypto.Number.Generate  (generateMax)
 import           Data.Aeson              (FromJSON (..), ToJSON (..),
                                           Value (String), eitherDecode, encode,
                                           object, withObject, (.:), (.:?), (.=))
@@ -176,15 +177,19 @@ call :: JsonRpcM m
      => MethodName
      -> [Value]
      -> m ByteString
-call n = connection . encode . Request n 1 . toJSON
+call m r = do
+  rid <- liftIO $ generateMax maxInt
+  connection . encode $ Request m (fromInteger rid) (toJSON r)
   where
+    maxInt = toInteger (maxBound :: Int)
     connection body = do
         serverUri <- use jsonRpcServer
         request <- parseRequest serverUri
         let request' = request
                      { requestBody = RequestBodyLBS body
                      , requestHeaders = [("Content-Type", "application/json")]
-                     , method = "POST" }
+                     , method = "POST"
+                     }
         manager <- use jsonRpcManager
         responseBody <$> liftIO (httpLbs request' manager)
 
