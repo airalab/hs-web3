@@ -83,6 +83,10 @@ flags:
 
 library:
   source-dirs: src
+  when:
+  - condition: flag(tls)
+    cpp-options:      -DTLS_MANAGER
+    dependencies:     http-client-tls
 
 tests:
   unit:
