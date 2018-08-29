@@ -33,8 +33,9 @@ import qualified Data.ByteString         as BS (take, unpack)
 import qualified Data.ByteString.Char8   as C8 (drop, length, pack, unpack)
 import qualified Data.Char               as C (toLower, toUpper)
 import           Data.HexString          (HexString, fromBytes, hexString,
-                                          toBytes)
+                                          toBytes, toText)
 import           Data.String             (IsString (..))
+import           Data.Text.Encoding      as T (encodeUtf8)
 import           Generics.SOP            (Generic)
 import qualified GHC.Generics            as GHC (Generic)
 
@@ -69,7 +70,7 @@ verifyChecksum :: ByteString -> Bool
 verifyChecksum = toChecksum >>= (==)
 
 instance Show Address where
-    show = show . toChecksum . toBytes . toHexString
+    show = show . toChecksum . T.encodeUtf8 . toText . toHexString
 
 instance IsString Address where
     fromString = either error id . (fromHexString <=< hexString) . fromString

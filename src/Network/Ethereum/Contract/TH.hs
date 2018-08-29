@@ -65,13 +65,8 @@ import           Data.Solidity.Abi.Json           (ContractAbi (..),
                                                    SolidityType (..), eventId,
                                                    methodId, parseSolidityType)
 import           Data.Solidity.Event              (IndexedEvent (..))
-import           Data.Solidity.Prim.Address       (Address)
-import           Data.Solidity.Prim.Bytes         (Bytes, BytesN)
-import           Data.Solidity.Prim.Int           (IntN, UIntN)
-import           Data.Solidity.Prim.List          (ListN)
-import           Data.Solidity.Prim.String        ()
-import           Data.Solidity.Prim.Tagged        ()
-import           Data.Solidity.Prim.Tuple         (Singleton (..))
+import           Data.Solidity.Prim               (Address, Bytes, BytesN, IntN,
+                                                   ListN, Singleton (..), UIntN)
 import           Data.String.Extra                (toLowerFirst, toUpperFirst)
 import           Network.Ethereum.Api.Provider    (Web3)
 import           Network.Ethereum.Api.Types       (Call, DefaultBlock (..),
