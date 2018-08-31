@@ -56,7 +56,6 @@ import           Language.Haskell.TH.Quote
 import           Lens.Micro                       ((^?))
 import           Lens.Micro.Aeson                 (key, _JSON)
 
-import           Data.HexString                   (HexString)
 import           Data.Solidity.Abi                (AbiGet, AbiPut, AbiType (..))
 import           Data.Solidity.Abi.Json           (ContractAbi (..),
                                                    Declaration (..),
@@ -68,10 +67,11 @@ import           Data.Solidity.Event              (IndexedEvent (..))
 import           Data.Solidity.Prim               (Address, Bytes, BytesN, IntN,
                                                    ListN, Singleton (..), UIntN)
 import           Data.String.Extra                (toLowerFirst, toUpperFirst)
-import           Network.Ethereum.Api.Provider    (Web3)
-import           Network.Ethereum.Api.Types       (Call, DefaultBlock (..),
-                                                   Filter (..))
-import           Network.Ethereum.Contract.Method (Method (..), call, sendTx)
+import           Network.Ethereum.Account         (Account (..))
+import           Network.Ethereum.Api.Types       (DefaultBlock (..),
+                                                   Filter (..), TxReceipt)
+import           Network.Ethereum.Contract.Method (Method (..))
+import           Network.JsonRpc.TinyClient       (JsonRpcM)
 
 -- | Read contract Abi from file
 abiFrom :: QuasiQuoter
@@ -143,33 +143,36 @@ funWrapper :: Bool
            -> Maybe [FunctionArg]
            -- ^ Results
            -> DecsQ
-funWrapper c name dname args result =
-    if c
-      then do
-        a : b : vars <- replicateM (length args + 2) (newName "t")
-        let params = appsE $ conE dname : fmap varE vars
-        sequence  [ sigD name $ [t|$(arrowing $ [t|Call|] : [t|DefaultBlock|] : inputT ++ [outputT])|]
-                  , funD' name (varP <$> a : b : vars) $
-                      case result of
-                        Just [_] -> [|unSingleton <$> call $(varE a) $(varE b) $(params)|]
-                        _        -> [|call $(varE a) $(varE b) $(params)|]
-                  ]
-      else do
-        a : _ : vars <- replicateM (length args + 2) (newName "t")
-        let params = appsE $ conE dname : fmap varE vars
-        sequence  [ sigD name $ [t|$(arrowing $ [t|Call|] : inputT ++ [[t|Web3 HexString|]])|]
-                  , funD' name (varP <$> a : vars) $
-                      [|sendTx $(varE a) $(params)|] ]
+funWrapper c name dname args result = do
+    vars <- replicateM (length args) (newName "t")
+    a <- varT <$> newName "a"
+    t <- varT <$> newName "t"
+    m <- varT <$> newName "m"
+
+
+    let params  = appsE $ conE dname : fmap varE vars
+        inputT  = fmap (typeQ . funArgType) args
+        outputT = case result of
+            Nothing  -> [t|$t $m ()|]
+            Just [x] -> [t|$t $m $(typeQ $ funArgType x)|]
+            Just xs  -> let outs = fmap (typeQ . funArgType) xs
+                         in  [t|$t $m $(foldl appT (tupleT (length xs)) outs)|]
+
+    sequence [
+        sigD name $ [t|
+            (JsonRpcM $m, Account $a $t, Functor ($t $m)) =>
+                $(arrowing $ inputT ++ [if c then outputT else [t|$t $m TxReceipt|]])
+            |]
+      , if c
+            then funD' name (varP <$> vars) $ case result of
+                    Just [_] -> [|unSingleton <$> call $(params)|]
+                    _        -> [|call $(params)|]
+            else funD' name (varP <$> vars) $ [|send $(params)|]
+      ]
   where
     arrowing []       = error "Impossible branch call"
     arrowing [x]      = x
     arrowing (x : xs) = [t|$x -> $(arrowing xs)|]
-    inputT  = fmap (typeQ . funArgType) args
-    outputT = case result of
-        Nothing  -> [t|Web3 ()|]
-        Just [x] -> [t|Web3 $(typeQ $ funArgType x)|]
-        Just xs  -> let outs = fmap (typeQ . funArgType) xs
-                    in  [t|Web3 $(foldl appT (tupleT (length xs)) outs)|]
 
 mkDecl :: Declaration -> DecsQ
 

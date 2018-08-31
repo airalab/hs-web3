@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds         #-}
+{-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 -- |
@@ -25,11 +26,14 @@ import           Data.ByteString                     (ByteString)
 import           Data.ByteString.Char8               (split)
 import           Data.Default                        (def)
 import           Data.Solidity.Prim                  (Address, BytesN)
+import           Network.Ethereum.Account            (Account)
 import           Network.Ethereum.Api.Provider       (Web3)
 import           Network.Ethereum.Api.Types          (Call (callTo),
                                                       DefaultBlock (Latest))
+import           Network.Ethereum.Contract           (ContractT, withTarget)
 import qualified Network.Ethereum.Ens.PublicResolver as Resolver
 import qualified Network.Ethereum.Ens.Registry       as Reg
+import           Network.JsonRpc.TinyClient          (JsonRpcM)
 
 -- | Namehash algorithm implementation: http://docs.ens.domains/en/latest/implementers.html#algorithm
 namehash :: ByteString -> BytesN 32
@@ -41,10 +45,10 @@ namehash =
     sha3 bs = convert (hash bs :: Digest Keccak_256)
 
 -- | Get address of ENS domain
-resolve :: ByteString -> Web3 Address
+resolve :: JsonRpcM m => ByteString -> ContractT m Address
 resolve name = do
-    r <- Reg.resolver (def { callTo = Just ensRegistry }) Latest node
-    Resolver.addr (def { callTo = Just r }) Latest node
+    r <- ensRegistry $ Reg.resolver node
+    withTarget r $ Resolver.addr node
   where
     node = namehash name
-    ensRegistry = "0x314159265dD8dbb310642f98f50C066173C1259b"
+    ensRegistry = withTarget "0x314159265dD8dbb310642f98f50C066173C1259b"

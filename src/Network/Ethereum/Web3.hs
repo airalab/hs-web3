@@ -24,9 +24,9 @@ module Network.Ethereum.Web3 (
   , runWeb3
 
   -- ** Basic transaction sending
-  , sendTx
-  , sendTx'
-  , Call(..)
+  , Account(..)
+  , withTarget
+  , value
 
   -- ** Basic event listening
   , EventAction(..)
@@ -42,9 +42,10 @@ module Network.Ethereum.Web3 (
   ) where
 
 import           Data.Solidity.Prim
-import           Network.Ethereum.Api.Provider    (Web3, runWeb3)
-import           Network.Ethereum.Api.Types       (Call (..))
-import           Network.Ethereum.Contract.Event  (EventAction (..), event,
-                                                   event')
-import           Network.Ethereum.Contract.Method (sendTx, sendTx')
+import           Network.Ethereum.Account        (Account (..))
+import           Network.Ethereum.Api.Provider   (Web3, runWeb3)
+import           Network.Ethereum.Api.Types      (Call (..))
+import           Network.Ethereum.Contract       (value, withTarget)
+import           Network.Ethereum.Contract.Event (EventAction (..), event,
+                                                  event')
 import           Network.Ethereum.Unit
