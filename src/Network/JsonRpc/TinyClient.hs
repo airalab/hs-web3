@@ -39,6 +39,7 @@ import           Control.Monad.Reader           (MonadReader, ask)
 import           Data.Aeson
 import           Data.ByteString.Lazy           (ByteString)
 import           Data.Text                      (Text, unpack)
+import           Network.Ethereum.Web3.Logging
 import           Network.Ethereum.Web3.Provider
 import           Network.HTTP.Client            (Manager,
                                                  RequestBody (RequestBodyLBS),
@@ -53,7 +54,7 @@ instance FromJSON a => Remote Web3 (Web3 a)
 type MethodName = Text
 
 -- | JSON-RPC minimal client config
-type Config = (Provider, Manager)
+type Config = (Provider, Manager, Web3Logger)
 
 -- | JSON-RPC request.
 data Request = Request { rqMethod :: !Text
@@ -143,17 +144,23 @@ call :: (MonadIO m,
      -> m ByteString
 call m r = do
   rid <- abs <$> liftIO randomIO
-  connection . encode $ Request m rid (toJSON r)
+  let req = Request m rid (toJSON r)
+      req' = toJSON req
+  (_, _ , logger) <- ask
+  liftIO . unWeb3Logger logger $ W3LMJsonRPCRequest rid req'
+  connection rid (encode req)
   where
-    connection body = do
-        ((Provider (HttpProvider uri) _), manager) <- ask
+    connection rid body = do
+        ((Provider (HttpProvider uri) _), manager, logger) <- ask
         request <- parseRequest uri
         let request' = request
                      { requestBody = RequestBodyLBS body
                      , requestHeaders = [("Content-Type", "application/json")]
                      , method = "POST"
                      }
-        responseBody <$> liftIO (httpLbs request' manager)
+        resp <- responseBody <$> liftIO (httpLbs request' manager)
+        liftIO . unWeb3Logger logger $ W3LMJsonRPCRawResponse rid resp
+        return resp
 
 data JsonRpcException
     = ParsingException String
