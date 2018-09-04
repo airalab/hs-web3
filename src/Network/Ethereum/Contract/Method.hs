@@ -24,6 +24,7 @@ import           Control.Monad.Reader
 import           Data.Monoid                       ((<>))
 import           Data.Proxy                        (Proxy (..))
 import           Data.Text                         (Text)
+import           Data.Tuple.Select                 (sel1)
 
 import           Network.Ethereum.ABI.Class        (ABIGet, ABIPut,
                                                     ABIType (..))
@@ -61,7 +62,7 @@ sendTx :: Method a
 sendTx call' (dat :: a) = do
     let sel = selector (Proxy :: Proxy a)
         callArgs = call' { callData = Just $ sel <> encode dat }
-    signingConfigM <- asks (signingConfiguration . fst)
+    signingConfigM <- asks (signingConfiguration . sel1)
     case signingConfigM of
         Just (SigningConfiguration privKey chainId) -> do
             txBytes <- either (throwM . UserFail) pure $
