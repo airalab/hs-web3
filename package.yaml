@@ -80,6 +80,14 @@ flags:
     description: Enable TLS support
     default: False
     manual: True
+  debug:
+    description: Enable debug compiler options
+    default: False
+    manual: True
+  solidity:
+    description: Enable Solidity compiler
+    default: False
+    manual: True
 
 library:
   source-dirs: src
@@ -87,6 +95,14 @@ library:
   - condition: flag(tls)
     cpp-options:      -DTLS_MANAGER
     dependencies:     http-client-tls
+  - condition: flag(debug)
+    ghc-options:      -ddump-splices
+  - condition: flag(solidity)
+    cpp-options:      -DSOLIDITY_COMPILER
+    dependencies:     containers
+    extra-libraries:  solidity
+    c-sources:        ./cbits/solidity_lite.cpp
+    include-dirs:     ./cbits
 
 tests:
   unit:

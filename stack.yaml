@@ -10,4 +10,4 @@ pvp-bounds: both
 
 # Nix integration
 nix:
-    packages: [ zlib ]
+    packages: [ zlib boost jsoncpp solc solc.dev ]
