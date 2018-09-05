@@ -3,7 +3,7 @@
 
 -- |
 -- Module      :  Data.Solidity.Abi.Json
--- Copyright   :  Alexander Krupenkin 2016-2018
+-- Copyright   :  Alexander Krupenkin 2016
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
@@ -13,7 +13,7 @@
 -- JSON encoded contract ABI parsers.
 --
 
-module Data.Solidity.Abi.Json (
+module Language.Solidity.Abi (
     ContractAbi(..)
   , Declaration(..)
   , FunctionArg(..)

@@ -57,16 +57,16 @@ import           Lens.Micro                       ((^?))
 import           Lens.Micro.Aeson                 (key, _JSON)
 
 import           Data.Solidity.Abi                (AbiGet, AbiPut, AbiType (..))
-import           Data.Solidity.Abi.Json           (ContractAbi (..),
+import           Data.Solidity.Event              (IndexedEvent (..))
+import           Data.Solidity.Prim               (Address, Bytes, BytesN, IntN,
+                                                   ListN, Singleton (..), UIntN)
+import           Data.String.Extra                (toLowerFirst, toUpperFirst)
+import           Language.Solidity.Abi            (ContractAbi (..),
                                                    Declaration (..),
                                                    EventArg (..),
                                                    FunctionArg (..),
                                                    SolidityType (..), eventId,
                                                    methodId, parseSolidityType)
-import           Data.Solidity.Event              (IndexedEvent (..))
-import           Data.Solidity.Prim               (Address, Bytes, BytesN, IntN,
-                                                   ListN, Singleton (..), UIntN)
-import           Data.String.Extra                (toLowerFirst, toUpperFirst)
 import           Network.Ethereum.Account         (Account (..))
 import           Network.Ethereum.Api.Types       (DefaultBlock (..),
                                                    Filter (..), TxReceipt)
