@@ -2,8 +2,7 @@
 
 This is the Ethereum compatible Haskell API which implements the [Generic JSON RPC](https://github.com/ethereum/wiki/wiki/JSON-RPC) spec.
 
-[![Build Status](https://travis-ci.org/airalab/hs-web3.svg?branch=master)](https://travis-ci.org/airalab/hs-web3)
-[![Build status](https://ci.appveyor.com/api/projects/status/8ljq93nar8kobk75?svg=true)](https://ci.appveyor.com/project/akru/hs-web3)
+[![Build Status](https://travis-ci.org/f-o-a-m/hs-web3.svg?branch=master)](https://travis-ci.org/f-o-a-m/hs-web3)
 [![Hackage](https://img.shields.io/hackage/v/web3.svg)](http://hackage.haskell.org/package/web3)
 ![Haskell Programming Language](https://img.shields.io/badge/language-Haskell-blue.svg)
 ![BSD3 License](http://img.shields.io/badge/license-BSD3-brightgreen.svg)
@@ -65,12 +64,8 @@ the library adequately interacts with a Web3 provider.
 One may simply run `stack test` to run both suites, or `stack test web3:unit` or `stack test web3:live`
 to run the test suites individually.
 
-The `unit` suite has no external dependencies, while the `live` suite requires Truffle and `jq`
-to be available on your machine.
+The `unit` suite has no external dependencies, while the `live` suite requires some npm dependencies. There is a `Makefile` in the `test-support` directory to help.
 
 The `live` suite also requires a Web3 provider with Ethereum capabilities, as well as
-an unlocked account with ether to send transactions from. It uses Truffle to deploy testing contracts,
+an unlocked account with ether to send transactions from. It uses Chanterelle to deploy testing contracts,
 generating ABIs for them in the process, then using said ABIs as part of a TemplateHaskell step in the suite.
-It is assumed that the provider is available at `http://localhost:8545`. If that's not the case, you must update `truffle.js`
-so that Truffle can deploy the contracts correctly, and pass the `WEB3_PROVIDER=http://host:port` environment variable
-when running the tests so that the `web3` library can interact with the chain that's being tested against.
