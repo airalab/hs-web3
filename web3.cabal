@@ -147,6 +147,7 @@ test-suite live
                      , Network.Ethereum.Web3.Test.LinearizationSpec
                      , Network.Ethereum.Web3.Test.ERC20Spec
                      , Network.Ethereum.Web3.Test.RegistrySpec
+                     , Network.Ethereum.Web3.Test.LagSpec
                      , Network.Ethereum.Web3.Test.Utils
   build-depends:       base                 >4.9       && <4.12
                      , aeson
