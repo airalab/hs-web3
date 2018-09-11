@@ -22,7 +22,7 @@ import           Control.Monad.Trans.Class        (lift)
 import           Control.Monad.Trans.Reader       (ReaderT, ask)
 import           Data.ByteString                  (ByteString)
 import           Data.Default
-import           Data.Either                      (isRight)
+import           Data.Either                      (isRight, isLeft)
 import           Data.Foldable                    (forM_)
 import           Data.List                        (sort)
 import           Data.Maybe
@@ -55,20 +55,38 @@ spec :: Spec
 spec = makeEnv `before` tagsSpec
 
 tagsSpec :: SpecWith (ContractsEnv, Address)
-tagsSpec = describe "can interact with a SimpleStorage contract" $ do
-    -- todo: this should ideally be arbitrary!
-    it "can index from past to future and always stay 3 block behind or more" $ \(ContractsEnv{simpleStorage}, primaryAccount) -> do
+tagsSpec = describe "can lag behind chain head for SimpleStorage contract" $ do
+    -- This test fires of 10 SetCount events, then forks a filter to index these past events while firing off new ones.
+    -- We set the lag to always be at least 3 blocks behind the chain head, and we set the historical window size to 5.
+    -- We then check that all events were indexed and that the lag worked
+    it "can index from past to future and always lag 3 block behind or more" $ \(ContractsEnv{simpleStorage}, primaryAccount) -> do
       startingBlock <- runWeb3Configured $ do
         bn <- Eth.blockNumber
         setOneValuePerBlock primaryAccount simpleStorage [1..10]
         pure bn
       v <- newIORef (Right 0)
       let filter = (def :: Filter EvT_CountSet) {filterFromBlock = BlockWithNumber startingBlock}
-      f <- runWeb3Configured' $ forkWeb3 $ eventNoFilter' filter 2 (lagHandler 3 20 v)
+          lag = 2
+      f <- runWeb3Configured' $ forkWeb3 $ eventManyNoFilter' filter 5 lag (lagHandler lag 20 v)
       runWeb3Configured $ setOneValuePerBlock primaryAccount simpleStorage [11..20]
       _ <- wait f
       result <- readIORef v
       result `shouldBe` Right 20
+    -- this is the control test, we want to know that if we set the lag to 0 that we eventually catch up to chain head.
+    -- it's pretty much copy pasta
+    it "the same test without specifying a positive lag will catch up to chain head" $ \(ContractsEnv{simpleStorage}, primaryAccount) -> do
+      startingBlock <- runWeb3Configured $ do
+        bn <- Eth.blockNumber
+        setOneValuePerBlock primaryAccount simpleStorage [1..10]
+        pure bn
+      v <- newIORef (Right 0)
+      let filter = (def :: Filter EvT_CountSet) {filterFromBlock = BlockWithNumber startingBlock}
+          lag = 2
+      f <- runWeb3Configured' $ forkWeb3 $ eventManyNoFilter' filter 3 0 (lagHandler lag 20 v)
+      runWeb3Configured $ setOneValuePerBlock primaryAccount simpleStorage [11..20]
+      _ <- wait f
+      result <- readIORef v
+      result `shouldSatisfy` isLeft
 
 lagHandler
   :: Integer -- lag
