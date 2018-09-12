@@ -164,21 +164,22 @@ multiFilterStream
   -> MachineT Web3 k (MultiFilter es)
 multiFilterStream initialPlan = do
   unfoldPlan initialPlan $ \s -> do
-    end <- lift . mkBlockNumber . minEndBlock . mfssInitialMultiFilter $ initialPlan
-    filterPlan end s
+    filterEnd <- lift . mkBlockNumber . minEndBlock . mfssInitialMultiFilter $ initialPlan
+    filterPlan filterEnd s
   where
     filterPlan :: Quantity -> MultiFilterStreamState es -> PlanT k (MultiFilter es) Web3 (MultiFilterStreamState es)
-    filterPlan end initialState@MultiFilterStreamState{..} = do
+    filterPlan filterEnd initialState@MultiFilterStreamState{..} = do
+      let end = filterEnd - fromInteger mfssLag
       if mfssCurrentBlock > end
         then stop
         else do
-          let to' = min (end - fromIntegral mfssLag) $ mfssCurrentBlock + fromInteger mfssWindowSize
+          let to' = min end $ mfssCurrentBlock + fromInteger mfssWindowSize
               h :: forall e. Filter e -> Filter e
               h f = f { filterFromBlock = BlockWithNumber mfssCurrentBlock
                       , filterToBlock = BlockWithNumber to'
                       }
           yield (modifyMultiFilter h mfssInitialMultiFilter)
-          filterPlan end initialState { mfssCurrentBlock = to' + 1 }
+          filterPlan filterEnd initialState { mfssCurrentBlock = to' + 1 }
 
 weakenCoRec
   :: ( RecApplicative ts
@@ -367,7 +368,7 @@ multiEventNoFilter'
   -> Integer
   -> Handlers es (ReaderT Change Web3 EventAction)
   -> Web3 ()
-multiEventNoFilter' fltrs lag h = multiEventManyNoFilter' fltrs 0 lag h
+multiEventNoFilter' fltrs lag = multiEventManyNoFilter' fltrs 0 lag
 
 
 multiEventManyNoFilter'
@@ -422,6 +423,7 @@ newMultiFilterStream initialPlan = do
       if BlockWithNumber mfssCurrentBlock > end
         then stop
         else do
+          -- we need newestBlockNumber > mfssCurrentBlock && newestBlockNumber <= chainHead - lag
           newestBlockNumber <- lift $ pollTillBlockProgress mfssCurrentBlock mfssLag
           let h :: forall e. Filter e -> Filter e
               h f = f { filterFromBlock = BlockWithNumber mfssCurrentBlock
