@@ -9,6 +9,7 @@ import qualified Data.ByteString.Lazy as L
 
 data Web3LogMessage = W3LMJsonRPCRequest Int Value
                     | W3LMJsonRPCRawResponse Int L.ByteString
+                    | W3LMTrace String
 
 newtype Web3Logger = Web3Logger { unWeb3Logger :: Web3LogMessage -> IO () }
 

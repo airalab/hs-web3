@@ -102,3 +102,8 @@ runWeb3 = runWeb3' def
 forkWeb3 :: Web3 a -> Web3 (Async a)
 {-# INLINE forkWeb3 #-}
 forkWeb3 = Web3 . mapReaderT async . unWeb3
+
+web3Trace :: String -> Web3 ()
+web3Trace msg = do
+    (_, _, logger) <- ask
+    liftIO . unWeb3Logger logger $ W3LMTrace msg
