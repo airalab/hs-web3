@@ -67,7 +67,7 @@ event' fltr = eventMany' fltr 0
 --
 eventMany' :: DecodeEvent i ni e
            => Filter e
-           -> Integer
+           -> Integer -- window
            -> (e -> ReaderT Change Web3 EventAction)
            -> Web3 ()
 eventMany' fltr window handler = do
@@ -75,6 +75,7 @@ eventMany' fltr window handler = do
     let initState = FilterStreamState { fssCurrentBlock = start
                                       , fssInitialFilter = fltr
                                       , fssWindowSize = window
+                                      , fssLag = 0
                                       }
     mLastProcessedFilterState <- reduceEventStream (playOldLogs initState) handler
     case mLastProcessedFilterState of
@@ -163,7 +164,7 @@ filterStream initialPlan = unfoldPlan initialPlan filterPlan
       if fssCurrentBlock > end
         then stop
         else do
-          let to' = min end $ fssCurrentBlock + fromInteger fssWindowSize
+          let to' = min (end - fromIntegral fssLag) (fssCurrentBlock + fromInteger fssWindowSize)
               filter' = fssInitialFilter { filterFromBlock = BlockWithNumber fssCurrentBlock
                                          , filterToBlock = BlockWithNumber to'
                                          }
@@ -178,27 +179,30 @@ eventNoFilter
   => Filter e
   -> (e -> ReaderT Change Web3 EventAction)
   -> Web3 (Async ())
-eventNoFilter fltr = forkWeb3 . event' fltr
+eventNoFilter fltr h = forkWeb3 $ eventNoFilter' fltr 0 h
 
 -- | Same as 'event', but does not immediately spawn a new thread.
 eventNoFilter'
   :: DecodeEvent i ni e
   => Filter e
+  -> Integer
   -> (e -> ReaderT Change Web3 EventAction)
   -> Web3 ()
-eventNoFilter' fltr = eventManyNoFilter' fltr 0
+eventNoFilter' fltr lag = eventManyNoFilter' fltr 0 lag
 
 eventManyNoFilter'
   :: DecodeEvent i ni e
   => Filter e
-  -> Integer
+  -> Integer -- window
+  -> Integer -- lag
   -> (e -> ReaderT Change Web3 EventAction)
   -> Web3 ()
-eventManyNoFilter' fltr window handler = do
+eventManyNoFilter' fltr window lag handler = do
     start <- mkBlockNumber $ filterFromBlock fltr
     let initState = FilterStreamState { fssCurrentBlock = start
                                       , fssInitialFilter = fltr
                                       , fssWindowSize = window
+                                      , fssLag = lag
                                       }
     mLastProcessedFilterState <- reduceEventStream (playOldLogs initState) handler
     case mLastProcessedFilterState of
@@ -206,6 +210,7 @@ eventManyNoFilter' fltr window handler = do
         let pollingFilterState = FilterStreamState { fssCurrentBlock = start
                                                    , fssInitialFilter = fltr
                                                    , fssWindowSize = 1
+                                                   , fssLag = lag
                                                    }
 
         in void $ reduceEventStream (playNewLogs pollingFilterState) handler
@@ -215,6 +220,7 @@ eventManyNoFilter' fltr window handler = do
           let pollingFilterState = FilterStreamState { fssCurrentBlock = lastBlock + 1
                                                      , fssInitialFilter = fltr
                                                      , fssWindowSize = 1
+                                                     , fssLag = lag
                                                      }
           in void $ reduceEventStream (playNewLogs pollingFilterState) handler
 
@@ -238,7 +244,7 @@ newFilterStream initialState = unfoldPlan initialState filterPlan
       if BlockWithNumber fssCurrentBlock > filterToBlock fssInitialFilter
         then stop
         else do
-          newestBlockNumber <- lift . pollTillBlockProgress $ fssCurrentBlock
+          newestBlockNumber <- lift $ pollTillBlockProgress fssCurrentBlock fssLag
           let filter' = fssInitialFilter { filterFromBlock = BlockWithNumber fssCurrentBlock
                                          , filterToBlock = BlockWithNumber newestBlockNumber
                                          }
