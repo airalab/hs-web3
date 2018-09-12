@@ -18,28 +18,29 @@
 
 module Network.Ethereum.Web3.Provider where
 
-import           Control.Concurrent.Async   (Async, async)
-import           Control.Exception          (Exception, try)
-import           Control.Monad.Catch        (MonadThrow)
-import           Control.Monad.IO.Class     (MonadIO (..))
-import           Control.Monad.Reader       (MonadReader (..))
-import           Control.Monad.Trans.Reader (ReaderT, mapReaderT, runReaderT)
-import           Data.ByteString            (ByteString)
-import           Data.Default               (Default (..))
-import           GHC.Generics               (Generic)
-import           Network.HTTP.Client        (Manager, newManager)
+import           Control.Concurrent.Async      (Async, async)
+import           Control.Exception             (Exception, try)
+import           Control.Monad.Catch           (MonadThrow)
+import           Control.Monad.IO.Class        (MonadIO (..))
+import           Control.Monad.Reader          (MonadReader (..))
+import           Control.Monad.Trans.Reader    (ReaderT, mapReaderT, runReaderT)
+import           Data.ByteString               (ByteString)
+import           Data.Default                  (Default (..))
+import           GHC.Generics                  (Generic)
+import           Network.Ethereum.Web3.Logging
+import           Network.HTTP.Client           (Manager, newManager)
 
 #ifdef TLS_MANAGER
-import           Network.HTTP.Client.TLS    (tlsManagerSettings)
+import           Network.HTTP.Client.TLS       (tlsManagerSettings)
 #else
-import           Network.HTTP.Client        (defaultManagerSettings)
+import           Network.HTTP.Client           (defaultManagerSettings)
 #endif
 
 -- | Any communication with Ethereum node wrapped with 'Web3' monad
-newtype Web3 a = Web3 { unWeb3 :: ReaderT (Provider, Manager) IO a }
+newtype Web3 a = Web3 { unWeb3 :: ReaderT (Provider, Manager, Web3Logger) IO a }
     deriving (Functor, Applicative, Monad, MonadIO, MonadThrow)
 
-instance MonadReader (Provider, Manager) Web3 where
+instance MonadReader (Provider, Manager, Web3Logger) Web3 where
     ask = Web3 ask
     local f = Web3 . local f . unWeb3
 
@@ -63,20 +64,23 @@ data JsonRpcProvider = HttpProvider ServerUri
   deriving (Show, Eq, Generic)
 
 -- | Web3 Provider
-data Provider = Provider { jsonRpc :: JsonRpcProvider
+data Provider = Provider { jsonRpc              :: JsonRpcProvider
                          , signingConfiguration :: Maybe SigningConfiguration
-                         }
+                         } deriving (Show, Eq)
 
 data SigningConfiguration = SigningConfiguration { privateKey      :: ByteString
-                                                 , chainIdentifier :: Integer }
+                                                 , chainIdentifier :: Integer } deriving (Show, Eq)
 
 instance Default Provider where
   def = Provider (HttpProvider "http://localhost:8545") Nothing
 
 -- | 'Web3' monad runner, using the supplied Manager
 runWeb3With :: MonadIO m => Manager -> Provider -> Web3 a -> m (Either Web3Error a)
-runWeb3With manager provider f =
-    liftIO . try .  flip runReaderT (provider, manager) . unWeb3 $ f
+runWeb3With manager provider = runWeb3With' manager provider noopLogger
+
+runWeb3With' :: MonadIO m => Manager -> Provider -> Web3Logger -> Web3 a -> m (Either Web3Error a)
+runWeb3With' manager provider w3logger =
+    liftIO . try .  flip runReaderT (provider, manager, w3logger) . unWeb3
 
 -- | 'Web3' monad runner
 runWeb3' :: MonadIO m => Provider -> Web3 a -> m (Either Web3Error a)

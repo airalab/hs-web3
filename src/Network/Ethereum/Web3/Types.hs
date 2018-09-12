@@ -27,7 +27,6 @@ import           Data.Aeson                        (FromJSON (..), Options (fiel
 import           Data.Aeson.TH                     (deriveJSON)
 import           Data.Default                      (Default (..))
 import           Data.Monoid                       ((<>))
-import           Data.Ord                          (Down (..))
 import           Data.String                       (IsString (..))
 import qualified Data.Text                         as T (pack)
 import qualified Data.Text.Lazy.Builder            as B (toLazyText)
@@ -211,7 +210,10 @@ instance Ord DefaultBlock where
     compare Pending Latest                          = GT
     compare _ Latest                                = LT
     compare Earliest _                              = LT
-    compare a b                                     = compare (Down b) (Down a)
+    compare a b                                     = case compare b a of
+                                                        LT -> GT
+                                                        GT -> LT
+                                                        EQ -> EQ
 
 -- | The Receipt of a Transaction
 data TxReceipt = TxReceipt
