@@ -163,18 +163,13 @@ multiFilterStream
   :: MultiFilterStreamState es
   -> MachineT Web3 k (MultiFilter es)
 multiFilterStream initialPlan = do
-  unfoldPlan initialPlan $ \s ->
-    let filterEnd = minEndBlock . mfssInitialMultiFilter $ initialPlan
-    in filterPlan filterEnd s
+  unfoldPlan initialPlan $ \s -> do
+    filterEnd <- lift . mkBlockNumber . minEndBlock . mfssInitialMultiFilter $ initialPlan
+    filterPlan filterEnd s
   where
-    filterPlan :: DefaultBlock -> MultiFilterStreamState es -> PlanT k (MultiFilter es) Web3 (MultiFilterStreamState es)
+    filterPlan :: Quantity -> MultiFilterStreamState es -> PlanT k (MultiFilter es) Web3 (MultiFilterStreamState es)
     filterPlan filterEnd initialState@MultiFilterStreamState{..} = do
-      end <- lift $ case filterEnd of
-        bn@(BlockWithNumber _) -> mkBlockNumber bn
-        Earliest -> mkBlockNumber Earliest
-        b -> do
-          filterEndBlock <- mkBlockNumber $ b
-          pure $ filterEndBlock - fromInteger mfssLag
+      let end = filterEnd - fromInteger mfssLag
       if mfssCurrentBlock > end
         then stop
         else do

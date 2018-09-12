@@ -160,12 +160,8 @@ filterStream initialPlan = unfoldPlan initialPlan filterPlan
   where
     filterPlan :: FilterStreamState e -> PlanT k (Filter e) Web3 (FilterStreamState e)
     filterPlan initialState@FilterStreamState{..} = do
-      end <- lift $ case filterToBlock fssInitialFilter of
-        bn@(BlockWithNumber _) -> mkBlockNumber bn
-        Earliest -> mkBlockNumber Earliest
-        b -> do
-          filterEnd <- mkBlockNumber $ b
-          pure $ filterEnd - fromInteger fssLag
+      filterEnd <- lift . mkBlockNumber $ filterToBlock fssInitialFilter
+      let end = filterEnd - fromIntegral fssLag
       if fssCurrentBlock > end
         then stop
         else do
