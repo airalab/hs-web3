@@ -245,6 +245,7 @@ newFilterStream initialState = unfoldPlan initialState filterPlan
         then stop
         else do
           newestBlockNumber <- lift $ pollTillBlockProgress fssCurrentBlock fssLag
+          -- we need newestBlockNumber > mfssCurrentBlock && newestBlockNumber <= chainHead - lag
           let filter' = fssInitialFilter { filterFromBlock = BlockWithNumber fssCurrentBlock
                                          , filterToBlock = BlockWithNumber newestBlockNumber
                                          }

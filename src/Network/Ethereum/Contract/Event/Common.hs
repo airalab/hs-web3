@@ -62,14 +62,28 @@ mkBlockNumber bm = case bm of
   Earliest           -> return 0
   _                  -> Eth.blockNumber
 
+-- what we need here is that whatever block number 'bn' is returned, that
+-- 1. currentBlock <= bn
+-- 2. bn <= chainHead - lag
+-- The function clearly satisfies (1) and (2), so we just need to prove that it does return.
+-- PROOF:
+-- let chainHead_t1 be the chainHead when the function runs.
+-- Assume currentBlock <= chainHead_t1 - lag:
+--   - then maxNextBlock === chainHead_t1 - lag has (1) by the assumption and (2) by tautology
+-- Otherwise we assume currentBlock > chainHead_t1 - lag:
+--   - then we loop. At some point in time t2, chainHead_t2 > chainHead_t1 occurs.
+--     if currentBlock <= chainHead_t2 - lag then we are done by part (i).
+--     otherwise we continue the loop. At somepoint tk we have curentBlock <= chainHead_tk - lag,
+--     since chainHead_t1 - lag < chainHead_t2 - lag < .. < chainHead_tk - lag is an increasing sequence.
 pollTillBlockProgress
   :: Quantity
   -> Integer
   -> Web3 Quantity
 pollTillBlockProgress currentBlock lag = do
-  bn <- Eth.blockNumber
-  if currentBlock + fromIntegral lag >= bn
-    then do
+  chainHead <- Eth.blockNumber
+  let maxNextBlock = chainHead - fromInteger lag
+  if currentBlock <= maxNextBlock
+    then pure maxNextBlock
+    else do
       liftIO $ threadDelay 3000000
       pollTillBlockProgress currentBlock lag
-    else pure bn
