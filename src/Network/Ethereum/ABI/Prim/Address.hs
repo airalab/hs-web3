@@ -16,18 +16,25 @@
 
 module Network.Ethereum.ABI.Prim.Address (
     Address
-  , toHexString
   , fromHexString
+  , toHexString
+  , toChecksum
+  , verifyChecksum
   ) where
 
 import           Control.Monad                 ((<=<))
+import           Crypto.Hash                   (Keccak_256 (..), hashWith)
 import           Data.Aeson                    (FromJSON (..), ToJSON (..),
                                                 Value (String))
-import           Data.ByteArray                (Bytes, length, zero)
+import           Data.Bits                     ((.&.))
+import           Data.Bool                     (bool)
+import           Data.ByteArray                (Bytes, convert, length, zero)
 import           Data.ByteArray.Encoding       (Base (Base16), convertFromBase,
                                                 convertToBase)
 import           Data.ByteString               (ByteString)
+import qualified Data.ByteString               as BS (take, unpack)
 import qualified Data.ByteString.Char8         as C8 (drop, pack, take, unpack)
+import qualified Data.Char                     as C (toLower, toUpper)
 import           Data.Monoid                   ((<>))
 import           Data.String                   (IsString (..))
 import           Data.Text.Encoding            (decodeUtf8, encodeUtf8)
@@ -62,6 +69,16 @@ fromHexString = decode . align <=< lenck <=< convertFromBase Base16 . trim0x
 
 toHexString :: Address -> ByteString
 toHexString = ("0x" <>) . convertToBase Base16 . C8.drop 12 . encode
+
+toChecksum :: ByteString -> ByteString
+toChecksum addr = ("0x"<>) . C8.pack $ zipWith ($) upcaseVector lower
+    where
+        upcaseVector = (>>= fourthBits) . BS.unpack . BS.take 20 . convert $ hashWith Keccak_256 (C8.pack lower)
+        fourthBits n = bool id C.toUpper <$> [n .&. 0x80 /= 0, n .&. 0x08 /= 0]
+        lower = drop 2 . fmap C.toLower . C8.unpack $ addr
+
+verifyChecksum :: ByteString -> Bool
+verifyChecksum = toChecksum >>= (==)
 
 instance Show Address where
     show = C8.unpack . toHexString
