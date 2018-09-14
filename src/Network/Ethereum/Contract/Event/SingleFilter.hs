@@ -160,11 +160,12 @@ filterStream initialPlan = unfoldPlan initialPlan filterPlan
   where
     filterPlan :: FilterStreamState e -> PlanT k (Filter e) Web3 (FilterStreamState e)
     filterPlan initialState@FilterStreamState{..} = do
-      end <- lift . mkBlockNumber $ filterToBlock fssInitialFilter
+      filterEnd <- lift . mkBlockNumber $ filterToBlock fssInitialFilter
+      let end = filterEnd - fromIntegral fssLag
       if fssCurrentBlock > end
         then stop
         else do
-          let to' = min (end - fromIntegral fssLag) (fssCurrentBlock + fromInteger fssWindowSize)
+          let to' = min end (fssCurrentBlock + fromInteger fssWindowSize)
               filter' = fssInitialFilter { filterFromBlock = BlockWithNumber fssCurrentBlock
                                          , filterToBlock = BlockWithNumber to'
                                          }
@@ -245,6 +246,7 @@ newFilterStream initialState = unfoldPlan initialState filterPlan
         then stop
         else do
           newestBlockNumber <- lift $ pollTillBlockProgress fssCurrentBlock fssLag
+          -- we need newestBlockNumber > mfssCurrentBlock && newestBlockNumber <= chainHead - lag
           let filter' = fssInitialFilter { filterFromBlock = BlockWithNumber fssCurrentBlock
                                          , filterToBlock = BlockWithNumber newestBlockNumber
                                          }
