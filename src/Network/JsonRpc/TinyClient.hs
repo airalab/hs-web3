@@ -4,6 +4,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 {-# LANGUAGE OverloadedStrings      #-}
+{-# LANGUAGE RecordWildCards        #-}
 {-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE UndecidableInstances   #-}
 
@@ -30,20 +31,22 @@ module Network.JsonRpc.TinyClient (
   , remote
   ) where
 
-import           Control.Applicative    ((<|>))
-import           Control.Exception      (Exception)
-import           Control.Monad          ((<=<))
-import           Control.Monad.Catch    (MonadThrow, throwM)
-import           Control.Monad.IO.Class (MonadIO, liftIO)
-import           Control.Monad.Reader   (MonadReader, ask)
+import           Control.Applicative            ((<|>))
+import           Control.Exception              (Exception)
+import           Control.Monad                  ((<=<))
+import           Control.Monad.Catch            (MonadThrow, throwM)
+import           Control.Monad.IO.Class         (MonadIO, liftIO)
+import           Control.Monad.Reader           (MonadReader, ask)
 import           Data.Aeson
-import           Data.ByteString.Lazy   (ByteString)
-import           Data.Text              (Text, unpack)
+import           Data.ByteString.Lazy           (ByteString)
+import           Data.Text                      (Text)
+import           Network.Ethereum.Web3.Logging
 import           Network.Ethereum.Web3.Provider
-import           Network.HTTP.Client    (Manager, RequestBody (RequestBodyLBS),
-                                         httpLbs, method, parseRequest,
-                                         requestBody, requestHeaders,
-                                         responseBody)
+import           Network.HTTP.Client            (RequestBody (RequestBodyLBS),
+                                                 httpLbs, method, parseRequest,
+                                                 requestBody, requestHeaders,
+                                                 responseBody)
+import           System.Random                  (randomIO)
 
 instance FromJSON a => Remote Web3 (Web3 a)
 
@@ -51,7 +54,7 @@ instance FromJSON a => Remote Web3 (Web3 a)
 type MethodName = Text
 
 -- | JSON-RPC minimal client config
-type Config = (Provider, Manager)
+type Config = (Provider, Web3Logger)
 
 -- | JSON-RPC request.
 data Request = Request { rqMethod :: !Text
@@ -75,23 +78,10 @@ instance FromJSON Response where
             \v -> Response <$>
                 (Right <$> v .: "result" <|> Left <$> v .: "error")
 
--- | JSON-RPC error message
-data RpcError = RpcError
-  { errCode    :: !Int
-  , errMessage :: !Text
-  , errData    :: !(Maybe Value)
-  } deriving Eq
-
-instance Show RpcError where
-    show (RpcError code msg dat) =
-        "JSON-RPC error " ++ show code ++ ": " ++ unpack msg
-         ++ ". Data: " ++ show dat
-
-instance FromJSON RpcError where
-    parseJSON = withObject "JSON-RPC error object" $
-        \v -> RpcError <$> v .: "code"
-                       <*> v .: "message"
-                       <*> v .:? "data"
+instance ToJSON Response where
+    toJSON r = case rsResult r of
+        Left err -> object [ "error" .= err ]
+        Right ok -> object [ "result" .= ok ]
 
 -- | Typeclass for JSON-RPC monad base.
 --
@@ -139,15 +129,37 @@ call :: (MonadIO m,
      => MethodName
      -> [Value]
      -> m ByteString
-call n = connection . encode . Request n 1 . toJSON
+call m r = do
+  rid <- abs <$> liftIO randomIO
+  let req = Request m rid (toJSON r)
+      req' = toJSON req
+  (Provider p _, logger) <- ask
+  liftIO . unWeb3Logger logger $ W3LMJsonRPCRequest rid req'
+  resp <- runProvider p req
+  acceptAndLogResponse rid logger resp
   where
-    connection body = do
-        ((Provider (HttpProvider uri) _), manager) <- ask
+    acceptAndLogResponse rid logger resp = do
+        liftIO . unWeb3Logger logger $ W3LMJsonRPCRawResponse rid resp
+        return resp
+
+    runProvider HttpProvider{..} req = connection (encode req) getHttpManager serverUri
+
+    runProvider HookedHTTPProvider{..} _ = do
+        ranHook <- liftIO $ runHookedProvider m r
+        case ranHook of
+            Left xformReq -> connection (encode xformReq) getHttpManager serverUri
+            Right shortedResponse -> return $ encode (Response shortedResponse)
+
+    runProvider AbstractProvider{..} _ = liftIO $ encode . Response <$> runAbstractProvider m r
+
+    connection body getManager uri = do
         request <- parseRequest uri
         let request' = request
                      { requestBody = RequestBodyLBS body
                      , requestHeaders = [("Content-Type", "application/json")]
-                     , method = "POST" }
+                     , method = "POST"
+                     }
+        manager <- liftIO getManager
         responseBody <$> liftIO (httpLbs request' manager)
 
 data JsonRpcException

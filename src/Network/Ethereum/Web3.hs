@@ -25,6 +25,7 @@ module Network.Ethereum.Web3 (
 
   -- ** Basic transaction sending
   , sendTx
+  , sendTx'
   , Call(..)
 
   -- ** Basic event listening
@@ -43,7 +44,7 @@ module Network.Ethereum.Web3 (
 import           Network.Ethereum.ABI.Prim
 import           Network.Ethereum.Contract.Event  (EventAction (..), event,
                                                    event')
-import           Network.Ethereum.Contract.Method (sendTx)
+import           Network.Ethereum.Contract.Method (sendTx, sendTx')
 import           Network.Ethereum.Unit
 import           Network.Ethereum.Web3.Provider   (Web3, runWeb3)
 import           Network.Ethereum.Web3.Types      (Call (..))
