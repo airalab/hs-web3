@@ -80,7 +80,7 @@ mkBlockNumber bm = case bm of
 For example:
  - at first call currentBlock = 11, chainHead = 10, lag  = 5
  - maxNextBlock = 10 - 5 = 5
- - 
+ -
 
 -}
 pollTillBlockProgress

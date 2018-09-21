@@ -7,9 +7,9 @@
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE QuasiQuotes           #-}
+{-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TemplateHaskell       #-}
-{-# LANGUAGE RecordWildCards      #-}
 
 module Network.Ethereum.Web3.Test.LagSpec where
 
@@ -22,7 +22,7 @@ import           Control.Monad.Trans.Class        (lift)
 import           Control.Monad.Trans.Reader       (ReaderT, ask)
 import           Data.ByteString                  (ByteString)
 import           Data.Default
-import           Data.Either                      (isRight, isLeft)
+import           Data.Either                      (isLeft, isRight)
 import           Data.Foldable                    (forM_)
 import           Data.List                        (sort)
 import           Data.Maybe
@@ -32,19 +32,19 @@ import qualified Data.Text                        as T
 import           Data.Traversable                 (for)
 import           GHC.TypeLits
 
-import           Network.Ethereum.Contract.TH
 import           Network.Ethereum.Contract.Event
+import           Network.Ethereum.Contract.TH
 import           Network.Ethereum.Web3            hiding (convert)
 import qualified Network.Ethereum.Web3.Eth        as Eth
 import           Network.Ethereum.Web3.Provider   (forkWeb3)
 import           Network.Ethereum.Web3.Types
 
+import           Data.IORef
+import           Network.Ethereum.Web3.Test.Utils
 import           Numeric                          (showHex)
 import           System.Environment               (getEnv)
 import           System.IO.Unsafe                 (unsafePerformIO)
 import           Test.Hspec
-import           Data.IORef
-import           Network.Ethereum.Web3.Test.Utils
 
 [abiFrom|test-support/build/contracts/abis/SimpleStorage.json|]
 

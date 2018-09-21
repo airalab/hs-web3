@@ -101,21 +101,21 @@ makeContractsEnv = do
 
 runWeb3Configured :: Show a => Web3 a -> IO a
 runWeb3Configured f = do
-    provider <- (flip Provider Nothing . HttpProvider) <$> rpcUri
-    v <- runWeb3With sharedManager provider f
+    provider <- (flip Provider Nothing . HttpProvider (return sharedManager)) <$> rpcUri
+    v <- runWeb3With provider f
     v `shouldSatisfy` isRight
     let Right a = v in return a
 
 runWeb3Configured' :: Web3 a -> IO a
 runWeb3Configured' f = do
-    provider <- (flip Provider Nothing . HttpProvider) <$> rpcUri
-    Right v <- runWeb3With sharedManager provider f
+    provider <- (flip Provider Nothing . HttpProvider (return sharedManager)) <$> rpcUri
+    Right v <- runWeb3With provider f
     return v
 
 retryWeb3Configured :: Web3 a -> IO a
 retryWeb3Configured f = do
-    provider <- (flip Provider Nothing . HttpProvider) <$> rpcUri
-    v <- runWeb3With sharedManager provider f
+    provider <- (flip Provider Nothing . HttpProvider (return sharedManager)) <$> rpcUri
+    v <- runWeb3With provider f
     case v of
         Left _  -> threadDelay 1000000 >> retryWeb3Configured f
         Right v -> return v
