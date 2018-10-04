@@ -74,10 +74,6 @@ class (Read a, Show a, UnitSpec a, Fractional a) => Unit a where
     fromWei :: Integer -> a
     -- | Convert a value to integer wei
     toWei :: a -> Integer
-    -- | Conversion beween two values
-    convert :: Unit b => a -> b
-    {-# INLINE convert #-}
-    convert = fromWei . toWei
 
 -- | Unit specification
 class UnitSpec a where

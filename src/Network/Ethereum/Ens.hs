@@ -24,18 +24,17 @@ import           Data.ByteArray                      (convert, zero)
 import           Data.ByteArray.Sized                (unsafeFromByteArrayAccess)
 import           Data.ByteString                     (ByteString)
 import           Data.ByteString.Char8               (split)
-import           Data.Default                        (def)
+import           Lens.Micro                          ((.~))
+
 import           Data.Solidity.Prim                  (Address, BytesN)
-import           Network.Ethereum.Account            (Account)
-import           Network.Ethereum.Api.Provider       (Web3)
-import           Network.Ethereum.Api.Types          (Call (callTo),
-                                                      DefaultBlock (Latest))
-import           Network.Ethereum.Contract           (ContractT, withTarget)
+import           Network.Ethereum.Account.Class      (Account)
+import           Network.Ethereum.Account.Internal   (AccountT, to, withParam)
 import qualified Network.Ethereum.Ens.PublicResolver as Resolver
 import qualified Network.Ethereum.Ens.Registry       as Reg
 import           Network.JsonRpc.TinyClient          (JsonRpcM)
 
--- | Namehash algorithm implementation: http://docs.ens.domains/en/latest/implementers.html#algorithm
+-- | Namehash algorithm
+-- http://docs.ens.domains/en/latest/implementers.html#algorithm
 namehash :: ByteString -> BytesN 32
 namehash =
     unsafeFromByteArrayAccess . foldr algo (zero 32) . split '.'
@@ -45,10 +44,10 @@ namehash =
     sha3 bs = convert (hash bs :: Digest Keccak_256)
 
 -- | Get address of ENS domain
-resolve :: JsonRpcM m => ByteString -> ContractT m Address
+resolve :: (JsonRpcM m, Account p (AccountT p)) => ByteString -> AccountT p m Address
 resolve name = do
     r <- ensRegistry $ Reg.resolver node
-    withTarget r $ Resolver.addr node
+    withParam (to .~ r) $ Resolver.addr node
   where
     node = namehash name
-    ensRegistry = withTarget "0x314159265dD8dbb310642f98f50C066173C1259b"
+    ensRegistry = withParam $ to .~ "0x314159265dD8dbb310642f98f50C066173C1259b"

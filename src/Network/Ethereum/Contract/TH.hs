@@ -67,7 +67,7 @@ import           Language.Solidity.Abi            (ContractAbi (..),
                                                    FunctionArg (..),
                                                    SolidityType (..), eventId,
                                                    methodId, parseSolidityType)
-import           Network.Ethereum.Account         (Account (..))
+import           Network.Ethereum.Account.Class   (Account (..))
 import           Network.Ethereum.Api.Types       (DefaultBlock (..),
                                                    Filter (..), TxReceipt)
 import           Network.Ethereum.Contract.Method (Method (..))

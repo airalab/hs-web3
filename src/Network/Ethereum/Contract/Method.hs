@@ -20,13 +20,13 @@ import           Data.Solidity.Abi.Generic ()
 import           Data.Solidity.Prim.Bytes  (Bytes)
 
 class AbiPut a => Method a where
-  selector :: Proxy a -> Bytes
+    selector :: Proxy a -> Bytes
 
 instance AbiType () where
-  isDynamic _ = False
+    isDynamic _ = False
 
 instance AbiPut ()
 
--- | Send transaction without method selection
+-- | Fallback contract method
 instance Method () where
-  selector = mempty
+    selector _   = mempty

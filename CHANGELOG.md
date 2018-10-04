@@ -1,6 +1,28 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.8.0.0] 2018-10-**
+### Added
+- Local private key transaction signer 
+- Generalized JSON-RPC monad for API methods
+- Support for multiple transaction sending methods via one `Account` api
+- Monad based transaction sending parametrization 
+- Experimental support for solidity compiler (disabled by default) 
+- Support for Ethereum mainnet ENS resolver
+- Event single/multi filters
+- HexString data type
+- Personal api calls
+- Address checksum
+
+### Changed
+- package.yaml instead web3.cabal package descriptor
+- Solidity related data types and codecs moved to Data.Solidity
+- Solidity related parsers and compiler moved to Language.Solidity
+- Modules in Network.Ethereum.Web3 moved to Network.Ethereum.Api
+
+### Removed
+- `convert` function from `Unit` typeclass
+
 ## [0.7.3.0] 2018-05-22
 ### Added
 - 'Network.Ethereum.ABI.Prim' meta-module as primitive types and instances aggregator.
