@@ -1,9 +1,9 @@
 {-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE RecordWildCards            #-}
 
 -- |
 -- Module      :  Network.Ethereum.Account.Internal
@@ -23,43 +23,53 @@ import           Control.Monad.State.Strict     (MonadState (..), StateT (..),
                                                  withStateT)
 import           Control.Monad.Trans            (MonadTrans (..))
 import           Data.Default                   (Default (..))
+import           Lens.Micro                     (Lens', lens)
+
 import           Data.HexString                 (HexString)
 import           Data.Solidity.Prim             (Address)
-import           Lens.Micro                     (Lens', lens)
 import           Network.Ethereum.Account.Class (Account)
 import qualified Network.Ethereum.Api.Eth       as Eth (getTransactionReceipt)
 import           Network.Ethereum.Api.Types     (Call (..),
                                                  DefaultBlock (Latest),
                                                  TxReceipt (receiptTransactionHash))
-import           Network.Ethereum.Unit          (Unit (toWei), Wei)
+import           Network.Ethereum.Unit          (Unit (..))
 import           Network.JsonRpc.TinyClient     (JsonRpcM)
 
 -- | Account is needed to send transactions to blockchain
 
 -- | TODO
-data CallParam p where
-    CallParam :: (Unit value, Unit gasprice)
-              => Address
-              -- ^ Transaction recepient
-              -> value
-              -- ^ Transaction value
-              -> Maybe Integer
-              -- ^ Transaction gas limit
-              -> Maybe gasprice
-              -- ^ Transaction gas price
-              -> DefaultBlock
-              -- ^ Call block number
-              -> p
-              -- ^ Account params to sign transaction
-              -> CallParam p
+data CallParam p = CallParam
+    { _to       :: Address
+    -- ^ Transaction recepient
+    , _value    :: Integer
+    -- ^ Transaction value
+    , _gasLimit :: Maybe Integer
+    -- ^ Transaction gas limit
+    , _gasPrice :: Maybe Integer
+    -- ^ Transaction gas price
+    , _block    :: DefaultBlock
+    -- ^ Call block number
+    , _account  :: p
+    -- ^ Account params to sign transaction
+    } deriving Eq
 
 to :: Lens' (CallParam p) Address
-to = lens getTo (flip setTo)
-  where
-    getTo = \case
-        CallParam t _ _ _ _ _ -> t
-    setTo t = \case
-        CallParam _ a b c d e -> CallParam t a b c d e
+to = lens _to $ \a b -> a { _to = b }
+
+value :: Unit value => Lens' (CallParam p) value
+value = lens (fromWei . _value) $ \a b -> a { _value = toWei b }
+
+gasLimit :: Lens' (CallParam p) (Maybe Integer)
+gasLimit = lens _gasLimit $ \a b -> a { _gasLimit = b }
+
+gasPrice :: Unit gasprice => Lens' (CallParam p) (Maybe gasprice)
+gasPrice = lens (fmap fromWei . _gasPrice) $ \a b -> a { _gasPrice = toWei <$> b }
+
+block :: Lens' (CallParam p) DefaultBlock
+block = lens _block $ \a b -> a { _block = b }
+
+account :: Lens' (CallParam p) p
+account = lens _account $ \a b -> a { _account = b }
 
 -- | TODO
 newtype AccountT p m a = AccountT
@@ -80,18 +90,16 @@ withParam f m = AccountT $ withStateT f $ runAccountT m
 defaultCallParam :: a -> CallParam a
 {-# INLINE defaultCallParam #-}
 defaultCallParam =
-    CallParam "0x0000000000000000000000000000000000000000" (0 :: Wei) Nothing (Nothing :: Maybe Wei) Latest
+    CallParam "0x0000000000000000000000000000000000000000" 0 Nothing Nothing Latest
 
-getCall :: MonadState (CallParam t) m => m Call
+getCall :: MonadState (CallParam p) m => m Call
 getCall = do
-    s <- get
-    return $ case s of
-        CallParam recipient value gas gasprice _ _ ->
-            def { callTo       = Just recipient
-                , callValue    = Just (fromInteger $ toWei value)
-                , callGas      = fromInteger <$> gas
-                , callGasPrice = (fromInteger . toWei) <$> gasprice
-                }
+    CallParam{..} <- get
+    return $ def { callTo       = Just _to
+                 , callValue    = Just $ fromInteger _value
+                 , callGas      = fromInteger <$> _gasLimit
+                 , callGasPrice = fromInteger <$> _gasPrice
+                 }
 
 getReceipt :: JsonRpcM m => HexString -> m TxReceipt
 getReceipt tx = do

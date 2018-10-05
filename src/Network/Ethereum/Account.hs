@@ -18,6 +18,11 @@ module Network.Ethereum.Account (
 
     , withParam
     , to
+    , value
+    , gasLimit
+    , gasPrice
+    , block
+    , account
     , (&)
     , (.~)
 
@@ -27,6 +32,8 @@ import           Lens.Micro                        ((&), (.~))
 
 import           Network.Ethereum.Account.Class    (Account (..))
 import           Network.Ethereum.Account.Default  (DefaultAccount)
-import           Network.Ethereum.Account.Internal (to, withParam)
+import           Network.Ethereum.Account.Internal (account, block, gasLimit,
+                                                    gasPrice, to, value,
+                                                    withParam)
 import           Network.Ethereum.Account.Personal (Personal (..),
                                                     PersonalAccount)
