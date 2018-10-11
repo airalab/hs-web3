@@ -1,19 +1,41 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Network.Ethereum.ABI.Prim.Test.AddressSpec where
+module Data.Solidity.Test.AddressSpec where
 
+import           Crypto.Secp256k1           (SecKey, derivePubKey)
 import           Data.ByteString            (ByteString)
 import           Data.ByteString.Char8      (unpack)
 import           Data.Foldable              (for_)
 import           Data.Monoid                ((<>))
-import           Data.Solidity.Prim.Address
 import           Test.Hspec
+
+import           Data.Solidity.Prim.Address
 
 spec :: Spec
 spec = do
     describe "EIP55 Test Vectors" $ for_ checksummedAddrs (\addr ->
         it (unpack addr <> " should be checksummed") $ verifyChecksum addr `shouldBe` True)
+
     describe "EIP55 Test Vectors Tampered" $ for_ unchecksummedAddrs (\addr ->
         it (unpack addr <> " should not be checksummed") $ verifyChecksum addr `shouldBe` False)
+
+    describe "Conversion from/to hex string" $ do
+        it "should convert from/to on valid hex" $ do
+            fromHexString "0x6370eF2f4Db3611D657b90667De398a2Cc2a370C"
+                `shouldBe` Right "0x6370eF2f4Db3611D657b90667De398a2Cc2a370C"
+
+            toHexString "0x6370eF2f4Db3611D657b90667De398a2Cc2a370C"
+                `shouldBe` "0x6370eF2f4Db3611D657b90667De398a2Cc2a370C"
+
+        it "should fail on broken hex" $ do
+            fromHexString "0x42"
+                `shouldBe` Left "Incorrect address length: 1"
+
+
+    describe "Conversion from Secp256k1 keys" $ do
+        it "derivation from private key" $ do
+            let key = "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20" :: SecKey
+            fromPubKey (derivePubKey key)
+                `shouldBe` "0x6370eF2f4Db3611D657b90667De398a2Cc2a370C"
 
 checksummedAddrs :: [ByteString]
 checksummedAddrs =

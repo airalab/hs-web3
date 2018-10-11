@@ -4,7 +4,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies      #-}
 
-module Network.Ethereum.Web3.Test.EncodingSpec where
+module Data.Solidity.Test.EncodingSpec where
 
 import           Data.Monoid                ((<>))
 import           Data.Text                  (Text)

@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
 
-module Network.Ethereum.Web3.Test.CompilerSpec where
+module Language.Solidity.Test.CompilerSpec where
 
 import           Language.Solidity.Compiler
 import           Test.Hspec

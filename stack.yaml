@@ -1,13 +1,23 @@
 # Resolver to choose a 'specific' stackage snapshot or a compiler version.
-resolver: lts-12.11
+resolver: lts-12.12
 
 # User packages to be built.
 packages:
 - '.'
+
+# Extra package dependencies
+extra-deps:
+- secp256k1-1.1.2
 
 # Dependencies bounds
 pvp-bounds: both
 
 # Nix integration
 nix:
-    packages: [ zlib boost jsoncpp solc solc.dev ]
+    packages:
+    - zlib
+    - boost
+    - jsoncpp
+    - solc
+    - solc.dev
+    - secp256k1

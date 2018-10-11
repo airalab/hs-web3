@@ -38,6 +38,7 @@ dependencies:
 - bytestring           >=0.10.8.2 && <0.11
 - cryptonite           ==0.25.*
 - exceptions
+- secp256k1
 - basement             >=0.0.7    && <0.1
 - machines             >=0.6.3    && <0.7
 - tagged               >=0.8.5    && <0.9
@@ -78,12 +79,14 @@ ghc-options:
 flags:
   tls:
     description: Enable TLS support
-    default: False
+    default: True 
     manual: True
+
   debug:
     description: Enable debug compiler options
     default: False
     manual: True
+
   solidity:
     description: Enable Solidity compiler
     default: False
@@ -95,8 +98,10 @@ library:
   - condition: flag(tls)
     cpp-options:      -DTLS_MANAGER
     dependencies:     http-client-tls
+
   - condition: flag(debug)
     ghc-options:      -ddump-splices
+
   - condition: flag(solidity)
     cpp-options:      -DSOLIDITY_COMPILER
     dependencies:     containers
