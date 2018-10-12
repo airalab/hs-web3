@@ -22,11 +22,11 @@ spec = do
             sign' = either error id $ decode (convert sign)
 
         it "sign message by Ethereum private key" $ do
-            ecsign message key `shouldBe` Just sign'
+            ecsign key message `shouldBe` sign'
 
         it "verify message by Ethereum public key" $ do
-            ecrecover message sign' `shouldBe` Just address
+            ecrecover sign' message `shouldBe` Just address
 
         prop "round robin sign/verify for random message" $ \chars ->
             let msg = pack chars
-             in (ecrecover msg =<< ecsign msg key) `shouldBe` Just address
+             in ecrecover (ecsign key msg) msg `shouldBe` Just address

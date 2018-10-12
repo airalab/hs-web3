@@ -1,35 +1,37 @@
 module Crypto.Ethereum where
 
 import           Crypto.Hash                (Keccak_256 (..), hashWith)
-import           Crypto.Secp256k1           (CompactRecSig, SecKey,
+import           Crypto.Secp256k1           (CompactRecSig, Msg, SecKey,
                                              exportCompactRecSig,
                                              importCompactRecSig, msg, recover,
                                              signRecMsg)
 import           Data.ByteArray             (ByteArrayAccess, convert)
+import           Data.Maybe                 (fromJust)
 
 import           Data.Solidity.Prim.Address (Address, fromPubKey)
 
+-- | Keccak 256 hash of argument
+hashMessage :: ByteArrayAccess ba => ba -> Msg
+hashMessage = fromJust . msg . convert . hashWith Keccak_256
+
 -- | Sign message with Ethereum private key
 ecsign :: ByteArrayAccess message
-       => message
-       -- ^ Message content
-       -> SecKey
+       => SecKey
        -- ^ Private key
-       -> Maybe CompactRecSig
+       -> message
+       -- ^ Message content
+       -> CompactRecSig
        -- ^ Signature
-ecsign message privateKey = do
-    msgHash <- msg $ convert $ hashWith Keccak_256 message
-    return . exportCompactRecSig $ signRecMsg privateKey msgHash
+ecsign key = exportCompactRecSig . signRecMsg key . hashMessage
 
 -- | Recover message signer Ethereum address
 ecrecover :: ByteArrayAccess message
-          => message
-          -- ^ Message content
-          -> CompactRecSig
+          => CompactRecSig
           -- ^ Signature
+          -> message
+          -- ^ Message content
           -> Maybe Address
           -- ^ Message signer address
-ecrecover message sig = do
-    msgHash <- msg $ convert $ hashWith Keccak_256 message
+ecrecover sig message = do
     sig' <- importCompactRecSig sig
-    fromPubKey <$> recover sig' msgHash
+    fromPubKey <$> recover sig' (hashMessage message)

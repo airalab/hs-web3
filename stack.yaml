@@ -8,6 +8,7 @@ packages:
 # Extra package dependencies
 extra-deps:
 - secp256k1-1.1.2
+- relapse-1.0.0.0
 
 # Dependencies bounds
 pvp-bounds: both

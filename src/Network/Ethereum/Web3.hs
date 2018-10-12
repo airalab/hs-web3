@@ -42,7 +42,6 @@ module Network.Ethereum.Web3 (
 import           Data.Solidity.Prim
 import           Network.Ethereum.Account
 import           Network.Ethereum.Api.Provider   (Web3, runWeb3)
-import           Network.Ethereum.Api.Types      (Call (..))
 import           Network.Ethereum.Contract.Event (EventAction (..), event,
                                                   event')
 import           Network.Ethereum.Unit
