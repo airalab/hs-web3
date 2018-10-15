@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 
@@ -29,17 +30,19 @@ import           Network.Ethereum.Account.Internal (CallParam (..),
                                                     defaultCallParam)
 import           Network.Ethereum.Account.Internal (AccountT (..), getCall,
                                                     getReceipt)
-import qualified Network.Ethereum.Api.Eth          as Eth (call)
+import qualified Network.Ethereum.Api.Eth          as Eth (call, estimateGas)
 import           Network.Ethereum.Api.Personal     (Passphrase)
 import qualified Network.Ethereum.Api.Personal     as Personal (sendTransaction)
-import           Network.Ethereum.Api.Types        (Call (callData, callFrom))
+import           Network.Ethereum.Api.Types        (Call (callData, callFrom, callGas))
 import           Network.Ethereum.Contract.Method  (selector)
 
-data Personal = Personal !Address !Passphrase
-  deriving (Eq, Show)
+data Personal = Personal {
+    personalAddress    :: !Address
+  , personalPassphrase :: !Passphrase
+  } deriving (Eq, Show)
 
 instance Default Personal where
-    def = Personal "0x0000000000000000000000000000000000000000" ""
+    def = Personal def ""
 
 type PersonalAccount = AccountT Personal
 
@@ -48,15 +51,17 @@ instance Account Personal PersonalAccount where
         fmap fst . flip runStateT (defaultCallParam a) . runAccountT
 
     send (args :: a) = do
-        s <- get
-        case s of
-            CallParam _ _ _ _ _ (Personal address passphrase) -> do
-                c <- getCall
-                let dat    = selector (Proxy :: Proxy a) <> encode args
-                    params = c { callFrom = Just address, callData = Just $ BA.convert dat }
-                lift $ do
-                    tx <- Personal.sendTransaction params passphrase
-                    getReceipt tx
+        CallParam{..} <- get
+        c <- getCall
+        lift $ do
+            let dat    = selector (Proxy :: Proxy a) <> encode args
+                params = c { callFrom = Just $ personalAddress _account
+                           , callData = Just $ BA.convert dat }
+
+            gasLimit <- Eth.estimateGas params
+            let params' = params { callGas = Just gasLimit }
+
+            getReceipt =<< Personal.sendTransaction params' (personalPassphrase _account)
 
     call (args :: a) = do
         s <- get

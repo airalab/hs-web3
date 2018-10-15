@@ -20,22 +20,29 @@
 
 module Network.Ethereum.Contract where
 
-import           Data.Proxy                     (Proxy)
-import           Data.Text                      (Text)
+import           Data.Proxy                       (Proxy)
+import           Data.Text                        (Text)
 
-import           Data.HexString                 (HexString)
-import           Network.Ethereum.Account.Class (Account)
-import           Network.Ethereum.Api.Types     (TxReceipt)
-import           Network.JsonRpc.TinyClient     (JsonRpcM)
+import           Data.HexString                   (HexString)
+import           Data.Solidity.Prim.Address       (Address)
+import           Network.Ethereum.Account.Class   (Account)
+import           Network.Ethereum.Account.Safe    (safeConfirmations, safeSend)
+import           Network.Ethereum.Api.Types       (receiptContractAddress)
+import           Network.Ethereum.Contract.Method (Method)
+import           Network.JsonRpc.TinyClient       (JsonRpcM)
 
 class Contract a where
-    abi :: Proxy a
-        -> Text
+    -- | Contract Solidity ABI
+    -- https://solidity.readthedocs.io/en/latest/abi-spec.html
+    abi :: Proxy a -> Text
 
-    bytecode :: Proxy a
-             -> HexString
+    -- | Contract bytecode as hex string
+    bytecode :: Proxy a -> HexString
 
-new :: (Account p t, JsonRpcM m)
-    => Proxy a
-    -> t m TxReceipt
-new = undefined
+-- | Create new contract on blockchain
+new :: (Account p t, JsonRpcM m, Method a, Monad (t m))
+    => a
+    -- ^ Contract constructor
+    -> t m (Maybe Address)
+    -- ^ Address of deployed contract when transaction success
+new = fmap receiptContractAddress . safeSend safeConfirmations

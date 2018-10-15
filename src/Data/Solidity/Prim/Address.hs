@@ -35,13 +35,14 @@ import           Data.ByteString         (ByteString)
 import qualified Data.ByteString         as BS (take, unpack)
 import qualified Data.ByteString.Char8   as C8 (drop, length, pack, unpack)
 import qualified Data.Char               as C (toLower, toUpper)
-import           Data.HexString          (HexString, fromBytes, hexString,
-                                          toBytes, toText)
+import           Data.Default            (Default (..))
 import           Data.String             (IsString (..))
 import           Data.Text.Encoding      as T (encodeUtf8)
 import           Generics.SOP            (Generic)
 import qualified GHC.Generics            as GHC (Generic)
 
+import           Data.HexString          (HexString, fromBytes, hexString,
+                                          toBytes, toText)
 import           Data.Solidity.Abi       (AbiGet (..), AbiPut (..),
                                           AbiType (..))
 import           Data.Solidity.Abi.Codec (decode, encode)
@@ -52,6 +53,9 @@ newtype Address = Address { unAddress :: UIntN 160 }
   deriving (Eq, Ord, GHC.Generic)
 
 instance Generic Address
+
+instance Default Address where
+    def = Address 0
 
 -- | Derive address from secp256k1 public key
 fromPubKey :: PubKey -> Address

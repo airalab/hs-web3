@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 
@@ -19,6 +20,7 @@ import           Control.Monad.Catch               (throwM)
 import           Control.Monad.State.Strict        (get, runStateT)
 import           Control.Monad.Trans               (MonadTrans (..))
 import qualified Data.ByteArray                    as BA (convert)
+import           Data.Maybe                        (listToMaybe)
 import           Data.Proxy                        (Proxy (..))
 
 import           Data.Solidity.Abi.Codec           (decode, encode)
@@ -28,9 +30,10 @@ import           Network.Ethereum.Account.Internal (AccountT (..),
                                                     defaultCallParam, getCall,
                                                     getReceipt)
 import qualified Network.Ethereum.Api.Eth          as Eth (accounts, call,
+                                                           estimateGas,
                                                            sendTransaction)
 import           Network.Ethereum.Api.Provider     (Web3Error (ParserFail))
-import           Network.Ethereum.Api.Types        (Call (callData, callFrom))
+import           Network.Ethereum.Api.Types        (Call (callData, callFrom, callGas))
 import           Network.Ethereum.Contract.Method  (Method (..))
 
 type DefaultAccount = AccountT ()
@@ -42,27 +45,25 @@ instance Account () DefaultAccount where
     send (args :: a) = do
         c <- getCall
         lift $ do
-            let dat = selector (Proxy :: Proxy a) <> encode args
-                params = c { callData = Just $ BA.convert dat }
             accounts <- Eth.accounts
-            tx <- Eth.sendTransaction $
-                case accounts of
-                    (a : _) -> params { callFrom = Just a }
-                    _       -> params
-            getReceipt tx
+            let dat = selector (Proxy :: Proxy a) <> encode args
+                params = c { callData = Just $ BA.convert dat
+                           , callFrom = listToMaybe accounts }
+
+            gasLimit <- Eth.estimateGas params
+            let params' = params { callGas = Just gasLimit }
+
+            getReceipt =<< Eth.sendTransaction params'
 
     call (args :: a) = do
         c <- getCall
-        let dat    = selector (Proxy :: Proxy a) <> encode args
-            params = c { callData = Just $ BA.convert dat }
-        s <- get
-        case s of
-            CallParam _ _ _ _ block _ -> do
-                res <- lift $ do
-                    accounts <- Eth.accounts
-                    flip Eth.call block $ case accounts of
-                        (a : _) -> params { callFrom = Just a }
-                        _       -> params
-                case decode res of
-                    Right r -> return r
-                    Left e  -> lift $ throwM (ParserFail e)
+        CallParam{..} <- get
+        res <- lift $ do
+            accounts <- Eth.accounts
+            let dat    = selector (Proxy :: Proxy a) <> encode args
+                params = c { callData = Just $ BA.convert dat
+                           , callFrom = listToMaybe accounts }
+            Eth.call params _block
+        case decode res of
+            Right r -> return r
+            Left e  -> lift $ throwM (ParserFail e)

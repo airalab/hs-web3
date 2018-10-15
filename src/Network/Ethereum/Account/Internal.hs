@@ -39,7 +39,7 @@ import           Network.JsonRpc.TinyClient     (JsonRpcM)
 
 -- | TODO
 data CallParam p = CallParam
-    { _to       :: Address
+    { _to       :: Maybe Address
     -- ^ Transaction recepient
     , _value    :: Integer
     -- ^ Transaction value
@@ -54,7 +54,7 @@ data CallParam p = CallParam
     } deriving Eq
 
 to :: Lens' (CallParam p) Address
-to = lens _to $ \a b -> a { _to = b }
+to = lens (maybe def id . _to) $ \a b -> a { _to = Just b }
 
 value :: Unit value => Lens' (CallParam p) value
 value = lens (fromWei . _value) $ \a b -> a { _value = toWei b }
@@ -89,13 +89,12 @@ withParam f m = AccountT $ withStateT f $ runAccountT m
 
 defaultCallParam :: a -> CallParam a
 {-# INLINE defaultCallParam #-}
-defaultCallParam =
-    CallParam "0x0000000000000000000000000000000000000000" 0 Nothing Nothing Latest
+defaultCallParam = CallParam def 0 Nothing Nothing Latest
 
 getCall :: MonadState (CallParam p) m => m Call
 getCall = do
     CallParam{..} <- get
-    return $ def { callTo       = Just _to
+    return $ def { callTo       = _to
                  , callValue    = Just $ fromInteger _value
                  , callGas      = fromInteger <$> _gasLimit
                  , callGasPrice = fromInteger <$> _gasPrice

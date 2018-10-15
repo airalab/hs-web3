@@ -48,3 +48,8 @@ safeSend b a = lift . waiting =<< send a
                     else do liftIO $ threadDelay 1000000
                             waiting receipt
 
+-- | Count block confirmation to keep secure
+-- According to Vitalik post
+-- https://blog.ethereum.org/2015/09/14/on-slow-and-fast-block-times/
+safeConfirmations :: Integer
+safeConfirmations = 10
