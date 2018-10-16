@@ -3,19 +3,21 @@
 
 -- |
 -- Module      :  Data.Solidity.Prim.Tagged
--- Copyright   :  Alexander Krupenkin 2016-2018
+-- Copyright   :  Alexander Krupenkin 2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
 -- Stability   :  experimental
 -- Portability :  noportable
 --
--- Ethereum Abi UTF8-encoded tagged types.
+-- Ethereum Abi tagged types.
 --
 
-module Data.Solidity.Prim.Tagged (
-    Tagged
-  ) where
+module Data.Solidity.Prim.Tagged
+    (
+    -- * The @Tagged@ type
+      Tagged
+    ) where
 
 import           Data.Proxy        (Proxy (..))
 import           Data.Tagged       (Tagged (..))

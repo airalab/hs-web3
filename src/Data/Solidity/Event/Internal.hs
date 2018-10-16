@@ -13,7 +13,7 @@
 
 -- |
 -- Module      :  Data.Solidity.Event.Internal
--- Copyright   :  Alexander Krupenkin 2016-2018
+-- Copyright   :  Alexander Krupenkin 2017-2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me

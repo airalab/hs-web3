@@ -13,27 +13,41 @@
 {-# LANGUAGE TypeOperators          #-}
 {-# LANGUAGE UndecidableInstances   #-}
 
+-- |
+-- Module      :  Network.Ethereum.Contract.Event.MultiFilter
+-- Copyright   :  Alexander Krupenkin 2018
+-- License     :  BSD3
+--
+-- Maintainer  :  mail@akru.me
+-- Stability   :  experimental
+-- Portability :  unportable
+--
+-- Support for parallel multiple event filters.
+--
 
-module  Network.Ethereum.Contract.Event.MultiFilter  -- * MultiEventMonitors
-  ( MultiFilter(..)
-  , minStartBlock
-  , minEndBlock
-  , modifyMultiFilter
-  -- * With geth filters
-  , multiEvent
-  , multiEvent'
-  , multiEventMany'
+module  Network.Ethereum.Contract.Event.MultiFilter
+    (
+    -- * The @MultiFilter@ type
+      MultiFilter(..)
+    , minStartBlock
+    , minEndBlock
+    , modifyMultiFilter
 
-  -- * Without geth filters
-  , multiEventNoFilter
-  , multiEventNoFilter'
-  , multiEventManyNoFilter'
+    -- * With geth filters
+    , multiEvent
+    , multiEvent'
+    , multiEventMany'
 
-  -- * ReExports
-  , Handlers
-  , Handler(..)
-  , Rec(..)
-  ) where
+    -- * Without geth filters
+    , multiEventNoFilter
+    , multiEventNoFilter'
+    , multiEventManyNoFilter'
+
+    -- * Re-exports
+    , Handlers
+    , Handler(..)
+    , Rec(..)
+    ) where
 
 import           Control.Concurrent                     (threadDelay)
 import           Control.Concurrent.Async               (Async)
@@ -64,6 +78,7 @@ import           Network.Ethereum.Api.Types             (Change (..),
                                                          DefaultBlock (..),
                                                          Filter (..), Quantity)
 import           Network.Ethereum.Contract.Event.Common
+
 --------------------------------------------------------------------------------
 -- | MultiFilters
 --------------------------------------------------------------------------------

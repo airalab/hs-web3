@@ -1,8 +1,8 @@
 {-# LANGUAGE TypeFamilies #-}
 
 -- |
--- Module      :  Data.Solidity.Codec
--- Copyright   :  Alexander Krupenkin 2016-2018
+-- Module      :  Data.Solidity.Abi.Codec
+-- Copyright   :  Alexander Krupenkin 2017-2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
@@ -12,12 +12,16 @@
 -- Solidity contract ABI encoding functions.
 --
 
-module Data.Solidity.Abi.Codec (
-    encode
-  , decode
-  , encode'
-  , decode'
-  ) where
+module Data.Solidity.Abi.Codec
+    (
+    -- * @AbiPut@/@AbiGet@ type class encoding
+      encode
+    , decode
+
+    -- * Generic encoding
+    , encode'
+    , decode'
+    ) where
 
 import           Data.ByteArray            (ByteArray, ByteArrayAccess, convert)
 import           Data.Serialize            (runGet, runPut)

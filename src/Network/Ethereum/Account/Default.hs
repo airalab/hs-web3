@@ -13,6 +13,8 @@
 -- Stability   :  experimental
 -- Portability :  unportable
 --
+-- Default node managed account (typically the first of accounts list).
+--
 
 module Network.Ethereum.Account.Default where
 

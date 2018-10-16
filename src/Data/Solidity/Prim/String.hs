@@ -1,6 +1,6 @@
 -- |
 -- Module      :  Data.Solidity.Prim.String
--- Copyright   :  Alexander Krupenkin 2016-2018
+-- Copyright   :  Alexander Krupenkin 2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
@@ -10,7 +10,11 @@
 -- Ethereum Abi UTF8-encoded string type.
 --
 
-module Data.Solidity.Prim.String () where
+module Data.Solidity.Prim.String
+    (
+    -- * The strict @Text@ type
+      Text
+    ) where
 
 import           Data.Text                (Text)
 import           Data.Text.Encoding       (decodeUtf8, encodeUtf8)

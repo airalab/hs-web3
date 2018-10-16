@@ -14,6 +14,8 @@
 -- Stability   :  experimental
 -- Portability :  unportable
 --
+-- Internal types and functions of 'Account' module.
+--
 
 module Network.Ethereum.Account.Internal where
 
@@ -37,7 +39,7 @@ import           Network.JsonRpc.TinyClient     (JsonRpcM)
 
 -- | Account is needed to send transactions to blockchain
 
--- | TODO
+-- | Transaction parametrization data type
 data CallParam p = CallParam
     { _to       :: Maybe Address
     -- ^ Transaction recepient
@@ -53,25 +55,31 @@ data CallParam p = CallParam
     -- ^ Account params to sign transaction
     } deriving Eq
 
+-- | Transaction recipient lens
 to :: Lens' (CallParam p) Address
 to = lens (maybe def id . _to) $ \a b -> a { _to = Just b }
 
+-- | Transaction value lens
 value :: Unit value => Lens' (CallParam p) value
 value = lens (fromWei . _value) $ \a b -> a { _value = toWei b }
 
+-- | Transaction gas limit lens
 gasLimit :: Lens' (CallParam p) (Maybe Integer)
 gasLimit = lens _gasLimit $ \a b -> a { _gasLimit = b }
 
+-- | Transaction gas price lens
 gasPrice :: Unit gasprice => Lens' (CallParam p) (Maybe gasprice)
 gasPrice = lens (fmap fromWei . _gasPrice) $ \a b -> a { _gasPrice = toWei <$> b }
 
+-- | Call execution block lens
 block :: Lens' (CallParam p) DefaultBlock
 block = lens _block $ \a b -> a { _block = b }
 
+-- | EOA params lens
 account :: Lens' (CallParam p) p
 account = lens _account $ \a b -> a { _account = b }
 
--- | TODO
+-- | Monad transformer for sending parametrized transactions from account
 newtype AccountT p m a = AccountT
     { runAccountT :: StateT (CallParam p) m a }
   deriving (Functor, Applicative, Monad, MonadTrans)
@@ -80,6 +88,14 @@ instance Monad m => MonadState (CallParam p) (AccountT p m) where
     get = AccountT get
     put = AccountT . put
 
+-- | @withParam@ is very similar to @withStateT@ function, it's used
+-- to set parameters of transaction locally and revert params after out of scope.
+--
+--  @
+--  withAccount () $
+--    withParam (to .~ tokenAddress) $
+--      transfer alice 42
+--  @
 withParam :: Account p (AccountT p)
           => (CallParam p -> CallParam p)
           -> AccountT p m a
@@ -107,7 +123,7 @@ getReceipt tx = do
         Just receipt -> return receipt
         Nothing -> do
             liftIO $ threadDelay 100000
-            -- | TODO: avoid inifinite loop
+            -- TODO: avoid inifinite loop
             getReceipt tx
 
 updateReceipt :: JsonRpcM m => TxReceipt -> m TxReceipt

@@ -4,23 +4,20 @@
 
 -- |
 -- Module      :  Data.Solidity.Abi
--- Copyright   :  Alexander Krupenkin 2016-2018
+-- Copyright   :  Alexander Krupenkin 2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
 -- Stability   :  experimental
 -- Portability :  noportable
 --
--- Solidity ABI encoding type classes.
+-- The Application Binary Interface is the standard way to interact with contracts
+-- in the Ethereum ecosystem, both from outside the blockchain and for contract-to-contract
+-- interaction. Data is encoded according to its type, as described in this specification.
+-- The encoding is not self describing and thus requires a schema in order to decode.
 --
 
-module Data.Solidity.Abi (
-    AbiType(..)
-  , AbiPut(..)
-  , AbiGet(..)
-  , GenericAbiPut(..)
-  , GenericAbiGet(..)
-  ) where
+module Data.Solidity.Abi where
 
 import           Data.Proxy     (Proxy)
 import           Data.Serialize (Get, Putter)

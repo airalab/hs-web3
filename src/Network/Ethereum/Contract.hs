@@ -15,7 +15,9 @@
 -- Stability   :  experimental
 -- Portability :  unportable
 --
---
+-- Smart contract type class and utils. A contract in the sense of Solidity
+-- is a collection of code (its functions) and data (its state) that resides
+-- at a specific address on the Ethereum blockchain.
 --
 
 module Network.Ethereum.Contract where
@@ -31,6 +33,7 @@ import           Network.Ethereum.Api.Types       (receiptContractAddress)
 import           Network.Ethereum.Contract.Method (Method)
 import           Network.JsonRpc.TinyClient       (JsonRpcM)
 
+-- | Contract description type clase
 class Contract a where
     -- | Contract Solidity ABI
     -- https://solidity.readthedocs.io/en/latest/abi-spec.html
@@ -39,7 +42,7 @@ class Contract a where
     -- | Contract bytecode as hex string
     bytecode :: Proxy a -> HexString
 
--- | Create new contract on blockchain
+-- | Create new smart contract on blockchain
 new :: (Account p t, JsonRpcM m, Method a, Monad (t m))
     => a
     -- ^ Contract constructor

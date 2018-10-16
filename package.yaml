@@ -53,6 +53,7 @@ dependencies:
 - mtl                  >=2.2.2    && <2.3
 
 ghc-options:
+- -funbox-strict-fields
 - -Wduplicate-exports
 - -Whi-shadowing
 - -Widentities

@@ -8,8 +8,8 @@
 {-# LANGUAGE TypeOperators              #-}
 
 -- |
--- Module      :  Network.Ethereum.Encoding.Prim.Int
--- Copyright   :  Alexander Krupenkin 2016-2018
+-- Module      :  Data.Solidity.Prim.Int
+-- Copyright   :  Alexander Krupenkin 2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
@@ -19,12 +19,18 @@
 -- Ethereum Abi intN and uintN types.
 --
 
-module Data.Solidity.Prim.Int (
-    IntN
-  , UIntN
-  , getWord256
-  , putWord256
-  ) where
+module Data.Solidity.Prim.Int
+    (
+    -- * The @IntN@ type
+      IntN
+
+    -- * The @UIntN@ type
+    , UIntN
+
+    -- * @Word256@ serializers
+    , getWord256
+    , putWord256
+    ) where
 
 import qualified Basement.Numerical.Number as Basement (toInteger)
 import           Basement.Types.Word256    (Word256 (Word256))
@@ -45,6 +51,7 @@ instance Integral Word256 where
     toInteger = Basement.toInteger
     quotRem a b = (Basement.quot a b, Basement.rem a b)
 
+-- | Unsigned integer with fixed length in bits
 newtype UIntN (n :: Nat) = UIntN { unUIntN :: Word256 }
     deriving (Eq, Ord, Enum, Num, Bits, Generic)
 
@@ -71,7 +78,7 @@ instance (n <= 256) => AbiGet (UIntN n) where
 instance (n <= 256) => AbiPut (UIntN n) where
     abiPut = putWord256 . unUIntN
 
--- TODO: Signed data type
+-- Signed integer with fixed length in bits
 newtype IntN (n :: Nat) = IntN { unIntN :: Word256 }
     deriving (Eq, Ord, Enum, Bits, Generic)
 

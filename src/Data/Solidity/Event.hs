@@ -11,7 +11,7 @@
 
 -- |
 -- Module      :  Data.Solidity.Event
--- Copyright   :  Alexander Krupenkin 2016-2018
+-- Copyright   :  Alexander Krupenkin 2017-2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
@@ -24,10 +24,11 @@
 -- this directly in application code.
 --
 
-module Data.Solidity.Event (
-    DecodeEvent(..)
-  , IndexedEvent(..)
-  ) where
+module Data.Solidity.Event
+    (
+      DecodeEvent(..)
+    , IndexedEvent(..)
+    ) where
 
 import           Data.ByteArray               (ByteArrayAccess)
 import           Data.Proxy                   (Proxy (..))

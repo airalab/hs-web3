@@ -1,11 +1,19 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
 
-module Data.HexString ( HexString
-                      , hexString
-                      , fromBytes
-                      , toBytes
-                      , toText ) where
+-- |
+-- Module      :  Data.HexString
+-- Copyright   :  Alexander Krupenkin 2018
+-- License     :  BSD3
+--
+-- Maintainer  :  mail@akru.me
+-- Stability   :  experimental
+-- Portability :  unportable
+--
+-- Hex string data type and useful functions.
+--
+
+module Data.HexString where
 
 import           Data.Aeson              (FromJSON (..), ToJSON (..),
                                           Value (String), withText)

@@ -35,7 +35,10 @@ import           Network.JsonRpc.TinyClient          (JsonRpcM)
 
 -- | Namehash algorithm
 -- http://docs.ens.domains/en/latest/implementers.html#algorithm
-namehash :: ByteString -> BytesN 32
+namehash :: ByteString
+         -- ^ Domain name
+         -> BytesN 32
+         -- ^ Associated ENS node
 namehash =
     unsafeFromByteArrayAccess . foldr algo (zero 32) . split '.'
   where
@@ -44,7 +47,11 @@ namehash =
     sha3 bs = convert (hash bs :: Digest Keccak_256)
 
 -- | Get address of ENS domain
-resolve :: (JsonRpcM m, Account p (AccountT p)) => ByteString -> AccountT p m Address
+resolve :: (JsonRpcM m, Account p (AccountT p))
+        => ByteString
+        -- ^ Domain name
+        -> AccountT p m Address
+        -- ^ Associated address
 resolve name = do
     r <- ensRegistry $ Reg.resolver node
     withParam (to .~ r) $ Resolver.addr node

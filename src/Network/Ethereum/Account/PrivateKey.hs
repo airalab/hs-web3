@@ -16,10 +16,7 @@
 -- Portability :  unportable
 --
 
-module Network.Ethereum.Account.PrivateKey (
-    PrivateKey(..)
-  , PrivateKeyAccount
-) where
+module Network.Ethereum.Account.PrivateKey where
 
 import           Control.Monad.State.Strict        (get, runStateT)
 import           Control.Monad.Trans               (lift)
@@ -51,6 +48,7 @@ import           Network.Ethereum.Chain            (foundation)
 import           Network.Ethereum.Contract.Method  (selector)
 import           Network.Ethereum.Unit             (Shannon, toWei)
 
+-- | Local EOA params
 data PrivateKey = PrivateKey
     { privateKey      :: !SecKey
     , privateKeyChain :: !Integer

@@ -9,6 +9,7 @@
 -- Stability   :  experimental
 -- Portability :  unportable
 --
+-- Safe sending of Ethereum transaction.
 --
 
 module Network.Ethereum.Account.Safe where
@@ -25,7 +26,6 @@ import           Network.Ethereum.Contract.Method  (Method)
 import           Network.JsonRpc.TinyClient        (JsonRpcM)
 
 -- | Safe version of 'send' function of 'Account' typeclass
---
 -- Waiting for some blocks of transaction confirmation before return
 safeSend :: (Account p t, JsonRpcM m, Method args, Monad (t m))
          => Integer

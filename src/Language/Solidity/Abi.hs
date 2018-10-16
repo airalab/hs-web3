@@ -3,7 +3,7 @@
 
 -- |
 -- Module      :  Data.Solidity.Abi.Json
--- Copyright   :  Alexander Krupenkin 2016
+-- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
@@ -13,17 +13,23 @@
 -- JSON encoded contract ABI parsers.
 --
 
-module Language.Solidity.Abi (
-    ContractAbi(..)
-  , Declaration(..)
-  , FunctionArg(..)
-  , EventArg(..)
-  , signature
-  , methodId
-  , eventId
-  , SolidityType(..)
-  , parseSolidityType
-  ) where
+module Language.Solidity.Abi
+    (
+    -- * Contract ABI declarations
+      ContractAbi(..)
+    , Declaration(..)
+    , FunctionArg(..)
+    , EventArg(..)
+
+    -- * Method/Event id encoder
+    , signature
+    , methodId
+    , eventId
+
+    -- * Solidity type parser
+    , SolidityType(..)
+    , parseSolidityType
+    ) where
 
 import           Control.Monad      (void)
 import           Crypto.Hash        (Digest, Keccak_256, hash)

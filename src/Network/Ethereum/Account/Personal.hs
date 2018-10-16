@@ -14,6 +14,9 @@
 -- Stability   :  experimental
 -- Portability :  unportable
 --
+-- Node managed unlockable account. Typically to send transaction from this account
+-- password is required.
+--
 
 module Network.Ethereum.Account.Personal where
 
@@ -36,6 +39,7 @@ import qualified Network.Ethereum.Api.Personal     as Personal (sendTransaction)
 import           Network.Ethereum.Api.Types        (Call (callData, callFrom, callGas))
 import           Network.Ethereum.Contract.Method  (selector)
 
+-- | Unlockable node managed account params
 data Personal = Personal {
     personalAddress    :: !Address
   , personalPassphrase :: !Passphrase

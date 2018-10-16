@@ -47,18 +47,21 @@
 -- @
 --
 
-module Network.Ethereum.Unit (
-    Unit(..)
-  , UnitSpec(..)
-  , Wei
-  , Babbage
-  , Lovelace
-  , Shannon
-  , Szabo
-  , Finney
-  , Ether
-  , KEther
-  ) where
+module Network.Ethereum.Unit
+    (
+    -- * The @Unit@ type class
+      Unit(..)
+
+    -- * Ethereum value metrics
+    , Wei
+    , Babbage
+    , Lovelace
+    , Shannon
+    , Szabo
+    , Finney
+    , Ether
+    , KEther
+    ) where
 
 import           Data.Proxy                      (Proxy (..))
 import           Data.Text.Lazy                  (Text, unpack)
@@ -72,6 +75,7 @@ import qualified Text.Read.Lex                   as L
 class (Read a, Show a, UnitSpec a, Fractional a) => Unit a where
     -- | Make a value from integer wei
     fromWei :: Integer -> a
+
     -- | Convert a value to integer wei
     toWei :: a -> Integer
 

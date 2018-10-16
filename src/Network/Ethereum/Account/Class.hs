@@ -11,6 +11,8 @@
 -- Stability   :  experimental
 -- Portability :  unportable
 --
+-- Ethereum external owned account abstraction.
+--
 
 module Network.Ethereum.Account.Class where
 

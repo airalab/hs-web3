@@ -36,10 +36,12 @@
 -- Full code example available in examples folder.
 --
 
-module Network.Ethereum.Contract.TH (
-    abi
-  , abiFrom
-) where
+module Network.Ethereum.Contract.TH
+    (
+    -- * The contract quasiquoters
+      abi
+    , abiFrom
+    ) where
 
 import           Control.Applicative              ((<|>))
 import           Control.Monad                    (replicateM, (<=<))

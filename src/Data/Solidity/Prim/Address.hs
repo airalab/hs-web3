@@ -4,7 +4,7 @@
 
 -- |
 -- Module      :  Data.Solidity.Prim.Address
--- Copyright   :  Alexander Krupenkin 2016-2018
+-- Copyright   :  Alexander Krupenkin 2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
@@ -14,14 +14,22 @@
 -- Ethreum account address.
 --
 
-module Data.Solidity.Prim.Address (
-    Address
-  , toHexString
-  , fromHexString
-  , fromPubKey
-  , toChecksum
-  , verifyChecksum
-  ) where
+module Data.Solidity.Prim.Address
+    (
+    -- * The @Address@ type
+      Address
+
+    -- * Hex string encoding
+    , toHexString
+    , fromHexString
+
+    -- * Public key to @Address@ convertor
+    , fromPubKey
+
+    -- * EIP55 Mix-case checksum address encoding
+    , toChecksum
+    , verifyChecksum
+    ) where
 
 import           Control.Monad           ((<=<))
 import           Crypto.Hash             (Keccak_256 (..), hashWith)

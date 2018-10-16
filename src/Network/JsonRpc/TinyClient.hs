@@ -45,17 +45,25 @@
 -- @
 --
 
-module Network.JsonRpc.TinyClient (
-    JsonRpcException(..)
-  , defaultSettings
-  , JsonRpcClient
-  , jsonRpcServer
-  , jsonRpcManager
-  , RpcError(..)
-  , MethodName
-  , JsonRpcM
-  , remote
-  ) where
+module Network.JsonRpc.TinyClient
+    (
+    -- * The JSON-RPC interaction monad
+      JsonRpcM
+
+    -- * JSON-RPC client settings
+    , JsonRpcClient
+    , defaultSettings
+    , jsonRpcServer
+    , jsonRpcManager
+
+    -- * Error handling
+    , JsonRpcException(..)
+    , RpcError(..)
+
+    -- * Remote method call
+    , remote
+    , MethodName
+    ) where
 
 import           Control.Applicative     ((<|>))
 import           Control.Exception       (Exception)

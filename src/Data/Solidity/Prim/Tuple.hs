@@ -5,7 +5,7 @@
 
 -- |
 -- Module      :  Data.Solidity.Prim.Tuple
--- Copyright   :  Alexander Krupenkin 2016-2018
+-- Copyright   :  Alexander Krupenkin 2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
@@ -15,9 +15,11 @@
 -- Tuple type abi encoding instances.
 --
 
-module Data.Solidity.Prim.Tuple (
-    Singleton(..)
-  ) where
+module Data.Solidity.Prim.Tuple
+    (
+    -- * The @Singleton@ type
+      Singleton(..)
+    ) where
 
 import           Data.Proxy                  (Proxy (..))
 import           Generics.SOP                (Generic)
@@ -27,7 +29,7 @@ import           Data.Solidity.Abi           (AbiGet, AbiPut, AbiType (..))
 import           Data.Solidity.Abi.Generic   ()
 import           Data.Solidity.Prim.Tuple.TH (tupleDecs)
 
--- | The type for one-tuples
+-- | The type for single element tuples
 newtype Singleton a = Singleton { unSingleton :: a }
   deriving GHC.Generic
 

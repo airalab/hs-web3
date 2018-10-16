@@ -8,7 +8,7 @@
 
 -- |
 -- Module      :  Data.Solidity.Prim.Bytes
--- Copyright   :  Alexander Krupenkin 2016-2018
+-- Copyright   :  Alexander Krupenkin 2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
@@ -18,10 +18,14 @@
 -- Bytes and BytesN primitive types.
 --
 
-module Data.Solidity.Prim.Bytes (
-    Bytes
-  , BytesN
-  ) where
+module Data.Solidity.Prim.Bytes
+    (
+    -- * The dynamic length @Bytes@ type
+      Bytes
+
+    -- * The fixed length @BytesN@ type
+    , BytesN
+    ) where
 
 import           Control.Monad           (unless)
 import           Data.Aeson              (FromJSON (..), ToJSON (..),
@@ -79,6 +83,7 @@ instance FromJSON Bytes where
 instance ToJSON Bytes where
     toJSON = toJSON . T.append "0x" . decodeUtf8 . convertToBase Base16
 
+-- | Sized byte array with fixed length in bytes
 type BytesN n = SizedByteArray n Bytes
 
 instance (n <= 32) => AbiType (BytesN n) where

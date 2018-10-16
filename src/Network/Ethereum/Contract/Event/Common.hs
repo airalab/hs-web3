@@ -8,6 +8,18 @@
 {-# LANGUAGE ScopedTypeVariables    #-}
 {-# LANGUAGE UndecidableInstances   #-}
 
+-- |
+-- Module      :  Network.Ethereum.Contract.Event.Common
+-- Copyright   :  Alexander Krupenkin 2018
+-- License     :  BSD3
+--
+-- Maintainer  :  mail@akru.me
+-- Stability   :  experimental
+-- Portability :  unportable
+--
+-- Common event manipulation functions.
+--
+
 module Network.Ethereum.Contract.Event.Common  where
 
 import           Control.Concurrent            (threadDelay)

@@ -3,12 +3,16 @@ All notable changes to this project will be documented in this file.
 
 ## [0.8.0.0] 2018-10-**
 ### Added
+- Support for Ethereum cryptography
 - Local private key transaction signer 
 - Generalized JSON-RPC monad for API methods
 - Support for multiple transaction sending methods via one `Account` api
 - Monad based transaction sending parametrization 
 - Experimental support for solidity compiler (disabled by default) 
 - Support for Ethereum mainnet ENS resolver
+- Contract typeclass with api/bytecode getters
+- Contract typeclass TH generator
+- Function for creating contracts
 - Event single/multi filters
 - HexString data type
 - Personal api calls

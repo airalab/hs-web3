@@ -13,16 +13,27 @@
 {-# LANGUAGE TypeOperators          #-}
 {-# LANGUAGE UndecidableInstances   #-}
 
-module Network.Ethereum.Contract.Event.SingleFilter
-  ( event
-  , event'
-  , eventMany'
-  , eventNoFilter
-  , eventNoFilter'
-  , eventManyNoFilter'
-  )
+-- |
+-- Module      :  Network.Ethereum.Contract.Event.SingleFilter
+-- Copyright   :  Alexander Krupenkin 2018
+-- License     :  BSD3
+--
+-- Maintainer  :  mail@akru.me
+-- Stability   :  experimental
+-- Portability :  unportable
+--
+-- Simple contract event filter support.
+--
 
-  where
+module Network.Ethereum.Contract.Event.SingleFilter
+    (
+      event
+    , event'
+    , eventMany'
+    , eventNoFilter
+    , eventNoFilter'
+    , eventManyNoFilter'
+    ) where
 
 import           Control.Concurrent                     (threadDelay)
 import           Control.Concurrent.Async               (Async)

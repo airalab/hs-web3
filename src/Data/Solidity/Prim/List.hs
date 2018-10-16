@@ -4,7 +4,7 @@
 
 -- |
 -- Module      :  Data.Solidity.Prim.List
--- Copyright   :  Alexander Krupenkin 2016-2018
+-- Copyright   :  Alexander Krupenkin 2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
@@ -14,9 +14,11 @@
 -- Ethereum Abi dynamic and static size vectors based on linked lists.
 --
 
-module Data.Solidity.Prim.List (
-    ListN
-  ) where
+module Data.Solidity.Prim.List
+    (
+    -- * Fixed size linked list
+      ListN
+    ) where
 
 import           Basement.Nat           (NatWithinBound)
 import           Basement.Sized.List    (ListN, toListN_, unListN)

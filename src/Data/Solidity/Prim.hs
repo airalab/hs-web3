@@ -1,6 +1,6 @@
 -- |
 -- Module      :  Data.Solidity.Prim
--- Copyright   :  Alexander Krupenkin 2016-2018
+-- Copyright   :  Alexander Krupenkin 2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
@@ -10,15 +10,16 @@
 -- Solidity primitive data types.
 --
 
-module Data.Solidity.Prim (
-    Address
-  , Bytes
-  , BytesN
-  , IntN
-  , UIntN
-  , ListN
-  , Singleton(..)
-  ) where
+module Data.Solidity.Prim
+    (
+      Address
+    , Bytes
+    , BytesN
+    , IntN
+    , UIntN
+    , ListN
+    , Singleton(..)
+    ) where
 
 import           Data.Solidity.Prim.Address (Address)
 import           Data.Solidity.Prim.Bool    ()
