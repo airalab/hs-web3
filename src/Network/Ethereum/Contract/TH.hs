@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
 {-# LANGUAGE TemplateHaskell   #-}
@@ -35,14 +36,19 @@
 -- Full code example available in examples folder.
 --
 
-module Network.Ethereum.Contract.TH (abi, abiFrom) where
+module Network.Ethereum.Contract.TH (
+    abi
+  , abiFrom
+) where
 
 import           Control.Applicative              ((<|>))
 import           Control.Monad                    (replicateM, (<=<))
-import           Data.Aeson                       (eitherDecode)
+import qualified Data.Aeson                       as Aeson (encode)
+import           Data.ByteArray                   (convert)
 import qualified Data.Char                        as Char
 import           Data.Default                     (Default (..))
 import           Data.List                        (group, sort, uncons)
+import           Data.Maybe                       (listToMaybe)
 import           Data.Monoid                      ((<>))
 import           Data.Tagged                      (Tagged)
 import           Data.Text                        (Text)
@@ -54,7 +60,7 @@ import qualified GHC.Generics                     as GHC (Generic)
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Quote
 import           Lens.Micro                       ((^?))
-import           Lens.Micro.Aeson                 (key, _JSON)
+import           Lens.Micro.Aeson                 (key, _JSON, _String)
 
 import           Data.Solidity.Abi                (AbiGet, AbiPut, AbiType (..))
 import           Data.Solidity.Event              (IndexedEvent (..))
@@ -70,6 +76,7 @@ import           Language.Solidity.Abi            (ContractAbi (..),
 import           Network.Ethereum.Account.Class   (Account (..))
 import           Network.Ethereum.Api.Types       (DefaultBlock (..),
                                                    Filter (..), TxReceipt)
+import qualified Network.Ethereum.Contract        as Contract (Contract (..))
 import           Network.Ethereum.Contract.Method (Method (..))
 import           Network.JsonRpc.TinyClient       (JsonRpcM)
 
@@ -80,11 +87,10 @@ abiFrom = quoteFile abi
 -- | QQ reader for contract Abi
 abi :: QuasiQuoter
 abi = QuasiQuoter
-  { quoteDec  = quoteAbiDec
-  , quoteExp  = quoteAbiExp
-  , quotePat  = undefined
-  , quoteType = undefined
-  }
+    { quoteDec  = quoteAbiDec
+    , quoteExp  = quoteAbiExp
+    , quotePat  = undefined
+    , quoteType = undefined }
 
 -- | Instance declaration with empty context
 instanceD' :: Name -> TypeQ -> [DecQ] -> DecQ
@@ -230,6 +236,28 @@ mkDecl fun@(DFunction name constant inputs outputs) = (++)
 
 mkDecl _ = return []
 
+mkContractDecl :: Text -> Text -> Text -> Declaration -> DecsQ
+mkContractDecl name a b (DConstructor inputs) = sequence
+    [ dataD' dataName (normalC dataName bangInput) derivingD
+    , instanceD' dataName (conT ''Generic) []
+    , instanceD' dataName (conT ''AbiType)
+        [funD' 'isDynamic [] [|const False|]]
+    , instanceD' dataName (conT ''AbiPut) []
+    , instanceD' dataName (conT ''Method)
+        [funD' 'selector [] [|convert . Contract.bytecode|]]
+    , instanceD' dataName (conT ''Contract.Contract)
+        [ funD' 'Contract.abi [] [|const abiString|]
+        , funD' 'Contract.bytecode [] [|const bytecodeString|]
+        ]
+    ]
+  where abiString = T.unpack a
+        bytecodeString = T.unpack b
+        dataName = mkName (toUpperFirst (T.unpack $ name <> "Contract"))
+        bangInput = fmap funBangType inputs
+        derivingD = [''Show, ''Eq, ''Ord, ''GHC.Generic]
+
+mkContractDecl _ _ _ _ = return []
+
 -- | this function gives appropriate names for the accessors in the following way
 -- | argName -> evArgName
 -- | arg_name -> evArg_name
@@ -241,9 +269,9 @@ makeArgs prefix ns = go 1 ns
     prefixStr = toLowerFirst . T.unpack $ prefix
     go :: Int -> [(Text, Text)] -> [(Name, Text)]
     go _ [] = []
-    go i ((h, ty) : tail') = if T.null h
-                        then (mkName $ prefixStr ++ show i, ty) : go (i + 1) tail'
-                        else (mkName . (++ "_") . (++) prefixStr . toUpperFirst . T.unpack $ h, ty) : go (i + 1) tail'
+    go i ((h, ty) : tail')
+        | T.null h  = (mkName $ prefixStr ++ show i, ty) : go (i + 1) tail'
+        | otherwise = (mkName . (++ "_") . (++) prefixStr . toUpperFirst . T.unpack $ h, ty) : go (i + 1) tail'
 
 escape :: [Declaration] -> [Declaration]
 escape = escapeEqualNames . fmap escapeReservedNames
@@ -272,36 +300,34 @@ isKeyword = flip elem [ "as", "case", "of", "class"
                       , "infix", "infixl", "infixr"
                       , "let", "in", "mdo", "module"
                       , "newtype", "proc", "qualified"
-                      , "rec", "type", "where"]
+                      , "rec", "type", "where"
+                      ]
+
+constructorSpec :: String -> Maybe (Text, Text, Text, Declaration)
+constructorSpec str = do
+    name <- str ^? key "contractName" . _String
+    abiValue <- str ^? key "abi"
+    bytecode <- str ^? key "bytecode" . _String
+    decl <- listToMaybe =<< (filter isContructor . unAbi <$> str ^? key "abi" . _JSON)
+    return (name, LT.toStrict $ LT.decodeUtf8 $ Aeson.encode abiValue, bytecode, decl)
+  where
+    isContructor (DConstructor _) = True
+    isContructor _                = False
 
 -- | Abi to declarations converter
 quoteAbiDec :: String -> DecsQ
-quoteAbiDec abi_string =
-    let abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
-        eabi = abiDec abi_lbs <|> abiDecNested abi_lbs
-    in case eabi of
-      Left e  -> fail ("Error in quoteAbiDec: " ++ e)
-      Right a -> concat <$> mapM mkDecl (escape a)
-  where
-    abiDec _abi_lbs = case eitherDecode _abi_lbs of
-      Left e                -> Left e
-      Right (ContractAbi a) -> Right a
-    abiDecNested _abi_lbs = case _abi_lbs ^? key "abi" . _JSON of
-      Nothing                -> Left $ "Failed to find Abi at 'abi' key in JSON object."
-      Just (ContractAbi a) -> Right a
+quoteAbiDec str =
+    case str ^? _JSON <|> str ^? key "abi" . _JSON of
+        Nothing                 -> fail "Unable to decode contract ABI"
+        Just (ContractAbi decs) -> do
+            funEvDecs <- concat <$> mapM mkDecl (escape decs)
+            case constructorSpec str of
+                Nothing -> return funEvDecs
+                Just (a, b, c, d) -> (funEvDecs ++) <$> mkContractDecl a b c d
 
 -- | Abi information string
 quoteAbiExp :: String -> ExpQ
-quoteAbiExp abi_string = stringE $
-    let abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
-        eabi = abiDec abi_lbs <|> abiDecNested abi_lbs
-    in case eabi of
-      Left e  -> "Error in 'quoteAbiExp' : " ++ e
-      Right a -> a
-  where
-    abiDec _abi_lbs = case eitherDecode _abi_lbs of
-      Left e  -> Left e
-      Right a -> Right $ show (a :: ContractAbi)
-    abiDecNested _abi_lbs = case _abi_lbs ^? key "abi" . _JSON of
-      Nothing -> Left $ "Failed to find Abi at 'abi' key in JSON object."
-      Just a  -> Right $ show (a :: ContractAbi)
+quoteAbiExp str =
+    case str ^? _JSON <|> str ^? key "abi" . _JSON of
+        Nothing                -> fail "Unable to decode contract ABI"
+        Just a@(ContractAbi _) -> stringE (show a)
