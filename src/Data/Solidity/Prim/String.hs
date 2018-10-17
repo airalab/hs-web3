@@ -10,11 +10,7 @@
 -- Ethereum Abi UTF8-encoded string type.
 --
 
-module Data.Solidity.Prim.String
-    (
-    -- * The strict @Text@ type
-      Text
-    ) where
+module Data.Solidity.Prim.String where
 
 import           Data.Text                (Text)
 import           Data.Text.Encoding       (decodeUtf8, encodeUtf8)

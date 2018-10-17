@@ -18,7 +18,6 @@ module Data.Solidity.Prim
     , IntN
     , UIntN
     , ListN
-    , Singleton(..)
     ) where
 
 import           Data.Solidity.Prim.Address (Address)
@@ -28,4 +27,4 @@ import           Data.Solidity.Prim.Int     (IntN, UIntN)
 import           Data.Solidity.Prim.List    (ListN)
 import           Data.Solidity.Prim.String  ()
 import           Data.Solidity.Prim.Tagged  ()
-import           Data.Solidity.Prim.Tuple   (Singleton (..))
+import           Data.Solidity.Prim.Tuple   ()

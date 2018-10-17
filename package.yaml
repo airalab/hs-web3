@@ -13,16 +13,13 @@ category:            Network
 extra-source-files:
 - README.md
 - CHANGELOG.md
-- test-support/contracts/Migrations.sol
-- test-support/contracts/SimpleStorage.sol
-- test-support/truffle.js
-- test-support/migrations/1_initial_migration.js
-- test-support/migrations/2_deploy_contracts.js
-- test-support/convertAbi.sh
-- test-support/inject-contract-addresses.sh
-- examples/ERC20.hs
-- examples/ERC20.json
-- examples/TokenInfo.hs
+- examples/token/ERC20.hs
+- examples/token/ERC20.json
+- examples/token/Main.hs
+- test/contracts/Registry.json
+- test/contracts/SimpleStorage.json
+- test/contracts/ComplexStorage.json
+- test/contracts/Linearization.json
 
 dependencies:
 - base                 >4.9       && <4.12
@@ -39,9 +36,10 @@ dependencies:
 - cryptonite           ==0.25.*
 - exceptions
 - secp256k1
-- relapse
 - basement             >=0.0.7    && <0.1
 - machines             >=0.6.3    && <0.7
+- OneTuple
+- relapse
 - tagged               >=0.8.5    && <0.9
 - parsec               >=3.1.13.0 && <3.2
 - memory               >=0.14.16  && <0.15

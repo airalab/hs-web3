@@ -15,13 +15,10 @@
 -- Tuple type abi encoding instances.
 --
 
-module Data.Solidity.Prim.Tuple
-    (
-    -- * The @Singleton@ type
-      Singleton(..)
-    ) where
+module Data.Solidity.Prim.Tuple where
 
 import           Data.Proxy                  (Proxy (..))
+import           Data.Tuple.OneTuple         (OneTuple (..))
 import           Generics.SOP                (Generic)
 import qualified GHC.Generics                as GHC (Generic)
 
@@ -29,18 +26,13 @@ import           Data.Solidity.Abi           (AbiGet, AbiPut, AbiType (..))
 import           Data.Solidity.Abi.Generic   ()
 import           Data.Solidity.Prim.Tuple.TH (tupleDecs)
 
--- | The type for single element tuples
-newtype Singleton a = Singleton { unSingleton :: a }
-  deriving GHC.Generic
+deriving instance GHC.Generic (OneTuple a)
+instance Generic (OneTuple a)
 
-deriving instance Eq a => Eq (Singleton a)
-deriving instance Show a => Show (Singleton a)
-instance Generic (Singleton a)
-
-instance AbiType a => AbiType (Singleton a) where
+instance AbiType a => AbiType (OneTuple a) where
     isDynamic _ = isDynamic (Proxy :: Proxy a)
 
-instance AbiGet a => AbiGet (Singleton a)
-instance AbiPut a => AbiPut (Singleton a)
+instance AbiGet a => AbiGet (OneTuple a)
+instance AbiPut a => AbiPut (OneTuple a)
 
 $(fmap concat $ sequence $ map tupleDecs [2..20])

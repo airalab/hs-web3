@@ -8,6 +8,7 @@ module Data.Solidity.Test.EncodingSpec where
 
 import           Data.Monoid                ((<>))
 import           Data.Text                  (Text)
+import           Data.Tuple.OneTuple        (OneTuple (..))
 import           Generics.SOP               (Generic, Rep)
 import           Test.Hspec
 
@@ -16,7 +17,7 @@ import           Data.Solidity.Abi          (AbiGet, AbiPut, GenericAbiGet,
                                              GenericAbiPut)
 import           Data.Solidity.Abi.Codec    (decode, decode', encode, encode')
 import           Data.Solidity.Prim         (Address, Bytes, BytesN, IntN,
-                                             ListN, Singleton (..), UIntN)
+                                             ListN, UIntN)
 import           Data.Solidity.Prim.Address (fromHexString, toHexString)
 
 spec :: Spec
@@ -150,7 +151,7 @@ tuplesTest =
        in roundTripGeneric decoded encoded
 
     it "can encode 1-tuples with dynamic arg" $ do
-      let decoded = Singleton ([True, False] :: [Bool])
+      let decoded = OneTuple ([True, False] :: [Bool])
           encoded = "0x0000000000000000000000000000000000000000000000000000000000000020"
                  <> "0x0000000000000000000000000000000000000000000000000000000000000002"
                  <> "0x0000000000000000000000000000000000000000000000000000000000000001"

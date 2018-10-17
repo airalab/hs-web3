@@ -9,5 +9,5 @@ import           Test.Hspec
 spec :: Spec
 spec = describe "methodDump" $
     it "can dump an ABI" $  do
-        let theApiDump = [abiFrom|examples/ERC20.json|]
+        let theApiDump = [abiFrom|examples/token/ERC20.json|]
          in theApiDump `shouldNotBe` ""

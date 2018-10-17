@@ -57,6 +57,7 @@ import           Data.Text                        (Text)
 import qualified Data.Text                        as T
 import qualified Data.Text.Lazy                   as LT
 import qualified Data.Text.Lazy.Encoding          as LT
+import           Data.Tuple.OneTuple              (only)
 import           Generics.SOP                     (Generic)
 import qualified GHC.Generics                     as GHC (Generic)
 import           Language.Haskell.TH
@@ -67,7 +68,7 @@ import           Lens.Micro.Aeson                 (key, _JSON, _String)
 import           Data.Solidity.Abi                (AbiGet, AbiPut, AbiType (..))
 import           Data.Solidity.Event              (IndexedEvent (..))
 import           Data.Solidity.Prim               (Address, Bytes, BytesN, IntN,
-                                                   ListN, Singleton (..), UIntN)
+                                                   ListN, UIntN)
 import           Data.String.Extra                (toLowerFirst, toUpperFirst)
 import           Language.Solidity.Abi            (ContractAbi (..),
                                                    Declaration (..),
@@ -173,7 +174,7 @@ funWrapper c name dname args result = do
             |]
       , if c
             then funD' name (varP <$> vars) $ case result of
-                    Just [_] -> [|unSingleton <$> call $(params)|]
+                    Just [_] -> [|only <$> call $(params)|]
                     _        -> [|call $(params)|]
             else funD' name (varP <$> vars) $ [|send $(params)|]
       ]
