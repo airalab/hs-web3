@@ -35,8 +35,8 @@ import           Data.Proxy                   (Proxy (..))
 import           Generics.SOP                 (Generic, I (..), NP (..),
                                                NS (..), Rep, SOP (..), from, to)
 
-import           Data.Solidity.Abi            (GenericAbiGet)
-import           Data.Solidity.Abi.Codec      (decode')
+import           Data.Solidity.Abi            (AbiGet)
+import           Data.Solidity.Abi.Codec      (decode)
 import           Data.Solidity.Event.Internal
 import           Network.Ethereum.Api.Types   (Change (..))
 
@@ -51,11 +51,11 @@ class ArrayParser a where
 instance ArrayParser (NP f '[]) where
   arrayParser _ = Right Nil
 
-instance (ArrayParser (NP I as), Generic a, Rep a ~ rep, GenericAbiGet rep)
+instance (ArrayParser (NP I as), AbiGet a)
        => ArrayParser (NP I (a : as)) where
   arrayParser [] = Left "Empty"
   arrayParser (a : as) = do
-    a' <- decode' a
+    a' <- decode a
     as' <- arrayParser as
     return $ I a' :* as'
 
@@ -81,16 +81,14 @@ data Event i ni = Event i ni
 parseChange :: ( Generic i
                , Rep i ~ irep
                , ArrayParser irep
-               , Generic ni
-               , Rep ni ~ nirep
-               , GenericAbiGet nirep
+               , AbiGet ni
                )
              => Change
              -> Bool
              -- ^ is anonymous event
              -> Either String (Event i ni)
 parseChange change anonymous =
-    Event <$> genericArrayParser topics <*> decode' data_
+    Event <$> genericArrayParser topics <*> decode data_
   where
     topics | anonymous = changeTopics change
            | otherwise = tail (changeTopics change)
@@ -130,12 +128,12 @@ class DecodeEvent i ni e | e -> i ni where
 instance ( IndexedEvent i ni e
          , Generic i
          , Rep i ~ SOP I '[hli]
+         , AbiGet ni
          , Generic ni
          , Rep ni ~ SOP I '[hlni]
          , Generic e
          , Rep e ~ SOP I '[hle]
          , CombineChange i ni e
-         , GenericAbiGet (SOP I '[hlni])
          , ArrayParser (SOP I '[hli])
          ) => DecodeEvent i ni e where
   decodeEvent change = do
