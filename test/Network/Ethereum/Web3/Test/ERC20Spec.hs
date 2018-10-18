@@ -1,27 +1,24 @@
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedLists       #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE QuasiQuotes           #-}
-{-# LANGUAGE TemplateHaskell       #-}
-
 module Network.Ethereum.Web3.Test.ERC20Spec where
-
-import           Data.Default
-import           Network.Ethereum.Contract.TH
-import           Network.Ethereum.Web3
-import           Network.Ethereum.Web3.Types
-
 
 import           Test.Hspec
 
-[abiFrom|test-support/abis/ERC20.json|]
+import           Network.Ethereum.Contract.TH (abiFrom)
+import           Network.Ethereum.Web3        (Account, UIntN)
+import           Network.JsonRpc.TinyClient   (JsonRpcM)
 
+[abiFrom|examples/token/ERC20.json|]
+
+-- this spec is just to test compilation
 spec :: Spec
 spec = return ()
 
-
-getBalance :: Web3 (UIntN 256)
-getBalance = balanceOf def Latest ("0x1234567890123456789011234567890234567890" :: Address)
+getBalance :: (JsonRpcM m, Account p t, Functor (t m))
+           => t m (UIntN 256)
+getBalance = balanceOf "0x1234567890123456789011234567890234567890"

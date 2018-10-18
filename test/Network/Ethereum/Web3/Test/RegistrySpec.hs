@@ -9,20 +9,19 @@
 
 module Network.Ethereum.Web3.Test.RegistrySpec where
 
-import           Data.Default
-import           Network.Ethereum.Contract.TH
-import           Network.Ethereum.Web3
-import           Network.Ethereum.Web3.Types
+import           Data.Default                 (def)
+import           Test.Hspec                   (Spec)
 
+import           Network.Ethereum.Api.Types   (Filter)
+import           Network.Ethereum.Contract.TH (abiFrom)
+import           Network.Ethereum.Web3        (EventAction (TerminateEvent),
+                                               Web3, event)
 
-import           Test.Hspec
-
-[abiFrom|test-support/build/contracts/abis/Registry.json|]
+[abiFrom|test/contracts/Registry.json|]
 
 -- this spec is just to test compilation
 spec :: Spec
 spec = return ()
-
 
 monitor :: Web3 ()
 monitor = do

@@ -133,6 +133,7 @@ tests:
     - hspec-contrib        >=0.4.0  && <0.6
     - hspec                >=2.4.8  && <2.6
     - split                >=0.2.3  && <0.3
+    - random
     - time
     - stm                  >=2.4.5  && <2.5
     - web3
