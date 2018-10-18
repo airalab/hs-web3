@@ -50,7 +50,6 @@ import           Data.ByteArray                   (convert)
 import qualified Data.Char                        as Char
 import           Data.Default                     (Default (..))
 import           Data.List                        (group, sort, uncons)
-import           Data.Maybe                       (listToMaybe)
 import           Data.Monoid                      ((<>))
 import           Data.Tagged                      (Tagged)
 import           Data.Text                        (Text)
@@ -308,14 +307,18 @@ isKeyword = flip elem [ "as", "case", "of", "class"
 
 constructorSpec :: String -> Maybe (Text, Text, Text, Declaration)
 constructorSpec str = do
-    name <- str ^? key "contractName" . _String
+    name     <- str ^? key "contractName" . _String
     abiValue <- str ^? key "abi"
     bytecode <- str ^? key "bytecode" . _String
-    decl <- listToMaybe =<< (filter isContructor . unAbi <$> str ^? key "abi" . _JSON)
-    return (name, LT.toStrict $ LT.decodeUtf8 $ Aeson.encode abiValue, bytecode, decl)
+    decl     <- filter isContructor . unAbi <$> str ^? key "abi" . _JSON
+    return (name, jsonEncode abiValue, bytecode, toConstructor decl)
   where
+    jsonEncode = LT.toStrict . LT.decodeUtf8 . Aeson.encode
     isContructor (DConstructor _) = True
     isContructor _                = False
+    toConstructor []  = DConstructor []
+    toConstructor [a] = a
+    toConstructor _   = error "Broken ABI: more that one constructor"
 
 -- | Abi to declarations converter
 quoteAbiDec :: String -> DecsQ
