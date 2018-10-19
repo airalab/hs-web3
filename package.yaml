@@ -1,5 +1,5 @@
 name:                web3
-version:             0.7.3.0
+version:             0.8.0.0
 synopsis:            Ethereum API for Haskell
 description:         Web3 is a Haskell client library for Ethereum
 github:              "airalab/hs-web3"
@@ -20,6 +20,14 @@ extra-source-files:
 - test/contracts/SimpleStorage.json
 - test/contracts/ComplexStorage.json
 - test/contracts/Linearization.json
+- docs/Makefile
+- docs/conf.py
+- docs/index.rst
+- docs/testing.rst
+- docs/contributing.rst
+- docs/getting_started.rst
+- docs/smart_contracts.rst
+- docs/ethereum_node_api.rst
 
 dependencies:
 - base                 >4.9       && <4.12
