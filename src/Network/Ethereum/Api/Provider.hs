@@ -28,17 +28,14 @@ import           GHC.Generics               (Generic)
 import           Lens.Micro.Mtl             ((.=))
 import           Network.HTTP.Client        (Manager)
 
-import           Network.JsonRpc.TinyClient (JsonRpcClient, defaultSettings,
-                                             jsonRpcManager)
+import           Network.JsonRpc.TinyClient (JsonRpc, JsonRpcClient,
+                                             defaultSettings, jsonRpcManager)
 
 -- | Any communication with Ethereum node wrapped with 'Web3' monad
 newtype Web3 a = Web3 { unWeb3 :: StateT JsonRpcClient IO a }
-    deriving (Functor, Applicative, Monad, MonadIO, MonadThrow)
+    deriving (Functor, Applicative, Monad, MonadIO, MonadThrow, MonadState JsonRpcClient)
 
-instance MonadState JsonRpcClient Web3 where
-    get = Web3 get
-    put = Web3 . put
-    state = Web3 . state
+instance JsonRpc Web3
 
 -- | Some peace of error response
 data Web3Error

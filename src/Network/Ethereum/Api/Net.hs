@@ -17,19 +17,19 @@ module Network.Ethereum.Api.Net where
 
 import           Data.Text                  (Text)
 import           Network.Ethereum.Api.Types (Quantity)
-import           Network.JsonRpc.TinyClient (JsonRpcM, remote)
+import           Network.JsonRpc.TinyClient (JsonRpc (..))
 
 -- | Returns the current network id.
-version :: JsonRpcM m => m Text
+version :: JsonRpc m => m Text
 {-# INLINE version #-}
 version = remote "net_version"
 
 -- | Returns true if client is actively listening for network connections.
-listening :: JsonRpcM m => m Bool
+listening :: JsonRpc m => m Bool
 {-# INLINE listening #-}
 listening = remote "net_listening"
 
 -- | Returns number of peers currently connected to the client.
-peerCount :: JsonRpcM m => m Quantity
+peerCount :: JsonRpc m => m Quantity
 {-# INLINE peerCount #-}
 peerCount = remote "net_peerCount"

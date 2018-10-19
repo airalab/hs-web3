@@ -23,11 +23,11 @@ import           Network.Ethereum.Account.Internal (updateReceipt)
 import qualified Network.Ethereum.Api.Eth          as Eth
 import           Network.Ethereum.Api.Types        (TxReceipt (receiptBlockNumber))
 import           Network.Ethereum.Contract.Method  (Method)
-import           Network.JsonRpc.TinyClient        (JsonRpcM)
+import           Network.JsonRpc.TinyClient        (JsonRpc)
 
 -- | Safe version of 'send' function of 'Account' typeclass
 -- Waiting for some blocks of transaction confirmation before return
-safeSend :: (Account p t, JsonRpcM m, Method args, Monad (t m))
+safeSend :: (Account p t, JsonRpc m, Method args, Monad (t m))
          => Integer
          -- ^ Confirmation in blocks
          -> args

@@ -40,11 +40,8 @@ module Network.Ethereum.Account
     , gasPrice
     , block
     , account
-    , (.~)
 
     ) where
-
-import           Lens.Micro                          ((.~))
 
 import           Network.Ethereum.Account.Class      (Account (..))
 import           Network.Ethereum.Account.Default    (DefaultAccount)

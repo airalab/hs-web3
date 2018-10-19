@@ -19,7 +19,7 @@ import           Data.HexString             (HexString)
 import           Data.Solidity.Prim.Address (Address)
 import           Data.Text                  (Text)
 import           Network.Ethereum.Api.Types (Call)
-import           Network.JsonRpc.TinyClient (JsonRpcM, remote)
+import           Network.JsonRpc.TinyClient (JsonRpc (..))
 
 type Passphrase = Text
 
@@ -32,23 +32,23 @@ type Passphrase = Text
 -- 2. passphrase
 --
 -- Returns: address of new account
-importRawKey :: JsonRpcM m => HexString -> Passphrase -> m Address
+importRawKey :: JsonRpc m => HexString -> Passphrase -> m Address
 {-# INLINE importRawKey #-}
 importRawKey = remote "personal_importRawKey"
 
 -- | Returns all the Ethereum account addresses of all keys in the key store.
-listAccounts :: JsonRpcM m => m [Address]
+listAccounts :: JsonRpc m => m [Address]
 {-# INLINE listAccounts #-}
 listAccounts = remote "personal_listAccounts"
 
 -- | Removes the private key with given address from memory. The account can no longer be used to send transactions.
-lockAccount :: JsonRpcM m => Address -> m Bool
+lockAccount :: JsonRpc m => Address -> m Bool
 {-# INLINE lockAccount #-}
 lockAccount = remote "personal_lockAccount"
 
 -- | Generates a new private key and stores it in the key store directory. The key file is encrypted with the given
 -- passphrase. Returns the address of the new account.
-newAccount :: JsonRpcM m => Passphrase -> m Address
+newAccount :: JsonRpc m => Passphrase -> m Address
 {-# INLINE newAccount #-}
 newAccount = remote "personal_newAccount"
 
@@ -57,7 +57,7 @@ newAccount = remote "personal_newAccount"
 -- The unencrypted key will be held in memory until it is locked again
 --
 -- The account can be used with eth_sign and eth_sendTransaction while it is unlocked.
-unlockAccount :: JsonRpcM m => Address -> Passphrase -> m Bool
+unlockAccount :: JsonRpc m => Address -> Passphrase -> m Bool
 {-# INLINE unlockAccount #-}
 unlockAccount = remote "personal_unlockAccount"
 
@@ -66,7 +66,7 @@ unlockAccount = remote "personal_unlockAccount"
 -- The transaction is the same argument as for eth_sendTransaction and contains the from address. If the passphrase can
 -- be used to decrypt the private key belonging to the transaction 'callFrom', the transaction is verified, signed and
 -- send onto the network. The account is not unlocked globally in the node and cannot be used in other RPC calls.
-sendTransaction :: JsonRpcM m => Call -> Passphrase -> m HexString
+sendTransaction :: JsonRpc m => Call -> Passphrase -> m HexString
 {-# INLINE sendTransaction #-}
 sendTransaction = remote "personal_sendTransaction"
 
@@ -75,7 +75,7 @@ sendTransaction = remote "personal_sendTransaction"
 -- sign(keccak256("\x19Ethereum Signed Message:\n" + len(message) + message))).
 --
 -- when given a passphrase to decrypt the account's private key
-sign :: JsonRpcM m => HexString -> Address -> Passphrase -> m HexString
+sign :: JsonRpc m => HexString -> Address -> Passphrase -> m HexString
 {-# INLINE sign #-}
 sign = remote "personal_sign"
 
@@ -88,6 +88,6 @@ sign = remote "personal_sign"
 -- 2. signature: DATA, 65 bytes
 --
 -- Returns: Address
-ecRecover :: JsonRpcM m => HexString -> HexString -> m Address
+ecRecover :: JsonRpc m => HexString -> HexString -> m Address
 {-# INLINE ecRecover #-}
 ecRecover = remote "personal_ecRecover"

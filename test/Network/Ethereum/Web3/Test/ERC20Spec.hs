@@ -11,7 +11,7 @@ import           Test.Hspec
 
 import           Network.Ethereum.Contract.TH (abiFrom)
 import           Network.Ethereum.Web3        (Account, UIntN)
-import           Network.JsonRpc.TinyClient   (JsonRpcM)
+import           Network.JsonRpc.TinyClient   (JsonRpc)
 
 [abiFrom|examples/token/ERC20.json|]
 
@@ -19,6 +19,6 @@ import           Network.JsonRpc.TinyClient   (JsonRpcM)
 spec :: Spec
 spec = return ()
 
-getBalance :: (JsonRpcM m, Account p t, Functor (t m))
+getBalance :: (JsonRpc m, Account p t, Functor (t m))
            => t m (UIntN 256)
 getBalance = balanceOf "0x1234567890123456789011234567890234567890"

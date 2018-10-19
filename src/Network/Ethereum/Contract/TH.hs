@@ -80,7 +80,7 @@ import           Network.Ethereum.Api.Types       (DefaultBlock (..),
                                                    Filter (..), TxReceipt)
 import qualified Network.Ethereum.Contract        as Contract (Contract (..))
 import           Network.Ethereum.Contract.Method (Method (..))
-import           Network.JsonRpc.TinyClient       (JsonRpcM)
+import           Network.JsonRpc.TinyClient       (JsonRpc)
 
 -- | Read contract Abi from file
 abiFrom :: QuasiQuoter
@@ -168,7 +168,7 @@ funWrapper c name dname args result = do
 
     sequence [
         sigD name $ [t|
-            (JsonRpcM $m, Account $a $t, Functor ($t $m)) =>
+            (JsonRpc $m, Account $a $t, Functor ($t $m)) =>
                 $(arrowing $ inputT ++ [if c then outputT else [t|$t $m TxReceipt|]])
             |]
       , if c

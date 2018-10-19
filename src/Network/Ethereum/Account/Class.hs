@@ -21,7 +21,7 @@ import           Control.Monad.Trans              (MonadTrans)
 import           Data.Solidity.Abi                (AbiGet)
 import           Network.Ethereum.Api.Types       (TxReceipt)
 import           Network.Ethereum.Contract.Method (Method)
-import           Network.JsonRpc.TinyClient       (JsonRpcM)
+import           Network.JsonRpc.TinyClient       (JsonRpc)
 
 -- | Account is needed for sending transactions to blockchain
 --
@@ -32,7 +32,7 @@ import           Network.JsonRpc.TinyClient       (JsonRpcM)
 class MonadTrans t => Account a t | t -> a where
 
     -- | Run computation with given account credentials
-    withAccount :: JsonRpcM m
+    withAccount :: JsonRpc m
                 => a
                 -- ^ Account params (like a password or private key)
                 -> t m b
@@ -41,14 +41,14 @@ class MonadTrans t => Account a t | t -> a where
                 -- ^ Json-rpc monad
 
     -- | Send transaction to contract, like a 'write' command
-    send :: (JsonRpcM m, Method args)
+    send :: (JsonRpc m, Method args)
          => args
          -- ^ Contract method arguments
          -> t m TxReceipt
          -- ^ Receipt of sended transaction
 
     -- | Call constant method of contract, like a 'read' command
-    call :: (JsonRpcM m, Method args, AbiGet result)
+    call :: (JsonRpc m, Method args, AbiGet result)
          => args
          -- ^ Contact method arguments
          -> t m result

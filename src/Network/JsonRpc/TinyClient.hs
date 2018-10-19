@@ -31,7 +31,9 @@
 -- @
 --   newtype MyMonad a = ...
 --
---   foo :: Int -> Bool -> Mymonad Text
+--   instance JsonRpc MyMonad
+--
+--   foo :: Mymonad Text
 --   foo = remote "foo"
 -- @
 --
@@ -40,15 +42,16 @@
 -- Example:
 --
 -- @
---   myMethod :: JsonRpcM m => Int -> Bool -> m String
+--   myMethod :: JsonRpc m => Int -> Bool -> m String
 --   myMethod = remote "myMethod"
 -- @
 --
 
 module Network.JsonRpc.TinyClient
     (
-    -- * The JSON-RPC interaction monad
-      JsonRpcM
+    -- * The JSON-RPC remote call monad
+      JsonRpc(..)
+    , MethodName
 
     -- * JSON-RPC client settings
     , JsonRpcClient
@@ -59,17 +62,13 @@ module Network.JsonRpc.TinyClient
     -- * Error handling
     , JsonRpcException(..)
     , RpcError(..)
-
-    -- * Remote method call
-    , remote
-    , MethodName
     ) where
 
 import           Control.Applicative     ((<|>))
 import           Control.Exception       (Exception)
 import           Control.Monad           ((<=<))
-import           Control.Monad.Catch     (MonadThrow, throwM)
-import           Control.Monad.IO.Class  (MonadIO, liftIO)
+import           Control.Monad.Catch     (MonadThrow (..))
+import           Control.Monad.IO.Class  (MonadIO (..))
 import           Control.Monad.State     (MonadState)
 import           Crypto.Number.Generate  (generateMax)
 import           Data.Aeson              (FromJSON (..), ToJSON (..),
@@ -90,25 +89,20 @@ import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Network.HTTP.Client     (defaultManagerSettings)
 #endif
 
--- | Name of called method.
-type MethodName = Text
-
--- | Remote call monad constrait
+-- | JSON-RPC monad constrait.
 type JsonRpcM m = (MonadIO m, MonadThrow m, MonadState JsonRpcClient m)
 
--- | JSON-RPC client state vars
+-- | JSON-RPC client state vars.
 data JsonRpcClient = JsonRpcClient
-  { _jsonRpcManager :: Manager
-  -- ^ HTTP connection manager
-  , _jsonRpcServer  :: String
-  -- ^ Remote server URI
-  }
+    { _jsonRpcManager :: Manager    -- ^ HTTP connection manager.
+    , _jsonRpcServer  :: String     -- ^ Remote server URI.
+    }
 
 $(makeLenses ''JsonRpcClient)
 
+-- | Create default 'JsonRpcClient' settings.
 defaultSettings :: MonadIO m
-                => String
-                -- ^ JSON-RPC server URI
+                => String           -- ^ JSON-RPC server URI
                 -> m JsonRpcClient
 defaultSettings srv = liftIO $ JsonRpcClient
 #ifdef TLS_MANAGER
@@ -122,20 +116,23 @@ instance Show JsonRpcClient where
     show JsonRpcClient{..} = "JsonRpcClient<" ++ _jsonRpcServer ++ ">"
 
 -- | JSON-RPC request.
-data Request = Request { rqMethod :: !Text
-                       , rqId     :: !Int
-                       , rqParams :: !Value }
+data Request = Request
+    { rqMethod :: !Text
+    , rqId     :: !Int
+    , rqParams :: !Value
+    } deriving (Eq, Show)
 
 instance ToJSON Request where
     toJSON rq = object [ "jsonrpc" .= String "2.0"
                        , "method"  .= rqMethod rq
                        , "params"  .= rqParams rq
-                       , "id"      .= rqId rq ]
+                       , "id"      .= rqId rq
+                       ]
 
 -- | JSON-RPC response.
 data Response = Response
-  { rsResult :: !(Either RpcError Value)
-  } deriving (Eq, Show)
+    { rsResult :: !(Either RpcError Value)
+    } deriving (Eq, Show)
 
 instance FromJSON Response where
     parseJSON =
@@ -145,10 +142,10 @@ instance FromJSON Response where
 
 -- | JSON-RPC error message
 data RpcError = RpcError
-  { errCode    :: !Int
-  , errMessage :: !Text
-  , errData    :: !(Maybe Value)
-  } deriving Eq
+    { errCode    :: !Int
+    , errMessage :: !Text
+    , errData    :: !(Maybe Value)
+    } deriving Eq
 
 instance Show RpcError where
     show (RpcError code msg dat) =
@@ -164,7 +161,7 @@ instance FromJSON RpcError where
 data JsonRpcException
     = ParsingException String
     | CallException RpcError
-    deriving (Eq, Show)
+    deriving (Show, Eq)
 
 instance Exception JsonRpcException
 
@@ -177,9 +174,15 @@ instance (ToJSON a, Remote m b) => Remote m (a -> b) where
 instance {-# INCOHERENT #-} (JsonRpcM m, FromJSON b) => Remote m (m b) where
     remote' f = decodeResponse =<< f []
 
--- | Remote call of JSON-RPC method.
-remote :: Remote m a => MethodName -> a
-remote = remote' . call
+-- | Name of called method.
+type MethodName = Text
+
+-- | JSON-RPC call monad.
+class JsonRpcM m => JsonRpc m where
+    -- | Remote call of JSON-RPC method.
+    remote :: Remote m a => MethodName -> a
+    {-# INLINE remote #-}
+    remote = remote' . call
 
 call :: JsonRpcM m
      => MethodName

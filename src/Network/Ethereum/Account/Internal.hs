@@ -35,7 +35,7 @@ import           Network.Ethereum.Api.Types     (Call (..),
                                                  DefaultBlock (Latest),
                                                  TxReceipt (receiptTransactionHash))
 import           Network.Ethereum.Unit          (Unit (..))
-import           Network.JsonRpc.TinyClient     (JsonRpcM)
+import           Network.JsonRpc.TinyClient     (JsonRpc)
 
 -- | Account is needed to send transactions to blockchain
 
@@ -116,7 +116,7 @@ getCall = do
                  , callGasPrice = fromInteger <$> _gasPrice
                  }
 
-getReceipt :: JsonRpcM m => HexString -> m TxReceipt
+getReceipt :: JsonRpc m => HexString -> m TxReceipt
 getReceipt tx = do
     mbreceipt <- Eth.getTransactionReceipt tx
     case mbreceipt of
@@ -126,6 +126,6 @@ getReceipt tx = do
             -- TODO: avoid inifinite loop
             getReceipt tx
 
-updateReceipt :: JsonRpcM m => TxReceipt -> m TxReceipt
+updateReceipt :: JsonRpc m => TxReceipt -> m TxReceipt
 {-# INLINE updateReceipt #-}
 updateReceipt = getReceipt . receiptTransactionHash

@@ -31,7 +31,7 @@ import           Network.Ethereum.Account.Class      (Account)
 import           Network.Ethereum.Account.Internal   (AccountT, to, withParam)
 import qualified Network.Ethereum.Ens.PublicResolver as Resolver
 import qualified Network.Ethereum.Ens.Registry       as Reg
-import           Network.JsonRpc.TinyClient          (JsonRpcM)
+import           Network.JsonRpc.TinyClient          (JsonRpc)
 
 -- | Namehash algorithm
 -- http://docs.ens.domains/en/latest/implementers.html#algorithm
@@ -47,7 +47,7 @@ namehash =
     sha3 bs = convert (hash bs :: Digest Keccak_256)
 
 -- | Get address of ENS domain
-resolve :: (JsonRpcM m, Account p (AccountT p))
+resolve :: (JsonRpc m, Account p (AccountT p))
         => ByteString
         -- ^ Domain name
         -> AccountT p m Address

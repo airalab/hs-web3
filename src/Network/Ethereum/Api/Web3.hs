@@ -17,14 +17,14 @@ module Network.Ethereum.Api.Web3 where
 
 import           Data.HexString             (HexString)
 import           Data.Text                  (Text)
-import           Network.JsonRpc.TinyClient (JsonRpcM, remote)
+import           Network.JsonRpc.TinyClient (JsonRpc (..))
 
 -- | Returns current node version string.
-clientVersion :: JsonRpcM m => m Text
+clientVersion :: JsonRpc m => m Text
 {-# INLINE clientVersion #-}
 clientVersion = remote "web3_clientVersion"
 
 -- | Returns Keccak-256 (not the standardized SHA3-256) of the given data.
-sha3 :: JsonRpcM m => HexString -> m HexString
+sha3 :: JsonRpc m => HexString -> m HexString
 {-# INLINE sha3 #-}
 sha3 = remote "web3_sha3"

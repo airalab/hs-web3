@@ -31,7 +31,7 @@ import           Network.Ethereum.Account.Class   (Account)
 import           Network.Ethereum.Account.Safe    (safeConfirmations, safeSend)
 import           Network.Ethereum.Api.Types       (receiptContractAddress)
 import           Network.Ethereum.Contract.Method (Method)
-import           Network.JsonRpc.TinyClient       (JsonRpcM)
+import           Network.JsonRpc.TinyClient       (JsonRpc)
 
 -- | Contract description type clase
 class Contract a where
@@ -43,7 +43,7 @@ class Contract a where
     bytecode :: Proxy a -> HexString
 
 -- | Create new smart contract on blockchain
-new :: (Account p t, JsonRpcM m, Method a, Monad (t m))
+new :: (Account p t, JsonRpc m, Method a, Monad (t m))
     => a
     -- ^ Contract constructor
     -> t m (Maybe Address)
