@@ -12,12 +12,6 @@ cache:
   - $HOME/.stack
   - $TRAVIS_BUILD_DIR/.stack-work
 
-# Install external dependencies.
-addons:
-  apt:
-    packages:
-    - libsecp256k1-dev
-
 # The different configurations we want to test. We have BUILD=cabal which uses
 # cabal-install, and BUILD=stack which uses Stack. More documentation on each
 # of those below.
@@ -38,44 +32,49 @@ matrix:
   # variable, such as using --stack-yaml to point to a different file.
   - env: BUILD=stack ARGS=""
     compiler: ": #stack default"
-    addons: {apt: {packages: [libgmp-dev]}}
+    addons: {apt: {packages: [libgmp-dev,libsecp256k1-dev]}}
 
   - env: BUILD=stack ARGS="--resolver lts-9"
     compiler: ": #stack 8.0.2"
-    addons: {apt: {packages: [libgmp-dev]}}
+    addons: {apt: {packages: [libgmp-dev,libsecp256k1-dev]}}
 
   - env: BUILD=stack ARGS="--resolver lts-11"
     compiler: ": #stack 8.2.2"
-    addons: {apt: {packages: [libgmp-dev]}}
+    addons: {apt: {packages: [libgmp-dev,libsecp256k1-dev]}}
 
   - env: BUILD=stack ARGS="--resolver lts-12"
     compiler: ": #stack 8.4.3"
-    addons: {apt: {packages: [libgmp-dev]}}
+    addons: {apt: {packages: [libgmp-dev,libsecp256k1-dev]}}
 
   # Nightly builds are allowed to fail
   - env: BUILD=stack ARGS="--resolver nightly"
     compiler: ": #stack nightly"
-    addons: {apt: {packages: [libgmp-dev]}}
+    addons: {apt: {packages: [libgmp-dev,libsecp256k1-dev]}}
 
   # Build on macOS in addition to Linux
   - env: BUILD=stack ARGS=""
     compiler: ": #stack default osx"
+    addons: {homebrew: {packages: [libsecp256k1]}}
     os: osx
 
   - env: BUILD=stack ARGS="--resolver lts-9"
     compiler: ": #stack 8.0.2 osx"
+    addons: {homebrew: {packages: [libsecp256k1]}}
     os: osx
 
   - env: BUILD=stack ARGS="--resolver lts-11"
     compiler: ": #stack 8.2.2 osx"
+    addons: {homebrew: {packages: [libsecp256k1]}}
     os: osx
 
   - env: BUILD=stack ARGS="--resolver lts-12"
     compiler: ": #stack 8.4.3 osx"
+    addons: {homebrew: {packages: [libsecp256k1]}}
     os: osx
 
   - env: BUILD=stack ARGS="--resolver nightly"
     compiler: ": #stack nightly osx"
+    addons: {homebrew: {packages: [libsecp256k1]}}
     os: osx
 
 before_install:

@@ -7,7 +7,7 @@ packages:
 
 # Extra package dependencies
 extra-deps:
-- secp256k1-1.1.2
+- secp256k1-haskell-0.1.3
 - relapse-1.0.0.0
 
 # Dependencies bounds
