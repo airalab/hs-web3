@@ -57,25 +57,10 @@ matrix:
     addons: {homebrew: {packages: [libsecp256k1]}}
     os: osx
 
-  - env: BUILD=stack ARGS="--resolver lts-9"
-    compiler: ": #stack 8.0.2 osx"
-    addons: {homebrew: {packages: [libsecp256k1]}}
-    os: osx
-
-  - env: BUILD=stack ARGS="--resolver lts-11"
-    compiler: ": #stack 8.2.2 osx"
-    addons: {homebrew: {packages: [libsecp256k1]}}
-    os: osx
-
-  - env: BUILD=stack ARGS="--resolver lts-12"
-    compiler: ": #stack 8.4.3 osx"
-    addons: {homebrew: {packages: [libsecp256k1]}}
-    os: osx
-
-  - env: BUILD=stack ARGS="--resolver nightly"
-    compiler: ": #stack nightly osx"
-    addons: {homebrew: {packages: [libsecp256k1]}}
-    os: osx
+  # Build on Windows in addition to Linux
+  - env: BUILD=stack ARGS=""
+    compiler: ": #stack default windows"
+    os: windows
 
 before_install:
 # Using compiler above sets CC to an invalid value, so unset it
