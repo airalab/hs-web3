@@ -110,10 +110,8 @@ instance (KnownNat n, n <= 256) => Num (IntN n) where
     negate = fromInteger . negate . toInteger
     signum = fromInteger . signum . toInteger
     fromInteger x
-      | x >= 0 = mask $ IntN (fromInteger x)
-      | otherwise = mask $ IntN (fromInteger $ 2 ^ 256 + x)
-      where
-        mask = (maxBound .&.) :: IntN n -> IntN n
+      | x >= 0 = IntN (fromInteger x)
+      | otherwise = IntN (fromInteger $ 2 ^ 256 + x)
 
 instance (KnownNat n, n <= 256) => Real (IntN n) where
     toRational = toRational . toInteger

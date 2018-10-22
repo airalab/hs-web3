@@ -6,6 +6,7 @@
 
 module Data.Solidity.Test.EncodingSpec where
 
+import           Control.Exception          (evaluate)
 import           Data.Monoid                ((<>))
 import           Data.Text                  (Text)
 import           Data.Tuple.OneTuple        (OneTuple (..))
@@ -100,11 +101,9 @@ bytesNTest =
              expected = "0x68656c6c6f000000" :: BytesN 8
          literal `shouldBe` expected
 
-{-
       it "fails on too long literals" $ do
          let literal = "hello" :: BytesN 4
          evaluate literal `shouldThrow` errorCall "Invalid Size"
--}
 
 vectorTest :: Spec
 vectorTest =
