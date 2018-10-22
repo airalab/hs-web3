@@ -22,3 +22,5 @@ nix:
     - solc
     - solc.dev
     - secp256k1
+    - haskellPackages.hlint
+    - haskellPackages.stylish-haskell
