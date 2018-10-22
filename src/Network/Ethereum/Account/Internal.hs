@@ -1,8 +1,6 @@
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE RecordWildCards            #-}
 
 -- |
@@ -25,6 +23,7 @@ import           Control.Monad.State.Strict     (MonadState (..), StateT (..),
                                                  withStateT)
 import           Control.Monad.Trans            (MonadTrans (..))
 import           Data.Default                   (Default (..))
+import           Data.Maybe                     (fromMaybe)
 import           Lens.Micro                     (Lens', lens)
 
 import           Data.HexString                 (HexString)
@@ -57,7 +56,7 @@ data CallParam p = CallParam
 
 -- | Transaction recipient lens
 to :: Lens' (CallParam p) Address
-to = lens (maybe def id . _to) $ \a b -> a { _to = Just b }
+to = lens (fromMaybe def . _to) $ \a b -> a { _to = Just b }
 
 -- | Transaction value lens
 value :: Unit value => Lens' (CallParam p) value

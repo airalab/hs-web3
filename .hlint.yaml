@@ -71,6 +71,7 @@
 - ignore: {name: Use .}
 - ignore: {name: Use asks}
 - ignore: {name: Use newtype instead of data}
+- ignore: {name: Use camelCase}
 # - ignore: {name: Use const, within: SpecialModule} # Only within certain modules
 
 

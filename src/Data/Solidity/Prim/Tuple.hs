@@ -35,4 +35,4 @@ instance AbiType a => AbiType (OneTuple a) where
 instance AbiGet a => AbiGet (OneTuple a)
 instance AbiPut a => AbiPut (OneTuple a)
 
-$(fmap concat $ sequence $ map tupleDecs [2..20])
+$(concat <$> mapM tupleDecs [2..20])

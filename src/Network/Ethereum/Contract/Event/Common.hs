@@ -1,16 +1,15 @@
-{-# LANGUAGE DataKinds              #-}
-{-# LANGUAGE FlexibleContexts       #-}
-{-# LANGUAGE FlexibleInstances      #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE GADTs                  #-}
-{-# LANGUAGE MultiParamTypeClasses  #-}
-{-# LANGUAGE RecordWildCards        #-}
-{-# LANGUAGE ScopedTypeVariables    #-}
-{-# LANGUAGE UndecidableInstances   #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE UndecidableInstances  #-}
 
 -- |
 -- Module      :  Network.Ethereum.Contract.Event.Common
--- Copyright   :  Alexander Krupenkin 2018
+-- Copyright   :  FOAM team <http://foam.space> 2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
@@ -56,7 +55,7 @@ mkFilterChanges changes =
   let eChanges = map (\c@Change{..} -> FilterChange c <$> decodeEvent c) changes
       ls = lefts eChanges
       rs = rights eChanges
-  in if ls /= [] then throwIO (EventParseFailure $ (show ls)) else pure rs
+  in if ls /= [] then throwIO (EventParseFailure $ show ls) else pure rs
 
 
 data FilterStreamState e =

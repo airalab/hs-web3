@@ -1,6 +1,5 @@
 {-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
 
 module Language.Solidity.Test.CompilerSpec where
 

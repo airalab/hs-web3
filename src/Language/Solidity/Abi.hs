@@ -217,14 +217,12 @@ numberParser = read <$> many1 digit
 parseUint :: Parser SolidityType
 parseUint = do
   _ <- string "uint"
-  n <- numberParser
-  pure $ SolidityUint n
+  SolidityUint <$> numberParser
 
 parseInt :: Parser SolidityType
 parseInt = do
   _ <- string "int"
-  n <- numberParser
-  pure $ SolidityInt n
+  SolidityInt <$> numberParser
 
 parseBool :: Parser SolidityType
 parseBool = string "bool" >>  pure SolidityBool
@@ -254,7 +252,7 @@ solidityBasicTypeParser =
 parseVector :: Parser SolidityType
 parseVector = do
     s <- solidityBasicTypeParser
-    ns <- many1Till lengthParser ((lookAhead $ void (string "[]")) <|> eof)
+    ns <- many1Till lengthParser (lookAhead (void $ string "[]") <|> eof)
     pure $ SolidityVector ns s
   where
     many1Till :: Parser Int -> Parser () -> Parser [Int]
@@ -271,7 +269,7 @@ parseVector = do
 
 parseArray :: Parser SolidityType
 parseArray = do
-  s <- (try $ parseVector <* string "[]") <|> (solidityBasicTypeParser <* string "[]")
+  s <- try (parseVector <* string "[]") <|> (solidityBasicTypeParser <* string "[]")
   pure $ SolidityArray s
 
 

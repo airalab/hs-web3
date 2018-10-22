@@ -125,9 +125,9 @@ toHSType s = case s of
     expandVector :: [Int] -> SolidityType -> TypeQ
     expandVector ns a = case uncons ns of
       Just (n, rest) ->
-        if length rest == 0
-          then (conT ''ListN) `appT` numLit n `appT` toHSType a
-          else (conT ''ListN) `appT` numLit n `appT` expandVector rest a
+        if null rest
+          then conT ''ListN `appT` numLit n `appT` toHSType a
+          else conT ''ListN `appT` numLit n `appT` expandVector rest a
       _ -> error $ "Impossible Nothing branch in `expandVector`: " ++ show ns ++ " " ++ show a
 
 typeQ :: Text -> TypeQ
@@ -279,7 +279,7 @@ escape :: [Declaration] -> [Declaration]
 escape = escapeEqualNames . fmap escapeReservedNames
 
 escapeEqualNames :: [Declaration] -> [Declaration]
-escapeEqualNames = concat . fmap go . group . sort
+escapeEqualNames = concatMap go . group . sort
   where go []       = []
         go (x : xs) = x : zipWith appendToName xs hats
         hats = [T.replicate n "'" | n <- [1..]]

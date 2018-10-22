@@ -1,5 +1,7 @@
 {-# LANGUAGE CPP             #-}
+#ifdef SOLIDITY_COMPILER
 {-# LANGUAGE RecordWildCards #-}
+#endif
 
 -- |
 -- Module      :  Language.Solidity.Compiler

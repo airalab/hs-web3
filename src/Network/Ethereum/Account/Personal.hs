@@ -29,9 +29,9 @@ import           Data.Proxy                        (Proxy (..))
 import           Data.Solidity.Abi.Codec           (decode, encode)
 import           Data.Solidity.Prim.Address        (Address)
 import           Network.Ethereum.Account.Class    (Account (..))
-import           Network.Ethereum.Account.Internal (CallParam (..),
-                                                    defaultCallParam)
-import           Network.Ethereum.Account.Internal (AccountT (..), getCall,
+import           Network.Ethereum.Account.Internal (AccountT (..),
+                                                    CallParam (..),
+                                                    defaultCallParam, getCall,
                                                     getReceipt)
 import qualified Network.Ethereum.Api.Eth          as Eth (call, estimateGas)
 import           Network.Ethereum.Api.Personal     (Passphrase)

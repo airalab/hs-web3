@@ -1,7 +1,6 @@
 {-# LANGUAGE DataKinds              #-}
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FlexibleInstances      #-}
-{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs                  #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 {-# LANGUAGE RankNTypes             #-}
@@ -15,7 +14,7 @@
 
 -- |
 -- Module      :  Network.Ethereum.Contract.Event.MultiFilter
--- Copyright   :  Alexander Krupenkin 2018
+-- Copyright   :  FOAM team <http://foam.space> 2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
@@ -106,7 +105,7 @@ modifyMultiFilter
   -> MultiFilter es
   -> MultiFilter es
 modifyMultiFilter _ NilFilters = NilFilters
-modifyMultiFilter h (f :? fs)  = (h f :? modifyMultiFilter h fs)
+modifyMultiFilter h (f :? fs)  = h f :? modifyMultiFilter h fs
 
 
 multiEvent
@@ -254,11 +253,11 @@ instance
   , MapHandlers m es es'
   ) => MapHandlers m (e : es) (FilterChange e : es') where
 
-  mapHandlers ((H f) :& fs) =
-    let f' = \FilterChange{..} -> do
+  mapHandlers (H f :& fs) =
+    let f' FilterChange{..} = do
           act <- runReaderT (f filterChangeEvent) filterChangeRawChange
           return ((,) act <$> changeBlockNumber filterChangeRawChange)
-    in (H f') :& mapHandlers fs
+    in H f' :& mapHandlers fs
 
 
 reduceMultiEventStream

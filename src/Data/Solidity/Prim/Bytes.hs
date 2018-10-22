@@ -114,11 +114,9 @@ instance (KnownNat n, n <= 32) => ToJSON (BytesN n) where
 abiGetByteString :: Get ByteString
 abiGetByteString = do
     len <- fromIntegral <$> getWord256
-    if len == 0 then
-      return ""
-    else do
-      ba <- getBytes len
-      return ba
+    if len == 0
+        then return ""
+        else getBytes len
 
 abiPutByteString :: Putter ByteString
 abiPutByteString bs = do

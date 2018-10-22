@@ -79,14 +79,13 @@ import           Data.Text               (Text, unpack)
 import           Lens.Micro.Mtl          (use)
 import           Lens.Micro.TH           (makeLenses)
 import           Network.HTTP.Client     (Manager, RequestBody (RequestBodyLBS),
-                                          httpLbs, method, newManager,
-                                          parseRequest, requestBody,
-                                          requestHeaders, responseBody)
+                                          defaultManagerSettings, httpLbs,
+                                          method, newManager, parseRequest,
+                                          requestBody, requestHeaders,
+                                          responseBody)
 
 #ifdef TLS_MANAGER
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
-#else
-import           Network.HTTP.Client     (defaultManagerSettings)
 #endif
 
 -- | JSON-RPC monad constrait.

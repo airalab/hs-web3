@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveGeneric       #-}
-{-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -80,4 +78,4 @@ awaitBlock bn = do
 sleepBlocks :: Int -> IO ()
 sleepBlocks n = do
     now <- web3 blockNumber
-    awaitBlock $ now + (fromIntegral n)
+    awaitBlock $ now + fromIntegral n

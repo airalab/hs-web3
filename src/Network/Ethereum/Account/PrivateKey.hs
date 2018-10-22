@@ -97,10 +97,10 @@ encodeTransaction :: Call
                   -> Either Integer (Integer, ByteString, ByteString)
                   -> HexString
 encodeTransaction Call{..} vrs = do
-    let (to       :: ByteString) = fromMaybe mempty (toBytes . toHexString <$> callTo)
+    let (to       :: ByteString) = maybe mempty (toBytes . toHexString) callTo
         (value    :: Integer)    = unQuantity $ fromJust callValue
         (nonce    :: Integer)    = unQuantity $ fromJust callNonce
-        (gasPrice :: Integer)    = fromMaybe defaultGasPrice $ fmap unQuantity callGasPrice
+        (gasPrice :: Integer)    = maybe defaultGasPrice unQuantity callGasPrice
         (gasLimit :: Integer)    = unQuantity $ fromJust callGas
         (input    :: ByteString) = convert $ fromMaybe mempty callData
 

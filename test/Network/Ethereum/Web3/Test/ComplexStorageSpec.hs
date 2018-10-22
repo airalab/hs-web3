@@ -136,7 +136,7 @@ complexStorageSpec = do
             boolVal'    `shouldBe` sBool
             int224Val'  `shouldBe` sInt224
             boolsVal    `shouldBe` True
-            intsVal     `shouldBe` sInts  Prelude.!! 0
+            intsVal     `shouldBe` head sInts
             stringVal'  `shouldBe` sString
             bytes16Val' `shouldBe` sBytes16
             bytes2s     `shouldBe` sByte2sElem

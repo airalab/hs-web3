@@ -1,13 +1,11 @@
 {-# LANGUAGE DataKinds              #-}
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FlexibleInstances      #-}
-{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs                  #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 {-# LANGUAGE RankNTypes             #-}
 {-# LANGUAGE RecordWildCards        #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
-{-# LANGUAGE TypeApplications       #-}
 {-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE TypeFamilyDependencies #-}
 {-# LANGUAGE TypeOperators          #-}
@@ -15,7 +13,7 @@
 
 -- |
 -- Module      :  Network.Ethereum.Contract.Event.SingleFilter
--- Copyright   :  Alexander Krupenkin 2018
+-- Copyright   :  FOAM team <http://foam.space> 2018
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
