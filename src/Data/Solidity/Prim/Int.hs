@@ -35,7 +35,7 @@ module Data.Solidity.Prim.Int
 import qualified Basement.Numerical.Number as Basement (toInteger)
 import           Basement.Types.Word256    (Word256 (Word256))
 import qualified Basement.Types.Word256    as Basement (quot, rem)
-import           Data.Bits                 (Bits (testBit))
+import           Data.Bits                 (Bits (testBit), (.&.))
 import           Data.Proxy                (Proxy (..))
 import           Data.Serialize            (Get, Putter, Serialize (get, put))
 import           GHC.Generics              (Generic)
@@ -53,14 +53,27 @@ instance Integral Word256 where
 
 -- | Unsigned integer with fixed length in bits
 newtype UIntN (n :: Nat) = UIntN { unUIntN :: Word256 }
-    deriving (Eq, Ord, Enum, Num, Bits, Generic)
+    deriving (Eq, Ord, Enum, Bits, Generic)
+
+instance (KnownNat n, n <= 256) => Num (UIntN n) where
+    a + b  = fromInteger (toInteger a + toInteger b)
+    a - b  = fromInteger (toInteger a - toInteger b)
+    a * b  = fromInteger (toInteger a * toInteger b)
+    abs    = fromInteger . abs . toInteger
+    negate = fromInteger . negate . toInteger
+    signum = fromInteger . signum . toInteger
+    fromInteger x
+      | x >= 0 = mask $ UIntN (fromInteger x)
+      | otherwise = mask $ UIntN (fromInteger $ 2 ^ 256 + x)
+      where
+        mask = (maxBound .&.) :: UIntN n -> UIntN n
 
 instance (KnownNat n, n <= 256) => Show (UIntN n) where
     show = show . unUIntN
 
 instance (KnownNat n, n <= 256) => Bounded (UIntN n) where
-    minBound = 0
-    maxBound = 2 ^ (natVal (Proxy :: Proxy n)) - 1
+    minBound = UIntN 0
+    maxBound = UIntN $ 2 ^ natVal (Proxy :: Proxy n) - 1
 
 instance (KnownNat n, n <= 256) => Real (UIntN n) where
     toRational = toRational . toInteger
@@ -86,8 +99,8 @@ instance (KnownNat n, n <= 256) => Show (IntN n) where
     show = show . toInteger
 
 instance (KnownNat n, n <= 256) => Bounded (IntN n) where
-    minBound = negate $ 2 ^ (natVal (Proxy :: Proxy (n :: Nat)) - 1)
-    maxBound = 2 ^ (natVal (Proxy :: Proxy (n :: Nat)) - 1) - 1
+    minBound = IntN $ negate $ 2 ^ (natVal (Proxy :: Proxy (n :: Nat)) - 1)
+    maxBound = IntN $ 2 ^ (natVal (Proxy :: Proxy (n :: Nat)) - 1) - 1
 
 instance (KnownNat n, n <= 256) => Num (IntN n) where
     a + b  = fromInteger (toInteger a + toInteger b)
@@ -97,8 +110,10 @@ instance (KnownNat n, n <= 256) => Num (IntN n) where
     negate = fromInteger . negate . toInteger
     signum = fromInteger . signum . toInteger
     fromInteger x
-      | x >= 0 = IntN (fromInteger x)
-      | otherwise = IntN (fromInteger $ 2 ^ 256 + x)
+      | x >= 0 = mask $ IntN (fromInteger x)
+      | otherwise = mask $ IntN (fromInteger $ 2 ^ 256 + x)
+      where
+        mask = (maxBound .&.) :: IntN n -> IntN n
 
 instance (KnownNat n, n <= 256) => Real (IntN n) where
     toRational = toRational . toInteger
