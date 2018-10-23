@@ -32,7 +32,7 @@ import           Data.Proxy                        (Proxy (..))
 import           Data.RLP                          (packRLP, rlpEncode)
 
 import           Crypto.Ethereum                   (ecsign)
-import           Data.HexString                    (HexString, toBytes)
+import           Data.ByteArray.HexString          (HexString, toBytes)
 import           Data.Solidity.Abi.Codec           (decode, encode)
 import           Data.Solidity.Prim.Address        (fromPubKey, toHexString)
 import           Network.Ethereum.Account.Class    (Account (..))

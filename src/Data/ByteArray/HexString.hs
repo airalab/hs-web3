@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings          #-}
 
 -- |
--- Module      :  Data.HexString
+-- Module      :  Data.ByteArray.HexString
 -- Copyright   :  Alexander Krupenkin 2018
 -- License     :  BSD3
 --
@@ -13,20 +13,20 @@
 -- Hex string data type and useful functions.
 --
 
-module Data.HexString where
+module Data.ByteArray.HexString where
 
 import           Data.Aeson              (FromJSON (..), ToJSON (..),
                                           Value (String), withText)
 import           Data.ByteArray          (ByteArray, ByteArrayAccess, convert)
+import qualified Data.ByteArray          as BA (drop, take)
 import           Data.ByteArray.Encoding (Base (Base16), convertFromBase,
                                           convertToBase)
 import           Data.ByteString         (ByteString)
-import qualified Data.ByteString         as BS (drop, take)
 import           Data.Monoid             (Monoid, (<>))
 import           Data.Semigroup          (Semigroup)
 import           Data.String             (IsString (..))
 import           Data.Text               (Text)
-import qualified Data.Text.Encoding      as TE (decodeUtf8, encodeUtf8)
+import           Data.Text.Encoding      (decodeUtf8, encodeUtf8)
 
 -- | Represents a Hex string. Guarantees that all characters it contains
 --   are valid hex characters.
@@ -37,22 +37,26 @@ instance Show HexString where
     show = ("HexString " ++) . show . toText
 
 instance IsString HexString where
-    fromString = either error id . hexString . fromString
+    fromString = hexString' . fromString
+      where
+        hexString' :: ByteString -> HexString
+        hexString' = either error id . hexString
 
 instance FromJSON HexString where
-    parseJSON = withText "HexString" $ either fail pure . hexString . TE.encodeUtf8
+    parseJSON = withText "HexString" $ either fail pure . hexString . encodeUtf8
 
 instance ToJSON HexString where
     toJSON = String . toText
 
 -- | Smart constructor which validates that all the text are actually
 --   have `0x` prefix, hexadecimal characters and length is even.
-hexString :: ByteString -> Either String HexString
+hexString :: ByteArray ba => ba -> Either String HexString
 hexString bs
-  | BS.take 2 bs == "0x" = HexString <$> bs'
-  | otherwise  = Left $ "Hex string should be '0x' prefixed: " ++ show bs
+  | BA.take 2 bs == hexStart = HexString <$> bs'
+  | otherwise  = Left "Hex string should start from '0x'"
   where
-    bs' = convertFromBase Base16 (BS.drop 2 bs)
+    hexStart = convert ("0x" :: ByteString)
+    bs' = convertFromBase Base16 (BA.drop 2 bs)
 
 -- | Reads a raw bytes and converts to hex representation.
 fromBytes :: ByteArrayAccess ba => ba -> HexString
@@ -64,4 +68,4 @@ toBytes = convert . unHexString
 
 -- | Access to a 'Text' representation of the 'HexString'
 toText :: HexString -> Text
-toText = ("0x" <>) . TE.decodeUtf8 . convertToBase Base16 . unHexString
+toText = ("0x" <>) . decodeUtf8 . convertToBase Base16 . unHexString

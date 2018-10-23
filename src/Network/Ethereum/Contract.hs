@@ -23,7 +23,7 @@ module Network.Ethereum.Contract where
 import           Data.Proxy                       (Proxy)
 import           Data.Text                        (Text)
 
-import           Data.HexString                   (HexString)
+import           Data.ByteArray.HexString         (HexString)
 import           Data.Solidity.Prim.Address       (Address)
 import           Network.Ethereum.Account.Class   (Account)
 import           Network.Ethereum.Account.Safe    (safeConfirmations, safeSend)

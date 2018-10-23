@@ -15,7 +15,7 @@
 
 module Network.Ethereum.Api.Web3 where
 
-import           Data.HexString             (HexString)
+import           Data.ByteArray.HexString   (HexString)
 import           Data.Text                  (Text)
 import           Network.JsonRpc.TinyClient (JsonRpc (..))
 

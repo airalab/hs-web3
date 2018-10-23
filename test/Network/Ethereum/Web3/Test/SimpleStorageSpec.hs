@@ -131,13 +131,13 @@ events = do
             Just end <- takeMVar blockNumberVar
             awaitBlock $ end + 1  -- make past transactions definitively in past
             var' <- newMVar []
-            fiber <- web3 $ do
-                let fltr = (def :: Filter EvT_CountSet) { filterAddress = Just [storage]
+            fiber' <- web3 $ do
+                let fltr' = (def :: Filter EvT_CountSet) { filterAddress = Just [storage]
                                                         , filterFromBlock = BlockWithNumber start}
-                forkWeb3 $ processUntil' var' fltr ((6 ==) . length)
+                forkWeb3 $ processUntil' var' fltr' ((6 ==) . length)
             putStrLn "Setting more values"
             setValues storage theSets2
-            wait fiber
+            wait fiber'
             putStrLn "All new values have ben set"
             vals <- takeMVar var'
             sort (unEvT_CountSet <$> vals) `shouldBe` sort (theSets1 <> theSets2)
@@ -170,8 +170,8 @@ processUntil :: MVar [EvT_CountSet]
              -> ([EvT_CountSet] -> Bool)  -- TODO: make it work for any event
              -> (Change -> Web3 ())
              -> Web3 ()
-processUntil var filter predicate action = do
-  event' filter $ \(ev :: EvT_CountSet) -> do
+processUntil var fltr predicate action = do
+  event' fltr $ \(ev :: EvT_CountSet) -> do
     newV <- liftIO $ modifyMVar var $ \v -> return (ev:v, ev:v)
     if predicate newV
         then do
@@ -184,7 +184,7 @@ processUntil' :: MVar [EvT_CountSet]
               -> Filter EvT_CountSet
               -> ([EvT_CountSet] -> Bool)
               -> Web3 ()
-processUntil' var filter predicate = processUntil var filter predicate (const $ return ())
+processUntil' var fltr predicate = processUntil var fltr predicate (const $ return ())
 
 setValues :: Address -> [UIntN 256] -> IO ()
 setValues storage = mapM_ (contract storage . setCount)

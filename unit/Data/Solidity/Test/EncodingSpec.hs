@@ -13,7 +13,6 @@ import           Data.Tuple.OneTuple        (OneTuple (..))
 import           Generics.SOP               (Generic, Rep)
 import           Test.Hspec
 
-import           Data.HexString             (hexString)
 import           Data.Solidity.Abi          (AbiGet, AbiPut, GenericAbiGet,
                                              GenericAbiPut)
 import           Data.Solidity.Abi.Codec    (decode, decode', encode, encode')
@@ -231,10 +230,10 @@ addressTest =
         `shouldBe` "0x4af013afbadb22d8a88c92d68fc96b033b9ebb8a"
 
     it "fails for invalid address length" $ do
-      (fromHexString =<< hexString "0x0")
-        `shouldBe` Left "base16: input: invalid length"
+      evaluate (fromHexString "0x0")
+        `shouldThrow` errorCall "base16: input: invalid length"
 
-      (fromHexString =<< hexString "0x4af013AfBAdb22D8A88c92D68Fc96B033b9Ebb8a00")
+      fromHexString "0x4af013AfBAdb22D8A88c92D68Fc96B033b9Ebb8a00"
         `shouldBe` Left "Incorrect address length: 21"
 
 -- | Run encoded/decoded comaration

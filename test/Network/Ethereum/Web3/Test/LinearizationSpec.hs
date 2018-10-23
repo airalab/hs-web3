@@ -28,21 +28,18 @@
 module Network.Ethereum.Web3.Test.LinearizationSpec where
 
 import           Control.Concurrent               (forkIO)
-import           Control.Concurrent.Async         (Async, async, wait)
+import           Control.Concurrent.Async         (forConcurrently_)
 import           Control.Concurrent.MVar
 import           Control.Concurrent.STM           (atomically)
 import           Control.Concurrent.STM.TQueue    (TQueue, flushTQueue,
                                                    newTQueueIO, writeTQueue)
-import           Control.Concurrent.STM.TSem      (TSem, newTSem, signalTSem,
-                                                   waitTSem)
-import           Control.Monad                    (forM, void)
-import           Control.Monad.IO.Class           (MonadIO, liftIO)
+import           Control.Monad                    (void)
+import           Control.Monad.IO.Class           (MonadIO (..))
 import           Control.Monad.Trans.Reader       (ReaderT, ask)
 import           Data.Default
 import           Data.Either
 import           Data.List                        (sort)
 import           Data.Maybe                       (fromJust)
-import           System.Environment               (getEnv)
 import           System.Random                    (randomRIO)
 import           Test.Hspec
 
@@ -70,12 +67,6 @@ spec = do
 
 floodCount :: Int
 floodCount = 200
-
--- waitTSem will block until the counter is positive (i.e., > 0)
--- so if there's -(floodCount - 1), that means when the floodCount `signalTSem`s are done
--- there will be 1 unit left in the TSem for the waitTSem at the end of a test
-floodSemCount :: Int
-floodSemCount = -(floodCount - 1)
 
 linearizationSpec :: SpecWith Address
 linearizationSpec =
@@ -114,7 +105,8 @@ floodSpec = describe "can correctly demonstrate the difference between `multiEve
         sleepBlocks 10
 
         -- flood em and wait for all to finish
-        void . forM [1..floodCount] . const . liftIO $ singleFlood linearization
+        liftIO . forConcurrently_ [1..floodCount] . const $ singleFlood linearization
+
         -- to let the event listeners catch up
         sleepBlocks 10
 
@@ -140,11 +132,11 @@ monitorE1OrE2 addr = do
     let fltr1 = (def :: Filter E1) { filterAddress = Just [addr] }
         fltr2 = (def :: Filter E2) { filterAddress = Just [addr] }
         filters = fltr1 :? fltr2 :? NilFilters
-        handler1 e1 = do
-            liftIO $ putMVar var (Left e1)
+        handler1 ev1 = do
+            liftIO $ putMVar var (Left ev1)
             return TerminateEvent
-        handler2 e2 = do
-            liftIO $ putMVar var (Right e2)
+        handler2 ev2 = do
+            liftIO $ putMVar var (Right ev2)
             return TerminateEvent
         handlers = H handler1 :& H handler2 :& RNil
     _ <- web3 $ multiEvent filters handlers

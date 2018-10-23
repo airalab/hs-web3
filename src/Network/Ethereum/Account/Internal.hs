@@ -26,7 +26,7 @@ import           Data.Default                   (Default (..))
 import           Data.Maybe                     (fromMaybe)
 import           Lens.Micro                     (Lens', lens)
 
-import           Data.HexString                 (HexString)
+import           Data.ByteArray.HexString       (HexString)
 import           Data.Solidity.Prim             (Address)
 import           Network.Ethereum.Account.Class (Account)
 import qualified Network.Ethereum.Api.Eth       as Eth (getTransactionReceipt)

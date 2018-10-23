@@ -27,18 +27,12 @@
 module Network.Ethereum.Web3.Test.ComplexStorageSpec where
 
 import           Control.Concurrent.Async         (wait)
-import           Control.Concurrent.MVar
+import           Control.Concurrent.MVar          (newEmptyMVar, putMVar,
+                                                   takeMVar)
 import           Control.Monad.IO.Class           (liftIO)
-import           Data.ByteArray                   (convert)
-import           Data.ByteString                  (ByteString)
-import           Data.Default
-import           Data.Either                      (isRight)
-import           Data.Maybe
-import           Data.String                      (fromString)
-import           System.IO.Unsafe                 (unsafePerformIO)
+import           Data.Default                     (def)
 
-import qualified Network.Ethereum.Api.Eth         as Eth
-import           Network.Ethereum.Api.Types       (Call (..), Filter (..))
+import           Network.Ethereum.Api.Types       (Filter (..))
 import           Network.Ethereum.Contract        (new)
 import           Network.Ethereum.Contract.TH
 import           Network.Ethereum.Web3            hiding (convert)

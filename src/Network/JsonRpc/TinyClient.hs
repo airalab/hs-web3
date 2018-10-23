@@ -79,14 +79,10 @@ import           Data.Text               (Text, unpack)
 import           Lens.Micro.Mtl          (use)
 import           Lens.Micro.TH           (makeLenses)
 import           Network.HTTP.Client     (Manager, RequestBody (RequestBodyLBS),
-                                          defaultManagerSettings, httpLbs,
-                                          method, newManager, parseRequest,
-                                          requestBody, requestHeaders,
-                                          responseBody)
-
-#ifdef TLS_MANAGER
+                                          httpLbs, method, newManager,
+                                          parseRequest, requestBody,
+                                          requestHeaders, responseBody)
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
-#endif
 
 -- | JSON-RPC monad constrait.
 type JsonRpcM m = (MonadIO m, MonadThrow m, MonadState JsonRpcClient m)
@@ -104,11 +100,7 @@ defaultSettings :: MonadIO m
                 => String           -- ^ JSON-RPC server URI
                 -> m JsonRpcClient
 defaultSettings srv = liftIO $ JsonRpcClient
-#ifdef TLS_MANAGER
   <$> newManager tlsManagerSettings
-#else
-  <$> newManager defaultManagerSettings
-#endif
   <*> pure srv
 
 instance Show JsonRpcClient where

@@ -32,7 +32,7 @@ import qualified Data.Text.Lazy.Builder.Int as B (hexadecimal)
 import qualified Data.Text.Read             as R (decimal, hexadecimal)
 import           GHC.Generics               (Generic)
 
-import           Data.HexString             (HexString)
+import           Data.ByteArray.HexString   (HexString)
 import           Data.String.Extra          (toLowerFirst)
 
 -- | Should be viewed as type to representing QUANTITY in Web3 JSON RPC docs

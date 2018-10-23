@@ -15,7 +15,7 @@
 
 module Network.Ethereum.Api.Eth where
 
-import           Data.HexString             (HexString)
+import           Data.ByteArray.HexString   (HexString)
 import           Data.Solidity.Prim.Address (Address)
 import           Data.Text                  (Text)
 import           Network.Ethereum.Api.Types (Block, Call, Change, DefaultBlock,
