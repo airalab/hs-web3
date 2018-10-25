@@ -25,6 +25,7 @@ import           Control.Concurrent            (threadDelay)
 import           Control.Exception             (Exception, throwIO)
 import           Control.Monad.IO.Class        (liftIO)
 import           Data.Either                   (lefts, rights)
+
 import           Data.Solidity.Event           (DecodeEvent (..))
 import qualified Network.Ethereum.Api.Eth      as Eth
 import           Network.Ethereum.Api.Provider (Web3)

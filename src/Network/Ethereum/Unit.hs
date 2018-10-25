@@ -74,10 +74,10 @@ import qualified Text.Read.Lex                   as L
 -- | Ethereum value unit
 class (Read a, Show a, UnitSpec a, Fractional a) => Unit a where
     -- | Make a value from integer wei
-    fromWei :: Integer -> a
+    fromWei :: Integral b => b -> a
 
     -- | Convert a value to integer wei
-    toWei :: a -> Integer
+    toWei :: Integral b => a -> b
 
 -- | Unit specification
 class UnitSpec a where
@@ -92,8 +92,8 @@ mkValue :: forall a b . (UnitSpec a, RealFrac b) => b -> Value a
 mkValue = MkValue . round . (* divider (Proxy :: Proxy a))
 
 instance UnitSpec a => Unit (Value a) where
-    fromWei = MkValue
-    toWei   = unValue
+    fromWei = MkValue . toInteger
+    toWei   = fromInteger . unValue
 
 instance UnitSpec a => UnitSpec (Value a) where
     divider = const $ divider (Proxy :: Proxy a)

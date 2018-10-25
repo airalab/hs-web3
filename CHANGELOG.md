@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - Solidity related data types and codecs moved to Data.Solidity
 - Solidity related parsers and compiler moved to Language.Solidity
 - Modules in Network.Ethereum.Web3 moved to Network.Ethereum.Api
+- fromWei/toWei from `Unit` typeclass now operates over `Integral`
 
 ### Removed
 - `convert` function from `Unit` typeclass

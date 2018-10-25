@@ -6,43 +6,74 @@ The Haskell Ethereum API which implements the [Generic JSON RPC](https://github.
 [![Documentation Status](https://readthedocs.org/projects/hs-web3/badge/?version=latest)](https://hs-web3.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/airalab/hs-web3.svg?branch=master)](https://travis-ci.org/airalab/hs-web3)
 [![Hackage](https://img.shields.io/hackage/v/web3.svg)](http://hackage.haskell.org/package/web3)
-![Haskell Programming Language](https://img.shields.io/badge/language-Haskell-blue.svg)
+[![LTS-12](http://stackage.org/package/web3/badge/lts-12)](http://stackage.org/lts-12/package/web3)
+[![nightly](http://stackage.org/package/web3/badge/nightly)](http://stackage.org/nightly/package/web3)
+[![Code Triagers](https://www.codetriage.com/airalab/hs-web3/badges/users.svg)](https://www.codetriage.com/airalab/hs-web3)
 ![BSD3 License](http://img.shields.io/badge/license-BSD3-brightgreen.svg)
-[![Code Triagers Badge](https://www.codetriage.com/airalab/hs-web3/badges/users.svg)](https://www.codetriage.com/airalab/hs-web3)
 
-Installation
-------------
+Install
+-------
 
-Using [Stackage](https://docs.haskellstack.org):
+`stack install web3`
 
-    stack install web3
+Usage
+-----
 
-Quick start
------------
+```haskell
+{-# LANGUAGE OverloadedStrings #-}
+module Main where
 
-Lets import library entrypoint modules using `ghci`:
+-- Basic imports
+import           Network.Ethereum.Web3
 
-    > import Network.Ethereum.Web3
-    > import qualified Network.Ethereum.Api.Web3 as Web3
+-- Eth API support
+import qualified Network.Ethereum.Api.Eth   as Eth
+import           Network.Ethereum.Api.Types
 
-> We recomends to import `Network.Ethereun.Api.Web3` as **qualified**, because it has name similar to their prefix in JSON-RPC API.
+-- ENS support
+import qualified Network.Ethereum.Ens       as Ens
 
-Looks anything in `Web3` API:
+-- Lens to simple param setting
+import           Lens.Micro                 ((.~))
 
-    > :t Web3.clientVersion
-    Web3.clientVersion :: JsonRpc m => m Text
+main :: IO ()
+main = do
+    -- Use default provider on http://localhost:8545
+    ret <- runWeb3 $ do
 
-To run it use `Web3` provider monad:
+        -- Get address of default account
+        me <- head <$> Eth.accounts
 
-    > :t runWeb3
-    runWeb3 :: MonadIO m => Web3 a -> m (Either Web3Error a)
+        -- Get balance of default account on latest block
+        myBalance <- Eth.getBalance me Latest
 
-    > runWeb3 Web3.clientVersion
-    Right "Parity-Ethereum//v2.0.3-unstable/x86_64-linux-gnu/rustc1.29.0"
+        -- Get half of balance
+        let halfBalance = fromWei (myBalance / 2)
 
-> Function `runWeb3` use default provider at `http://localhost:8545`, for using custom providers try `runweb3'`.
+        -- Use default account
+        withAccount () $ do
+            -- Get Ethereum address via ENS
+            alice <- Ens.resolve "alice.address.on.eth"
+            bob   <- Ens.resolve "bob.address.on.eth"
+
+            -- Send transaction with value
+            withParam (value .~ halfBalance) $ do
+
+                -- Send transaction to alice account
+                withParam (to .~ alice) $ send ()
+
+                -- Send transaction to bob account
+                withParam (to .~ bob) $ send ()
+
+        -- Return sended value
+        return halfBalance
+
+    -- Web3 error handling
+    case ret of
+        Left e  -> error $ show e
+        Right v -> print (v :: Ether)  -- Print returned value in ethers
+```
 
 ---
 
-See [documentation](https://hs-web3.readthedocs.io) for other examples.
-
+Read more in the [documentation on ReadTheDocs](https://hs-web3.readthedocs.io).

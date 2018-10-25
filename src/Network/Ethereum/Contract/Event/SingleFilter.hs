@@ -46,6 +46,7 @@ import           Data.Machine                           (MachineT, asParts,
                                                          unfoldPlan, (~>))
 import           Data.Machine.Plan                      (PlanT, stop, yield)
 import           Data.Maybe                             (catMaybes, listToMaybe)
+
 import           Data.Solidity.Event                    (DecodeEvent (..))
 import qualified Network.Ethereum.Api.Eth               as Eth
 import           Network.Ethereum.Api.Provider          (Web3, forkWeb3)

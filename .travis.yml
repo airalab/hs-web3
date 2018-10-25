@@ -16,8 +16,6 @@ cache:
 matrix:
   include:
   # Build with different GHC versions
-  - env: RESOLVER=lts-9.21
-    compiler: ": #GHC 8.0.2"
   - env: RESOLVER=lts-11.22
     compiler: ": #GHC 8.2.2"
   - env: RESOLVER=lts-12.14
@@ -26,9 +24,6 @@ matrix:
     compiler: ": #GHC 8.6.1"
 
   # Build on macOS in addition to Linux
-  - env: RESOLVER=lts-9.21
-    compiler: ": #GHC 8.0.2"
-    os: osx
   - env: RESOLVER=lts-11.22
     compiler: ": #GHC 8.2.2"
     os: osx
@@ -39,6 +34,9 @@ matrix:
     compiler: ": #GHC 8.6.1"
     os: osx
 
+install:
+- curl -sSL https://get.haskellstack.org/ | sh -s - -d .
+- ./stack --version
+
 script:
-- nix-shell -p stack --run \
-  "stack test web3:unit --flag web3:solidity --nix --no-terminal --haddock --no-haddock-deps --resolver $RESOLVER"
+- ./stack test web3:unit --flag web3:solidity --nix --no-terminal --haddock --no-haddock-deps --resolver $RESOLVER

@@ -27,7 +27,7 @@ import           Data.ByteString                   (ByteString)
 import           Data.ByteString.Short             (fromShort)
 import           Data.Default                      (Default (..))
 import           Data.Maybe                        (fromJust, fromMaybe)
-import           Data.Monoid                       (mempty)
+import           Data.Monoid                       (mempty, (<>))
 import           Data.Proxy                        (Proxy (..))
 import           Data.RLP                          (packRLP, rlpEncode)
 

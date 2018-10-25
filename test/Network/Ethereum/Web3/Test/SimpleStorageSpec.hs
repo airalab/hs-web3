@@ -31,8 +31,9 @@ import           Control.Concurrent.MVar
 import           Control.Monad.IO.Class           (liftIO)
 import           Control.Monad.Trans.Class        (lift)
 import           Control.Monad.Trans.Reader       (ask)
-import           Data.Default
+import           Data.Default                     (def)
 import           Data.List                        (sort)
+import           Data.Monoid                      ((<>))
 import           Test.Hspec
 
 import qualified Network.Ethereum.Api.Eth         as Eth

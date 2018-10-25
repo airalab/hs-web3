@@ -3,7 +3,7 @@ version:             0.8.0.0
 synopsis:            Ethereum API for Haskell
 description:         Web3 is a Haskell client library for Ethereum
 github:              "airalab/hs-web3"
-license:             BSD3
+license:             BSD-3-Clause
 license-file:        LICENSE
 author:              Alexander Krupenkin
 maintainer:          mail@akru.me
@@ -13,6 +13,7 @@ category:            Network
 extra-source-files:
 - README.md
 - CHANGELOG.md
+- stack.yaml
 - examples/token/ERC20.hs
 - examples/token/ERC20.json
 - examples/token/Main.hs
@@ -23,7 +24,7 @@ extra-source-files:
 
 dependencies:
 - base                 >4.9       && <4.13
-- secp256k1-haskell    >=0.1.3    && <0.2
+- secp256k1-haskell    >=0.1.4    && <0.2
 - http-client-tls      >=0.3.5.1  && <0.4
 - template-haskell     >=2.11.1.0 && <2.15
 - microlens-aeson      >=2.2.0.2  && <2.4
@@ -46,7 +47,7 @@ dependencies:
 - memory               >=0.14.11  && <0.15
 - cereal               >=0.5.4.0  && <0.6
 - aeson                >=1.1.2.0  && <1.5
-- vinyl                >=0.5.3    && <0.11
+- vinyl                >=0.5.3    && <0.10
 - async                >=2.1.1.1  && <2.3
 - text                 >=1.2.2.2  && <1.3
 - mtl                  >=2.2.1    && <2.3
@@ -98,7 +99,8 @@ library:
     cpp-options:      -DSOLIDITY_COMPILER
     dependencies:     containers
     extra-libraries:  solidity
-    c-sources:        ./cbits/solidity_lite.cpp
+    cxx-options:      -std=c++14
+    cxx-sources:      ./cbits/solidity_lite.cpp
     include-dirs:     ./cbits
 
 tests:

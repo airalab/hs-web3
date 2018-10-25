@@ -65,12 +65,19 @@ import           Data.Maybe                             (catMaybes, fromJust,
                                                          listToMaybe)
 import           Data.Monoid                            ((<>))
 import           Data.Proxy                             (Proxy (..))
+import           Data.Tagged                            (Tagged (..))
+import           Data.Vinyl                             (Rec ((:&), RNil),
+                                                         RecApplicative)
+import           Data.Vinyl.CoRec                       (CoRec (..), Field,
+                                                         FoldRec, Handler (H),
+                                                         Handlers, coRecToRec,
+                                                         firstField, match,
+                                                         onField)
+import           Data.Vinyl.Functor                     (Compose (..),
+                                                         Identity (..))
+import           Data.Vinyl.TypeLevel                   (AllAllSat)
+
 import           Data.Solidity.Event                    (DecodeEvent (..))
-import           Data.Tagged
-import           Data.Vinyl
-import           Data.Vinyl.CoRec
-import           Data.Vinyl.Functor
-import           Data.Vinyl.TypeLevel
 import qualified Network.Ethereum.Api.Eth               as Eth
 import           Network.Ethereum.Api.Provider          (Web3, forkWeb3)
 import           Network.Ethereum.Api.Types             (Change (..),

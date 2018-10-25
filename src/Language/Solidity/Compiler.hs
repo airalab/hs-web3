@@ -21,6 +21,7 @@ module Language.Solidity.Compiler where
 
 import           Data.ByteString                    (ByteString)
 import           Data.Map                           (Map)
+import           Data.Semigroup                     (Semigroup (..))
 import qualified Language.Solidity.Compiler.Foreign as FFI
 import           System.IO.Unsafe                   (unsafePerformIO)
 
@@ -40,6 +41,7 @@ instance Semigroup Sources where
                      (optimization a || optimization b)
 
 instance Monoid Sources where
+    mappend = (<>)
     mempty = Sources mempty mempty False
 
 type Compiled = Map ByteString (ByteString, ByteString)
