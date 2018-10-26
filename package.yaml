@@ -99,8 +99,7 @@ library:
     cpp-options:      -DSOLIDITY_COMPILER
     dependencies:     containers
     extra-libraries:  solidity
-    cxx-options:      -std=c++14
-    cxx-sources:      ./cbits/solidity_lite.cpp
+    c-sources:        ./cbits/solidity_lite.cpp
     include-dirs:     ./cbits
 
 tests:

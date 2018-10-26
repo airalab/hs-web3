@@ -1,7 +1,4 @@
-# Use new container infrastructure to enable caching.
-sudo: false
-
-# Use nix build environment.
+sudo: false 
 language: nix 
 
 # Caching so the next build will be fast too.
@@ -24,19 +21,16 @@ matrix:
     compiler: ": #GHC 8.6.1"
 
   # Build on macOS in addition to Linux
-  - env: RESOLVER=lts-11.22
-    compiler: ": #GHC 8.2.2"
-    os: osx
-  - env: RESOLVER=lts-12.14
-    compiler: ": #GHC 8.4.3"
-    os: osx
-  - env: RESOLVER=nightly
-    compiler: ": #GHC 8.6.1"
-    os: osx
-
-install:
-- curl -sSL https://get.haskellstack.org/ | sh -s - -d .
-- ./stack --version
+  #  - env: RESOLVER=lts-11.22
+  #    compiler: ": #GHC 8.2.2"
+  #    os: osx
+  #  - env: RESOLVER=lts-12.14
+  #    compiler: ": #GHC 8.4.3"
+  #    os: osx
+  #  - env: RESOLVER=nightly
+  #    compiler: ": #GHC 8.6.1"
+  #    os: osx
 
 script:
-- ./stack test web3:unit --flag web3:solidity --nix --no-terminal --haddock --no-haddock-deps --resolver $RESOLVER
+- nix-shell -p stack --run \
+  "stack test web3:unit --flag web3:solidity --nix --no-terminal --haddock --no-haddock-deps --resolver $RESOLVER"
