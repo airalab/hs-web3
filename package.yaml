@@ -3,7 +3,7 @@ version:             0.8.0.0
 synopsis:            Ethereum API for Haskell
 description:         Web3 is a Haskell client library for Ethereum
 github:              "airalab/hs-web3"
-license:             BSD-3-Clause
+license:             BSD3
 license-file:        LICENSE
 author:              Alexander Krupenkin
 maintainer:          mail@akru.me

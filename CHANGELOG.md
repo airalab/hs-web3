@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [0.8.0.0] 2018-10-**
+## [0.8.0.0] 2018-10-26
 ### Added
 - Support for Ethereum cryptography
 - Local private key transaction signer 
