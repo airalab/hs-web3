@@ -1,6 +1,6 @@
 -- |
 -- Module      :  Data.String.Extra
--- Copyright   :  Alexander Krupenkin 2016-2018
+-- Copyright   :  Alexander Krupenkin 2016
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me

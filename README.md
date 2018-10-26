@@ -1,76 +1,79 @@
-## Ethereum Haskell API
+Ethereum API for Haskell
+========================
 
-This is the Ethereum compatible Haskell API which implements the [Generic JSON RPC](https://github.com/ethereum/wiki/wiki/JSON-RPC) spec.
+The Haskell Ethereum API which implements the [Generic JSON RPC](https://github.com/ethereum/wiki/wiki/JSON-RPC).
 
+[![Documentation Status](https://readthedocs.org/projects/hs-web3/badge/?version=latest)](https://hs-web3.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/airalab/hs-web3.svg?branch=master)](https://travis-ci.org/airalab/hs-web3)
-[![Build status](https://ci.appveyor.com/api/projects/status/8ljq93nar8kobk75?svg=true)](https://ci.appveyor.com/project/akru/hs-web3)
 [![Hackage](https://img.shields.io/hackage/v/web3.svg)](http://hackage.haskell.org/package/web3)
-![Haskell Programming Language](https://img.shields.io/badge/language-Haskell-blue.svg)
+[![LTS-12](http://stackage.org/package/web3/badge/lts-12)](http://stackage.org/lts-12/package/web3)
+[![nightly](http://stackage.org/package/web3/badge/nightly)](http://stackage.org/nightly/package/web3)
+[![Code Triagers](https://www.codetriage.com/airalab/hs-web3/badges/users.svg)](https://www.codetriage.com/airalab/hs-web3)
 ![BSD3 License](http://img.shields.io/badge/license-BSD3-brightgreen.svg)
-[![Code Triagers Badge](https://www.codetriage.com/airalab/hs-web3/badges/users.svg)](https://www.codetriage.com/airalab/hs-web3)
 
-### Installation
+Install
+-------
 
-    $ git clone https://github.com/airalab/hs-web3 && cd hs-web3
-    $ stack setup
-    $ stack ghci
+`stack install web3`
 
-> This library runs only paired with [geth](https://github.com/ethereum/go-ethereum)
-> or [parity](https://github.com/ethcore/parity) Ethereum node,
-> please start node first before using the library.
+Usage
+-----
 
-### Web3 monad
+```haskell
+{-# LANGUAGE OverloadedStrings #-}
+module Main where
 
-Any Ethereum node communication wrapped with `Web3` monadic type.
+-- Basic imports
+import           Network.Ethereum.Web3
 
-    > import Network.Ethereum.Web3.Web3
-    > :t clientVersion
-    clientVersion :: Web3 Text
+-- Eth API support
+import qualified Network.Ethereum.Api.Eth   as Eth
+import           Network.Ethereum.Api.Types
 
-To run this computation used `runWeb3'` or `runWeb3` functions.
+-- ENS support
+import qualified Network.Ethereum.Ens       as Ens
 
-    > import Network.Ethereum.Web3
-    > runWeb3 clientVersion
-    Right "Parity//v1.4.5-beta-a028d04-20161126/x86_64-linux-gnu/rustc1.13.0"
+-- Lens to simple param setting
+import           Lens.Micro                 ((.~))
 
-Function `runWeb3` use default `Web3` provider at `localhost:8545`.
+main :: IO ()
+main = do
+    -- Use default provider on http://localhost:8545
+    ret <- runWeb3 $ do
 
-    > :t runWeb3
-    runWeb3
-      :: MonadIO m => Web3 a -> m (Either Web3Error a)
+        -- Get address of default account
+        me <- head <$> Eth.accounts
 
-### TemplateHaskell generator
+        -- Get balance of default account on latest block
+        myBalance <- Eth.getBalance me Latest
 
-[Quasiquotation](https://wiki.haskell.org/Quasiquotation) is used to parse contract ABI or load from JSON file. [TemplateHaskell](https://wiki.haskell.org/Template_Haskell) driven Haskell contract API generator can automatical create ABI encoding instances and contract method helpers.
+        -- Get half of balance
+        let halfBalance = fromWei (myBalance / 2)
 
-    > :set -XQuasiQuotes
-    > import Network.Ethereum.Contract.TH
-    > putStr [abiFrom|data/sample.json|]
-    Contract:
-            Events:
-                    Action1(address,uint256)
-                    Action2(string,uint256)
-            Methods:
-                    0x03de48b3 runA1()
-                    0x90126c7a runA2(string,uint256)
+        -- Use default account
+        withAccount () $ do
+            -- Get Ethereum address via ENS
+            alice <- Ens.resolve "alice.address.on.eth"
+            bob   <- Ens.resolve "bob.address.on.eth"
 
-Use `-ddump-splices` to see generated code during compilation or in GHCi. See `examples` folder for more use cases.
+            -- Send transaction with value
+            withParam (value .~ halfBalance) $ do
 
-### Testing
+                -- Send transaction to alice account
+                withParam (to .~ alice) $ send ()
 
-Testing the `web3` is split up into two suites: `unit` and `live`.
-The `unit` suite tests internal library facilities, while the `live` tests that
-the library adequately interacts with a Web3 provider.
+                -- Send transaction to bob account
+                withParam (to .~ bob) $ send ()
 
-One may simply run `stack test` to run both suites, or `stack test web3:unit` or `stack test web3:live`
-to run the test suites individually.
+        -- Return sended value
+        return halfBalance
 
-The `unit` suite has no external dependencies, while the `live` suite requires Truffle and `jq`
-to be available on your machine.
+    -- Web3 error handling
+    case ret of
+        Left e  -> error $ show e
+        Right v -> print (v :: Ether)  -- Print returned value in ethers
+```
 
-The `live` suite also requires a Web3 provider with Ethereum capabilities, as well as
-an unlocked account with ether to send transactions from. It uses Truffle to deploy testing contracts,
-generating ABIs for them in the process, then using said ABIs as part of a TemplateHaskell step in the suite.
-It is assumed that the provider is available at `http://localhost:8545`. If that's not the case, you must update `truffle.js`
-so that Truffle can deploy the contracts correctly, and pass the `WEB3_PROVIDER=http://host:port` environment variable
-when running the tests so that the `web3` library can interact with the chain that's being tested against.
+---
+
+Read more in the [documentation on ReadTheDocs](https://hs-web3.readthedocs.io).

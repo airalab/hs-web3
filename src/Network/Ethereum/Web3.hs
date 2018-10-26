@@ -17,43 +17,28 @@
 -- Web3 Haskell library currently use JSON-RPC over HTTP to access node functionality.
 --
 
-module Network.Ethereum.Web3 (
+module Network.Ethereum.Web3
+    (
+    -- * Base monad for any Ethereum node communication
+      Web3
+    , runWeb3
 
-  -- ** Monad as base of any Ethereum node communication
-    Web3
-  , runWeb3
+    -- * Basic transaction sending
+    , module Account
 
-  -- ** Basic transaction sending
-  , sendTx
-  , Call(..)
+    -- * Basic event listening
+    , EventAction(..)
+    , event
 
-  -- ** Basic event listening
-  , EventAction(..)
-  , event
-  , event'
+    -- * Primitive data types
+    , module Prim
 
-  -- ** Primitive data types
-  , Address
-  , Bytes
-  , BytesN
-  , IntN
-  , UIntN
-  , ListN
+    -- * Metric unit system
+    , module Unit
+    ) where
 
-  -- ** Metric unit system
-  , module Network.Ethereum.Unit
-
-  ) where
-
-import           Network.Ethereum.ABI.Prim.Address (Address)
-import           Network.Ethereum.ABI.Prim.Bool    ()
-import           Network.Ethereum.ABI.Prim.Bytes   (Bytes, BytesN)
-import           Network.Ethereum.ABI.Prim.Int     (IntN, UIntN)
-import           Network.Ethereum.ABI.Prim.List    (ListN)
-import           Network.Ethereum.ABI.Prim.String  ()
-import           Network.Ethereum.Contract.Event   (EventAction (..), event,
-                                                    event')
-import           Network.Ethereum.Contract.Method  (sendTx)
-import           Network.Ethereum.Unit
-import           Network.Ethereum.Web3.Provider    (Web3, runWeb3)
-import           Network.Ethereum.Web3.Types       (Call (..))
+import           Data.Solidity.Prim              as Prim
+import           Network.Ethereum.Account        as Account
+import           Network.Ethereum.Api.Provider   (Web3, runWeb3)
+import           Network.Ethereum.Contract.Event (EventAction (..), event)
+import           Network.Ethereum.Unit           as Unit

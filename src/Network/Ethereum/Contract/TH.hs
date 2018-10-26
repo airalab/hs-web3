@@ -1,5 +1,5 @@
-{-# LANGUAGE CPP               #-}
 {-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
 {-# LANGUAGE TemplateHaskell   #-}
@@ -18,7 +18,7 @@
 -- The Application Binary Interface is the standard way to interact
 -- with contracts in the Ethereum ecosystem. It can be described by
 -- specially JSON file, like @ERC20.json@. This module use TemplateHaskell
--- for generation described in ABI contract methods and events. Helper
+-- for generation described in Abi contract methods and events. Helper
 -- functions and instances inserted in haskell module and can be used in
 -- another modules or in place.
 --
@@ -36,57 +36,63 @@
 -- Full code example available in examples folder.
 --
 
-module Network.Ethereum.Contract.TH (abi, abiFrom) where
+module Network.Ethereum.Contract.TH
+    (
+    -- * The contract quasiquoters
+      abi
+    , abiFrom
+    ) where
 
-import           Control.Monad                     (replicateM, (<=<))
-import           Data.Aeson                        (eitherDecode)
-import           Data.Default                      (Default (..))
-import           Data.List                         (groupBy, sortBy, uncons)
-import           Data.Monoid                       ((<>))
-import           Data.Tagged                       (Tagged)
-import           Data.Text                         (Text)
-import qualified Data.Text                         as T
-import qualified Data.Text.Lazy                    as LT
-import qualified Data.Text.Lazy.Encoding           as LT
-import           Generics.SOP                      (Generic)
-import qualified GHC.Generics                      as GHC (Generic)
+import           Control.Applicative              ((<|>))
+import           Control.Monad                    (replicateM, (<=<))
+import qualified Data.Aeson                       as Aeson (encode)
+import           Data.ByteArray                   (convert)
+import qualified Data.Char                        as Char
+import           Data.Default                     (Default (..))
+import           Data.List                        (group, sort, uncons)
+import           Data.Monoid                      ((<>))
+import           Data.Tagged                      (Tagged)
+import           Data.Text                        (Text)
+import qualified Data.Text                        as T
+import qualified Data.Text.Lazy                   as LT
+import qualified Data.Text.Lazy.Encoding          as LT
+import           Data.Tuple.OneTuple              (only)
+import           Generics.SOP                     (Generic)
+import qualified GHC.Generics                     as GHC (Generic)
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Quote
+import           Lens.Micro                       ((^?))
+import           Lens.Micro.Aeson                 (key, _JSON, _String)
 
-import           Data.String.Extra                 (toLowerFirst, toUpperFirst)
-import           Network.Ethereum.ABI.Class        (ABIGet, ABIPut,
-                                                    ABIType (..))
-import           Network.Ethereum.ABI.Event        (IndexedEvent (..))
-import           Network.Ethereum.ABI.Json         (ContractABI (..),
-                                                    Declaration (..),
-                                                    EventArg (..),
-                                                    FunctionArg (..),
-                                                    SolidityType (..), eventId,
-                                                    methodId, parseSolidityType)
-import           Network.Ethereum.ABI.Prim.Address (Address)
-import           Network.Ethereum.ABI.Prim.Bytes   (Bytes, BytesN)
-import           Network.Ethereum.ABI.Prim.Int     (IntN, UIntN)
-import           Network.Ethereum.ABI.Prim.List    (ListN)
-import           Network.Ethereum.ABI.Prim.String  ()
-import           Network.Ethereum.ABI.Prim.Tagged  ()
-import           Network.Ethereum.ABI.Prim.Tuple   (Singleton (..))
-import           Network.Ethereum.Contract.Method  (Method (..), call, sendTx)
-import           Network.Ethereum.Web3.Provider    (Web3)
-import           Network.Ethereum.Web3.Types       (Call, DefaultBlock (..),
-                                                    Filter (..), TxHash)
+import           Data.Solidity.Abi                (AbiGet, AbiPut, AbiType (..))
+import           Data.Solidity.Event              (IndexedEvent (..))
+import           Data.Solidity.Prim               (Address, Bytes, BytesN, IntN,
+                                                   ListN, UIntN)
+import           Data.String.Extra                (toLowerFirst, toUpperFirst)
+import           Language.Solidity.Abi            (ContractAbi (..),
+                                                   Declaration (..),
+                                                   EventArg (..),
+                                                   FunctionArg (..),
+                                                   SolidityType (..), eventId,
+                                                   methodId, parseSolidityType)
+import           Network.Ethereum.Account.Class   (Account (..))
+import           Network.Ethereum.Api.Types       (DefaultBlock (..),
+                                                   Filter (..), TxReceipt)
+import qualified Network.Ethereum.Contract        as Contract (Contract (..))
+import           Network.Ethereum.Contract.Method (Method (..))
+import           Network.JsonRpc.TinyClient       (JsonRpc)
 
--- | Read contract ABI from file
+-- | Read contract Abi from file
 abiFrom :: QuasiQuoter
 abiFrom = quoteFile abi
 
--- | QQ reader for contract ABI
+-- | QQ reader for contract Abi
 abi :: QuasiQuoter
 abi = QuasiQuoter
-  { quoteDec  = quoteAbiDec
-  , quoteExp  = quoteAbiExp
-  , quotePat  = undefined
-  , quoteType = undefined
-  }
+    { quoteDec  = quoteAbiDec
+    , quoteExp  = quoteAbiExp
+    , quotePat  = undefined
+    , quoteType = undefined }
 
 -- | Instance declaration with empty context
 instanceD' :: Name -> TypeQ -> [DecQ] -> DecQ
@@ -95,18 +101,14 @@ instanceD' name insType =
 
 -- | Simple data type declaration with one constructor
 dataD' :: Name -> ConQ -> [Name] -> DecQ
-dataD' name rec derive =
-#if MIN_VERSION_template_haskell(2,12,0)
-    dataD (cxt []) name [] Nothing [rec] [derivClause Nothing (conT <$> derive)]
-#else
-    dataD (cxt []) name [] Nothing [rec] $ cxt (conT <$> derive)
-#endif
+dataD' name rec' derive =
+    dataD (cxt []) name [] Nothing [rec'] [derivClause Nothing (conT <$> derive)]
 
 -- | Simple function declaration
 funD' :: Name -> [PatQ] -> ExpQ -> DecQ
 funD' name p f = funD name [clause p (normalB f) []]
 
--- | ABI and Haskell types association
+-- | Abi and Haskell types association
 toHSType :: SolidityType -> TypeQ
 toHSType s = case s of
     SolidityBool        -> conT ''Bool
@@ -123,9 +125,9 @@ toHSType s = case s of
     expandVector :: [Int] -> SolidityType -> TypeQ
     expandVector ns a = case uncons ns of
       Just (n, rest) ->
-        if length rest == 0
-          then (conT ''ListN) `appT` numLit n `appT` toHSType a
-          else (conT ''ListN) `appT` numLit n `appT` expandVector rest a
+        if null rest
+          then conT ''ListN `appT` numLit n `appT` toHSType a
+          else conT ''ListN `appT` numLit n `appT` expandVector rest a
       _ -> error $ "Impossible Nothing branch in `expandVector`: " ++ show ns ++ " " ++ show a
 
 typeQ :: Text -> TypeQ
@@ -148,46 +150,49 @@ funWrapper :: Bool
            -- ^ Parameters
            -> Maybe [FunctionArg]
            -- ^ Results
-           -> Q [Dec]
+           -> DecsQ
 funWrapper c name dname args result = do
-    a : _ : vars <- replicateM (length args + 2) (newName "t")
-    let params = appsE $ conE dname : fmap varE vars
+    vars <- replicateM (length args) (newName "t")
+    a <- varT <$> newName "a"
+    t <- varT <$> newName "t"
+    m <- varT <$> newName "m"
 
-    sequence $ if c
-        then
-          [ sigD name $ [t|$(arrowing $ [t|Call|] : inputT ++ [outputT])|]
-          , funD' name (varP <$> a : vars) $
-              case result of
-                Just [_] -> [|unSingleton <$> call $(varE a) Latest $(params)|]
-                _        -> [|call $(varE a) Latest $(params)|]
-          ]
 
-        else
-          [ sigD name $ [t|$(arrowing $ [t|Call|] : inputT ++ [[t|Web3 TxHash|]])|]
-          , funD' name (varP <$> a : vars) $
-                [|sendTx $(varE a) $(params)|] ]
+    let params  = appsE $ conE dname : fmap varE vars
+        inputT  = fmap (typeQ . funArgType) args
+        outputT = case result of
+            Nothing  -> [t|$t $m ()|]
+            Just [x] -> [t|$t $m $(typeQ $ funArgType x)|]
+            Just xs  -> let outs = fmap (typeQ . funArgType) xs
+                         in  [t|$t $m $(foldl appT (tupleT (length xs)) outs)|]
+
+    sequence [
+        sigD name $ [t|
+            (JsonRpc $m, Account $a $t, Functor ($t $m)) =>
+                $(arrowing $ inputT ++ [if c then outputT else [t|$t $m TxReceipt|]])
+            |]
+      , if c
+            then funD' name (varP <$> vars) $ case result of
+                    Just [_] -> [|only <$> call $(params)|]
+                    _        -> [|call $(params)|]
+            else funD' name (varP <$> vars) $ [|send $(params)|]
+      ]
   where
     arrowing []       = error "Impossible branch call"
     arrowing [x]      = x
     arrowing (x : xs) = [t|$x -> $(arrowing xs)|]
-    inputT  = fmap (typeQ . funArgType) args
-    outputT = case result of
-        Nothing  -> [t|Web3 ()|]
-        Just [x] -> [t|Web3 $(typeQ $ funArgType x)|]
-        Just xs  -> let outs = fmap (typeQ . funArgType) xs
-                    in  [t|Web3 $(foldl appT (tupleT (length xs)) outs)|]
 
-mkDecl :: Declaration -> Q [Dec]
+mkDecl :: Declaration -> DecsQ
 
-mkDecl ev@(DEvent name inputs anonymous) = sequence
+mkDecl ev@(DEvent uncheckedName inputs anonymous) = sequence
     [ dataD' indexedName (normalC indexedName (map (toBang <=< tag) indexedArgs)) derivingD
     , instanceD' indexedName (conT ''Generic) []
-    , instanceD' indexedName (conT ''ABIType) [funD' 'isDynamic [] [|const False|]]
-    , instanceD' indexedName (conT ''ABIGet) []
+    , instanceD' indexedName (conT ''AbiType) [funD' 'isDynamic [] [|const False|]]
+    , instanceD' indexedName (conT ''AbiGet) []
     , dataD' nonIndexedName (normalC nonIndexedName (map (toBang <=< tag) nonIndexedArgs)) derivingD
     , instanceD' nonIndexedName (conT ''Generic) []
-    , instanceD' nonIndexedName (conT ''ABIType) [funD' 'isDynamic [] [|const False|]]
-    , instanceD' nonIndexedName (conT ''ABIGet) []
+    , instanceD' nonIndexedName (conT ''AbiType) [funD' 'isDynamic [] [|const False|]]
+    , instanceD' nonIndexedName (conT ''AbiGet) []
     , dataD' allName (recC allName (map (\(n, a) -> ((\(b,t) -> return (n,b,t)) <=< toBang <=< typeQ $ a)) allArgs)) derivingD
     , instanceD' allName (conT ''Generic) []
     , instanceD (cxt [])
@@ -195,9 +200,10 @@ mkDecl ev@(DEvent name inputs anonymous) = sequence
         [funD' 'isAnonymous [] [|const anonymous|]]
     , instanceD (cxt [])
         (pure $ ConT ''Default `AppT` (ConT ''Filter `AppT` ConT allName))
-        [funD' 'def [] [|Filter Nothing (Just topics) Latest Latest|] ]
+        [funD' 'def [] [|Filter Nothing Latest Latest $ Just topics|] ]
     ]
   where
+    name = if Char.toLower (T.head uncheckedName) == Char.toUpper (T.head uncheckedName) then "EvT" <> uncheckedName else uncheckedName
     topics    = [Just (T.unpack $ eventId ev)] <> replicate (length indexedArgs) Nothing
     toBang ty = bangType (bang sourceNoUnpack sourceStrict) (return ty)
     tag (n, ty) = AppT (AppT (ConT ''Tagged) (LitT $ NumTyLit n)) <$> typeQ ty
@@ -210,16 +216,17 @@ mkDecl ev@(DEvent name inputs anonymous) = sequence
     allName = mkName $ toUpperFirst (T.unpack name)
     derivingD = [''Show, ''Eq, ''Ord, ''GHC.Generic]
 
+-- TODO change this type name also
 -- | Method delcarations maker
 mkDecl fun@(DFunction name constant inputs outputs) = (++)
   <$> funWrapper constant fnName dataName inputs outputs
   <*> sequence
         [ dataD' dataName (normalC dataName bangInput) derivingD
         , instanceD' dataName (conT ''Generic) []
-        , instanceD' dataName (conT ''ABIType)
+        , instanceD' dataName (conT ''AbiType)
           [funD' 'isDynamic [] [|const False|]]
-        , instanceD' dataName (conT ''ABIPut) []
-        , instanceD' dataName (conT ''ABIGet) []
+        , instanceD' dataName (conT ''AbiPut) []
+        , instanceD' dataName (conT ''AbiGet) []
         , instanceD' dataName (conT ''Method)
           [funD' 'selector [] [|const mIdent|]]
         ]
@@ -230,6 +237,28 @@ mkDecl fun@(DFunction name constant inputs outputs) = (++)
         derivingD = [''Show, ''Eq, ''Ord, ''GHC.Generic]
 
 mkDecl _ = return []
+
+mkContractDecl :: Text -> Text -> Text -> Declaration -> DecsQ
+mkContractDecl name a b (DConstructor inputs) = sequence
+    [ dataD' dataName (normalC dataName bangInput) derivingD
+    , instanceD' dataName (conT ''Generic) []
+    , instanceD' dataName (conT ''AbiType)
+        [funD' 'isDynamic [] [|const False|]]
+    , instanceD' dataName (conT ''AbiPut) []
+    , instanceD' dataName (conT ''Method)
+        [funD' 'selector [] [|convert . Contract.bytecode|]]
+    , instanceD' dataName (conT ''Contract.Contract)
+        [ funD' 'Contract.abi [] [|const abiString|]
+        , funD' 'Contract.bytecode [] [|const bytecodeString|]
+        ]
+    ]
+  where abiString = T.unpack a
+        bytecodeString = T.unpack b
+        dataName = mkName (toUpperFirst (T.unpack $ name <> "Contract"))
+        bangInput = fmap funBangType inputs
+        derivingD = [''Show, ''Eq, ''Ord, ''GHC.Generic]
+
+mkContractDecl _ _ _ _ = return []
 
 -- | this function gives appropriate names for the accessors in the following way
 -- | argName -> evArgName
@@ -242,36 +271,69 @@ makeArgs prefix ns = go 1 ns
     prefixStr = toLowerFirst . T.unpack $ prefix
     go :: Int -> [(Text, Text)] -> [(Name, Text)]
     go _ [] = []
-    go i ((h, ty) : tail') = if T.null h
-                        then (mkName $ prefixStr ++ show i, ty) : go (i + 1) tail'
-                        else (mkName . (++ "_") . (++) prefixStr . toUpperFirst . T.unpack $ h, ty) : go (i + 1) tail'
+    go i ((h, ty) : tail')
+        | T.null h  = (mkName $ prefixStr ++ show i, ty) : go (i + 1) tail'
+        | otherwise = (mkName . (++ "_") . (++) prefixStr . toUpperFirst . T.unpack $ h, ty) : go (i + 1) tail'
 
 escape :: [Declaration] -> [Declaration]
-escape = concat . escapeNames . groupBy fnEq . sortBy fnCompare
-  where fnEq (DFunction n1 _ _ _) (DFunction n2 _ _ _) = n1 == n2
-        fnEq _ _                                       = False
-        fnCompare (DFunction n1 _ _ _) (DFunction n2 _ _ _) = compare n1 n2
-        fnCompare _ _                                       = GT
+escape = escapeEqualNames . fmap escapeReservedNames
 
-escapeNames :: [[Declaration]] -> [[Declaration]]
-escapeNames = fmap go
+escapeEqualNames :: [Declaration] -> [Declaration]
+escapeEqualNames = concatMap go . group . sort
   where go []       = []
         go (x : xs) = x : zipWith appendToName xs hats
         hats = [T.replicate n "'" | n <- [1..]]
-        appendToName dfn addition = dfn { funName = funName dfn <> addition }
+        appendToName d@(DFunction n _ _ _) a = d { funName = n <> a }
+        appendToName d@(DEvent n _ _) a      = d { eveName = n <> a }
+        appendToName d _                     = d
 
--- | ABI to declarations converter
-quoteAbiDec :: String -> Q [Dec]
-quoteAbiDec abi_string =
-    case eitherDecode abi_lbs of
-        Left e                -> fail $ "Error: " ++ show e
-        Right (ContractABI a) -> concat <$> mapM mkDecl (escape a)
-  where abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
+escapeReservedNames :: Declaration -> Declaration
+escapeReservedNames d@(DFunction n _ _ _)
+  | isKeyword n = d { funName = n <> "'" }
+  | otherwise = d
+escapeReservedNames d = d
 
--- | ABI information string
+isKeyword :: Text -> Bool
+isKeyword = flip elem [ "as", "case", "of", "class"
+                      , "data", "family", "instance"
+                      , "default", "deriving", "do"
+                      , "forall", "foreign", "hiding"
+                      , "if", "then", "else", "import"
+                      , "infix", "infixl", "infixr"
+                      , "let", "in", "mdo", "module"
+                      , "newtype", "proc", "qualified"
+                      , "rec", "type", "where"
+                      ]
+
+constructorSpec :: String -> Maybe (Text, Text, Text, Declaration)
+constructorSpec str = do
+    name     <- str ^? key "contractName" . _String
+    abiValue <- str ^? key "abi"
+    bytecode <- str ^? key "bytecode" . _String
+    decl     <- filter isContructor . unAbi <$> str ^? key "abi" . _JSON
+    return (name, jsonEncode abiValue, bytecode, toConstructor decl)
+  where
+    jsonEncode = LT.toStrict . LT.decodeUtf8 . Aeson.encode
+    isContructor (DConstructor _) = True
+    isContructor _                = False
+    toConstructor []  = DConstructor []
+    toConstructor [a] = a
+    toConstructor _   = error "Broken ABI: more that one constructor"
+
+-- | Abi to declarations converter
+quoteAbiDec :: String -> DecsQ
+quoteAbiDec str =
+    case str ^? _JSON <|> str ^? key "abi" . _JSON of
+        Nothing                 -> fail "Unable to decode contract ABI"
+        Just (ContractAbi decs) -> do
+            funEvDecs <- concat <$> mapM mkDecl (escape decs)
+            case constructorSpec str of
+                Nothing -> return funEvDecs
+                Just (a, b, c, d) -> (funEvDecs ++) <$> mkContractDecl a b c d
+
+-- | Abi information string
 quoteAbiExp :: String -> ExpQ
-quoteAbiExp abi_string = stringE $
-    case eitherDecode abi_lbs of
-        Left e  -> "Error: " ++ show e
-        Right a -> show (a :: ContractABI)
-  where abi_lbs = LT.encodeUtf8 (LT.pack abi_string)
+quoteAbiExp str =
+    case str ^? _JSON <|> str ^? key "abi" . _JSON of
+        Nothing                -> fail "Unable to decode contract ABI"
+        Just a@(ContractAbi _) -> stringE (show a)

@@ -1,7 +1,9 @@
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedLists       #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE QuasiQuotes           #-}
@@ -25,29 +27,30 @@
 module Network.Ethereum.Web3.Test.ComplexStorageSpec where
 
 import           Control.Concurrent.Async         (wait)
-import           Control.Concurrent.MVar
+import           Control.Concurrent.MVar          (newEmptyMVar, putMVar,
+                                                   takeMVar)
 import           Control.Monad.IO.Class           (liftIO)
-import           Data.ByteArray                   (convert)
-import           Data.ByteString                  (ByteString)
-import           Data.Default
-import           Data.Either                      (isRight)
-import           Data.Maybe
-import           Data.String                      (fromString)
+import           Data.Default                     (def)
+
+import           Network.Ethereum.Api.Types       (Filter (..))
+import           Network.Ethereum.Contract        (new)
 import           Network.Ethereum.Contract.TH
 import           Network.Ethereum.Web3            hiding (convert)
-import qualified Network.Ethereum.Web3.Eth        as Eth
 import           Network.Ethereum.Web3.Test.Utils
-import           Network.Ethereum.Web3.Types      (Call (..), Filter (..))
-import           System.Environment               (getEnv)
-import           System.IO.Unsafe                 (unsafePerformIO)
+
+
 import           Test.Hspec
 
-[abiFrom|test-support/build/contracts/abis/ComplexStorage.json|]
+[abiFrom|test/contracts/ComplexStorage.json|]
+
+deploy :: IO Address
+deploy = do
+    Just address <- web3 $ withAccount () $ withParam id $ new ComplexStorageContract
+    putStrLn $ "ComplexStorage: " ++ show address
+    return address
 
 spec :: Spec
-spec = describe "Complex Storage" $ do
-    it "should inject contract addresses" injectExportedEnvironmentVariables
-    withPrimaryEthereumAccount `before` complexStorageSpec
+spec = deploy `before` complexStorageSpec
 
 complexStorageSpec :: SpecWith Address
 complexStorageSpec = do
@@ -65,27 +68,25 @@ complexStorageSpec = do
             sByte2sVec = [sByte2sElem, sByte2sElem, sByte2sElem, sByte2sElem]
             sByte2s = [sByte2sVec, sByte2sVec]
 
-        it "can set the values of a ComplexStorage and validate them with an event" $ \primaryAccount -> do
-            contractAddress <- Prelude.fmap fromString . liftIO $ getEnv "COMPLEXSTORAGE_CONTRACT_ADDRESS"
-            let theCall = callFromTo primaryAccount contractAddress
-                fltr    = (def :: Filter ValsSet) { filterAddress = Just contractAddress }
+        it "can set the values of a ComplexStorage and validate them with an event" $ \storage -> do
+            let fltr = (def :: Filter ValsSet) { filterAddress = Just [storage] }
             -- kick off listening for the ValsSet event
             vals <- newEmptyMVar
-            fiber <- runWeb3Configured' $
+            fiber <- web3 $
                 event fltr $ \vs -> do
                     liftIO $ putMVar vals vs
                     pure TerminateEvent
             -- kick off tx
-            ret <- runWeb3Configured $ setValues theCall
-                                                 sUint
-                                                 sInt
-                                                 sBool
-                                                 sInt224
-                                                 sBools
-                                                 sInts
-                                                 sString
-                                                 sBytes16
-                                                 sByte2s
+            _ <- contract storage $ setValues
+                                    sUint
+                                    sInt
+                                    sBool
+                                    sInt224
+                                    sBools
+                                    sInts
+                                    sString
+                                    sBytes16
+                                    sByte2s
             -- wait for its ValsSet event
             wait fiber
             (ValsSet vsA vsB vsC vsD vsE vsF vsG vsH vsI) <- takeMVar vals
@@ -99,33 +100,53 @@ complexStorageSpec = do
             vsH `shouldBe` sBytes16
             vsI `shouldBe` sByte2s
 
-        it "can verify that it set the values correctly" $ \primaryAccount -> do
-            contractAddress <- Prelude.fmap fromString . liftIO $ getEnv "COMPLEXSTORAGE_CONTRACT_ADDRESS"
-            let theCall = callFromTo primaryAccount contractAddress
-                runGetterCall f = runWeb3Configured (f theCall)
-            -- there really has to be a better way to do this
-            uintVal'    <- runGetterCall uintVal
-            intVal'     <- runGetterCall intVal
-            boolVal'    <- runGetterCall boolVal
-            int224Val'  <- runGetterCall int224Val
-            boolsVal    <- runGetterCall $ \c -> boolVectorVal c 0
-            intsVal     <- runGetterCall $ \c -> intListVal c 0
-            stringVal'  <- runGetterCall stringVal
-            bytes16Val' <- runGetterCall bytes16Val
-            bytes2s     <- runGetterCall $ \c -> bytes2VectorListVal c 0 0
+        it "can verify that it set the values correctly" $ \storage -> do
+            -- Write a values
+            _ <- contract storage $ setValues
+                                    sUint
+                                    sInt
+                                    sBool
+                                    sInt224
+                                    sBools
+                                    sInts
+                                    sString
+                                    sBytes16
+                                    sByte2s
+            -- Read a couple of values
+            (uintVal', intVal', boolVal', int224Val', boolsVal, intsVal, stringVal', bytes16Val', bytes2s)
+                <- contract storage $ (,,,,,,,,)
+                    <$> uintVal
+                    <*> intVal
+                    <*> boolVal
+                    <*> int224Val
+                    <*> boolVectorVal 0
+                    <*> intListVal 0
+                    <*> stringVal
+                    <*> bytes16Val
+                    <*> bytes2VectorListVal 0 0
+
             uintVal'    `shouldBe` sUint
             intVal'     `shouldBe` sInt
             boolVal'    `shouldBe` sBool
             int224Val'  `shouldBe` sInt224
             boolsVal    `shouldBe` True
-            intsVal     `shouldBe` sInts  Prelude.!! 0
+            intsVal     `shouldBe` head sInts
             stringVal'  `shouldBe` sString
             bytes16Val' `shouldBe` sBytes16
-            bytes2s `shouldBe` sByte2sElem
+            bytes2s     `shouldBe` sByte2sElem
 
-        it "can decode a complicated value correctly" $ \primaryAccount -> do
-            contractAddress <- Prelude.fmap fromString . liftIO $ getEnv "COMPLEXSTORAGE_CONTRACT_ADDRESS"
-            let theCall = callFromTo primaryAccount contractAddress
-                runGetterCall f = runWeb3Configured (f theCall)
-            allVals <- runGetterCall getVals
+        it "can decode a complicated value correctly" $ \storage -> do
+            -- Write a values
+            _ <- contract storage $ setValues
+                                    sUint
+                                    sInt
+                                    sBool
+                                    sInt224
+                                    sBools
+                                    sInts
+                                    sString
+                                    sBytes16
+                                    sByte2s
+            -- Read a all values
+            allVals <- contract storage getVals
             allVals `shouldBe` (sUint, sInt, sBool, sInt224, sBools, sInts, sString, sBytes16, sByte2s)

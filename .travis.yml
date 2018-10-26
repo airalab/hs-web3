@@ -1,59 +1,36 @@
-sudo: required
-language: haskell
+sudo: false 
+language: nix 
 
-services:
-- docker
-
-before_install:
-- nvm install 8.9.4
-- nvm use 8.9.4
-- npm i -g truffle
-- if [ $STACK ]; then mkdir -p ~/.local/bin; export PATH=$HOME/.local/bin:$PATH;
-  travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack';
-  else export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH;
-  fi
-
-install:
-- $STACK || if [ -f $HOME/.cabal/packages/hackage.haskell.org/00-index.tar.gz ]; then zcat $HOME/.cabal/packages/hackage.haskell.org/00-index.tar.gz
-  > $HOME/.cabal/packages/hackage.haskell.org/00-index.tar; ls -l $HOME/.cabal/packages/hackage.haskell.org/;
-  fi; cabal update; sed -i 's/^jobs:/-- jobs:/' ${HOME}/.cabal/config; if [ -n "$CABALCONFIG"
-  ]; then cp $CABALCONFIG cabal.config; fi; if [ -n "$STACKAGESNAPSHOT" ]; then curl
-  --silent https://www.stackage.org/$STACKAGESNAPSHOT/cabal.config | grep -v "$(cabal
-  info . -v0 | head -n 1 | awk '{ print $2 }' | sed -E 's/-[0-9]+(\.[0-9]+)+//') =="
-  > cabal.config; fi; cabal install --only-dependencies --enable-tests $CABALCONFOPTS --dry -v >
-  installplan.txt; sed -i -e '1,/^Resolving /d' installplan.txt; cat installplan.txt;
-  if diff -u $HOME/.cabsnap/installplan.txt installplan.txt; then echo "cabal build-cache
-  HIT"; rm -rfv .ghc; cp -av $HOME/.cabsnap/ghc $HOME/.ghc; cp -av $HOME/.cabsnap/lib
-  $HOME/.cabsnap/share $HOME/.cabsnap/bin $HOME/.cabal/; else echo "cabal build-cache
-  MISS"; rm -rf $HOME/.cabsnap; mkdir -p $HOME/.ghc $HOME/.cabal/lib $HOME/.cabal/share
-  $HOME/.cabal/bin; cabal install --only-dependencies --enable-tests $CABALCONFOPTS; fi; if [ ! -d
-  $HOME/.cabsnap ]; then echo "snapshotting package-db to build-cache"; mkdir $HOME/.cabsnap;
-  cp -av $HOME/.ghc $HOME/.cabsnap/ghc; cp -av $HOME/.cabal/lib $HOME/.cabal/share
-  $HOME/.cabal/bin installplan.txt $HOME/.cabsnap/; fi;
-
-script:
-- docker run --rm -d -p 8545:8545 foamspace/cliquebait:latest && sleep 30
-- export EXPORT_STORE=.detected-contract-addresses && cd test-support && truffle deploy && ./convertAbi.sh && ./inject-contract-addresses.sh && cd ..
-- if [ $STACK ]; then stack -j2 --no-terminal --install-ghc test;
-  else cabal update && cabal install --only-dependencies --enable-tests $CABALCONFOPTS && cabal configure --enable-tests $CABALCONFOPTS -v2 && cabal build web3 $CABALBUILDOPTS && cabal test;
-  fi
-
-matrix:
-  include:
-    - env: GHCVER=8.0.2 CABALVER=1.24
-      addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.2], sources: [hvr-ghc]}}
-    - env: GHCVER=8.2.2 CABALVER=2.0
-      addons: {apt: {packages: [cabal-install-2.0,ghc-8.2.2], sources: [hvr-ghc]}}
-    - env: GHCVER=8.4.2 CABALVER=2.2
-      addons: {apt: {packages: [cabal-install-2.2,ghc-8.4.2], sources: [hvr-ghc]}}
-    - env: STACK=YES
-
-before_cache:
-  - rm -fv $HOME/.cabal/packages/hackage.haskell.org/build-reports.log
-  - rm -fv $HOME/.cabal/packages/hackage.haskell.org/00-index.tar
-
+# Caching so the next build will be fast too.
 cache:
   directories:
-    - $HOME/.stack
-    - $HOME/.cabsnap
-    - $HOME/.cabal/packages
+  - $HOME/.stack
+  - $TRAVIS_BUILD_DIR/.stack-work
+
+# The different configurations we want to test. We have BUILD=cabal which uses
+# cabal-install, and BUILD=stack which uses Stack. More documentation on each
+# of those below.
+matrix:
+  include:
+  # Build with different GHC versions
+  - env: RESOLVER=lts-11.22
+    compiler: ": #GHC 8.2.2"
+  - env: RESOLVER=lts-12.14
+    compiler: ": #GHC 8.4.3"
+  - env: RESOLVER=nightly
+    compiler: ": #GHC 8.6.1"
+
+  # Build on macOS in addition to Linux
+  #  - env: RESOLVER=lts-11.22
+  #    compiler: ": #GHC 8.2.2"
+  #    os: osx
+  #  - env: RESOLVER=lts-12.14
+  #    compiler: ": #GHC 8.4.3"
+  #    os: osx
+  #  - env: RESOLVER=nightly
+  #    compiler: ": #GHC 8.6.1"
+  #    os: osx
+
+script:
+- nix-shell -p stack --run \
+  "stack test web3:unit --flag web3:solidity --nix --no-terminal --haddock --no-haddock-deps --resolver $RESOLVER"
