@@ -20,13 +20,13 @@
 # -- Project information -----------------------------------------------------
 
 project = 'hs-web3'
-copyright = 'Alexander Krupenkin 2018-2016'
+copyright = '2018, Alexander Krupenkin'
 author = 'Alexander Krupenkin'
 
 # The short X.Y version
 version = '0.8'
 # The full version, including alpha/beta/rc tags
-release = '0.8-rc1'
+release = '0.8.0.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -38,7 +38,8 @@ release = '0.8-rc1'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = []
+extensions = [
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -61,11 +62,12 @@ language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-# This pattern also affects html_static_path and html_extra_path.
+# This pattern also affects html_static_path and html_extra_path .
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = None
+pygments_style = 'sphinx'
+
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -99,29 +101,55 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'hs-web3-doc'
+htmlhelp_basename = 'hs-web3doc'
+
+
+# -- Options for LaTeX output ------------------------------------------------
+
+latex_elements = {
+    # The paper size ('letterpaper' or 'a4paper').
+    #
+    # 'papersize': 'letterpaper',
+
+    # The font size ('10pt', '11pt' or '12pt').
+    #
+    # 'pointsize': '10pt',
+
+    # Additional stuff for the LaTeX preamble.
+    #
+    # 'preamble': '',
+
+    # Latex figure (float) alignment
+    #
+    # 'figure_align': 'htbp',
+}
+
+# Grouping the document tree into LaTeX files. List of tuples
+# (source start file, target name, title,
+#  author, documentclass [howto, manual, or own class]).
+latex_documents = [
+    (master_doc, 'hs-web3.tex', 'hs-web3 Documentation',
+     'Alexander Krupenkin', 'manual'),
+]
+
 
 # -- Options for manual page output ------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'hs-web3', 'Haskell Web3 Documentation', [author], 1)
+    (master_doc, 'hs-web3', 'hs-web3 Documentation',
+     [author], 1)
 ]
 
-# -- Options for Epub output -------------------------------------------------
 
-# Bibliographic Dublin Core info.
-epub_title = project
+# -- Options for Texinfo output ----------------------------------------------
 
-# The unique identifier of the text. This can be a ISBN number
-# or the project homepage.
-#
-# epub_identifier = ''
-
-# A unique identification for the text.
-#
-# epub_uid = ''
-
-# A list of files that should not be packed into the epub file.
-epub_exclude_files = ['search.html']
+# Grouping the document tree into Texinfo files. List of tuples
+# (source start file, target name, title, author,
+#  dir menu entry, description, category)
+texinfo_documents = [
+    (master_doc, 'hs-web3', 'hs-web3 Documentation',
+     author, 'hs-web3', 'One line description of project.',
+     'Miscellaneous'),
+]

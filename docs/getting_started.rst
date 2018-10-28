@@ -1,43 +1,56 @@
 Getting started
 ===============
 
+.. note::
+   **hs-web3** is a Haskell library. Of course you should have some knowledge about Haskell and platform tools like a `cabal` or `stack`. If you have not - `Real World Haskell <http://book.realworldhaskell.org>`_ and `Learn You a Haskell for Great Good <http://learnyouahaskell.com>`_ is a good point to begin. 
+
 Installation
 ~~~~~~~~~~~~
 
-Using `Stackage <https://docs.haskellstack.org>`_
+**Simplest way** is using `Stackage <https://docs.haskellstack.org>`_ with `Nix <https://nixos.org/nix>`_ integration.
 
-    stack install web3
+.. code-block:: bash
+
+    stack install web3 --nix
+
+Dependencies for building from source without Nix:
+
+- `zlib <https://packages.ubuntu.com/ru/trusty/zlib1g-dev>`_
+- `secp256k1 <https://launchpad.net/ubuntu/+source/libsecp256k1>`_
+- optional: `solidity <https://solidity.readthedocs.io/en/v0.4.21/installing-solidity.html#binary-packages>`_
 
 Quick start
 ~~~~~~~~~~~
 
-Lets import library entrypoint modules using `ghci`:
+Lets import library entrypoint modules using ``ghci``:
 
 .. code-block:: haskell
 
     > import Network.Ethereum.Web3
-    > import qualified Network.Ethereum.Api.Web3 as Web3
+    > import qualified Network.Ethereum.Api.Eth as Eth
 
 .. note::
 
-   We recomends to import `Network.Ethereun.Api.Web3` as **qualified**, because it has name similar to their prefix in JSON-RPC API.
+   I recomend to import `Network.Ethereun.Api.Eth` as **qualified**, because it has name similar to their prefix in JSON-RPC API.
 
-Looks anything in `Web3` API:
+Looks anything in ``Eth`` API:
 
 .. code-block:: haskell
 
-    > :t Web3.clientVersion
-    Web3.clientVersion :: JsonRpc m => m Text
+    > :t Eth.blockNumber
+    Eth.blockNumber :: JsonRpc m => m Quantity
 
-To run it use `Web3` provider monad:
+To run it use ``runWeb3`` function:
 
 .. code-block:: haskell
 
     > :t runWeb3
     runWeb3 :: MonadIO m => Web3 a -> m (Either Web3Error a)
 
-    > runWeb3 Web3.clientVersion
-    Right "Parity-Ethereum//v2.0.3-unstable/x86_64-linux-gnu/rustc1.29.0"
+    > runWeb3 Eth.blockNumber 
+    Right 6601059
 
 .. note::
-   Function ``runWeb3`` use default provider at **http://localhost:8545**, for using custom providers try ``runWeb3'``.
+
+   Function ``runWeb3`` run default provider at **http://localhost:8545**, for using custom providers try to use ``runWeb3'``.
+
