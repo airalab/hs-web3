@@ -9,7 +9,6 @@ packages:
 extra-deps:
 - secp256k1-haskell-0.1.4
 - relapse-1.0.0.0
-- vinyl-0.9.3
 
 # Dependencies bounds
 pvp-bounds: both

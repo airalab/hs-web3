@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                    #-}
 {-# LANGUAGE DataKinds              #-}
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FlexibleInstances      #-}
@@ -64,7 +65,6 @@ import           Data.Machine.Plan                      (PlanT, stop, yield)
 import           Data.Maybe                             (catMaybes, fromJust,
                                                          listToMaybe)
 import           Data.Monoid                            ((<>))
-import           Data.Proxy                             (Proxy (..))
 import           Data.Tagged                            (Tagged (..))
 import           Data.Vinyl                             (Rec ((:&), RNil),
                                                          RecApplicative)
@@ -75,7 +75,12 @@ import           Data.Vinyl.CoRec                       (CoRec (..), Field,
                                                          onField)
 import           Data.Vinyl.Functor                     (Compose (..),
                                                          Identity (..))
+#if MIN_VERSION_vinyl(0,10,0)
+import           Data.Vinyl                             (RPureConstrained)
+#else
+import           Data.Proxy                             (Proxy (..))
 import           Data.Vinyl.TypeLevel                   (AllAllSat)
+#endif
 
 import           Data.Solidity.Event                    (DecodeEvent (..))
 import qualified Network.Ethereum.Api.Eth               as Eth
@@ -119,7 +124,11 @@ multiEvent
   :: ( PollFilters es
      , QueryAllLogs es
      , MapHandlers Web3 es (WithChange es)
+#if MIN_VERSION_vinyl(0,10,0)
+     , RPureConstrained HasLogIndex (WithChange es)
+#else
      , AllAllSat '[HasLogIndex] (WithChange es)
+#endif
      , RecApplicative (WithChange es)
      )
   => MultiFilter es
@@ -131,7 +140,11 @@ multiEvent'
   :: ( PollFilters es
      , QueryAllLogs es
      , MapHandlers Web3 es (WithChange es)
+#if MIN_VERSION_vinyl(0,10,0)
+     , RPureConstrained HasLogIndex (WithChange es)
+#else
      , AllAllSat '[HasLogIndex] (WithChange es)
+#endif
      , RecApplicative (WithChange es)
      )
   => MultiFilter es
@@ -150,7 +163,11 @@ multiEventMany'
   :: ( PollFilters es
      , QueryAllLogs es
      , MapHandlers Web3 es (WithChange es)
+#if MIN_VERSION_vinyl(0,10,0)
+     , RPureConstrained HasLogIndex (WithChange es)
+#else
      , AllAllSat '[HasLogIndex] (WithChange es)
+#endif
      , RecApplicative (WithChange es)
      )
   => MultiFilter es
@@ -238,13 +255,21 @@ instance HasLogIndex (FilterChange e) where
     (,) <$> changeBlockNumber filterChangeRawChange <*> changeLogIndex filterChangeRawChange
 
 sortChanges
+#if MIN_VERSION_vinyl(0,10,0)
+  :: ( RPureConstrained HasLogIndex es
+#else
   :: ( AllAllSat '[HasLogIndex] es
+#endif
      , RecApplicative es
      )
   => [Field es]
   -> [Field es]
 sortChanges changes =
+#if MIN_VERSION_vinyl(0,10,0)
+  let sorterProj change = onField @HasLogIndex getLogIndex change
+#else
   let sorterProj change = onField (Proxy @'[HasLogIndex]) getLogIndex change
+#endif
   in sortOn sorterProj changes
 
 class MapHandlers m es es' where
@@ -293,7 +318,11 @@ reduceMultiEventStream filterChanges handlers = fmap listToMaybe . runT $
 playMultiLogs
   :: forall es k.
      ( QueryAllLogs es
+#if MIN_VERSION_vinyl(0,10,0)
+     , RPureConstrained HasLogIndex (WithChange es)
+#else
      , AllAllSat '[HasLogIndex] (WithChange es)
+#endif
      , RecApplicative (WithChange es)
      )
   => MultiFilterStreamState es
@@ -342,7 +371,11 @@ instance forall e i ni es.
 pollMultiFilter
   :: ( PollFilters es
      , RecApplicative (WithChange es)
+#if MIN_VERSION_vinyl(0,10,0)
+     , RPureConstrained HasLogIndex (WithChange es)
+#else
      , AllAllSat '[HasLogIndex] (WithChange es)
+#endif
      )
   => TaggedFilterIds es
   -> DefaultBlock
@@ -368,7 +401,11 @@ pollMultiFilter is = construct . pollPlan is
 multiEventNoFilter
   :: ( QueryAllLogs es
      , MapHandlers Web3 es (WithChange es)
+#if MIN_VERSION_vinyl(0,10,0)
+     , RPureConstrained HasLogIndex (WithChange es)
+#else
      , AllAllSat '[HasLogIndex] (WithChange es)
+#endif
      , RecApplicative (WithChange es)
      )
   => MultiFilter es
@@ -379,7 +416,11 @@ multiEventNoFilter fltrs = forkWeb3 . multiEventNoFilter' fltrs
 multiEventNoFilter'
   :: ( QueryAllLogs es
      , MapHandlers Web3 es (WithChange es)
+#if MIN_VERSION_vinyl(0,10,0)
+     , RPureConstrained HasLogIndex (WithChange es)
+#else
      , AllAllSat '[HasLogIndex] (WithChange es)
+#endif
      , RecApplicative (WithChange es)
      )
   => MultiFilter es
@@ -391,7 +432,11 @@ multiEventNoFilter' fltrs = multiEventManyNoFilter' fltrs 0
 multiEventManyNoFilter'
   :: ( QueryAllLogs es
      , MapHandlers Web3 es (WithChange es)
+#if MIN_VERSION_vinyl(0,10,0)
+     , RPureConstrained HasLogIndex (WithChange es)
+#else
      , AllAllSat '[HasLogIndex] (WithChange es)
+#endif
      , RecApplicative (WithChange es)
      )
   => MultiFilter es
@@ -447,7 +492,11 @@ newMultiFilterStream initialPlan = do
 playNewMultiLogs
   :: forall es k.
      ( QueryAllLogs es
+#if MIN_VERSION_vinyl(0,10,0)
+     , RPureConstrained HasLogIndex (WithChange es)
+#else
      , AllAllSat '[HasLogIndex] (WithChange es)
+#endif
      , RecApplicative (WithChange es)
      )
   => MultiFilterStreamState es

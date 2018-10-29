@@ -7,25 +7,23 @@ cache:
   - $HOME/.stack
   - $TRAVIS_BUILD_DIR/.stack-work
 
-# The different configurations we want to test. We have BUILD=cabal which uses
-# cabal-install, and BUILD=stack which uses Stack. More documentation on each
-# of those below.
+# The different configurations we want to test.
 matrix:
   include:
-  # Build with different GHC versions
-  - env: RESOLVER=lts-11.22
+  # Build with different GHC versions and stable package sets
+  - env: RESOLVER=lts-11
     compiler: ": #GHC 8.2.2"
-  - env: RESOLVER=lts-12.14
-    compiler: ": #GHC 8.4.3"
+  - env: RESOLVER=lts-12
+    compiler: ": #GHC 8.4.4"
   - env: RESOLVER=nightly
     compiler: ": #GHC 8.6.1"
 
   # Build on macOS in addition to Linux
-  #  - env: RESOLVER=lts-11.22
+  #  - env: RESOLVER=lts-11
   #    compiler: ": #GHC 8.2.2"
   #    os: osx
-  #  - env: RESOLVER=lts-12.14
-  #    compiler: ": #GHC 8.4.3"
+  #  - env: RESOLVER=lts-12
+  #    compiler: ": #GHC 8.4.4"
   #    os: osx
   #  - env: RESOLVER=nightly
   #    compiler: ": #GHC 8.6.1"
