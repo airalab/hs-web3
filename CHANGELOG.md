@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.8.1.0] 2018-10-29
+### Added
+- Support vinyl-0.10 in `MultiFilter` module
+
 ## [0.8.0.0] 2018-10-26
 ### Added
 - Support for Ethereum cryptography
