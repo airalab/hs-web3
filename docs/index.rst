@@ -10,6 +10,7 @@ Haskell Web3 Documentation
    ethereum_node_api
    ethereum_accounts
    smart_contracts
+   ens
 
 .. toctree::
    :caption: Developer documentation 

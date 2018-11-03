@@ -70,13 +70,13 @@ Currently implemented the following Ethereum APIs in modules:
  ===============  ================
   Method prefix    Implementation
  ===============  ================
-  ``eth_*``        `Network.Ethereum.Api.Eth <http://hackage.haskell.org/package/web3-0.8.0.0/docs/Network-Ethereum-Api-Eth.html>`_
-  ``net_*``        `Network.Ethereum.Api.Net <http://hackage.haskell.org/package/web3-0.8.0.0/docs/Network-Ethereum-Api-Net.html>`_
-  ``web3_*``       `Network.Ethereum.Api.Web3 <http://hackage.haskell.org/package/web3-0.8.0.0/docs/Network-Ethereum-Api-Web3.html>`_
-  ``personal_*``   `Network.Ethereum.Api.Personal <http://hackage.haskell.org/package/web3-0.8.0.0/docs/Network-Ethereum-Api-Personal.html>`_
+  ``eth_*``        `Network.Ethereum.Api.Eth <http://hackage.haskell.org/package/web3-0.8.1.0/docs/Network-Ethereum-Api-Eth.html>`_
+  ``net_*``        `Network.Ethereum.Api.Net <http://hackage.haskell.org/package/web3-0.8.1.0/docs/Network-Ethereum-Api-Net.html>`_
+  ``web3_*``       `Network.Ethereum.Api.Web3 <http://hackage.haskell.org/package/web3-0.8.1.0/docs/Network-Ethereum-Api-Web3.html>`_
+  ``personal_*``   `Network.Ethereum.Api.Personal <http://hackage.haskell.org/package/web3-0.8.1.0/docs/Network-Ethereum-Api-Personal.html>`_
  ===============  ================
 
-All modules use descriptive types according to official Ethereum specification. It placed at `Network.Ethereum.Api.Types <http://hackage.haskell.org/package/web3-0.8.0.0/docs/Network-Ethereum-Api-Types.html>`_.
+All modules use descriptive types according to official Ethereum specification. It placed at `Network.Ethereum.Api.Types <http://hackage.haskell.org/package/web3-0.8.1.0/docs/Network-Ethereum-Api-Types.html>`_.
 
 .. note::
    
