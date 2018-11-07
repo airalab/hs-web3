@@ -53,8 +53,11 @@ instance Account () DefaultAccount where
                 params = c { callData = Just $ BA.convert dat
                            , callFrom = listToMaybe accounts }
 
-            gasLimit <- Eth.estimateGas params
-            let params' = params { callGas = Just gasLimit }
+            params' <- case callGas params of
+                Just _  -> return params
+                Nothing -> do
+                    gasLimit <- Eth.estimateGas params
+                    return $ params { callGas = Just gasLimit }
 
             getReceipt =<< Eth.sendTransaction params'
 

@@ -75,8 +75,11 @@ instance Account PrivateKey PrivateKeyAccount where
                        , callNonce = Just nonce
                        , callData  = Just $ convert dat }
 
-        gasLimit <- lift $ Eth.estimateGas params
-        let params' = params { callGas = Just gasLimit }
+        params' <- case callGas params of
+            Just _  -> return params
+            Nothing -> do
+                gasLimit <- lift $ Eth.estimateGas params
+                return $ params { callGas = Just gasLimit }
 
         let signed = signTransaction params' (privateKeyChain _account) (privateKey _account)
         lift $ getReceipt =<< Eth.sendRawTransaction signed

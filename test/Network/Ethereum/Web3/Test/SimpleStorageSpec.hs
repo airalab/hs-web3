@@ -8,6 +8,7 @@
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE QuasiQuotes           #-}
+{-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
@@ -34,6 +35,7 @@ import           Control.Monad.Trans.Reader       (ask)
 import           Data.Default                     (def)
 import           Data.List                        (sort)
 import           Data.Monoid                      ((<>))
+import           Lens.Micro                       ((.~))
 import           Test.Hspec
 
 import qualified Network.Ethereum.Api.Eth         as Eth
@@ -77,6 +79,16 @@ interactions = describe "can interact with a SimpleStorage contract" $ do
 
         v <- contract storage count
         v `shouldBe` theValue
+
+    it "can set transaction gas limit" $ \storage -> do
+        TxReceipt{..} <- contract storage $ withParam (gasLimit .~ 500000) $ setCount theValue
+        Just Transaction{..} <- web3 $ Eth.getTransactionByHash receiptTransactionHash
+        txGas `shouldBe` 500000
+
+    it "can estimate transaction gas limit" $ \storage -> do
+        TxReceipt{..} <- contract storage $ setCount theValue
+        Just Transaction{..} <- web3 $ Eth.getTransactionByHash receiptTransactionHash
+        txGas `shouldBe` 42822
 
 events :: SpecWith Address
 events = do

@@ -63,8 +63,11 @@ instance Account Personal PersonalAccount where
                 params = c { callFrom = Just $ personalAddress _account
                            , callData = Just $ BA.convert dat }
 
-            gasLimit <- Eth.estimateGas params
-            let params' = params { callGas = Just gasLimit }
+            params' <- case callGas params of
+                Just _  -> return params
+                Nothing -> do
+                    gasLimit <- Eth.estimateGas params
+                    return $ params { callGas = Just gasLimit }
 
             getReceipt =<< Personal.sendTransaction params' (personalPassphrase _account)
 
