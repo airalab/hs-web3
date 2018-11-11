@@ -1,5 +1,5 @@
 name:                web3
-version:             0.8.1.0
+version:             0.8.2.0
 synopsis:            Ethereum API for Haskell
 description:         Web3 is a Haskell client library for Ethereum
 github:              "airalab/hs-web3"

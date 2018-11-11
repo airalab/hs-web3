@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.8.2.0] 2018-11-07
+### Changed
+- Gas estimation runs when gas limit is not set before
+
 ## [0.8.1.0] 2018-10-29
 ### Added
 - Support vinyl-0.10 in `MultiFilter` module
@@ -15,6 +19,7 @@ All notable changes to this project will be documented in this file.
 - Experimental support for solidity compiler (disabled by default) 
 - Support for Ethereum mainnet ENS resolver
 - Contract typeclass with api/bytecode getters
+- Gas estimation for sending transactions
 - Contract typeclass TH generator
 - Function for creating contracts
 - Event single/multi filters
