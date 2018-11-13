@@ -16,7 +16,7 @@ matrix:
   - env: RESOLVER=lts-12
     compiler: ": #GHC 8.4.4"
   - env: RESOLVER=nightly
-    compiler: ": #GHC 8.6.1"
+    compiler: ": #GHC 8.6.2"
 
   # Build on macOS in addition to Linux
   #  - env: RESOLVER=lts-11
@@ -26,7 +26,7 @@ matrix:
   #    compiler: ": #GHC 8.4.4"
   #    os: osx
   #  - env: RESOLVER=nightly
-  #    compiler: ": #GHC 8.6.1"
+  #    compiler: ": #GHC 8.6.2"
   #    os: osx
 
 script:
