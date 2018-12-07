@@ -28,7 +28,8 @@ module Language.Solidity.Abi
 
     -- * Solidity type parser
     , SolidityType(..)
-    , parseSolidityType
+    , parseSolidityFunctionArgType
+    , parseSolidityEventArgType
     ) where
 
 import           Control.Monad      (void)
@@ -54,6 +55,8 @@ data FunctionArg = FunctionArg
   -- ^ Argument name
   , funArgType :: Text
   -- ^ Argument type
+  , funArgComponents :: Maybe [FunctionArg]
+  -- ^ Argument components for tuples
   } deriving (Show, Eq, Ord)
 
 $(deriveJSON
@@ -166,15 +169,22 @@ signature :: Declaration -> Text
 
 signature (DConstructor inputs) = "(" <> args inputs <> ")"
   where
-    args :: [FunctionArg] -> Text
-    args = T.dropEnd 1 . foldMap (<> ",") . fmap funArgType
+    args [] = ""
+    args [x] = funArgType x
+    args (x:xs) = case funArgComponents x of
+      Nothing -> funArgType x <> "," <> args xs
+      Just cmps -> "(" <> args cmps <> ")," <> args xs
 
 signature (DFallback _) = "()"
 
 signature (DFunction name _ inputs _) = name <> "(" <> args inputs <> ")"
   where
     args :: [FunctionArg] -> Text
-    args = T.dropEnd 1 . foldMap (<> ",") . fmap funArgType
+    args [] = ""
+    args [x] = funArgType x
+    args (x:xs) = case funArgComponents x of
+      Nothing -> funArgType x <> "," <> args xs
+      Just cmps -> "(" <> args cmps <> ")," <> args xs
 
 signature (DEvent name inputs _) = name <> "(" <> args inputs <> ")"
   where
@@ -207,6 +217,7 @@ data SolidityType =
   | SolidityString
   | SolidityBytesN Int
   | SolidityBytes
+  | SolidityTuple Int [SolidityType]
   | SolidityVector [Int] SolidityType
   | SolidityArray SolidityType
     deriving (Eq, Show)
@@ -280,5 +291,13 @@ solidityTypeParser =
            , solidityBasicTypeParser
            ]
 
-parseSolidityType :: Text -> Either ParseError SolidityType
-parseSolidityType = parse solidityTypeParser "Solidity"
+parseSolidityFunctionArgType :: FunctionArg -> Either ParseError SolidityType
+parseSolidityFunctionArgType (FunctionArg _ typ mcmps) = case mcmps of
+  Nothing -> parse solidityTypeParser "Solidity" typ
+  Just cmps -> 
+    SolidityTuple (length cmps) 
+    <$>  mapM parseSolidityFunctionArgType cmps
+
+
+parseSolidityEventArgType :: EventArg -> Either ParseError SolidityType
+parseSolidityEventArgType (EventArg _ typ _) = parse solidityTypeParser "Solidity" typ
