@@ -29,8 +29,8 @@ module Network.Ethereum.Account
     , Personal(..)
 
     -- * Local key account
-    , PrivateKeyAccount
-    , PrivateKey(..)
+    --, PrivateKeyAccount
+    --, PrivateKey(..)
 
     -- * Transaction paramitrization function and lenses
     , withParam
@@ -43,12 +43,12 @@ module Network.Ethereum.Account
 
     ) where
 
-import           Network.Ethereum.Account.Class      (Account (..))
-import           Network.Ethereum.Account.Default    (DefaultAccount)
-import           Network.Ethereum.Account.Internal   (account, block, gasLimit,
-                                                      gasPrice, to, value,
-                                                      withParam)
-import           Network.Ethereum.Account.Personal   (Personal (..),
-                                                      PersonalAccount)
-import           Network.Ethereum.Account.PrivateKey (PrivateKey (..),
-                                                      PrivateKeyAccount)
+import           Network.Ethereum.Account.Class    (Account (..))
+import           Network.Ethereum.Account.Default  (DefaultAccount)
+import           Network.Ethereum.Account.Internal (account, block, gasLimit,
+                                                    gasPrice, to, value,
+                                                    withParam)
+import           Network.Ethereum.Account.Personal (Personal (..),
+                                                    PersonalAccount)
+--import           Network.Ethereum.Account.PrivateKey (PrivateKey (..),
+--                                                      PrivateKeyAccount)

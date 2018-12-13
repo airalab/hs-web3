@@ -24,9 +24,8 @@ extra-source-files:
 
 dependencies:
 - base                 >4.9       && <4.13
-- secp256k1-haskell    >=0.1.4    && <0.2
-- http-client-tls      >=0.3.5.1  && <0.4
 - template-haskell     >=2.11.1.0 && <2.15
+- http-client-tls      >=0.3.5.1  && <0.4
 - microlens-aeson      >=2.2.0.2  && <2.4
 - microlens-mtl        >=0.1.11.0 && <0.2
 - microlens-th         >=0.4.1.1  && <0.5
@@ -35,6 +34,7 @@ dependencies:
 - generics-sop         >=0.3.1.0  && <0.5
 - transformers         >=0.5.2.0  && <0.6
 - http-client          >=0.5.7.1  && <0.6
+- uuid-types           >=1.0.3    && <1.1
 - bytestring           >=0.10.8.1 && <0.11
 - cryptonite           >=0.23     && <0.26
 - exceptions           >=0.8.3    && <0.11

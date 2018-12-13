@@ -48,15 +48,13 @@ instance FromJSON HexString where
 instance ToJSON HexString where
     toJSON = String . toText
 
--- | Smart constructor which validates that all the text are actually
---   have `0x` prefix, hexadecimal characters and length is even.
+-- | Smart constructor which trims '0x' and validates length is even.
 hexString :: ByteArray ba => ba -> Either String HexString
-hexString bs
-  | BA.take 2 bs == hexStart = HexString <$> bs'
-  | otherwise  = Left "Hex string should start from '0x'"
+hexString bs = HexString <$> convertFromBase Base16 bs'
   where
     hexStart = convert ("0x" :: ByteString)
-    bs' = convertFromBase Base16 (BA.drop 2 bs)
+    bs' | BA.take 2 bs == hexStart = BA.drop 2 bs
+        | otherwise = bs
 
 -- | Reads a raw bytes and converts to hex representation.
 fromBytes :: ByteArrayAccess ba => ba -> HexString

@@ -4,4 +4,4 @@
 build/
 dist/
 docs/_build
-web3.cabal
+*.cabal
