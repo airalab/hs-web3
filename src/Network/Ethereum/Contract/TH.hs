@@ -193,7 +193,7 @@ mkDecl ev@(DEvent uncheckedName inputs anonymous) = sequence
     , instanceD' nonIndexedName (conT ''Generic) []
     , instanceD' nonIndexedName (conT ''AbiType) [funD' 'isDynamic [] [|const False|]]
     , instanceD' nonIndexedName (conT ''AbiGet) []
-    , dataD' allName (recC allName (map (\(n, a) -> ((\(b,t) -> return (n,b,t)) <=< toBang <=< typeQ $ a)) allArgs)) derivingD
+    , dataD' allName (recC allName (map (\(n, a) -> (\(b,t) -> return (n,b,t)) <=< toBang <=< typeQ $ a) allArgs)) derivingD
     , instanceD' allName (conT ''Generic) []
     , instanceD (cxt [])
         (pure $ ConT ''IndexedEvent `AppT` ConT indexedName `AppT` ConT nonIndexedName `AppT` ConT allName)
