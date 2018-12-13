@@ -10,7 +10,7 @@
 {-# LANGUAGE TemplateHaskell       #-}
 
 -- |
--- Module      :  Network.Ethereum.Web3.Test.ComplexStorage
+-- Module      :  Network.Ethereum.Web3.Test.ComplexStorageSpec
 -- Copyright   :  Alexander Krupenkin 2016
 -- License     :  BSD3
 --

@@ -5,7 +5,7 @@
 {-# LANGUAGE TypeSynonymInstances  #-}
 
 -- |
--- Module      :  Network.Ethereum.Account.PrivateKey
+-- Module      :  Network.Ethereum.Account.LocalKey
 -- Copyright   :  Alexander Krupenkin 2018
 --                Roy Blankman 2018
 -- License     :  BSD3
@@ -14,12 +14,15 @@
 -- Stability   :  experimental
 -- Portability :  unportable
 --
+-- Using ECC for singing transactions locally, e.g. out of Ethereum node.
+-- Transaction will send using 'eth_sendRawTransacion' JSON-RPC method.
+--
 
-module Network.Ethereum.Account.PrivateKey where
+module Network.Ethereum.Account.LocalKey where
 
 import           Control.Monad.State.Strict        (get, runStateT)
 import           Control.Monad.Trans               (lift)
-import qualified Crypto.PubKey.ECC.ECDSA           as EC (PrivateKey)
+import           Crypto.PubKey.ECC.ECDSA           (PrivateKey)
 import           Data.ByteArray                    (convert)
 import           Data.ByteString                   (empty)
 import           Data.Default                      (Default (..))
@@ -43,17 +46,17 @@ import           Network.Ethereum.Contract.Method  (selector)
 import           Network.Ethereum.Transaction      (encodeTransaction)
 
 -- | Local EOA params
-data PrivateKey = PrivateKey
-    { privateKey      :: !EC.PrivateKey
-    , privateKeyChain :: !Integer
+data LocalKey = LocalKey
+    { localKeyPrivate :: !PrivateKey
+    , localKeyChainId :: !Integer
     } deriving (Eq, Show)
 
-instance Default PrivateKey where
-    def = PrivateKey (importKey empty) foundation
+instance Default LocalKey where
+    def = LocalKey (importKey empty) foundation
 
-type PrivateKeyAccount = AccountT PrivateKey
+type LocalKeyAccount = AccountT LocalKey
 
-instance Account PrivateKey PrivateKeyAccount where
+instance Account LocalKey LocalKeyAccount where
     withAccount a =
         fmap fst . flip runStateT (defaultCallParam a) . runAccountT
 
@@ -62,7 +65,7 @@ instance Account PrivateKey PrivateKeyAccount where
         c <- getCall
 
         let dat     = selector (Proxy :: Proxy a) <> encode args
-            address = fromPubKey (derivePubKey $ privateKey _account)
+            address = fromPubKey (derivePubKey $ localKeyPrivate _account)
 
         nonce <- lift $ Eth.getTransactionCount address _block
         let params = c { callFrom  = Just address
@@ -75,15 +78,15 @@ instance Account PrivateKey PrivateKeyAccount where
                 gasLimit <- lift $ Eth.estimateGas params
                 return $ params { callGas = Just gasLimit }
 
-        let packer = encodeTransaction params' (privateKeyChain _account)
-            signed = signTransaction packer (privateKey _account)
+        let packer = encodeTransaction params' (localKeyChainId _account)
+            signed = signTransaction packer (localKeyPrivate _account)
         lift $ getReceipt =<< Eth.sendRawTransaction signed
 
     call (args :: a) = do
         CallParam{..} <- get
         c <- getCall
         let dat = selector (Proxy :: Proxy a) <> encode args
-            address = fromPubKey (derivePubKey $ privateKey _account)
+            address = fromPubKey (derivePubKey $ localKeyPrivate _account)
             params = c { callFrom = Just address, callData = Just $ convert dat }
 
         res <- lift $ Eth.call params _block

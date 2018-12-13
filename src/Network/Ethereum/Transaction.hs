@@ -14,7 +14,7 @@ module Network.Ethereum.Transaction where
 --
 
 import           Data.ByteArray             (ByteArray, convert)
-import           Data.ByteString            (ByteString)
+import           Data.ByteString            (ByteString, empty)
 import           Data.Maybe                 (fromJust, fromMaybe)
 import           Data.RLP                   (packRLP, rlpEncode)
 import           Data.Word                  (Word8)
@@ -47,10 +47,10 @@ encodeTransaction Call{..} chain_id rsv = do
 
     convert . packRLP $ case rsv of
         -- Unsigned transaction by EIP155
-        Nothing        -> rlpEncode (nonce, gasPrice, gasLimit, to, value, input, chain_id, 0 :: Int, 0 :: Int)
+        Nothing        -> rlpEncode (nonce, gasPrice, gasLimit, to, value, input, chain_id, empty, empty)
         -- Signed transaction
         Just (r, s, v) ->
-            let v' = v + 8 + 2 * fromInteger chain_id  -- Improved 'v' according to EIP155
+            let v' = fromIntegral v + 8 + 2 * chain_id  -- Improved 'v' according to EIP155
              in rlpEncode (nonce, gasPrice, gasLimit, to, value, input, v', r, s)
   where
     defaultGasPrice = toWei (10 :: Shannon)

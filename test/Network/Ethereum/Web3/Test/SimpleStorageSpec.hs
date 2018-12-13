@@ -12,7 +12,7 @@
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
--- Module      :  Network.Ethereum.Web3.Test.SimpleStorage
+-- Module      :  Network.Ethereum.Web3.Test.SimpleStorageSpec
 -- Copyright   :  Alexander Krupenkin 2016
 -- License     :  BSD3
 --
