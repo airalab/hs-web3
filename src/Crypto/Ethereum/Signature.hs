@@ -25,7 +25,6 @@ module Crypto.Ethereum.Signature
 import           Control.Monad               (when)
 import           Crypto.Hash                 (Digest, Keccak_256 (..), SHA256,
                                               hashWith)
-
 import           Crypto.Number.Generate      (generateBetween)
 import           Crypto.Number.ModArithmetic (inverse)
 import           Crypto.Number.Serialize     (i2osp, os2ip)
@@ -42,6 +41,7 @@ import           Data.ByteArray              (ByteArray, ByteArrayAccess,
 import qualified Data.ByteArray              as BA (length, unpack)
 import           Data.ByteString.Builder     (intDec, toLazyByteString)
 import qualified Data.ByteString.Lazy        as LBS (toStrict)
+import           Data.Monoid                 ((<>))
 import           Data.Word                   (Word8)
 
 import           Crypto.Ethereum.Utils       (exportKey)

@@ -20,6 +20,7 @@ import           Crypto.PubKey.ECC.Types    (CurveName (SEC_p256k1), Point (..),
                                              getCurveByName)
 import           Data.ByteArray             (ByteArray, ByteArrayAccess,
                                              convert)
+import           Data.Monoid                ((<>))
 
 -- | Import Ethereum private key from byte array.
 --
