@@ -7,6 +7,7 @@
 -- Stability   :  experimental
 -- Portability :  unportable
 --
+-- Ethereum chain IDs.
 --
 
 module Network.Ethereum.Chain where

@@ -1,6 +1,5 @@
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-module Network.Ethereum.Transaction where
 
 -- |
 -- Module      :  Network.Ethereum.Transaction
@@ -12,6 +11,10 @@ module Network.Ethereum.Transaction where
 -- Stability   :  experimental
 -- Portability :  unportable
 --
+-- Transaction managing utils.
+--
+
+module Network.Ethereum.Transaction where
 
 import           Data.ByteArray             (ByteArray, convert)
 import           Data.ByteString            (ByteString, empty)
@@ -24,7 +27,7 @@ import           Data.Solidity.Prim.Address (toHexString)
 import           Network.Ethereum.Api.Types (Call (..), Quantity (unQuantity))
 import           Network.Ethereum.Unit      (Shannon, toWei)
 
--- | Ethereum transaction codec.
+-- | Ethereum transaction packer.
 --
 -- Two way RLP encoding of Ethereum transaction: for unsigned and signed.
 -- Packing scheme described in https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
@@ -37,7 +40,7 @@ encodeTransaction :: ByteArray ba
                   -- ^ Should contain signature when transaction signed
                   -> ba
                   -- ^ RLP encoded transaction
-encodeTransaction Call{..} chain_id rsv = do
+encodeTransaction Call{..} chain_id rsv =
     let (to       :: ByteString) = maybe mempty (toBytes . toHexString) callTo
         (value    :: Integer)    = unQuantity $ fromJust callValue
         (nonce    :: Integer)    = unQuantity $ fromJust callNonce
@@ -45,7 +48,7 @@ encodeTransaction Call{..} chain_id rsv = do
         (gasLimit :: Integer)    = unQuantity $ fromJust callGas
         (input    :: ByteString) = convert $ fromMaybe mempty callData
 
-    convert . packRLP $ case rsv of
+    in convert . packRLP $ case rsv of
         -- Unsigned transaction by EIP155
         Nothing        -> rlpEncode (nonce, gasPrice, gasLimit, to, value, input, chain_id, empty, empty)
         -- Signed transaction

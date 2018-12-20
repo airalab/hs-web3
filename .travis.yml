@@ -41,7 +41,7 @@ matrix:
     os: windows
 
 install:
-- if [[ $TRAVIS_OS_NAME == 'windows' ]]; then wget https://get.haskellstack.org/stable/windows-x86_64-installer.exe && ./windows-x86_64-installer.exe; else curl -sSL https://get.haskellstack.org/ | sh; fi
+    - if [[ $TRAVIS_OS_NAME == 'windows' ]]; then curl -sS -ostack.zip -L --insecure https://get.haskellstack.org/stable/windows-i386.zip && 7z x stack.zip stack.exe; else curl -sSL https://get.haskellstack.org/ | sh; fi
 
 script:
 - stack test web3:unit --no-terminal --haddock --no-haddock-deps --resolver $RESOLVER

@@ -46,9 +46,11 @@ import           Data.UUID.Types.Internal (buildFromBytes)
 import           Crypto.Ethereum.Utils    (sha3)
 import           Data.ByteArray.HexString (HexString)
 
+-- | Key derivation function parameters and salt.
 data Kdf = Pbkdf2 !Pbkdf2.Parameters !HexString
          | Scrypt !Scrypt.Parameters !HexString
 
+-- | Cipher parameters.
 data Cipher = Aes128Ctr
     { cipherIv :: !(IV AES128), cipherText :: !HexString }
 
