@@ -1,5 +1,5 @@
 sudo: false 
-language: nix 
+language: cpp
 
 # Caching so the next build will be fast too.
 cache:
@@ -12,23 +12,36 @@ matrix:
   include:
   # Build with different GHC versions and stable package sets
   - env: RESOLVER=lts-11
-    compiler: ": #GHC 8.2.2"
+    compiler: ": #GHC 8.2"
   - env: RESOLVER=lts-12
-    compiler: ": #GHC 8.4.4"
+    compiler: ": #GHC 8.4"
   - env: RESOLVER=nightly
-    compiler: ": #GHC 8.6.2"
+    compiler: ": #GHC 8.6"
 
-  # Build on macOS in addition to Linux
-  #  - env: RESOLVER=lts-11
-  #    compiler: ": #GHC 8.2.2"
-  #    os: osx
-  #  - env: RESOLVER=lts-12
-  #    compiler: ": #GHC 8.4.4"
-  #    os: osx
-  #  - env: RESOLVER=nightly
-  #    compiler: ": #GHC 8.6.2"
-  #    os: osx
+  # Build on macOS
+  - env: RESOLVER=lts-11
+    compiler: ": #GHC 8.2"
+    os: osx
+  - env: RESOLVER=lts-12
+    compiler: ": #GHC 8.4"
+    os: osx
+  - env: RESOLVER=nightly
+    compiler: ": #GHC 8.6"
+    os: osx
+
+  # Build on windows
+  - env: RESOLVER=lts-11
+    compiler: ": #GHC 8.2"
+    os: windows
+  - env: RESOLVER=lts-12
+    compiler: ": #GHC 8.4"
+    os: windows
+  - env: RESOLVER=nightly
+    compiler: ": #GHC 8.6"
+    os: windows
+
+install:
+- if [[ $TRAVIS_OS_NAME == 'windows' ]]; then wget https://get.haskellstack.org/stable/windows-x86_64-installer.exe && ./windows-x86_64-installer.exe; else curl -sSL https://get.haskellstack.org/ | sh; fi
 
 script:
-- nix-shell -p stack --run \
-  "stack test web3:unit --flag web3:solidity --nix --no-terminal --haddock --no-haddock-deps --resolver $RESOLVER"
+- stack test web3:unit --no-terminal --haddock --no-haddock-deps --resolver $RESOLVER
