@@ -1,8 +1,9 @@
 #include <solidity_lite.h>
 #include <libsolidity/interface/CompilerStack.h>
-#include <libsolidity/interface/SourceReferenceFormatter.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 using namespace dev::solidity;
+using namespace langutil;
 using namespace std;
 
 struct Solidity {

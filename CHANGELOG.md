@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.8.2.1] 2018-11-19
+### Changed
+- Fixed dependencies bounds for stackage distribution
+
 ## [0.8.2.0] 2018-11-07
 ### Changed
 - Gas estimation runs when gas limit is not set before

@@ -84,34 +84,37 @@ flags:
     default: False
     manual: True
 
-  solidity:
+  compiler:
     description: Enable Solidity compiler
     default: False
     manual: True
 
+when:
+- condition: flag(debug)
+  ghc-options:      -ddump-splices
+
+- condition: flag(compiler)
+  source-dirs:      compiler
+  cpp-options:      -DSOLIDITY_COMPILER
+  dependencies:     containers
+  extra-libraries:  solidity
+  c-sources:        ./compiler/cbits/solidity_lite.cpp
+  include-dirs:     ./compiler/cbits
+
 library:
   source-dirs: src
-  when:
-  - condition: flag(debug)
-    ghc-options:      -ddump-splices
-
-  - condition: flag(solidity)
-    cpp-options:      -DSOLIDITY_COMPILER
-    dependencies:     containers
-    extra-libraries:  solidity
-    c-sources:        ./cbits/solidity_lite.cpp
-    include-dirs:     ./cbits
 
 tests:
   unit:
     main:             Spec.hs
-    source-dirs:      unit
+    source-dirs:
+    - unit
+    - src
     dependencies:
     - hspec-expectations   >=0.8.2  && <0.9
     - hspec-discover       >=2.4.4  && <2.7
     - hspec-contrib        >=0.4.0  && <0.6
     - hspec                >=2.4.4  && <2.7
-    - web3
     ghc-options:
     - -threaded
     - -rtsopts
@@ -119,7 +122,9 @@ tests:
 
   live:
     main:             Spec.hs
-    source-dirs:      test
+    source-dirs:
+    - test
+    - src
     dependencies:
     - hspec-expectations   >=0.8.2  && <0.9
     - hspec-discover       >=2.4.4  && <2.7
@@ -129,7 +134,6 @@ tests:
     - random               >=1.1    && <1.2
     - time                 >=1.6.0  && <1.9
     - stm                  >=2.4.4  && <2.6
-    - web3
     ghc-options:
     - -threaded
     - -rtsopts
