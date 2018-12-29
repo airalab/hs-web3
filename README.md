@@ -6,7 +6,7 @@ The Haskell Ethereum API which implements the [Generic JSON RPC](https://github.
 [![Documentation Status](https://readthedocs.org/projects/hs-web3/badge/?version=latest)](https://hs-web3.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/airalab/hs-web3.svg?branch=master)](https://travis-ci.org/airalab/hs-web3)
 [![Hackage](https://img.shields.io/hackage/v/web3.svg)](http://hackage.haskell.org/package/web3)
-[![LTS-12](http://stackage.org/package/web3/badge/lts-12)](http://stackage.org/lts-12/package/web3)
+[![LTS-13](http://stackage.org/package/web3/badge/lts-13)](http://stackage.org/lts-13/package/web3)
 [![nightly](http://stackage.org/package/web3/badge/nightly)](http://stackage.org/nightly/package/web3)
 [![Code Triagers](https://www.codetriage.com/airalab/hs-web3/badges/users.svg)](https://www.codetriage.com/airalab/hs-web3)
 ![BSD3 License](http://img.shields.io/badge/license-BSD3-brightgreen.svg)

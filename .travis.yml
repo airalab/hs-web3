@@ -12,34 +12,45 @@ matrix:
   # Build with different GHC versions and stable package sets
   include:
   - env: RESOLVER=lts-11
-    compiler: ": #GHC 8.2"
+    compiler: "LTS11"
   - env: RESOLVER=lts-12
-    compiler: ": #GHC 8.4"
+    compiler: "LTS12"
+  - env: RESOLVER=lts-13
+    compiler: "LTS13"
   - env: RESOLVER=nightly
-    compiler: ": #GHC 8.6"
+    compiler: "nightly"
 
   - env: RESOLVER=lts-11
-    compiler: ": #GHC 8.2"
-    os: osx 
+    compiler: "LTS11"
+    os: osx
   - env: RESOLVER=lts-12
-    compiler: ": #GHC 8.4"
-    os: osx 
+    compiler: "LTS12"
+    os: osx
+  - env: RESOLVER=lts-13
+    compiler: "LTS13"
+    os: osx
   - env: RESOLVER=nightly
-    compiler: ": #GHC 8.6"
-    os: osx 
+    compiler: "nightly"
+    os: osx
 
   - env: RESOLVER=lts-11
-    compiler: ": #GHC 8.2"
-    os: windows 
+    compiler: "LTS11"
+    os: windows
   - env: RESOLVER=lts-12
-    compiler: ": #GHC 8.4"
-    os: windows 
+    compiler: "LTS12"
+    os: windows
+  - env: RESOLVER=lts-13
+    compiler: "LTS13"
+    os: windows
   - env: RESOLVER=nightly
-    compiler: ": #GHC 8.6"
-    os: windows 
+    compiler: "nightly"
+    os: windows
 
-install:
+before_install:
 - if [[ $TRAVIS_OS_NAME == 'windows' ]]; then choco install haskell-stack; else curl -sSL https://get.haskellstack.org/ | sh; fi
 
+install:
+- travis_wait 30 stack build --no-terminal --haddock --no-haddock-deps --resolver $RESOLVER
+
 script:
-- stack test web3:unit --no-terminal --haddock --no-haddock-deps --resolver $RESOLVER
+- stack test web3:unit --no-terminal --resolver $RESOLVER
