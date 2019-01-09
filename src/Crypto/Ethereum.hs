@@ -20,12 +20,11 @@ module Crypto.Ethereum
 
     -- * Digital Signature Algorithm
     , signMessage
-    , recover
 
     -- * Hash function
     , sha3
     ) where
 
-import           Crypto.Ethereum.Signature (recover, signMessage)
+import           Crypto.Ethereum.Signature (signMessage)
 import           Crypto.Ethereum.Utils     (derivePubKey, importKey, sha3)
 import           Crypto.PubKey.ECC.ECDSA   (PrivateKey, PublicKey)

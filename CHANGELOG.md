@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.8.3.0] 2019-01-09
+### Changed 
+- Cryptonite based ECC signer for messages and transactions, it removes secp256k1 dependency
+- Fixed dependencies bounds for stackage LTS-13
+
 ## [0.8.2.1] 2018-11-19
 ### Changed
 - Fixed dependencies bounds for stackage distribution

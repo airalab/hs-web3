@@ -17,7 +17,6 @@ module Crypto.Ethereum.Signature
       hashMessage
     , signMessage
     , signTransaction
-    , recover
     , pack
     , unpack
     ) where
@@ -127,13 +126,6 @@ ecsign pk@(PrivateKey curve d) z = do
         let (s', v') | s > n `div` 2 = (n - s, v `xor` 1)
                      | otherwise = (s, v)
         return $ (r, s', v' + 27)
-
--- | Recover message signer Ethereum address.
-recover :: (ByteArrayAccess msg, ByteArrayAccess rsv)
-        => msg
-        -> rsv
-        -> Address
-recover = undefined
 
 -- | Unpack recoverable signature from byte array.
 --
