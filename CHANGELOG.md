@@ -2,6 +2,9 @@
 All notable changes to this project will be documented in this file.
 
 ## [0.8.3.0] 2019-01-09
+### Added
+- Web3 secret storage v3 support
+
 ### Changed 
 - Cryptonite based ECC signer for messages and transactions, it removes secp256k1 dependency
 - Fixed dependencies bounds for stackage LTS-13
