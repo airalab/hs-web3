@@ -63,12 +63,12 @@ value :: Unit value => Lens' (CallParam p) value
 value = lens (fromWei . _value) $ \a b -> a { _value = toWei b }
 
 -- | Transaction gas limit lens
-gasLimit :: Lens' (CallParam p) (Maybe Integer)
-gasLimit = lens _gasLimit $ \a b -> a { _gasLimit = b }
+gasLimit :: Lens' (CallParam p) Integer
+gasLimit = lens (fromMaybe def . _gasLimit) $ \a b -> a { _gasLimit = Just b }
 
 -- | Transaction gas price lens
-gasPrice :: Unit gasprice => Lens' (CallParam p) (Maybe gasprice)
-gasPrice = lens (fmap fromWei . _gasPrice) $ \a b -> a { _gasPrice = toWei <$> b }
+gasPrice :: Unit gasprice => Lens' (CallParam p) gasprice
+gasPrice = lens (fromWei . fromMaybe def . _gasPrice) $ \a b -> a { _gasPrice = Just (toWei b) }
 
 -- | Call execution block lens
 block :: Lens' (CallParam p) DefaultBlock

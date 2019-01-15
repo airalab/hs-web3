@@ -1,22 +1,23 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Data.Solidity.Test.AddressSpec where
 
-import           Crypto.Secp256k1           (SecKey, derivePubKey)
 import           Data.ByteString            (ByteString)
 import           Data.ByteString.Char8      (unpack)
 import           Data.Foldable              (for_)
 import           Data.Monoid                ((<>))
 import           Test.Hspec
 
+import           Crypto.Ethereum.Utils      (derivePubKey, importKey)
+import           Data.ByteArray.HexString   (HexString)
 import           Data.Solidity.Prim.Address
 
 spec :: Spec
 spec = do
-    describe "EIP55 Test Vectors" $ for_ checksummedAddrs (\addr ->
-        it (unpack addr <> " should be checksummed") $ verifyChecksum addr `shouldBe` True)
+    describe "EIP55 Test Vectors" $ for_ checksummedAddrs $ \addr ->
+        it (unpack addr <> " should be checksummed") $ verifyChecksum addr `shouldBe` True
 
-    describe "EIP55 Test Vectors Tampered" $ for_ unchecksummedAddrs (\addr ->
-        it (unpack addr <> " should not be checksummed") $ verifyChecksum addr `shouldBe` False)
+    describe "EIP55 Test Vectors Tampered" $ for_ unchecksummedAddrs $ \addr ->
+        it (unpack addr <> " should not be checksummed") $ verifyChecksum addr `shouldBe` False
 
     describe "Conversion from/to hex string" $ do
         it "should convert from/to on valid hex" $ do
@@ -31,10 +32,10 @@ spec = do
                 `shouldBe` Left "Incorrect address length: 1"
 
 
-    describe "Conversion from Secp256k1 keys" $ do
-        it "derivation from private key" $ do
-            let key = "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20" :: SecKey
-            fromPubKey (derivePubKey key)
+    describe "Conversion from ECC keys" $ do
+        it "can derive address from public key" $ do
+            let key = "0x0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20" :: HexString
+            fromPubKey (derivePubKey $ importKey key)
                 `shouldBe` "0x6370eF2f4Db3611D657b90667De398a2Cc2a370C"
 
 checksummedAddrs :: [ByteString]

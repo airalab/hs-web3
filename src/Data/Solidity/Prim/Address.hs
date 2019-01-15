@@ -23,7 +23,7 @@ module Data.Solidity.Prim.Address
     , toHexString
     , fromHexString
 
-    -- * Public key to @Address@ convertor
+    -- * Derive address from public key
     , fromPubKey
 
     -- * EIP55 Mix-case checksum address encoding
@@ -32,12 +32,11 @@ module Data.Solidity.Prim.Address
     ) where
 
 import           Control.Monad            ((<=<))
-import           Crypto.Hash              (Keccak_256 (..), hashWith)
-import           Crypto.Secp256k1         (PubKey, exportPubKey)
+import           Crypto.PubKey.ECC.ECDSA  (PublicKey)
 import           Data.Aeson               (FromJSON (..), ToJSON (..))
 import           Data.Bits                ((.&.))
 import           Data.Bool                (bool)
-import           Data.ByteArray           (convert, zero)
+import           Data.ByteArray           (zero)
 import qualified Data.ByteArray           as BA (drop)
 import           Data.ByteString          (ByteString)
 import qualified Data.ByteString          as BS (take, unpack)
@@ -50,6 +49,7 @@ import           Data.Text.Encoding       as T (encodeUtf8)
 import           Generics.SOP             (Generic)
 import qualified GHC.Generics             as GHC (Generic)
 
+import           Crypto.Ethereum.Utils    (exportPubKey, sha3)
 import           Data.ByteArray.HexString (HexString, fromBytes, toBytes,
                                            toText)
 import           Data.Solidity.Abi        (AbiGet (..), AbiPut (..),
@@ -88,14 +88,14 @@ instance ToJSON Address where
     toJSON = toJSON . toHexString
 
 -- | Derive address from secp256k1 public key
-fromPubKey :: PubKey -> Address
+fromPubKey :: PublicKey -> Address
 fromPubKey key =
-    case decode $ zero 12 <> BA.drop 12 (sha3 key) of
+    case decode $ zero 12 <> toAddress (exportPubKey key) of
         Right a -> a
         Left e  -> error $ "Impossible error: " ++ e
   where
-    sha3 :: PubKey -> ByteString
-    sha3 = convert . hashWith Keccak_256 . BA.drop 1 . exportPubKey False
+    toAddress :: HexString -> HexString
+    toAddress = BA.drop 12 . sha3
 
 -- | Decode address from hex string
 fromHexString :: HexString -> Either String Address
@@ -113,7 +113,7 @@ toHexString = fromBytes . C8.drop 12 . encode
 toChecksum :: ByteString -> ByteString
 toChecksum addr = ("0x" <>) . C8.pack $ zipWith ($) upcaseVector lower
   where
-    upcaseVector = (>>= fourthBits) . BS.unpack . BS.take 20 . convert $ hashWith Keccak_256 (C8.pack lower)
+    upcaseVector = (>>= fourthBits) . BS.unpack . BS.take 20 $ sha3 (C8.pack lower)
     fourthBits n = bool id C.toUpper <$> [n .&. 0x80 /= 0, n .&. 0x08 /= 0]
     lower = drop 2 . fmap C.toLower . C8.unpack $ addr
 

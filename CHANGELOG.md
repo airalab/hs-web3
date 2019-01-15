@@ -1,6 +1,26 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.8.3.0] 2019-01-09
+### Added
+- Web3 secret storage v3 support
+
+### Changed 
+- Cryptonite based ECC signer for messages and transactions, it removes secp256k1 dependency
+- Fixed dependencies bounds for stackage LTS-13
+
+## [0.8.2.1] 2018-11-19
+### Changed
+- Fixed dependencies bounds for stackage distribution
+
+## [0.8.2.0] 2018-11-07
+### Changed
+- Gas estimation runs when gas limit is not set before
+
+## [0.8.1.0] 2018-10-29
+### Added
+- Support vinyl-0.10 in `MultiFilter` module
+
 ## [0.8.0.0] 2018-10-26
 ### Added
 - Support for Ethereum cryptography
@@ -11,6 +31,7 @@ All notable changes to this project will be documented in this file.
 - Experimental support for solidity compiler (disabled by default) 
 - Support for Ethereum mainnet ENS resolver
 - Contract typeclass with api/bytecode getters
+- Gas estimation for sending transactions
 - Contract typeclass TH generator
 - Function for creating contracts
 - Event single/multi filters

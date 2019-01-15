@@ -51,7 +51,7 @@ instance Integral Word256 where
     toInteger = Basement.toInteger
     quotRem a b = (Basement.quot a b, Basement.rem a b)
 
--- | Unsigned integer with fixed length in bits
+-- | Unsigned integer with fixed length in bits.
 newtype UIntN (n :: Nat) = UIntN { unUIntN :: Word256 }
     deriving (Eq, Ord, Enum, Bits, Generic)
 
@@ -91,7 +91,7 @@ instance (n <= 256) => AbiGet (UIntN n) where
 instance (n <= 256) => AbiPut (UIntN n) where
     abiPut = putWord256 . unUIntN
 
--- Signed integer with fixed length in bits
+-- | Signed integer with fixed length in bits.
 newtype IntN (n :: Nat) = IntN { unIntN :: Word256 }
     deriving (Eq, Ord, Enum, Bits, Generic)
 
@@ -131,9 +131,11 @@ instance (n <= 256) => AbiGet (IntN n) where
 instance (n <= 256) => AbiPut (IntN n) where
     abiPut = putWord256 . unIntN
 
+-- | Serialize 256 bit unsigned integer.
 putWord256 :: Putter Word256
 putWord256 (Word256 a3 a2 a1 a0) =
     put a3 >> put a2 >> put a1 >> put a0
 
+-- | Deserialize 256 bit unsigned integer.
 getWord256 :: Get Word256
 getWord256 = Word256 <$> get <*> get <*> get <*> get

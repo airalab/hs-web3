@@ -3,4 +3,5 @@
 .DS_Store
 build/
 dist/
-web3.cabal
+docs/_build
+*.cabal
