@@ -23,8 +23,8 @@ extra-source-files:
 - test/contracts/Linearization.json
 
 dependencies:
-- base                 >4.9       && <4.13
-- template-haskell     >=2.11.1.0 && <2.15
+- base                 >4.10      && <4.13
+- template-haskell     >=2.12     && <2.15
 - http-client-tls      >=0.3.5.1  && <0.4
 - microlens-aeson      >=2.2.0.2  && <2.4
 - microlens-mtl        >=0.1.11.0 && <0.2
@@ -112,9 +112,9 @@ tests:
     - src
     dependencies:
     - hspec-expectations   >=0.8.2  && <0.9
-    - hspec-discover       >=2.4.4  && <2.7
+    - hspec-discover       >=2.4.4  && <2.8
     - hspec-contrib        >=0.4.0  && <0.6
-    - hspec                >=2.4.4  && <2.7
+    - hspec                >=2.4.4  && <2.8
     ghc-options:
     - -threaded
     - -rtsopts
@@ -127,9 +127,9 @@ tests:
     - src
     dependencies:
     - hspec-expectations   >=0.8.2  && <0.9
-    - hspec-discover       >=2.4.4  && <2.7
+    - hspec-discover       >=2.4.4  && <2.8
     - hspec-contrib        >=0.4.0  && <0.6
-    - hspec                >=2.4.4  && <2.7
+    - hspec                >=2.4.4  && <2.8
     - split                >=0.2.3  && <0.3
     - random               >=1.1    && <1.2
     - time                 >=1.6.0  && <1.9
