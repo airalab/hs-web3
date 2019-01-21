@@ -305,7 +305,7 @@ data NodeInfo = NodeInfo
   -- ^ Number of messages in the pool.
   , nodeInfoMaxMessageSize :: !Integer
   -- ^ Max message size in bytes.
-  , nodeInfoMinPow         :: !Text
+  , nodeInfoMinPow         :: !Quantity
   -- ^ Minimal incoming message PoW.
   } deriving (Generic, Show)
 
