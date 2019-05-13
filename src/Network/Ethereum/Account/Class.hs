@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE MultiParamTypeClasses  #-}
 
 -- |
 -- Module      :  Network.Ethereum.Account.Class
