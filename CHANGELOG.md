@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.8.3.2] 2019-05-13
+### Changed
+- Fixed dependencies bounds for stackage distribution
+- Optimized LANGUAGE pragmas
+
+## [0.8.3.1] 2019-01-21
+### Changed
+- Fixed dependencies bounds for stackage distribution
+
 ## [0.8.3.0] 2019-01-09
 ### Added
 - Web3 secret storage v3 support
