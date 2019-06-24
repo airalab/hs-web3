@@ -23,7 +23,6 @@ import           Control.Monad.Catch        (MonadThrow)
 import           Control.Monad.IO.Class     (MonadIO (..))
 import           Control.Monad.State        (MonadState (..))
 import           Control.Monad.Trans.State  (StateT, evalStateT)
-import           Data.Default               (Default (..))
 import           GHC.Generics               (Generic)
 import           Lens.Micro.Mtl             ((.=))
 import           Network.HTTP.Client        (Manager)
@@ -51,11 +50,11 @@ instance Exception Web3Error
 
 --TODO: Change to `HttpProvider ServerUri | IpcProvider FilePath` to support IPC
 -- | Web3 Provider
-data Provider = HttpProvider String
+data Provider = HttpProvider String | WSProvider String
   deriving (Show, Eq, Generic)
 
-instance Default Provider where
-  def = HttpProvider "http://localhost:8545"
+defaultHttpPovider = HttpProvider "http://localhost:8545"
+defaultWSPovider   = WSProvider   "ws://127.0.0.1:8546"
 
 -- | 'Web3' monad runner, using the supplied Manager
 runWeb3With :: MonadIO m
@@ -75,12 +74,19 @@ runWeb3' (HttpProvider uri) f = do
     cfg <- defaultSettings uri
     liftIO . try . flip evalStateT cfg . unWeb3 $ f
 
--- | 'Web3' runner for default provider
+-- | 'Web3' runner for default http provider
 runWeb3 :: MonadIO m
         => Web3 a
         -> m (Either Web3Error a)
 {-# INLINE runWeb3 #-}
-runWeb3 = runWeb3' def
+runWeb3 = runWeb3' defaultHttpPovider
+
+-- | 'Web3' runner for default WS provider
+runWeb3WS :: MonadIO m
+        => Web3 a
+        -> m (Either Web3Error a)
+{-# INLINE runWeb3WS #-}
+runWeb3WS = runWeb3' defaultWSPovider
 
 -- | Fork 'Web3' with the same 'Provider' and 'Manager'
 forkWeb3 :: Web3 a -> Web3 (Async a)
