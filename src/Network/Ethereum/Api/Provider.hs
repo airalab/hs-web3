@@ -22,9 +22,8 @@ import           Control.Exception          (Exception, try)
 import           Control.Monad.Catch        (MonadThrow)
 import           Control.Monad.IO.Class     (MonadIO (..))
 import           Control.Monad.State        (MonadState (..))
-import           Control.Monad.Trans.State  (StateT, evalStateT)
+import           Control.Monad.Trans.State  (StateT, evalStateT, withStateT)
 import           GHC.Generics               (Generic)
-import           Lens.Micro.Mtl             ((.=))
 import           Network.HTTP.Client        (Manager)
 
 import           Network.JsonRpc.TinyClient (JsonRpc, JsonRpcClient,
@@ -62,8 +61,10 @@ runWeb3With :: MonadIO m
             -> Provider
             -> Web3 a
             -> m (Either Web3Error a)
-runWeb3With manager provider f =
-    runWeb3' provider $ jsonRpcManager .= manager >> f
+runWeb3With manager provider f = do  
+    runWeb3' provider Web3{ unWeb3 = withStateT changeManager $ unWeb3 f}
+    where
+      changeManager jsonRpc = jsonRpc {jsonRpcManager = manager} 
 
 -- | 'Web3' monad runner
 runWeb3' :: MonadIO m
