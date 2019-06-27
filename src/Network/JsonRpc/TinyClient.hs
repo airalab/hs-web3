@@ -53,48 +53,45 @@ module Network.JsonRpc.TinyClient
     , MethodName
 
     -- * JSON-RPC client settings
-    , JsonRpcClient
+    , JsonRpcClient(..)
     , defaultSettings
-    , jsonRpcServer
-    , jsonRpcManager
 
     -- * Error handling
     , JsonRpcException(..)
     , RpcError(..)
     ) where
 
-import           Control.Applicative     ((<|>))
-import           Control.Exception       (Exception)
-import           Control.Monad           ((<=<),forever, unless)
-import           Control.Monad.Catch     (MonadThrow (..))
-import           Control.Monad.IO.Class  (MonadIO (..))
-import           Control.Monad.State     (MonadState,get)
-import           Crypto.Number.Generate  (generateMax)
-import           Data.Aeson              (FromJSON (..), ToJSON (..),
-                                          Value (String), eitherDecode, encode,
-                                          object, withObject, (.:), (.:?), (.=))
-import           Data.ByteString.Lazy    (ByteString)
-import           Data.Text               (Text, unpack)
-import           Network.HTTP.Client     (Manager, RequestBody (RequestBodyLBS),
-                                          httpLbs, method, newManager,
-                                          parseRequest, requestBody,
-                                          requestHeaders, responseBody)
-import           Network.HTTP.Client.TLS (tlsManagerSettings)
-import           Network.WebSockets      (Connection)
+import           Control.Applicative       ((<|>))
+import           Control.Exception         (Exception)
+import           Control.Monad             ((<=<))
+import           Control.Monad.Catch       (MonadThrow (..))
+import           Control.Monad.IO.Class    (MonadIO (..))
+import           Control.Monad.State       (MonadState,get)
+import           Crypto.Number.Generate    (generateMax)
+import           Data.Aeson                (FromJSON (..), ToJSON (..),
+                                            Value (String), eitherDecode, encode,
+                                            object, withObject, (.:), (.:?), (.=))
+import           Data.ByteString.Lazy      (ByteString)
+import           Data.Text                 (Text, unpack)
+import           Network.HTTP.Client       (Manager, RequestBody (RequestBodyLBS),
+                                            httpLbs, method, newManager,
+                                            parseRequest, requestBody,
+                                            requestHeaders, responseBody)
+import           Network.HTTP.Client.TLS   (tlsManagerSettings)
+import qualified Network.WebSockets as  WS (Connection, sendTextData, receiveData)
 
 -- | JSON-RPC monad constrait.
 type JsonRpcM m = (MonadIO m, MonadThrow m, MonadState JsonRpcClient m)
 
 -- | JSON-RPC client state vars.
 data JsonRpcClient = JsonRpcHTTPClient
-    { jsonRpcManager :: Manager    -- ^ HTTP connection manager.
-    , jsonRpcServer  :: String     -- ^ Remote server URI.
+    { jsonRpcManager  :: Manager    -- ^ HTTP connection manager.
+    , jsonRpcServer   :: String     -- ^ Remote server URI.
     }              | JsonRpcWSClient
-    { jsonRpcWSConn :: Connection    -- ^ WS connection.
-    , jsonRpcWSServer  :: String     -- ^ Remote server URI.
+    { jsonRpcWSConn   :: WS.Connection -- ^ WS connection.
+    , jsonRpcWSHost   :: String     -- ^ Remote Host.
+    , jsonRpcWSPort   :: Int        -- ^ Port
     }                 
-
--- $(makeLensesFor [("_jsonRpcManager", "jsonRpcManager"), ("_jsonRpcServer", "jsonRpcServer")] ''JsonRpcClient)
 
 -- | Create default 'JsonRpcClient' settings.
 defaultSettings :: MonadIO m
@@ -105,8 +102,8 @@ defaultSettings srv = liftIO $ JsonRpcHTTPClient
   <*> pure srv
 
 instance Show JsonRpcClient where
-    show JsonRpcHTTPClient{..} = "JsonRpcClient<" ++ jsonRpcServer ++ ">"
-    show JsonRpcWSClient{..} = "JsonRpcClient<" ++ jsonRpcWSServer ++ ">"
+    show JsonRpcHTTPClient{..} = "JsonRpcHTTPClient<" ++ jsonRpcServer ++ ">"
+    show JsonRpcWSClient{..} = "JsonRpcWSClient<" ++ jsonRpcWSHost ++ ":" ++ (show jsonRpcWSPort ) ++ ">"
 
 -- | JSON-RPC request.
 data Request = Request
@@ -188,14 +185,22 @@ call m r = do
     maxInt = toInteger (maxBound :: Int)
     connection body = do
         jsonRpcInstance <- get
-        case jsonRpcInstance of { JsonRpcHTTPClient{..} -> do
-            request <- parseRequest jsonRpcServer
-            let request' = request
-                         { requestBody = RequestBodyLBS body
-                         , requestHeaders = [("Content-Type", "application/json")]
-                         , method = "POST"
-                         }
-            responseBody <$> liftIO (httpLbs request' jsonRpcManager) }
+        case jsonRpcInstance of 
+            JsonRpcHTTPClient{..} -> do
+                                       request <- parseRequest jsonRpcServer
+                                       let request' = request
+                                                    { requestBody = RequestBodyLBS body
+                                                    , requestHeaders = [("Content-Type", "application/json")]
+                                                    , method = "POST"
+                                                    }
+                                       responseBody <$> liftIO (httpLbs request' jsonRpcManager) 
+                                                              
+            JsonRpcWSClient{..} -> do 
+                                    liftIO $ app jsonRpcWSConn
+                                    where
+                                      app conn = do WS.sendTextData conn body
+                                                    WS.receiveData conn
+                                                              
 
 
 decodeResponse :: (MonadThrow m, FromJSON a)
