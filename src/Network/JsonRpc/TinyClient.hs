@@ -85,12 +85,12 @@ type JsonRpcM m = (MonadIO m, MonadThrow m, MonadState JsonRpcClient m)
 
 -- | JSON-RPC client state vars.
 data JsonRpcClient = JsonRpcHTTPClient
-    { jsonRpcManager  :: Manager    -- ^ HTTP connection manager.
-    , jsonRpcServer   :: String     -- ^ Remote server URI.
+    { jsonRpcManager  :: Manager        -- ^ HTTP connection manager.
+    , jsonRpcServer   :: String         -- ^ Remote server URI.
     }              | JsonRpcWSClient
-    { jsonRpcWSConn   :: WS.Connection -- ^ WS connection.
-    , jsonRpcWSHost   :: String     -- ^ Remote Host.
-    , jsonRpcWSPort   :: Int        -- ^ Port
+    { jsonRpcWSConn   :: WS.Connection  -- ^ WS connection.
+    , jsonRpcWSHost   :: String         -- ^ Remote Host.
+    , jsonRpcWSPort   :: Int            -- ^ Port
     }                 
 
 -- | Create default 'JsonRpcClient' settings.

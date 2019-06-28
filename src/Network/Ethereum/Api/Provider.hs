@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 -- |
 -- Module      :  Network.Ethereum.Api.Provider
@@ -18,6 +19,7 @@
 module Network.Ethereum.Api.Provider where
 
 import           Control.Concurrent.Async   (Async, async)
+import           Data.Text                  (Text)
 import           Control.Exception          (Exception, try)
 import           Control.Monad.Catch        (MonadThrow)
 import           Control.Monad.IO.Class     (MonadIO (..))
@@ -27,8 +29,8 @@ import           GHC.Generics               (Generic)
 import           Network.HTTP.Client        (Manager)
 import qualified Network.Socket             as S
 import qualified Network.WebSockets.Stream  as Stream
-import qualified Network.WebSockets         as WS ( Connection, 
-                                                    newClientConnection, 
+import qualified Network.WebSockets         as WS ( Connection, sendClose, 
+                                                    newClientConnection,
                                                     defaultConnectionOptions)
 
 import           Network.JsonRpc.TinyClient (JsonRpc, JsonRpcClient(..),
@@ -58,10 +60,10 @@ data Provider = HttpProvider String | WSProvider String Int
   deriving (Show, Eq, Generic)
 
 defaultHttpPovider :: Provider
-defaultHttpPovider = HttpProvider "http://localhost:8545" -- | Default HTTP Provider URI
+defaultHttpPovider = HttpProvider "http://localhost:8545" -- ^ Default HTTP Provider URI
 
 defaultWSPovider   :: Provider
-defaultWSPovider   = WSProvider   "127.0.0.1" 8546        -- | Default WS Provider URI 
+defaultWSPovider   = WSProvider   "127.0.0.1" 8546        -- ^ Default WS Provider URI 
 
 -- | 'Web3' monad runner, using the supplied Manager
 runWeb3With :: MonadIO m
@@ -89,7 +91,9 @@ runWeb3' (WSProvider host port) f = do
           jsonRpcWSConn = currentConnection
         , jsonRpcWSHost = host
         , jsonRpcWSPort = port}
-    liftIO . try . flip evalStateT currentClient . unWeb3 $ f
+    response <- liftIO $ try . flip evalStateT currentClient . unWeb3 $ f
+    liftIO $ WS.sendClose currentConnection ("Bye-" :: Text)
+    return response 
 
 -- | 'Web3' runner for default http provider
 runWeb3 :: MonadIO m
@@ -109,10 +113,10 @@ runWeb3WS = runWeb3' defaultWSPovider
 forkWeb3 :: Web3 a -> Web3 (Async a)
 forkWeb3 f = liftIO . async . evalStateT (unWeb3 f) =<< get
 
-getConnection :: (Eq a, Num a, Show a)
-              => S.HostName
-              -> a
-              -> [Char]
+-- | Returns a WebSocket Connection Instance
+getConnection :: String           -- ^ Host 
+              -> Int              -- ^ Port
+              -> String           -- ^ Path
               -> IO WS.Connection
 {-# INLINE getConnection #-}
 getConnection host port path = do
@@ -135,5 +139,4 @@ getConnection host port path = do
               (\stream ->
                     WS.newClientConnection stream fullHost 
                     path0 WS.defaultConnectionOptions [] )     
-    -- Clean up
     return res
