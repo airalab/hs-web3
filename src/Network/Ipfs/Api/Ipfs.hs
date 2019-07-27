@@ -17,19 +17,10 @@
 
 module Network.Ipfs.Api.Ipfs where
 
-import           Control.Arrow                    (left)
-import           Data.ByteString.Lazy             (fromStrict, toStrict)
-import qualified Data.ByteString.Lazy.Char8       as BC
-import           Data.Proxy           
-import qualified Data.Text                        as TextS
-import qualified Data.Text.Encoding               as TextS
-import           Data.Typeable            
 import           Network.HTTP.Client              (newManager, defaultManagerSettings)
-import qualified Network.HTTP.Media               as M ((//), (/:))
-import           Servant.API
 import           Servant.Client
 
-import           Network.Ipfs.Api.Api             (IpfsReturnType, _cat, _ls)
+import           Network.Ipfs.Api.Api             (_cat, _ls, _refs, _refsLocal)
 
 call :: ClientM a -> IO (Either ServantError a)
 call func = do 
@@ -49,4 +40,18 @@ ls hash = do
     res <- call $ _ls hash
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+        
+refs :: String -> IO ()
+refs hash = do 
+    res <- call $ _refs hash
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v  
+
+refsLocal :: IO ()
+refsLocal = do 
+    res <- call _refsLocal
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v          
