@@ -20,7 +20,7 @@ module Network.Ipfs.Api.Ipfs where
 import           Network.HTTP.Client              (newManager, defaultManagerSettings)
 import           Servant.Client
 
-import           Network.Ipfs.Api.Api             (_cat, _ls, _refs, _refsLocal)
+import           Network.Ipfs.Api.Api             (_cat, _ls, _refs, _refsLocal, _swarmPeers)
 
 call :: ClientM a -> IO (Either ServantError a)
 call func = do 
@@ -54,4 +54,11 @@ refsLocal = do
     res <- call _refsLocal
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
-        Right v -> print v          
+        Right v -> print v
+ 
+swarmPeers :: IO ()
+swarmPeers = do 
+    res <- call _swarmPeers
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v        

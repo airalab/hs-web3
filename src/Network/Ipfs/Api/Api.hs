@@ -40,26 +40,40 @@ type CatReturnType = TextS.Text
 
 
 data DirLink = DirLink
-    {   name          :: String 
-    ,   hash          :: String
-    ,   size          :: Int64
-    ,   contentType   :: Int
-    ,   target        :: String
+    { name        :: String 
+    , hash        :: String
+    , size        :: Int64
+    , contentType :: Int
+    , target      :: String
     } deriving (Show)
  
-data DirObject = DirObject
-    {   objectHash :: String
-    ,   links      :: [DirLink] 
+data DirObj = DirObj
+    { objHash :: String
+    , links   :: [DirLink] 
     } deriving (Show)
 
-data LsObject = LsObject {  objects :: [DirObject]  } deriving (Show)
+data LsObj = LsObj {  objs :: [DirObj]  } deriving (Show)
 
 
-data RefsObject = RefsObject String deriving (Show)
+data RefsObj = RefsObj String deriving (Show)
 {--    {   error :: String
     ,   ref   :: String 
     } deriving (Show)
 --}
+
+data SwarmStreamObj = SwarmStreamObj {  protocol :: String  } deriving (Show)  
+
+data SwarmPeerObj = SwarmPeerObj
+   {  address   :: String
+    , direction :: Int
+    , latency   :: String
+    , muxer     :: String
+    , peer      :: String
+    , streams   :: Maybe [SwarmStreamObj]
+   } deriving (Show)
+
+data SwarmObj = SwarmObj {  peers :: [SwarmPeerObj]  } deriving (Show)  
+
 
 instance FromJSON DirLink where
     parseJSON (Object o) =
@@ -71,26 +85,53 @@ instance FromJSON DirLink where
     
     parseJSON _ = mzero
 
-instance FromJSON DirObject where
+instance FromJSON DirObj where
     parseJSON (Object o) =
-        DirObject  <$> o .: "Hash"
-                   <*> o .: "Links"
+        DirObj  <$> o .: "Hash"
+                <*> o .: "Links"
     
     parseJSON _ = mzero
 
-instance FromJSON LsObject where
+instance FromJSON LsObj where
     parseJSON (Object o) =
-        LsObject  <$> o .: "Objects"
+        LsObj  <$> o .: "Objects"
 
     parseJSON _ = mzero
-{--
-instance FromJSON RefsObject where
+
+
+instance FromJSON SwarmStreamObj where
     parseJSON (Object o) =
-        RefsObject  <$> o .: "Err"
+        SwarmStreamObj  <$> o .: "Protocol"
+
+    parseJSON _ = mzero    
+
+instance FromJSON SwarmPeerObj where
+    parseJSON (Object o) =
+        SwarmPeerObj  <$> o .: "Addr"
+                      <*> o .: "Direction"
+                      <*> o .: "Latency"
+                      <*> o .: "Muxer"
+                      <*> o .: "Peer"
+                      <*> o .: "Streams"
+    
+    parseJSON _ = mzero
+
+instance FromJSON SwarmObj where
+    parseJSON (Object o) =
+        SwarmObj  <$> o .: "Peers"
+
+    parseJSON _ = mzero
+
+
+{--
+instance FromJSON RefsObj where
+    parseJSON (Objecto o) =
+        RefsObj  <$> o .: "Err"
                     <*> o .: "Ref"
 
     parseJSON _ = mzero
 --}
+
 -- | Defining a content type same as PlainText without charset
 data IpfsText deriving Typeable
 
@@ -101,22 +142,24 @@ instance Servant.API.Accept IpfsText where
 instance MimeUnrender IpfsText TextS.Text where
     mimeUnrender _ = left show . TextS.decodeUtf8' . toStrict
 
-instance {-# OVERLAPPING #-} MimeUnrender JSON (Vec.Vector RefsObject) where
+instance {-# OVERLAPPING #-} MimeUnrender JSON (Vec.Vector RefsObj) where
   mimeUnrender _ bs = do
     t <- fmapL show (TextS.decodeUtf8' (toStrict bs))
-    pure (Vec.fromList (map RefsObject (lines $ TextS.unpack t)))    
+    pure (Vec.fromList (map RefsObj (lines $ TextS.unpack t)))    
 
 type IpfsApi = "cat" :> Capture "cid" String :> Get '[IpfsText] CatReturnType
-            :<|> "ls" :> Capture "cid" String :> Get '[JSON] LsObject
-            :<|> "refs" :> Capture "cid" String :> Get '[JSON] (Vec.Vector RefsObject)
-            :<|> "refs" :> "local" :> Get '[JSON] (Vec.Vector RefsObject)
+            :<|> "ls" :> Capture "cid" String :> Get '[JSON] LsObj
+            :<|> "refs" :> Capture "cid" String :> Get '[JSON] (Vec.Vector RefsObj)
+            :<|> "refs" :> "local" :> Get '[JSON] (Vec.Vector RefsObj)
+            :<|> "swarm" :> "peers" :> Get '[JSON] SwarmObj
 
 ipfsApi :: Proxy IpfsApi
 ipfsApi =  Proxy
 
 _cat :: String -> ClientM CatReturnType
-_ls :: String -> ClientM LsObject
-_refs :: String -> ClientM (Vec.Vector RefsObject)
-_refsLocal :: ClientM (Vec.Vector RefsObject) 
+_ls :: String -> ClientM LsObj
+_refs :: String -> ClientM (Vec.Vector RefsObj)
+_refsLocal :: ClientM (Vec.Vector RefsObj) 
+_swarmPeers :: ClientM SwarmObj 
 
-_cat :<|> _ls :<|> _refs :<|> _refsLocal = client ipfsApi
+_cat :<|> _ls :<|> _refs :<|> _refsLocal :<|> _swarmPeers = client ipfsApi
