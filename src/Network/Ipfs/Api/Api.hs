@@ -75,6 +75,23 @@ data SwarmPeerObj = SwarmPeerObj
 data SwarmObj = SwarmObj {  peers :: [SwarmPeerObj]  } deriving (Show)  
 
 
+data WantlistObj = WantlistObj {  forSlash :: String } deriving (Show)
+
+data BitswapStatObj = BitswapStatObj
+    {  blocksReceived   :: Int64
+    ,  blocksSent       :: Int64
+    ,  dataReceived     :: Int64
+    ,  dataSent         :: Int64
+    ,  dupBlksReceived  :: Int64
+    ,  dupDataReceived  :: Int64
+    ,  messagesReceived :: Int64
+    ,  bitswapPeers     :: [String]
+    ,  provideBufLen    :: Int
+    ,  wantlist         :: [WantlistObj]
+    }  deriving (Show)
+
+data BitswapWLObj = BitswapWLObj {  keys :: [WantlistObj] } deriving (Show)
+
 instance FromJSON DirLink where
     parseJSON (Object o) =
         DirLink  <$> o .: "Name"
@@ -123,6 +140,34 @@ instance FromJSON SwarmObj where
     parseJSON _ = mzero
 
 
+instance FromJSON WantlistObj where
+    parseJSON (Object o) =
+        WantlistObj  <$> o .: "/"
+
+    parseJSON _ = mzero
+
+instance FromJSON BitswapStatObj where
+    parseJSON (Object o) =
+        BitswapStatObj  <$> o .: "BlocksReceived"
+                        <*> o .: "BlocksSent"
+                        <*> o .: "DataReceived"
+                        <*> o .: "DataSent"
+                        <*> o .: "DupBlksReceived"
+                        <*> o .: "DupDataReceived"
+                        <*> o .: "MessagesReceived"
+                        <*> o .: "Peers"
+                        <*> o .: "ProvideBufLen"
+                        <*> o .: "Wantlist"
+    
+    parseJSON _ = mzero
+
+    
+instance FromJSON BitswapWLObj where
+    parseJSON (Object o) =
+        BitswapWLObj  <$> o .: "Keys"
+
+    parseJSON _ = mzero
+    
 {--
 instance FromJSON RefsObj where
     parseJSON (Objecto o) =
@@ -152,6 +197,8 @@ type IpfsApi = "cat" :> Capture "cid" String :> Get '[IpfsText] CatReturnType
             :<|> "refs" :> Capture "cid" String :> Get '[JSON] (Vec.Vector RefsObj)
             :<|> "refs" :> "local" :> Get '[JSON] (Vec.Vector RefsObj)
             :<|> "swarm" :> "peers" :> Get '[JSON] SwarmObj
+            :<|> "bitswap" :> "stat" :> Get '[JSON] BitswapStatObj
+            :<|> "bitswap" :> "wantlist" :> Get '[JSON] BitswapWLObj
 
 ipfsApi :: Proxy IpfsApi
 ipfsApi =  Proxy
@@ -161,5 +208,8 @@ _ls :: String -> ClientM LsObj
 _refs :: String -> ClientM (Vec.Vector RefsObj)
 _refsLocal :: ClientM (Vec.Vector RefsObj) 
 _swarmPeers :: ClientM SwarmObj 
+_bitswapStat :: ClientM BitswapStatObj 
+_bitswapWL :: ClientM BitswapWLObj 
 
-_cat :<|> _ls :<|> _refs :<|> _refsLocal :<|> _swarmPeers = client ipfsApi
+_cat :<|> _ls :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> 
+  _bitswapStat :<|> _bitswapWL  = client ipfsApi

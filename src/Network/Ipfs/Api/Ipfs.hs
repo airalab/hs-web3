@@ -17,10 +17,11 @@
 
 module Network.Ipfs.Api.Ipfs where
 
-import           Network.HTTP.Client              (newManager, defaultManagerSettings)
+import           Network.HTTP.Client   (newManager, defaultManagerSettings)
 import           Servant.Client
 
-import           Network.Ipfs.Api.Api             (_cat, _ls, _refs, _refsLocal, _swarmPeers)
+import           Network.Ipfs.Api.Api   (_cat, _ls, _refs, _refsLocal, 
+                                        _swarmPeers, _bitswapStat, _bitswapWL)
 
 call :: ClientM a -> IO (Either ServantError a)
 call func = do 
@@ -62,3 +63,17 @@ swarmPeers = do
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v        
+
+bitswapStat :: IO ()
+bitswapStat = do 
+    res <- call _bitswapStat
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+        
+bitswapWL :: IO ()
+bitswapWL = do 
+    res <- call _bitswapWL
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v         
