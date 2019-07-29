@@ -21,7 +21,8 @@ import           Network.HTTP.Client   (newManager, defaultManagerSettings)
 import           Servant.Client
 
 import           Network.Ipfs.Api.Api   (_cat, _ls, _refs, _refsLocal, 
-                                        _swarmPeers, _bitswapStat, _bitswapWL)
+                                        _swarmPeers, _bitswapStat, _bitswapWL,
+                                        _bitswapLedger, _bitswapReprovide, _cidBases)
 
 call :: ClientM a -> IO (Either ServantError a)
 call func = do 
@@ -76,4 +77,25 @@ bitswapWL = do
     res <- call _bitswapWL
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
-        Right v -> print v         
+        Right v -> print v    
+        
+bitswapLedger :: String -> IO ()
+bitswapLedger peerId = do 
+    res <- call $ _bitswapLedger peerId
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+        
+bitswapReprovide :: IO ()
+bitswapReprovide = do 
+    res <- call $ _bitswapReprovide
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v 
+
+cidBases :: IO ()
+cidBases = do 
+    res <- call $ _cidBases
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v 

@@ -37,6 +37,7 @@ import           Servant.Client
 
 
 type CatReturnType = TextS.Text
+type ReprovideReturnType = TextS.Text
 
 
 data DirLink = DirLink
@@ -91,6 +92,20 @@ data BitswapStatObj = BitswapStatObj
     }  deriving (Show)
 
 data BitswapWLObj = BitswapWLObj {  keys :: [WantlistObj] } deriving (Show)
+
+data BitswapLedgerObj = BitswapLedgerObj
+    {  exchanged  :: Int64
+    ,  ledgerPeer :: String
+    ,  recv       :: Int64
+    ,  sent       :: Int64
+    ,  value      :: Double
+    }  deriving (Show)
+
+data CidBasesObj = CidBasesObj
+    { code     :: Int
+    , baseName :: String
+    } deriving (Show)
+
 
 instance FromJSON DirLink where
     parseJSON (Object o) =
@@ -167,7 +182,24 @@ instance FromJSON BitswapWLObj where
         BitswapWLObj  <$> o .: "Keys"
 
     parseJSON _ = mzero
+
+instance FromJSON BitswapLedgerObj where
+    parseJSON (Object o) =
+        BitswapLedgerObj  <$> o .: "Exchanged"
+                          <*> o .: "Peer"
+                          <*> o .: "Recv"
+                          <*> o .: "Sent"
+                          <*> o .: "Value"
     
+    parseJSON _ = mzero
+
+instance FromJSON CidBasesObj where
+    parseJSON (Object o) =
+        CidBasesObj  <$> o .: "Code"
+                     <*> o .: "Name"
+    
+    parseJSON _ = mzero
+
 {--
 instance FromJSON RefsObj where
     parseJSON (Objecto o) =
@@ -199,6 +231,9 @@ type IpfsApi = "cat" :> Capture "cid" String :> Get '[IpfsText] CatReturnType
             :<|> "swarm" :> "peers" :> Get '[JSON] SwarmObj
             :<|> "bitswap" :> "stat" :> Get '[JSON] BitswapStatObj
             :<|> "bitswap" :> "wantlist" :> Get '[JSON] BitswapWLObj
+            :<|> "bitswap" :> "ledger" :> Capture "peerId" String :> Get '[JSON] BitswapLedgerObj
+            :<|> "bitswap" :> "reprovide" :> Get '[IpfsText] ReprovideReturnType
+            :<|> "cid" :> "bases" :> Get '[JSON] [CidBasesObj]
 
 ipfsApi :: Proxy IpfsApi
 ipfsApi =  Proxy
@@ -210,6 +245,10 @@ _refsLocal :: ClientM (Vec.Vector RefsObj)
 _swarmPeers :: ClientM SwarmObj 
 _bitswapStat :: ClientM BitswapStatObj 
 _bitswapWL :: ClientM BitswapWLObj 
+_bitswapLedger :: String -> ClientM BitswapLedgerObj 
+_bitswapReprovide :: ClientM ReprovideReturnType  
+_cidBases :: ClientM [CidBasesObj]  
 
 _cat :<|> _ls :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> 
-  _bitswapStat :<|> _bitswapWL  = client ipfsApi
+  _bitswapStat :<|> _bitswapWL :<|> _bitswapLedger :<|> _bitswapReprovide :<|> 
+  _cidBases = client ipfsApi
