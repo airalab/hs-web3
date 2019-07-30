@@ -22,7 +22,8 @@ import           Servant.Client
 
 import           Network.Ipfs.Api.Api   (_cat, _ls, _refs, _refsLocal, 
                                         _swarmPeers, _bitswapStat, _bitswapWL,
-                                        _bitswapLedger, _bitswapReprovide, _cidBases)
+                                        _bitswapLedger, _bitswapReprovide,
+                                        _cidBases, _cidCodecs, _cidHashes, _cidBase32)
 
 call :: ClientM a -> IO (Either ServantError a)
 call func = do 
@@ -99,3 +100,24 @@ cidBases = do
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v 
+        
+cidCodecs :: IO ()
+cidCodecs = do 
+    res <- call $ _cidCodecs
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v 
+        
+cidHashes :: IO ()
+cidHashes = do 
+    res <- call $ _cidHashes
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v 
+
+cidBase32 :: String -> IO ()
+cidBase32 hash = do 
+    res <- call $ _cidBase32 hash
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v       

@@ -102,11 +102,26 @@ data BitswapLedgerObj = BitswapLedgerObj
     }  deriving (Show)
 
 data CidBasesObj = CidBasesObj
-    { code     :: Int
+    { baseCode :: Int
     , baseName :: String
     } deriving (Show)
 
+data CidCodecsObj = CidCodecsObj
+    { codecCode :: Int
+    , codecName :: String
+    } deriving (Show)
 
+data CidHashesObj = CidHashesObj
+    { multihashCode :: Int
+    , multihashName :: String
+    } deriving (Show)
+
+data CidBase32Obj = CidBase32Obj
+    { cidStr    :: String
+    , errorMsg  :: String
+    , formatted :: String
+    } deriving (Show)
+    
 instance FromJSON DirLink where
     parseJSON (Object o) =
         DirLink  <$> o .: "Name"
@@ -200,6 +215,28 @@ instance FromJSON CidBasesObj where
     
     parseJSON _ = mzero
 
+instance FromJSON CidCodecsObj where
+    parseJSON (Object o) =
+        CidCodecsObj  <$> o .: "Code"
+                      <*> o .: "Name"
+    
+    parseJSON _ = mzero
+
+instance FromJSON CidHashesObj where
+    parseJSON (Object o) =
+        CidHashesObj  <$> o .: "Code"
+                      <*> o .: "Name"
+    
+    parseJSON _ = mzero
+
+instance FromJSON CidBase32Obj where
+    parseJSON (Object o) =
+        CidBase32Obj  <$> o .: "CidStr"
+                      <*> o .: "ErrorMsg"
+                      <*> o .: "Formatted"
+    
+    parseJSON _ = mzero
+
 {--
 instance FromJSON RefsObj where
     parseJSON (Objecto o) =
@@ -234,6 +271,9 @@ type IpfsApi = "cat" :> Capture "cid" String :> Get '[IpfsText] CatReturnType
             :<|> "bitswap" :> "ledger" :> Capture "peerId" String :> Get '[JSON] BitswapLedgerObj
             :<|> "bitswap" :> "reprovide" :> Get '[IpfsText] ReprovideReturnType
             :<|> "cid" :> "bases" :> Get '[JSON] [CidBasesObj]
+            :<|> "cid" :> "codecs" :> Get '[JSON] [CidCodecsObj]
+            :<|> "cid" :> "hashes" :> Get '[JSON] [CidHashesObj]
+            :<|> "cid" :> "base32" :> Capture "cid" String :> Get '[JSON] CidBase32Obj
 
 ipfsApi :: Proxy IpfsApi
 ipfsApi =  Proxy
@@ -248,7 +288,10 @@ _bitswapWL :: ClientM BitswapWLObj
 _bitswapLedger :: String -> ClientM BitswapLedgerObj 
 _bitswapReprovide :: ClientM ReprovideReturnType  
 _cidBases :: ClientM [CidBasesObj]  
+_cidCodecs :: ClientM [CidCodecsObj]  
+_cidHashes :: ClientM [CidHashesObj]  
+_cidBase32 :: String -> ClientM CidBase32Obj  
 
 _cat :<|> _ls :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> 
   _bitswapStat :<|> _bitswapWL :<|> _bitswapLedger :<|> _bitswapReprovide :<|> 
-  _cidBases = client ipfsApi
+  _cidBases :<|> _cidCodecs :<|> _cidHashes :<|> _cidBase32 = client ipfsApi
