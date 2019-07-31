@@ -17,13 +17,15 @@
 
 module Network.Ipfs.Api.Ipfs where
 
+import           Data.Text                        as TextS
 import           Network.HTTP.Client   (newManager, defaultManagerSettings)
 import           Servant.Client
 
 import           Network.Ipfs.Api.Api   (_cat, _ls, _refs, _refsLocal, 
                                         _swarmPeers, _bitswapStat, _bitswapWL,
                                         _bitswapLedger, _bitswapReprovide,
-                                        _cidBases, _cidCodecs, _cidHashes, _cidBase32)
+                                        _cidBases, _cidCodecs, _cidHashes, _cidBase32,
+                                        _cidFormat, _blockGet)
 
 call :: ClientM a -> IO (Either ServantError a)
 call func = do 
@@ -31,21 +33,21 @@ call func = do
     runClientM func (mkClientEnv manager' (BaseUrl Http "localhost" 5001 "/api/v0"))
 
 
-cat :: String -> IO ()
+cat :: Text -> IO ()
 cat hash = do 
     res <- call $ _cat hash
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v
         
-ls :: String -> IO ()
+ls :: Text -> IO ()
 ls hash = do 
     res <- call $ _ls hash
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v
         
-refs :: String -> IO ()
+refs :: Text -> IO ()
 refs hash = do 
     res <- call $ _refs hash
     case res of
@@ -80,7 +82,7 @@ bitswapWL = do
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v    
         
-bitswapLedger :: String -> IO ()
+bitswapLedger :: Text -> IO ()
 bitswapLedger peerId = do 
     res <- call $ _bitswapLedger peerId
     case res of
@@ -115,9 +117,23 @@ cidHashes = do
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v 
 
-cidBase32 :: String -> IO ()
+cidBase32 :: Text -> IO ()
 cidBase32 hash = do 
     res <- call $ _cidBase32 hash
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
-        Right v -> print v       
+        Right v -> print v
+                
+cidFormat :: Text-> IO ()
+cidFormat hash = do 
+    res <- call $ _cidFormat hash
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v  
+        
+blockGet :: Text -> IO ()
+blockGet hash = do 
+    res <- call $ _blockGet hash
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v 

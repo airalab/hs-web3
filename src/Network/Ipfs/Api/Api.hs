@@ -38,7 +38,8 @@ import           Servant.Client
 
 type CatReturnType = TextS.Text
 type ReprovideReturnType = TextS.Text
-
+type GetReturnType = TextS.Text
+type BlockReturnType = TextS.Text
 
 data DirLink = DirLink
     { name        :: String 
@@ -116,7 +117,7 @@ data CidHashesObj = CidHashesObj
     , multihashName :: String
     } deriving (Show)
 
-data CidBase32Obj = CidBase32Obj
+data CidObj = CidObj
     { cidStr    :: String
     , errorMsg  :: String
     , formatted :: String
@@ -229,9 +230,9 @@ instance FromJSON CidHashesObj where
     
     parseJSON _ = mzero
 
-instance FromJSON CidBase32Obj where
+instance FromJSON CidObj where
     parseJSON (Object o) =
-        CidBase32Obj  <$> o .: "CidStr"
+        CidObj  <$> o .: "CidStr"
                       <*> o .: "ErrorMsg"
                       <*> o .: "Formatted"
     
@@ -261,37 +262,42 @@ instance {-# OVERLAPPING #-} MimeUnrender JSON (Vec.Vector RefsObj) where
     t <- fmapL show (TextS.decodeUtf8' (toStrict bs))
     pure (Vec.fromList (map RefsObj (lines $ TextS.unpack t)))    
 
-type IpfsApi = "cat" :> Capture "cid" String :> Get '[IpfsText] CatReturnType
-            :<|> "ls" :> Capture "cid" String :> Get '[JSON] LsObj
-            :<|> "refs" :> Capture "cid" String :> Get '[JSON] (Vec.Vector RefsObj)
+type IpfsApi = "cat" :> Capture "cid" TextS.Text :> Get '[IpfsText] CatReturnType
+            :<|> "ls" :> Capture "cid" TextS.Text :> Get '[JSON] LsObj
+            :<|> "refs" :> Capture "cid" TextS.Text :> Get '[JSON] (Vec.Vector RefsObj)
             :<|> "refs" :> "local" :> Get '[JSON] (Vec.Vector RefsObj)
             :<|> "swarm" :> "peers" :> Get '[JSON] SwarmObj
             :<|> "bitswap" :> "stat" :> Get '[JSON] BitswapStatObj
             :<|> "bitswap" :> "wantlist" :> Get '[JSON] BitswapWLObj
-            :<|> "bitswap" :> "ledger" :> Capture "peerId" String :> Get '[JSON] BitswapLedgerObj
+            :<|> "bitswap" :> "ledger" :> Capture "peerId" TextS.Text :> Get '[JSON] BitswapLedgerObj
             :<|> "bitswap" :> "reprovide" :> Get '[IpfsText] ReprovideReturnType
             :<|> "cid" :> "bases" :> Get '[JSON] [CidBasesObj]
             :<|> "cid" :> "codecs" :> Get '[JSON] [CidCodecsObj]
             :<|> "cid" :> "hashes" :> Get '[JSON] [CidHashesObj]
-            :<|> "cid" :> "base32" :> Capture "cid" String :> Get '[JSON] CidBase32Obj
+            :<|> "cid" :> "base32" :> Capture "cid" TextS.Text :> Get '[JSON] CidObj
+            :<|> "cid" :> "format" :> Capture "cid" TextS.Text :> Get '[JSON] CidObj
+            :<|> "block" :> "get" :> Capture "cid" TextS.Text :> Get '[IpfsText] BlockReturnType
 
 ipfsApi :: Proxy IpfsApi
 ipfsApi =  Proxy
 
-_cat :: String -> ClientM CatReturnType
-_ls :: String -> ClientM LsObj
-_refs :: String -> ClientM (Vec.Vector RefsObj)
+_cat :: TextS.Text -> ClientM CatReturnType
+_ls :: TextS.Text -> ClientM LsObj
+_refs :: TextS.Text -> ClientM (Vec.Vector RefsObj)
 _refsLocal :: ClientM (Vec.Vector RefsObj) 
 _swarmPeers :: ClientM SwarmObj 
 _bitswapStat :: ClientM BitswapStatObj 
 _bitswapWL :: ClientM BitswapWLObj 
-_bitswapLedger :: String -> ClientM BitswapLedgerObj 
+_bitswapLedger :: TextS.Text -> ClientM BitswapLedgerObj 
 _bitswapReprovide :: ClientM ReprovideReturnType  
 _cidBases :: ClientM [CidBasesObj]  
 _cidCodecs :: ClientM [CidCodecsObj]  
 _cidHashes :: ClientM [CidHashesObj]  
-_cidBase32 :: String -> ClientM CidBase32Obj  
+_cidBase32 :: TextS.Text -> ClientM CidObj  
+_cidFormat :: TextS.Text -> ClientM CidObj
+_blockGet :: TextS.Text -> ClientM BlockReturnType
 
 _cat :<|> _ls :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> 
   _bitswapStat :<|> _bitswapWL :<|> _bitswapLedger :<|> _bitswapReprovide :<|> 
-  _cidBases :<|> _cidCodecs :<|> _cidHashes :<|> _cidBase32 = client ipfsApi
+  _cidBases :<|> _cidCodecs :<|> _cidHashes :<|> _cidBase32 :<|> _cidFormat :<|> 
+ _blockGet = client ipfsApi
