@@ -40,6 +40,7 @@ type CatReturnType = TextS.Text
 type ReprovideReturnType = TextS.Text
 type GetReturnType = TextS.Text
 type BlockReturnType = TextS.Text
+type DagReturnType = TextS.Text
 
 data DirLink = DirLink
     { name        :: String 
@@ -122,7 +123,24 @@ data CidObj = CidObj
     , errorMsg  :: String
     , formatted :: String
     } deriving (Show)
-    
+   
+data BlockStatObj = BlockStatObj
+    { key       :: String
+    , blockSize :: Int
+    } deriving (Show)
+
+data DagCidObj = DagCidObj {  cidSlash :: String } deriving (Show)
+
+data DagResolveObj = DagResolveObj
+    { cid     :: DagCidObj
+    , remPath :: String
+    } deriving (Show)
+
+data ConfigObj = ConfigObj
+    { configKey   :: String
+    , configValue :: String
+    } deriving (Show)
+
 instance FromJSON DirLink where
     parseJSON (Object o) =
         DirLink  <$> o .: "Name"
@@ -233,8 +251,35 @@ instance FromJSON CidHashesObj where
 instance FromJSON CidObj where
     parseJSON (Object o) =
         CidObj  <$> o .: "CidStr"
-                      <*> o .: "ErrorMsg"
-                      <*> o .: "Formatted"
+                <*> o .: "ErrorMsg"
+                <*> o .: "Formatted"
+    
+    parseJSON _ = mzero
+
+instance FromJSON BlockStatObj where
+    parseJSON (Object o) =
+        BlockStatObj  <$> o .: "Key"
+                      <*> o .: "Size"
+    
+    parseJSON _ = mzero
+
+instance FromJSON DagCidObj where
+    parseJSON (Object o) =
+        DagCidObj  <$> o .: "/"
+
+    parseJSON _ = mzero
+   
+instance FromJSON DagResolveObj where
+    parseJSON (Object o) =
+        DagResolveObj  <$> o .: "Cid"
+                       <*> o .: "RemPath"
+    
+    parseJSON _ = mzero
+
+instance FromJSON ConfigObj where
+    parseJSON (Object o) =
+        ConfigObj  <$> o .: "Key"
+                   <*> o .: "Value"
     
     parseJSON _ = mzero
 
@@ -276,7 +321,11 @@ type IpfsApi = "cat" :> Capture "cid" TextS.Text :> Get '[IpfsText] CatReturnTyp
             :<|> "cid" :> "hashes" :> Get '[JSON] [CidHashesObj]
             :<|> "cid" :> "base32" :> Capture "cid" TextS.Text :> Get '[JSON] CidObj
             :<|> "cid" :> "format" :> Capture "cid" TextS.Text :> Get '[JSON] CidObj
-            :<|> "block" :> "get" :> Capture "cid" TextS.Text :> Get '[IpfsText] BlockReturnType
+            :<|> "block" :> "get" :> Capture "key" TextS.Text :> Get '[IpfsText] BlockReturnType
+            :<|> "block" :> "stat" :> Capture "key" TextS.Text :> Get '[JSON] BlockStatObj
+            :<|> "dag" :> "get" :> Capture "ref" TextS.Text :> Get '[JSON] DagReturnType 
+            :<|> "dag" :> "resolve" :> Capture "ref" TextS.Text :> Get '[JSON] DagResolveObj 
+            :<|> "config" :> Capture "ref" TextS.Text :> Get '[JSON] ConfigObj 
 
 ipfsApi :: Proxy IpfsApi
 ipfsApi =  Proxy
@@ -296,8 +345,12 @@ _cidHashes :: ClientM [CidHashesObj]
 _cidBase32 :: TextS.Text -> ClientM CidObj  
 _cidFormat :: TextS.Text -> ClientM CidObj
 _blockGet :: TextS.Text -> ClientM BlockReturnType
+_blockStat :: TextS.Text -> ClientM BlockStatObj
+_dagGet :: TextS.Text -> ClientM DagReturnType
+_dagResolve :: TextS.Text -> ClientM DagResolveObj
+_configGet :: TextS.Text -> ClientM ConfigObj
 
 _cat :<|> _ls :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> 
   _bitswapStat :<|> _bitswapWL :<|> _bitswapLedger :<|> _bitswapReprovide :<|> 
   _cidBases :<|> _cidCodecs :<|> _cidHashes :<|> _cidBase32 :<|> _cidFormat :<|> 
- _blockGet = client ipfsApi
+ _blockGet :<|> _blockStat :<|> _dagGet :<|> _dagResolve :<|> _configGet = client ipfsApi

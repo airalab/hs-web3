@@ -25,7 +25,8 @@ import           Network.Ipfs.Api.Api   (_cat, _ls, _refs, _refsLocal,
                                         _swarmPeers, _bitswapStat, _bitswapWL,
                                         _bitswapLedger, _bitswapReprovide,
                                         _cidBases, _cidCodecs, _cidHashes, _cidBase32,
-                                        _cidFormat, _blockGet)
+                                        _cidFormat, _blockGet, _blockStat, _dagGet,
+                                        _configGet, _dagResolve)
 
 call :: ClientM a -> IO (Either ServantError a)
 call func = do 
@@ -132,8 +133,37 @@ cidFormat hash = do
         Right v -> print v  
         
 blockGet :: Text -> IO ()
-blockGet hash = do 
-    res <- call $ _blockGet hash
+blockGet key = do 
+    res <- call $ _blockGet key
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+        
+        
+blockStat :: Text -> IO ()
+blockStat key = do 
+    res <- call $ _blockStat key
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+dagGet :: Text -> IO ()
+dagGet ref = do 
+    res <- call $ _dagGet ref
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v 
+
+dagResolve :: Text -> IO ()
+dagResolve ref = do 
+    res <- call $ _dagResolve ref
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v 
+
+configGet :: Text -> IO ()
+configGet key = do 
+    res <- call $ _configGet key
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v 
