@@ -41,6 +41,7 @@ type ReprovideReturnType = TextS.Text
 type GetReturnType = TextS.Text
 type BlockReturnType = TextS.Text
 type DagReturnType = TextS.Text
+type ObjectReturnType = TextS.Text
 
 data DirLink = DirLink
     { name        :: String 
@@ -139,6 +140,26 @@ data DagResolveObj = DagResolveObj
 data ConfigObj = ConfigObj
     { configKey   :: String
     , configValue :: String
+    } deriving (Show)
+
+data ObjectLinkObj = ObjectLinkObj
+    { linkHash  :: String
+    , linkName  :: String
+    , linkSize  :: Int64
+    } deriving (Show)
+
+data ObjectNewObj = ObjectNewObj
+    { newObjectHash  :: String
+    } deriving (Show)
+
+data ObjectLinksObj = ObjectLinksObj
+    { objectHash  :: String
+    , objectLinks :: [ObjectLinkObj]   
+    } deriving (Show)
+
+data ObjectGetObj = ObjectGetObj
+    { objectName     :: String
+    , objectGetLinks :: [ObjectLinkObj]   
     } deriving (Show)
 
 instance FromJSON DirLink where
@@ -283,6 +304,34 @@ instance FromJSON ConfigObj where
     
     parseJSON _ = mzero
 
+instance FromJSON ObjectLinkObj where
+    parseJSON (Object o) =
+        ObjectLinkObj  <$> o .: "Hash"
+                       <*> o .: "Name"
+                       <*> o .: "Size"
+    
+    parseJSON _ = mzero
+
+instance FromJSON ObjectNewObj where
+    parseJSON (Object o) =
+        ObjectNewObj  <$> o .: "Hash"
+    
+    parseJSON _ = mzero
+
+instance FromJSON ObjectLinksObj where
+    parseJSON (Object o) =
+        ObjectLinksObj  <$> o .: "Hash"
+                       <*> o .: "Links"
+    
+    parseJSON _ = mzero
+
+instance FromJSON ObjectGetObj where
+    parseJSON (Object o) =
+        ObjectGetObj  <$> o .: "Data"
+                      <*> o .: "Links"
+    
+    parseJSON _ = mzero
+
 {--
 instance FromJSON RefsObj where
     parseJSON (Objecto o) =
@@ -326,6 +375,14 @@ type IpfsApi = "cat" :> Capture "cid" TextS.Text :> Get '[IpfsText] CatReturnTyp
             :<|> "dag" :> "get" :> Capture "ref" TextS.Text :> Get '[JSON] DagReturnType 
             :<|> "dag" :> "resolve" :> Capture "ref" TextS.Text :> Get '[JSON] DagResolveObj 
             :<|> "config" :> Capture "ref" TextS.Text :> Get '[JSON] ConfigObj 
+            :<|> "config" :> Capture "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] ConfigObj 
+            :<|> "object" :> "data" :> Capture "ref" TextS.Text :> Get '[IpfsText] ObjectReturnType
+            :<|> "object" :> "new" :> Get '[JSON] ObjectNewObj 
+            :<|> "object" :> "links" :>  Capture "ref" TextS.Text :> Get '[JSON] ObjectLinksObj  
+            :<|> "object" :> "patch" :> "add-link" :> Capture "arg" TextS.Text 
+                :> QueryParam "arg" TextS.Text :> QueryParam "arg" TextS.Text
+                :> Get '[JSON] ObjectLinksObj 
+            :<|> "object" :> "get" :> Capture "arg" TextS.Text :> Get '[JSON] ObjectGetObj 
 
 ipfsApi :: Proxy IpfsApi
 ipfsApi =  Proxy
@@ -349,8 +406,16 @@ _blockStat :: TextS.Text -> ClientM BlockStatObj
 _dagGet :: TextS.Text -> ClientM DagReturnType
 _dagResolve :: TextS.Text -> ClientM DagResolveObj
 _configGet :: TextS.Text -> ClientM ConfigObj
+_configSet :: TextS.Text -> Maybe TextS.Text -> ClientM ConfigObj
+_objectData :: TextS.Text -> ClientM ObjectReturnType
+_objectNew :: ClientM ObjectNewObj
+_objectGetLinks :: TextS.Text -> ClientM ObjectLinksObj
+_objectAddLink :: TextS.Text -> Maybe TextS.Text -> Maybe TextS.Text -> ClientM ObjectLinksObj
+_objectGet :: TextS.Text -> ClientM ObjectGetObj
 
 _cat :<|> _ls :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> 
   _bitswapStat :<|> _bitswapWL :<|> _bitswapLedger :<|> _bitswapReprovide :<|> 
   _cidBases :<|> _cidCodecs :<|> _cidHashes :<|> _cidBase32 :<|> _cidFormat :<|> 
- _blockGet :<|> _blockStat :<|> _dagGet :<|> _dagResolve :<|> _configGet = client ipfsApi
+  _blockGet :<|> _blockStat :<|> _dagGet :<|> _dagResolve :<|> _configGet :<|> 
+  _configSet :<|> _objectData :<|> _objectNew :<|> _objectGetLinks :<|> _objectAddLink :<|> 
+  _objectGet = client ipfsApi

@@ -26,7 +26,9 @@ import           Network.Ipfs.Api.Api   (_cat, _ls, _refs, _refsLocal,
                                         _bitswapLedger, _bitswapReprovide,
                                         _cidBases, _cidCodecs, _cidHashes, _cidBase32,
                                         _cidFormat, _blockGet, _blockStat, _dagGet,
-                                        _configGet, _dagResolve)
+                                        _dagResolve, _configGet, _configSet, _objectData,
+                                        _objectNew, _objectGetLinks, _objectAddLink,
+                                         _objectGet)
 
 call :: ClientM a -> IO (Either ServantError a)
 call func = do 
@@ -164,6 +166,48 @@ dagResolve ref = do
 configGet :: Text -> IO ()
 configGet key = do 
     res <- call $ _configGet key
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v 
+
+configSet :: Text -> Text -> IO ()
+configSet key value = do 
+    res <- call $ _configSet key $ Just value
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v 
+
+objectData :: Text -> IO ()
+objectData key = do 
+    res <- call $ _objectData key
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+objectNew :: IO ()
+objectNew = do 
+    res <- call _objectNew
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+ 
+objectGetLinks :: Text -> IO ()
+objectGetLinks key = do 
+    res <- call $ _objectGetLinks key
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+objectAddLink ::  Text -> Text -> Text -> IO ()
+objectAddLink hash name key = do 
+    res <- call $ _objectAddLink hash (Just name) (Just key)
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+                
+objectGet :: Text -> IO ()
+objectGet key = do 
+    res <- call $ _objectGet key
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v 
