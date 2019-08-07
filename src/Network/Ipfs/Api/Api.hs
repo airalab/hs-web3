@@ -52,7 +52,7 @@ data DirLink = DirLink
     } deriving (Show)
  
 data DirObj = DirObj
-    { objHash :: String
+    { dirHash :: String
     , links   :: [DirLink] 
     } deriving (Show)
 
@@ -148,9 +148,7 @@ data ObjectLinkObj = ObjectLinkObj
     , linkSize  :: Int64
     } deriving (Show)
 
-data ObjectNewObj = ObjectNewObj
-    { newObjectHash  :: String
-    } deriving (Show)
+data ObjectNewObj = ObjectNewObj { newObjectHash  :: String } deriving (Show)
 
 data ObjectLinksObj = ObjectLinksObj
     { objectHash  :: String
@@ -161,6 +159,19 @@ data ObjectGetObj = ObjectGetObj
     { objectName     :: String
     , objectGetLinks :: [ObjectLinkObj]   
     } deriving (Show)
+
+data ObjectStatObj = ObjectStatObj
+    {  objBlockSize   :: Int
+    ,  cumulativeSize :: Int
+    ,  dataSize       :: Int
+    ,  objHash        :: String
+    ,  linksSize      :: Int
+    ,  numLinks       :: Int    
+    }  deriving (Show)
+
+data PinObj = PinObj { pins  :: [String] } deriving (Show)
+
+data BootstrapObj = BootstrapObj { bootstrapPeers  :: [String] } deriving (Show)
 
 instance FromJSON DirLink where
     parseJSON (Object o) =
@@ -332,6 +343,29 @@ instance FromJSON ObjectGetObj where
     
     parseJSON _ = mzero
 
+instance FromJSON ObjectStatObj where
+    parseJSON (Object o) =
+        ObjectStatObj  <$> o .: "BlockSize"
+                       <*> o .: "CumulativeSize"
+                       <*> o .: "DataSize"
+                       <*> o .: "Hash"
+                       <*> o .: "LinksSize"
+                       <*> o .: "NumLinks"
+    
+    parseJSON _ = mzero
+
+instance FromJSON PinObj where
+    parseJSON (Object o) =
+        PinObj  <$> o .: "Pins"
+    
+    parseJSON _ = mzero    
+
+instance FromJSON BootstrapObj where
+    parseJSON (Object o) =
+        BootstrapObj  <$> o .: "Peers"
+    
+    parseJSON _ = mzero
+   
 {--
 instance FromJSON RefsObj where
     parseJSON (Objecto o) =
@@ -383,6 +417,11 @@ type IpfsApi = "cat" :> Capture "cid" TextS.Text :> Get '[IpfsText] CatReturnTyp
                 :> QueryParam "arg" TextS.Text :> QueryParam "arg" TextS.Text
                 :> Get '[JSON] ObjectLinksObj 
             :<|> "object" :> "get" :> Capture "arg" TextS.Text :> Get '[JSON] ObjectGetObj 
+            :<|> "object" :> "stat" :> Capture "arg" TextS.Text :> Get '[JSON] ObjectStatObj 
+            :<|> "pin" :> "add" :> Capture "arg" TextS.Text :> Get '[JSON] PinObj 
+            :<|> "pin" :> "rm" :> Capture "arg" TextS.Text :> Get '[JSON] PinObj 
+            :<|> "bootstrap" :> "add" :> QueryParam "arg" TextS.Text :> Get '[JSON] BootstrapObj 
+            :<|> "bootstrap" :> "list" :> Get '[JSON] BootstrapObj 
 
 ipfsApi :: Proxy IpfsApi
 ipfsApi =  Proxy
@@ -412,10 +451,16 @@ _objectNew :: ClientM ObjectNewObj
 _objectGetLinks :: TextS.Text -> ClientM ObjectLinksObj
 _objectAddLink :: TextS.Text -> Maybe TextS.Text -> Maybe TextS.Text -> ClientM ObjectLinksObj
 _objectGet :: TextS.Text -> ClientM ObjectGetObj
+_objectStat :: TextS.Text -> ClientM ObjectStatObj
+_pinAdd :: TextS.Text -> ClientM PinObj
+_pinRemove :: TextS.Text -> ClientM PinObj
+_bootstrapAdd ::Maybe TextS.Text -> ClientM BootstrapObj 
+_bootstrapList ::ClientM BootstrapObj 
 
 _cat :<|> _ls :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> 
   _bitswapStat :<|> _bitswapWL :<|> _bitswapLedger :<|> _bitswapReprovide :<|> 
   _cidBases :<|> _cidCodecs :<|> _cidHashes :<|> _cidBase32 :<|> _cidFormat :<|> 
   _blockGet :<|> _blockStat :<|> _dagGet :<|> _dagResolve :<|> _configGet :<|> 
   _configSet :<|> _objectData :<|> _objectNew :<|> _objectGetLinks :<|> _objectAddLink :<|> 
-  _objectGet = client ipfsApi
+  _objectGet :<|> _objectStat :<|> _pinAdd :<|> _pinRemove :<|> _bootstrapAdd :<|>
+  _bootstrapList = client ipfsApi

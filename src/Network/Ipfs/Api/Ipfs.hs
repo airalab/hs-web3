@@ -28,7 +28,8 @@ import           Network.Ipfs.Api.Api   (_cat, _ls, _refs, _refsLocal,
                                         _cidFormat, _blockGet, _blockStat, _dagGet,
                                         _dagResolve, _configGet, _configSet, _objectData,
                                         _objectNew, _objectGetLinks, _objectAddLink,
-                                         _objectGet)
+                                        _objectGet, _objectStat, _pinAdd, _pinRemove, _bootstrapList,
+                                        _bootstrapAdd)
 
 call :: ClientM a -> IO (Either ServantError a)
 call func = do 
@@ -211,3 +212,39 @@ objectGet key = do
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v 
+
+objectStat :: Text -> IO ()
+objectStat key = do 
+    res <- call $ _objectStat key
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v 
+
+pinAdd :: Text -> IO ()
+pinAdd path = do 
+    res <- call $ _pinAdd path
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v 
+
+pinRemove :: Text -> IO ()
+pinRemove path = do 
+    res <- call $ _pinRemove path
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+bootstrapAdd :: Text -> IO ()
+bootstrapAdd peerId = do 
+    res <- call $ _bootstrapAdd (Just peerId)
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+        
+bootstrapList :: IO ()
+bootstrapList = do 
+    res <- call $ _bootstrapList
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
