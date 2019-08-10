@@ -28,8 +28,8 @@ import           Network.Ipfs.Api.Api   (_cat, _ls, _refs, _refsLocal,
                                         _cidFormat, _blockGet, _blockStat, _dagGet,
                                         _dagResolve, _configGet, _configSet, _objectData,
                                         _objectNew, _objectGetLinks, _objectAddLink,
-                                        _objectGet, _objectStat, _pinAdd, _pinRemove, _bootstrapList,
-                                        _bootstrapAdd)
+                                        _objectGet, _objectStat, _pinAdd, _pinRemove,_bootstrapList, 
+                                        _bootstrapAdd, _bootstrapRM, _statsBw, _statsRepo, _version)
 
 call :: ClientM a -> IO (Either ServantError a)
 call func = do 
@@ -241,10 +241,37 @@ bootstrapAdd peerId = do
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v
 
-        
 bootstrapList :: IO ()
 bootstrapList = do 
     res <- call $ _bootstrapList
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+bootstrapRM :: Text -> IO ()
+bootstrapRM peerId = do 
+    res <- call $ _bootstrapRM  (Just peerId)
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+statsBw :: IO ()
+statsBw = do 
+    res <- call $ _statsBw  
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+statsRepo :: IO ()
+statsRepo = do 
+    res <- call $ _statsRepo  
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+version :: IO ()
+version = do 
+    res <- call $ _version  
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v

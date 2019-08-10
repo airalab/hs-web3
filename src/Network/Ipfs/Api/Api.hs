@@ -18,20 +18,23 @@
 
 module Network.Ipfs.Api.Api where
 
-import           Control.Arrow                    (left)
-import           Control.Error                    (fmapL)
+import           Control.Arrow                 (left)
+import           Control.Error                 (fmapL)
 import           Control.Monad
 import           Data.Aeson
 import           Data.Int
-import           Data.ByteString.Lazy             (toStrict)
+import           Data.ByteString.Lazy          (toStrict)
 import qualified Data.ByteString.Lazy.Char8()
+import qualified Data.HashMap.Strict           as H
+import           Data.Map (Map)
+import qualified Data.Map                      as Map
 import           Data.Proxy           
-import qualified Data.Text                        as TextS
-import qualified Data.Text.Encoding               as TextS
+import qualified Data.Text                     as TextS
+import qualified Data.Text.Encoding            as TextS
 import           Data.Typeable            
-import qualified Data.Vector                      as Vec (fromList,Vector)
+import qualified Data.Vector                   as Vec (fromList,Vector)
 import           Network.HTTP.Client()
-import qualified Network.HTTP.Media               as M ((//))
+import qualified Network.HTTP.Media            as M ((//))
 import           Servant.API
 import           Servant.Client
 
@@ -169,9 +172,39 @@ data ObjectStatObj = ObjectStatObj
     ,  numLinks       :: Int    
     }  deriving (Show)
 
-data PinObj = PinObj { pins  :: [String] } deriving (Show)
+data PinObj = WithoutProgress
+    { pins  :: [String] }  
+
+    | WithProgress
+    {  pins     :: [String]
+    ,  progress :: Int
+    } deriving (Show)
 
 data BootstrapObj = BootstrapObj { bootstrapPeers  :: [String] } deriving (Show)
+
+
+data StatsBwObj = StatsBwObj
+    {  rateIn   :: Double
+    ,  rateOut  :: Double
+    ,  totalIn  :: Int64
+    ,  totalOut :: Int64
+    }  deriving (Show)
+
+data StatsRepoObj = StatsRepoObj
+    {  numObjects  :: Int64
+    ,  repoPath    :: String
+    ,  repoSize    :: Int64
+    ,  storageMax  :: Int64
+    ,  repoVersion :: String
+    }  deriving (Show)
+
+data VersionObj = VersionObj
+    {  commit  :: String
+    ,  golang  :: String
+    ,  repo    :: String
+    ,  system  :: String
+    ,  version :: String
+    }  deriving (Show)
 
 instance FromJSON DirLink where
     parseJSON (Object o) =
@@ -355,17 +388,54 @@ instance FromJSON ObjectStatObj where
     parseJSON _ = mzero
 
 instance FromJSON PinObj where
-    parseJSON (Object o) =
-        PinObj  <$> o .: "Pins"
+    parseJSON (Object v) =
+        case H.lookup "Progress" v of
+            Just (_) -> WithProgress <$> v .: "Pins" 
+                                            <*> v .: "Progress"
+
+            Nothing -> 
+                case H.lookup "Pins" v of
+                      Just (_) -> WithoutProgress <$> v .: "Pins" 
+                      Nothing -> mzero
     
-    parseJSON _ = mzero    
+    parseJSON _ = mzero
 
 instance FromJSON BootstrapObj where
     parseJSON (Object o) =
         BootstrapObj  <$> o .: "Peers"
     
     parseJSON _ = mzero
-   
+
+instance FromJSON StatsBwObj where
+    parseJSON (Object o) =
+        StatsBwObj  <$> o .: "RateIn"
+                    <*> o .: "RateOut"
+                    <*> o .: "TotalIn"
+                    <*> o .: "TotalOut"
+    
+    parseJSON _ = mzero
+
+
+instance FromJSON StatsRepoObj where
+    parseJSON (Object o) =
+        StatsRepoObj  <$> o .: "NumObjects"
+                      <*> o .: "RepoPath"
+                      <*> o .: "RepoSize"
+                      <*> o .: "StorageMax"
+                      <*> o .: "Version"
+
+    parseJSON _ = mzero
+
+instance FromJSON VersionObj where
+    parseJSON (Object o) =
+        VersionObj  <$> o .: "Commit"
+                    <*> o .: "Golang"
+                    <*> o .: "Repo"
+                    <*> o .: "System"
+                    <*> o .: "Version"
+
+    parseJSON _ = mzero
+
 {--
 instance FromJSON RefsObj where
     parseJSON (Objecto o) =
@@ -422,6 +492,10 @@ type IpfsApi = "cat" :> Capture "cid" TextS.Text :> Get '[IpfsText] CatReturnTyp
             :<|> "pin" :> "rm" :> Capture "arg" TextS.Text :> Get '[JSON] PinObj 
             :<|> "bootstrap" :> "add" :> QueryParam "arg" TextS.Text :> Get '[JSON] BootstrapObj 
             :<|> "bootstrap" :> "list" :> Get '[JSON] BootstrapObj 
+            :<|> "bootstrap" :> "rm" :> QueryParam "arg" TextS.Text :> Get '[JSON] BootstrapObj 
+            :<|> "stats" :> "bw" :> Get '[JSON] StatsBwObj 
+            :<|> "stats" :> "repo" :> Get '[JSON] StatsRepoObj 
+            :<|> "version" :> Get '[JSON] VersionObj 
 
 ipfsApi :: Proxy IpfsApi
 ipfsApi =  Proxy
@@ -456,6 +530,10 @@ _pinAdd :: TextS.Text -> ClientM PinObj
 _pinRemove :: TextS.Text -> ClientM PinObj
 _bootstrapAdd ::Maybe TextS.Text -> ClientM BootstrapObj 
 _bootstrapList ::ClientM BootstrapObj 
+_bootstrapRM :: Maybe TextS.Text -> ClientM BootstrapObj 
+_statsBw ::ClientM StatsBwObj 
+_statsRepo ::ClientM StatsRepoObj 
+_version ::ClientM VersionObj 
 
 _cat :<|> _ls :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> 
   _bitswapStat :<|> _bitswapWL :<|> _bitswapLedger :<|> _bitswapReprovide :<|> 
@@ -463,4 +541,4 @@ _cat :<|> _ls :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|>
   _blockGet :<|> _blockStat :<|> _dagGet :<|> _dagResolve :<|> _configGet :<|> 
   _configSet :<|> _objectData :<|> _objectNew :<|> _objectGetLinks :<|> _objectAddLink :<|> 
   _objectGet :<|> _objectStat :<|> _pinAdd :<|> _pinRemove :<|> _bootstrapAdd :<|>
-  _bootstrapList = client ipfsApi
+  _bootstrapList :<|> _bootstrapRM :<|> _statsBw :<|> _statsRepo :<|> _version = client ipfsApi
