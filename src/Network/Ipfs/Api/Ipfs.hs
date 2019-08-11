@@ -29,7 +29,8 @@ import           Network.Ipfs.Api.Api   (_cat, _ls, _refs, _refsLocal,
                                         _dagResolve, _configGet, _configSet, _objectData,
                                         _objectNew, _objectGetLinks, _objectAddLink,
                                         _objectGet, _objectStat, _pinAdd, _pinRemove,_bootstrapList, 
-                                        _bootstrapAdd, _bootstrapRM, _statsBw, _statsRepo, _version)
+                                        _bootstrapAdd, _bootstrapRM, _statsBw, _statsRepo, _version,
+                                        _id, _idPeer, _dns, _shutdown)
 
 call :: ClientM a -> IO (Either ServantError a)
 call func = do 
@@ -275,3 +276,31 @@ version = do
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v
+
+id :: IO ()
+id = do 
+    res <- call $ _id  
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+idPeer :: Text -> IO ()
+idPeer peerId = do 
+    res <- call $ _idPeer peerId  
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+dns :: Text -> IO ()
+dns name = do 
+    res <- call $ _dns name  
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+shutdown :: IO ()
+shutdown = do 
+    res <- call $ _shutdown   
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print "The daemon has been shutdown, your welcome."

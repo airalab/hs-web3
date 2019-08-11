@@ -45,6 +45,7 @@ type GetReturnType = TextS.Text
 type BlockReturnType = TextS.Text
 type DagReturnType = TextS.Text
 type ObjectReturnType = TextS.Text
+type ShutdownReturnType = TextS.Text
 
 data DirLink = DirLink
     { name        :: String 
@@ -182,7 +183,6 @@ data PinObj = WithoutProgress
 
 data BootstrapObj = BootstrapObj { bootstrapPeers  :: [String] } deriving (Show)
 
-
 data StatsBwObj = StatsBwObj
     {  rateIn   :: Double
     ,  rateOut  :: Double
@@ -205,6 +205,16 @@ data VersionObj = VersionObj
     ,  system  :: String
     ,  version :: String
     }  deriving (Show)
+
+data IdObj = IdObj
+    {  addresses       :: [String]
+    ,  agentVersion    :: String
+    ,  id              :: String
+    ,  protocolVersion :: String
+    ,  publicKey       :: String
+    }  deriving (Show)
+
+data DnsObj = DnsObj { dnsPath  :: String } deriving (Show)
 
 instance FromJSON DirLink where
     parseJSON (Object o) =
@@ -436,6 +446,22 @@ instance FromJSON VersionObj where
 
     parseJSON _ = mzero
 
+instance FromJSON IdObj where
+    parseJSON (Object o) =
+        IdObj  <$> o .: "Addresses"
+               <*> o .: "AgentVersion"
+               <*> o .: "ID"
+               <*> o .: "ProtocolVersion"
+               <*> o .: "PublicKey"
+
+    parseJSON _ = mzero
+
+instance FromJSON DnsObj where
+    parseJSON (Object o) =
+        DnsObj  <$> o .: "Path"
+    
+    parseJSON _ = mzero
+
 {--
 instance FromJSON RefsObj where
     parseJSON (Objecto o) =
@@ -496,6 +522,10 @@ type IpfsApi = "cat" :> Capture "cid" TextS.Text :> Get '[IpfsText] CatReturnTyp
             :<|> "stats" :> "bw" :> Get '[JSON] StatsBwObj 
             :<|> "stats" :> "repo" :> Get '[JSON] StatsRepoObj 
             :<|> "version" :> Get '[JSON] VersionObj 
+            :<|> "id" :> Get '[JSON] IdObj 
+            :<|> "id" :> Capture "arg" TextS.Text :> Get '[JSON] IdObj 
+            :<|> "dns" :> Capture "arg" TextS.Text :> Get '[JSON] DnsObj 
+            :<|> "shutdown" :> Get '[JSON] NoContent 
 
 ipfsApi :: Proxy IpfsApi
 ipfsApi =  Proxy
@@ -529,11 +559,15 @@ _objectStat :: TextS.Text -> ClientM ObjectStatObj
 _pinAdd :: TextS.Text -> ClientM PinObj
 _pinRemove :: TextS.Text -> ClientM PinObj
 _bootstrapAdd ::Maybe TextS.Text -> ClientM BootstrapObj 
-_bootstrapList ::ClientM BootstrapObj 
+_bootstrapList :: ClientM BootstrapObj 
 _bootstrapRM :: Maybe TextS.Text -> ClientM BootstrapObj 
-_statsBw ::ClientM StatsBwObj 
-_statsRepo ::ClientM StatsRepoObj 
-_version ::ClientM VersionObj 
+_statsBw :: ClientM StatsBwObj 
+_statsRepo :: ClientM StatsRepoObj 
+_version :: ClientM VersionObj 
+_id :: ClientM IdObj 
+_idPeer :: TextS.Text -> ClientM IdObj 
+_dns :: TextS.Text -> ClientM DnsObj 
+_shutdown :: ClientM NoContent 
 
 _cat :<|> _ls :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> 
   _bitswapStat :<|> _bitswapWL :<|> _bitswapLedger :<|> _bitswapReprovide :<|> 
@@ -541,4 +575,5 @@ _cat :<|> _ls :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|>
   _blockGet :<|> _blockStat :<|> _dagGet :<|> _dagResolve :<|> _configGet :<|> 
   _configSet :<|> _objectData :<|> _objectNew :<|> _objectGetLinks :<|> _objectAddLink :<|> 
   _objectGet :<|> _objectStat :<|> _pinAdd :<|> _pinRemove :<|> _bootstrapAdd :<|>
-  _bootstrapList :<|> _bootstrapRM :<|> _statsBw :<|> _statsRepo :<|> _version = client ipfsApi
+  _bootstrapList :<|> _bootstrapRM :<|> _statsBw :<|> _statsRepo :<|> _version :<|> _id :<|> _idPeer :<|>
+  _dns :<|> _shutdown = client ipfsApi
