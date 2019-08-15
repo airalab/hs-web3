@@ -37,6 +37,7 @@ import           Network.HTTP.Client()
 import qualified Network.HTTP.Media            as M ((//))
 import           Servant.API
 import           Servant.Client
+--import           Servant.Multipart 
 
 
 type CatReturnType = TextS.Text
@@ -48,42 +49,43 @@ type ObjectReturnType = TextS.Text
 type ShutdownReturnType = TextS.Text
 
 data DirLink = DirLink
-    { name        :: String 
-    , hash        :: String
+    { name        :: TextS.Text 
+    , hash        :: TextS.Text
     , size        :: Int64
     , contentType :: Int
-    , target      :: String
+    , target      :: TextS.Text
     } deriving (Show)
  
 data DirObj = DirObj
-    { dirHash :: String
+    { dirHash :: TextS.Text
     , links   :: [DirLink] 
     } deriving (Show)
 
 data LsObj = LsObj {  objs :: [DirObj]  } deriving (Show)
 
 
-data RefsObj = RefsObj String deriving (Show)
-{--    {   error :: String
-    ,   ref   :: String 
+data RefsObj = RefsObj TextS.Text deriving (Show)
+{--    {   error :: TextS.Text
+    ,   ref   :: TextS.Text 
     } deriving (Show)
 --}
 
-data SwarmStreamObj = SwarmStreamObj {  protocol :: String  } deriving (Show)  
+data SwarmStreamObj = SwarmStreamObj {  protocol :: TextS.Text  } deriving (Show)  
 
 data SwarmPeerObj = SwarmPeerObj
-   {  address   :: String
+   {  address   :: TextS.Text
     , direction :: Int
-    , latency   :: String
-    , muxer     :: String
-    , peer      :: String
+    , latency   :: TextS.Text
+    , muxer     :: TextS.Text
+    , peer      :: TextS.Text
     , streams   :: Maybe [SwarmStreamObj]
    } deriving (Show)
 
-data SwarmObj = SwarmObj {  peers :: [SwarmPeerObj]  } deriving (Show)  
+data SwarmPeersObj = SwarmPeersObj {  peers :: [SwarmPeerObj]  } deriving (Show)  
 
+data SwarmObj = SwarmObj {  strings :: [TextS.Text]  } deriving (Show)  
 
-data WantlistObj = WantlistObj {  forSlash :: String } deriving (Show)
+data WantlistObj = WantlistObj {  forSlash :: TextS.Text } deriving (Show)
 
 data BitswapStatObj = BitswapStatObj
     {  blocksReceived   :: Int64
@@ -93,7 +95,7 @@ data BitswapStatObj = BitswapStatObj
     ,  dupBlksReceived  :: Int64
     ,  dupDataReceived  :: Int64
     ,  messagesReceived :: Int64
-    ,  bitswapPeers     :: [String]
+    ,  bitswapPeers     :: [TextS.Text]
     ,  provideBufLen    :: Int
     ,  wantlist         :: [WantlistObj]
     }  deriving (Show)
@@ -102,7 +104,7 @@ data BitswapWLObj = BitswapWLObj {  keys :: [WantlistObj] } deriving (Show)
 
 data BitswapLedgerObj = BitswapLedgerObj
     {  exchanged  :: Int64
-    ,  ledgerPeer :: String
+    ,  ledgerPeer :: TextS.Text
     ,  recv       :: Int64
     ,  sent       :: Int64
     ,  value      :: Double
@@ -110,57 +112,57 @@ data BitswapLedgerObj = BitswapLedgerObj
 
 data CidBasesObj = CidBasesObj
     { baseCode :: Int
-    , baseName :: String
+    , baseName :: TextS.Text
     } deriving (Show)
 
 data CidCodecsObj = CidCodecsObj
     { codecCode :: Int
-    , codecName :: String
+    , codecName :: TextS.Text
     } deriving (Show)
 
 data CidHashesObj = CidHashesObj
     { multihashCode :: Int
-    , multihashName :: String
+    , multihashName :: TextS.Text
     } deriving (Show)
 
 data CidObj = CidObj
-    { cidStr    :: String
-    , errorMsg  :: String
-    , formatted :: String
+    { cidStr    :: TextS.Text
+    , errorMsg  :: TextS.Text
+    , formatted :: TextS.Text
     } deriving (Show)
    
 data BlockStatObj = BlockStatObj
-    { key       :: String
+    { key       :: TextS.Text
     , blockSize :: Int
     } deriving (Show)
 
-data DagCidObj = DagCidObj {  cidSlash :: String } deriving (Show)
+data DagCidObj = DagCidObj {  cidSlash :: TextS.Text } deriving (Show)
 
 data DagResolveObj = DagResolveObj
     { cid     :: DagCidObj
-    , remPath :: String
+    , remPath :: TextS.Text
     } deriving (Show)
 
 data ConfigObj = ConfigObj
-    { configKey   :: String
-    , configValue :: String
+    { configKey   :: TextS.Text
+    , configValue :: TextS.Text
     } deriving (Show)
 
 data ObjectLinkObj = ObjectLinkObj
-    { linkHash  :: String
-    , linkName  :: String
+    { linkHash  :: TextS.Text
+    , linkName  :: TextS.Text
     , linkSize  :: Int64
     } deriving (Show)
 
-data ObjectNewObj = ObjectNewObj { newObjectHash  :: String } deriving (Show)
+data ObjectNewObj = ObjectNewObj { newObjectHash  :: TextS.Text } deriving (Show)
 
 data ObjectLinksObj = ObjectLinksObj
-    { objectHash  :: String
+    { objectHash  :: TextS.Text
     , objectLinks :: [ObjectLinkObj]   
     } deriving (Show)
 
 data ObjectGetObj = ObjectGetObj
-    { objectName     :: String
+    { objectName     :: TextS.Text
     , objectGetLinks :: [ObjectLinkObj]   
     } deriving (Show)
 
@@ -168,20 +170,20 @@ data ObjectStatObj = ObjectStatObj
     {  objBlockSize   :: Int
     ,  cumulativeSize :: Int
     ,  dataSize       :: Int
-    ,  objHash        :: String
+    ,  objHash        :: TextS.Text
     ,  linksSize      :: Int
     ,  numLinks       :: Int    
     }  deriving (Show)
 
 data PinObj = WithoutProgress
-    { pins  :: [String] }  
+    { pins  :: [TextS.Text] }  
 
     | WithProgress
-    {  pins     :: [String]
+    {  pins     :: [TextS.Text]
     ,  progress :: Int
     } deriving (Show)
 
-data BootstrapObj = BootstrapObj { bootstrapPeers  :: [String] } deriving (Show)
+data BootstrapObj = BootstrapObj { bootstrapPeers  :: [TextS.Text] } deriving (Show)
 
 data StatsBwObj = StatsBwObj
     {  rateIn   :: Double
@@ -192,29 +194,29 @@ data StatsBwObj = StatsBwObj
 
 data StatsRepoObj = StatsRepoObj
     {  numObjects  :: Int64
-    ,  repoPath    :: String
+    ,  repoPath    :: TextS.Text
     ,  repoSize    :: Int64
     ,  storageMax  :: Int64
-    ,  repoVersion :: String
+    ,  repoVersion :: TextS.Text
     }  deriving (Show)
 
 data VersionObj = VersionObj
-    {  commit  :: String
-    ,  golang  :: String
-    ,  repo    :: String
-    ,  system  :: String
-    ,  version :: String
+    {  commit  :: TextS.Text
+    ,  golang  :: TextS.Text
+    ,  repo    :: TextS.Text
+    ,  system  :: TextS.Text
+    ,  version :: TextS.Text
     }  deriving (Show)
 
 data IdObj = IdObj
-    {  addresses       :: [String]
-    ,  agentVersion    :: String
-    ,  id              :: String
-    ,  protocolVersion :: String
-    ,  publicKey       :: String
+    {  addresses       :: [TextS.Text]
+    ,  agentVersion    :: TextS.Text
+    ,  id              :: TextS.Text
+    ,  protocolVersion :: TextS.Text
+    ,  publicKey       :: TextS.Text
     }  deriving (Show)
 
-data DnsObj = DnsObj { dnsPath  :: String } deriving (Show)
+data DnsObj = DnsObj { dnsPath  :: TextS.Text } deriving (Show)
 
 instance FromJSON DirLink where
     parseJSON (Object o) =
@@ -257,12 +259,18 @@ instance FromJSON SwarmPeerObj where
     
     parseJSON _ = mzero
 
-instance FromJSON SwarmObj where
+instance FromJSON SwarmPeersObj where
     parseJSON (Object o) =
-        SwarmObj  <$> o .: "Peers"
+        SwarmPeersObj  <$> o .: "Peers"
 
     parseJSON _ = mzero
 
+
+instance FromJSON SwarmObj where
+    parseJSON (Object o) =
+        SwarmObj  <$> o .: "Strings"
+    
+    parseJSON _ = mzero
 
 instance FromJSON WantlistObj where
     parseJSON (Object o) =
@@ -484,13 +492,16 @@ instance MimeUnrender IpfsText TextS.Text where
 instance {-# OVERLAPPING #-} MimeUnrender JSON (Vec.Vector RefsObj) where
   mimeUnrender _ bs = do
     t <- fmapL show (TextS.decodeUtf8' (toStrict bs))
-    pure (Vec.fromList (map RefsObj (lines $ TextS.unpack t)))    
+    pure (Vec.fromList (map RefsObj (map TextS.pack (lines $ TextS.unpack t))))    
 
 type IpfsApi = "cat" :> Capture "cid" TextS.Text :> Get '[IpfsText] CatReturnType
             :<|> "ls" :> Capture "cid" TextS.Text :> Get '[JSON] LsObj
             :<|> "refs" :> Capture "cid" TextS.Text :> Get '[JSON] (Vec.Vector RefsObj)
             :<|> "refs" :> "local" :> Get '[JSON] (Vec.Vector RefsObj)
-            :<|> "swarm" :> "peers" :> Get '[JSON] SwarmObj
+            :<|> "swarm" :> "peers" :> Get '[JSON] SwarmPeersObj
+            :<|> "swarm" :> "connect" :> QueryParam "arg" TextS.Text :> Get '[JSON] SwarmObj 
+            :<|> "swarm" :> "disconnect" :> QueryParam "arg" TextS.Text :> Get '[JSON] SwarmObj 
+            :<|> "swarm" :> "filters" :> "add" :> QueryParam "arg" TextS.Text :> Get '[JSON] SwarmObj 
             :<|> "bitswap" :> "stat" :> Get '[JSON] BitswapStatObj
             :<|> "bitswap" :> "wantlist" :> Get '[JSON] BitswapWLObj
             :<|> "bitswap" :> "ledger" :> Capture "peerId" TextS.Text :> Get '[JSON] BitswapLedgerObj
@@ -534,7 +545,10 @@ _cat :: TextS.Text -> ClientM CatReturnType
 _ls :: TextS.Text -> ClientM LsObj
 _refs :: TextS.Text -> ClientM (Vec.Vector RefsObj)
 _refsLocal :: ClientM (Vec.Vector RefsObj) 
-_swarmPeers :: ClientM SwarmObj 
+_swarmPeers :: ClientM SwarmPeersObj 
+_swarmConnect :: Maybe TextS.Text -> ClientM SwarmObj 
+_swarmDisconnect :: Maybe TextS.Text -> ClientM SwarmObj 
+_swarmFilterAdd :: Maybe TextS.Text -> ClientM SwarmObj 
 _bitswapStat :: ClientM BitswapStatObj 
 _bitswapWL :: ClientM BitswapWLObj 
 _bitswapLedger :: TextS.Text -> ClientM BitswapLedgerObj 
@@ -569,8 +583,8 @@ _idPeer :: TextS.Text -> ClientM IdObj
 _dns :: TextS.Text -> ClientM DnsObj 
 _shutdown :: ClientM NoContent 
 
-_cat :<|> _ls :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> 
-  _bitswapStat :<|> _bitswapWL :<|> _bitswapLedger :<|> _bitswapReprovide :<|> 
+_cat :<|> _ls :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> _swarmConnect :<|> _swarmDisconnect :<|>
+  _swarmFilterAdd :<|> _bitswapStat :<|> _bitswapWL :<|> _bitswapLedger :<|> _bitswapReprovide :<|> 
   _cidBases :<|> _cidCodecs :<|> _cidHashes :<|> _cidBase32 :<|> _cidFormat :<|> 
   _blockGet :<|> _blockStat :<|> _dagGet :<|> _dagResolve :<|> _configGet :<|> 
   _configSet :<|> _objectData :<|> _objectNew :<|> _objectGetLinks :<|> _objectAddLink :<|> 

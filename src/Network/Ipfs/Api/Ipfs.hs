@@ -22,15 +22,15 @@ import           Network.HTTP.Client   (newManager, defaultManagerSettings)
 import           Servant.Client
 
 import           Network.Ipfs.Api.Api   (_cat, _ls, _refs, _refsLocal, 
-                                        _swarmPeers, _bitswapStat, _bitswapWL,
-                                        _bitswapLedger, _bitswapReprovide,
+                                        _swarmPeers, _swarmConnect,_swarmDisconnect, _swarmFilterAdd,
+                                         _bitswapStat, _bitswapWL, _bitswapLedger, _bitswapReprovide,
                                         _cidBases, _cidCodecs, _cidHashes, _cidBase32,
                                         _cidFormat, _blockGet, _blockStat, _dagGet,
                                         _dagResolve, _configGet, _configSet, _objectData,
                                         _objectNew, _objectGetLinks, _objectAddLink,
                                         _objectGet, _objectStat, _pinAdd, _pinRemove,_bootstrapList, 
                                         _bootstrapAdd, _bootstrapRM, _statsBw, _statsRepo, _version,
-                                        _id, _idPeer, _dns, _shutdown)
+                                        _id, _idPeer, _dns, _shutdown,)
 
 call :: ClientM a -> IO (Either ServantError a)
 call func = do 
@@ -72,6 +72,30 @@ swarmPeers = do
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v        
+
+-- | peerId has to be of the format - /ipfs/id        
+swarmConnect :: Text -> IO ()
+swarmConnect peerId = do 
+    res <- call $ _swarmConnect (Just peerId)  
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+-- | peerId has to be of the format - /ipfs/id        
+swarmDisconnect :: Text -> IO ()
+swarmDisconnect peerId = do 
+    res <- call $ _swarmDisconnect (Just peerId)  
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+-- | peerId has to be of the format - /ip4/{IP of peer}/ipcidr/16        
+swarmFilterAdd :: Text -> IO ()
+swarmFilterAdd filter = do 
+    res <- call $ _swarmFilterAdd (Just filter)  
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
 
 bitswapStat :: IO ()
 bitswapStat = do 
@@ -303,4 +327,4 @@ shutdown = do
     res <- call $ _shutdown   
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
-        Right v -> print "The daemon has been shutdown, your welcome."
+        Right _ -> print "The daemon has been shutdown, your welcome."
