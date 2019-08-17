@@ -17,14 +17,17 @@
 
 module Network.Ipfs.Api.Ipfs where
 
-import           Data.Text                        as TextS
+import qualified Codec.Archive.Tar as Tar
+import           Data.Text                     as TextS
+import qualified Data.Text.Encoding            as TextS
+import qualified Data.ByteString.Lazy          as BS 
 import           Network.HTTP.Client   (newManager, defaultManagerSettings)
 import           Servant.Client
 
-import           Network.Ipfs.Api.Api   (_cat, _ls, _refs, _refsLocal, 
-                                        _swarmPeers, _swarmConnect,_swarmDisconnect, _swarmFilterAdd,
-                                         _bitswapStat, _bitswapWL, _bitswapLedger, _bitswapReprovide,
-                                        _cidBases, _cidCodecs, _cidHashes, _cidBase32,
+import           Network.Ipfs.Api.Api   (_cat, _ls, _get, _refs, _refsLocal, _swarmPeers, _swarmConnect,
+                                        _swarmDisconnect, _swarmFilterAdd, _swarmFilters,
+                                        _swarmFilterRm, _bitswapStat, _bitswapWL, _bitswapLedger,
+                                        _bitswapReprovide, _cidBases, _cidCodecs, _cidHashes, _cidBase32,
                                         _cidFormat, _blockGet, _blockStat, _dagGet,
                                         _dagResolve, _configGet, _configSet, _objectData,
                                         _objectNew, _objectGetLinks, _objectAddLink,
@@ -51,7 +54,14 @@ ls hash = do
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v
-        
+
+get :: Text -> IO ()
+get hash = do 
+    res <- call $ _get hash
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v ->  Tar.unpack "getResponseDirectory" . Tar.read $ BS.fromStrict $ TextS.encodeUtf8 v
+
 refs :: Text -> IO ()
 refs hash = do 
     res <- call $ _refs hash
@@ -89,13 +99,27 @@ swarmDisconnect peerId = do
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v
 
--- | peerId has to be of the format - /ip4/{IP of peer}/ipcidr/16        
-swarmFilterAdd :: Text -> IO ()
-swarmFilterAdd filter = do 
-    res <- call $ _swarmFilterAdd (Just filter)  
+swarmFilters :: IO ()
+swarmFilters = do 
+    res <- call _swarmFilters
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v
+
+-- | peerId has to be of the format - /ip4/{IP addr of peer}/ipcidr/{ip network prefix}       
+swarmFilterAdd :: Text -> IO ()
+swarmFilterAdd filterParam = do 
+    res <- call $ _swarmFilterAdd (Just filterParam)  
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+swarmFilterRm :: Text -> IO ()
+swarmFilterRm filterParam = do 
+    res <- call $ _swarmFilterRm (Just filterParam)  
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v  
 
 bitswapStat :: IO ()
 bitswapStat = do 

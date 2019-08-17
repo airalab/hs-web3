@@ -494,14 +494,17 @@ instance {-# OVERLAPPING #-} MimeUnrender JSON (Vec.Vector RefsObj) where
     t <- fmapL show (TextS.decodeUtf8' (toStrict bs))
     pure (Vec.fromList (map RefsObj (map TextS.pack (lines $ TextS.unpack t))))    
 
-type IpfsApi = "cat" :> Capture "cid" TextS.Text :> Get '[IpfsText] CatReturnType
-            :<|> "ls" :> Capture "cid" TextS.Text :> Get '[JSON] LsObj
-            :<|> "refs" :> Capture "cid" TextS.Text :> Get '[JSON] (Vec.Vector RefsObj)
+type IpfsApi = "cat" :> Capture "arg" TextS.Text :> Get '[IpfsText] CatReturnType
+            :<|> "ls" :> Capture "arg" TextS.Text :> Get '[JSON] LsObj
+            :<|> "get" :> Capture "arg" TextS.Text :> Get '[IpfsText] GetReturnType
+            :<|> "refs" :> Capture "arg" TextS.Text :> Get '[JSON] (Vec.Vector RefsObj)
             :<|> "refs" :> "local" :> Get '[JSON] (Vec.Vector RefsObj)
             :<|> "swarm" :> "peers" :> Get '[JSON] SwarmPeersObj
             :<|> "swarm" :> "connect" :> QueryParam "arg" TextS.Text :> Get '[JSON] SwarmObj 
             :<|> "swarm" :> "disconnect" :> QueryParam "arg" TextS.Text :> Get '[JSON] SwarmObj 
+            :<|> "swarm" :> "filters" :> Get '[JSON] SwarmObj
             :<|> "swarm" :> "filters" :> "add" :> QueryParam "arg" TextS.Text :> Get '[JSON] SwarmObj 
+            :<|> "swarm" :> "filters" :> "rm" :> QueryParam "arg" TextS.Text :> Get '[JSON] SwarmObj 
             :<|> "bitswap" :> "stat" :> Get '[JSON] BitswapStatObj
             :<|> "bitswap" :> "wantlist" :> Get '[JSON] BitswapWLObj
             :<|> "bitswap" :> "ledger" :> Capture "peerId" TextS.Text :> Get '[JSON] BitswapLedgerObj
@@ -543,12 +546,15 @@ ipfsApi =  Proxy
 
 _cat :: TextS.Text -> ClientM CatReturnType
 _ls :: TextS.Text -> ClientM LsObj
+_get :: TextS.Text -> ClientM GetReturnType
 _refs :: TextS.Text -> ClientM (Vec.Vector RefsObj)
 _refsLocal :: ClientM (Vec.Vector RefsObj) 
 _swarmPeers :: ClientM SwarmPeersObj 
 _swarmConnect :: Maybe TextS.Text -> ClientM SwarmObj 
 _swarmDisconnect :: Maybe TextS.Text -> ClientM SwarmObj 
+_swarmFilters :: ClientM SwarmObj 
 _swarmFilterAdd :: Maybe TextS.Text -> ClientM SwarmObj 
+_swarmFilterRm :: Maybe TextS.Text -> ClientM SwarmObj 
 _bitswapStat :: ClientM BitswapStatObj 
 _bitswapWL :: ClientM BitswapWLObj 
 _bitswapLedger :: TextS.Text -> ClientM BitswapLedgerObj 
@@ -583,9 +589,9 @@ _idPeer :: TextS.Text -> ClientM IdObj
 _dns :: TextS.Text -> ClientM DnsObj 
 _shutdown :: ClientM NoContent 
 
-_cat :<|> _ls :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> _swarmConnect :<|> _swarmDisconnect :<|>
-  _swarmFilterAdd :<|> _bitswapStat :<|> _bitswapWL :<|> _bitswapLedger :<|> _bitswapReprovide :<|> 
-  _cidBases :<|> _cidCodecs :<|> _cidHashes :<|> _cidBase32 :<|> _cidFormat :<|> 
+_cat :<|> _ls :<|> _get :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> _swarmConnect :<|> _swarmDisconnect :<|>
+  _swarmFilters :<|> _swarmFilterAdd :<|> _swarmFilterRm :<|>  _bitswapStat :<|> _bitswapWL :<|> _bitswapLedger :<|> 
+  _bitswapReprovide :<|> _cidBases :<|> _cidCodecs :<|> _cidHashes :<|> _cidBase32 :<|> _cidFormat :<|> 
   _blockGet :<|> _blockStat :<|> _dagGet :<|> _dagResolve :<|> _configGet :<|> 
   _configSet :<|> _objectData :<|> _objectNew :<|> _objectGetLinks :<|> _objectAddLink :<|> 
   _objectGet :<|> _objectStat :<|> _pinAdd :<|> _pinRemove :<|> _bootstrapAdd :<|>
