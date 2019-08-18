@@ -26,8 +26,7 @@ import           Data.Int
 import           Data.ByteString.Lazy          (toStrict)
 import qualified Data.ByteString.Lazy.Char8()
 import qualified Data.HashMap.Strict           as H
-import           Data.Map (Map)
-import qualified Data.Map                      as Map
+import           Data.Map()                    
 import           Data.Proxy           
 import qualified Data.Text                     as TextS
 import qualified Data.Text.Encoding            as TextS
@@ -131,7 +130,7 @@ data CidObj = CidObj
     , formatted :: TextS.Text
     } deriving (Show)
    
-data BlockStatObj = BlockStatObj
+data BlockObj = BlockObj
     { key       :: TextS.Text
     , blockSize :: Int
     } deriving (Show)
@@ -339,10 +338,10 @@ instance FromJSON CidObj where
     
     parseJSON _ = mzero
 
-instance FromJSON BlockStatObj where
+instance FromJSON BlockObj where
     parseJSON (Object o) =
-        BlockStatObj  <$> o .: "Key"
-                      <*> o .: "Size"
+        BlockObj  <$> o .: "Key"
+                  <*> o .: "Size"
     
     parseJSON _ = mzero
 
@@ -515,7 +514,7 @@ type IpfsApi = "cat" :> Capture "arg" TextS.Text :> Get '[IpfsText] CatReturnTyp
             :<|> "cid" :> "base32" :> Capture "cid" TextS.Text :> Get '[JSON] CidObj
             :<|> "cid" :> "format" :> Capture "cid" TextS.Text :> Get '[JSON] CidObj
             :<|> "block" :> "get" :> Capture "key" TextS.Text :> Get '[IpfsText] BlockReturnType
-            :<|> "block" :> "stat" :> Capture "key" TextS.Text :> Get '[JSON] BlockStatObj
+            :<|> "block" :> "stat" :> Capture "key" TextS.Text :> Get '[JSON] BlockObj
             :<|> "dag" :> "get" :> Capture "ref" TextS.Text :> Get '[JSON] DagReturnType 
             :<|> "dag" :> "resolve" :> Capture "ref" TextS.Text :> Get '[JSON] DagResolveObj 
             :<|> "config" :> Capture "ref" TextS.Text :> Get '[JSON] ConfigObj 
@@ -565,7 +564,7 @@ _cidHashes :: ClientM [CidHashesObj]
 _cidBase32 :: TextS.Text -> ClientM CidObj  
 _cidFormat :: TextS.Text -> ClientM CidObj
 _blockGet :: TextS.Text -> ClientM BlockReturnType
-_blockStat :: TextS.Text -> ClientM BlockStatObj
+_blockStat :: TextS.Text -> ClientM BlockObj
 _dagGet :: TextS.Text -> ClientM DagReturnType
 _dagResolve :: TextS.Text -> ClientM DagResolveObj
 _configGet :: TextS.Text -> ClientM ConfigObj

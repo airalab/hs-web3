@@ -17,28 +17,42 @@
 
 module Network.Ipfs.Api.Ipfs where
 
-import qualified Codec.Archive.Tar as Tar
-import           Data.Text                     as TextS
-import qualified Data.Text.Encoding            as TextS
-import qualified Data.ByteString.Lazy          as BS 
-import           Network.HTTP.Client   (newManager, defaultManagerSettings)
+import qualified Codec.Archive.Tar            as Tar
+import           Data.Aeson                   (decode)
+import           Data.Text                    as TextS
+import qualified Data.Text.Encoding           as TextS
+import qualified Data.ByteString.Lazy         as BS (ByteString, fromStrict) 
+import           Network.HTTP.Client          as Net  hiding (Proxy)
+import           Network.HTTP.Client.MultipartFormData
 import           Servant.Client
 
-import           Network.Ipfs.Api.Api   (_cat, _ls, _get, _refs, _refsLocal, _swarmPeers, _swarmConnect,
-                                        _swarmDisconnect, _swarmFilterAdd, _swarmFilters,
-                                        _swarmFilterRm, _bitswapStat, _bitswapWL, _bitswapLedger,
-                                        _bitswapReprovide, _cidBases, _cidCodecs, _cidHashes, _cidBase32,
-                                        _cidFormat, _blockGet, _blockStat, _dagGet,
-                                        _dagResolve, _configGet, _configSet, _objectData,
-                                        _objectNew, _objectGetLinks, _objectAddLink,
-                                        _objectGet, _objectStat, _pinAdd, _pinRemove,_bootstrapList, 
-                                        _bootstrapAdd, _bootstrapRM, _statsBw, _statsRepo, _version,
-                                        _id, _idPeer, _dns, _shutdown,)
+import           Network.Ipfs.Api.Api         (_cat, _ls, _get, _refs, _refsLocal, _swarmPeers, _swarmConnect,
+                                              _swarmDisconnect, _swarmFilterAdd, _swarmFilters,
+                                              _swarmFilterRm, _bitswapStat, _bitswapWL, _bitswapLedger,
+                                              _bitswapReprovide, _cidBases, _cidCodecs, _cidHashes, _cidBase32,
+                                              _cidFormat, _blockGet, _blockStat, _dagGet,
+                                              _dagResolve, _configGet, _configSet, _objectData,
+                                              _objectNew, _objectGetLinks, _objectAddLink,
+                                              _objectGet, _objectStat, _pinAdd, _pinRemove,_bootstrapList, 
+                                              _bootstrapAdd, _bootstrapRM, _statsBw, _statsRepo, _version,
+                                              _id, _idPeer, _dns, _shutdown, BlockObj)
+
+import           Network.Ipfs.Api.Multipart   (AddObj)
 
 call :: ClientM a -> IO (Either ServantError a)
 call func = do 
     manager' <- newManager defaultManagerSettings
     runClientM func (mkClientEnv manager' (BaseUrl Http "localhost" 5001 "/api/v0"))
+
+multipartCall ::  Text -> Text -> IO BS.ByteString
+multipartCall uri filePath = do
+    reqManager <- newManager defaultManagerSettings
+    req <- parseRequest $ TextS.unpack uri
+    resp <- flip httpLbs reqManager =<< formDataBody form req
+    return (Net.responseBody resp)
+    
+    where form = [ partFileSource "file" $ TextS.unpack filePath ]
+
 
 
 cat :: Text -> IO ()
@@ -47,7 +61,12 @@ cat hash = do
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v
-        
+
+add :: Text -> IO()
+add filePath = do 
+    respBody <- multipartCall (TextS.pack "http://localhost:5001/api/v0/add") filePath 
+    print (decode (respBody)  :: Maybe AddObj)
+    
 ls :: Text -> IO ()
 ls hash = do 
     res <- call $ _ls hash
@@ -191,6 +210,10 @@ blockGet key = do
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v
         
+blockPut :: Text -> IO()
+blockPut filePath = do 
+    respBody <- multipartCall (TextS.pack "http://localhost:5001/api/v0/block/put") filePath 
+    print (decode (respBody)  :: Maybe BlockObj)
         
 blockStat :: Text -> IO ()
 blockStat key = do 
@@ -270,15 +293,15 @@ objectStat key = do
         Right v -> print v 
 
 pinAdd :: Text -> IO ()
-pinAdd path = do 
-    res <- call $ _pinAdd path
+pinAdd pinPath = do 
+    res <- call $ _pinAdd pinPath
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v 
 
 pinRemove :: Text -> IO ()
-pinRemove path = do 
-    res <- call $ _pinRemove path
+pinRemove pinPath = do 
+    res <- call $ _pinRemove pinPath
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v
