@@ -142,6 +142,10 @@ data DagResolveObj = DagResolveObj
     , remPath :: TextS.Text
     } deriving (Show)
 
+data DagPutObj = DagPutObj
+    { putCid     :: DagCidObj
+    } deriving (Show)
+
 data ConfigObj = ConfigObj
     { configKey   :: TextS.Text
     , configValue :: TextS.Text
@@ -153,7 +157,7 @@ data ObjectLinkObj = ObjectLinkObj
     , linkSize  :: Int64
     } deriving (Show)
 
-data ObjectNewObj = ObjectNewObj { newObjectHash  :: TextS.Text } deriving (Show)
+data ObjectObj = ObjectObj { newObjectHash  :: TextS.Text } deriving (Show)
 
 data ObjectLinksObj = ObjectLinksObj
     { objectHash  :: TextS.Text
@@ -358,6 +362,12 @@ instance FromJSON DagResolveObj where
     
     parseJSON _ = mzero
 
+instance FromJSON DagPutObj where
+    parseJSON (Object o) =
+        DagPutObj  <$> o .: "Cid"
+    
+    parseJSON _ = mzero
+
 instance FromJSON ConfigObj where
     parseJSON (Object o) =
         ConfigObj  <$> o .: "Key"
@@ -373,9 +383,9 @@ instance FromJSON ObjectLinkObj where
     
     parseJSON _ = mzero
 
-instance FromJSON ObjectNewObj where
+instance FromJSON ObjectObj where
     parseJSON (Object o) =
-        ObjectNewObj  <$> o .: "Hash"
+        ObjectObj  <$> o .: "Hash"
     
     parseJSON _ = mzero
 
@@ -520,7 +530,7 @@ type IpfsApi = "cat" :> Capture "arg" TextS.Text :> Get '[IpfsText] CatReturnTyp
             :<|> "config" :> Capture "ref" TextS.Text :> Get '[JSON] ConfigObj 
             :<|> "config" :> Capture "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] ConfigObj 
             :<|> "object" :> "data" :> Capture "ref" TextS.Text :> Get '[IpfsText] ObjectReturnType
-            :<|> "object" :> "new" :> Get '[JSON] ObjectNewObj 
+            :<|> "object" :> "new" :> Get '[JSON] ObjectObj 
             :<|> "object" :> "links" :>  Capture "ref" TextS.Text :> Get '[JSON] ObjectLinksObj  
             :<|> "object" :> "patch" :> "add-link" :> Capture "arg" TextS.Text 
                 :> QueryParam "arg" TextS.Text :> QueryParam "arg" TextS.Text
@@ -570,7 +580,7 @@ _dagResolve :: TextS.Text -> ClientM DagResolveObj
 _configGet :: TextS.Text -> ClientM ConfigObj
 _configSet :: TextS.Text -> Maybe TextS.Text -> ClientM ConfigObj
 _objectData :: TextS.Text -> ClientM ObjectReturnType
-_objectNew :: ClientM ObjectNewObj
+_objectNew :: ClientM ObjectObj
 _objectGetLinks :: TextS.Text -> ClientM ObjectLinksObj
 _objectAddLink :: TextS.Text -> Maybe TextS.Text -> Maybe TextS.Text -> ClientM ObjectLinksObj
 _objectGet :: TextS.Text -> ClientM ObjectGetObj

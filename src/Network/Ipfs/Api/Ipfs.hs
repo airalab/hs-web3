@@ -35,7 +35,7 @@ import           Network.Ipfs.Api.Api         (_cat, _ls, _get, _refs, _refsLoca
                                               _objectNew, _objectGetLinks, _objectAddLink,
                                               _objectGet, _objectStat, _pinAdd, _pinRemove,_bootstrapList, 
                                               _bootstrapAdd, _bootstrapRM, _statsBw, _statsRepo, _version,
-                                              _id, _idPeer, _dns, _shutdown, BlockObj)
+                                              _id, _idPeer, _dns, _shutdown, BlockObj, DagPutObj, ObjectObj)
 
 import           Network.Ipfs.Api.Multipart   (AddObj)
 
@@ -236,6 +236,11 @@ dagResolve ref = do
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v 
 
+dagPut :: Text -> IO()
+dagPut filePath = do 
+    respBody <- multipartCall (TextS.pack "http://localhost:5001/api/v0/dag/put") filePath 
+    print (decode (respBody)  :: Maybe DagPutObj)
+
 configGet :: Text -> IO ()
 configGet key = do 
     res <- call $ _configGet key
@@ -249,6 +254,11 @@ configSet key value = do
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v 
+
+configReplace :: Text -> IO()
+configReplace filePath = do 
+    respBody <- multipartCall (TextS.pack "http://localhost:5001/api/v0/config/replace") filePath 
+    print (decode (respBody)  :: Maybe String)
 
 objectData :: Text -> IO ()
 objectData key = do 
@@ -284,6 +294,11 @@ objectGet key = do
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v 
+
+objectPut :: Text -> IO()
+objectPut filePath = do 
+    respBody <- multipartCall (TextS.pack "http://localhost:5001/api/v0/object/put") filePath 
+    print (decode (respBody)  :: Maybe ObjectObj)        
 
 objectStat :: Text -> IO ()
 objectStat key = do 
