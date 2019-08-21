@@ -45,7 +45,6 @@ type GetReturnType = TextS.Text
 type BlockReturnType = TextS.Text
 type DagReturnType = TextS.Text
 type ObjectReturnType = TextS.Text
-type ShutdownReturnType = TextS.Text
 
 data DirLink = DirLink
     { name        :: TextS.Text 
@@ -177,6 +176,17 @@ data ObjectStatObj = ObjectStatObj
     ,  linksSize      :: Int
     ,  numLinks       :: Int    
     }  deriving (Show)
+
+data DiffObj = DiffObj {  diffSlash :: TextS.Text } deriving (Show)
+
+data ObjectChangeObj = ObjectChangeObj
+    { after    :: Maybe DiffObj 
+    , before   :: DiffObj
+    , path     :: TextS.Text
+    , diffType :: Int
+    } deriving (Show)
+
+data ObjectDiffObj = ObjectDiffObj {  changes :: [ObjectChangeObj] } deriving (Show)
 
 data PinObj = WithoutProgress
     { pins  :: [TextS.Text] }  
@@ -414,6 +424,27 @@ instance FromJSON ObjectStatObj where
     
     parseJSON _ = mzero
 
+instance FromJSON ObjectChangeObj where
+    parseJSON (Object o) =
+        ObjectChangeObj  <$> o .: "After"
+                         <*> o .: "Before"
+                         <*> o .: "Path"
+                         <*> o .: "Type"
+
+    parseJSON _ = mzero
+
+instance FromJSON DiffObj where
+    parseJSON (Object o) =
+        DiffObj  <$> o .: "/"
+
+    parseJSON _ = mzero
+
+instance FromJSON ObjectDiffObj where
+    parseJSON (Object o) =
+        ObjectDiffObj  <$> o .: "Changes"
+
+    parseJSON _ = mzero
+
 instance FromJSON PinObj where
     parseJSON (Object v) =
         case H.lookup "Progress" v of
@@ -536,6 +567,7 @@ type IpfsApi = "cat" :> Capture "arg" TextS.Text :> Get '[IpfsText] CatReturnTyp
                 :> QueryParam "arg" TextS.Text :> QueryParam "arg" TextS.Text
                 :> Get '[JSON] ObjectLinksObj 
             :<|> "object" :> "get" :> Capture "arg" TextS.Text :> Get '[JSON] ObjectGetObj 
+            :<|> "object" :> "diff" :> Capture "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] ObjectDiffObj 
             :<|> "object" :> "stat" :> Capture "arg" TextS.Text :> Get '[JSON] ObjectStatObj 
             :<|> "pin" :> "add" :> Capture "arg" TextS.Text :> Get '[JSON] PinObj 
             :<|> "pin" :> "rm" :> Capture "arg" TextS.Text :> Get '[JSON] PinObj 
@@ -584,6 +616,7 @@ _objectNew :: ClientM ObjectObj
 _objectGetLinks :: TextS.Text -> ClientM ObjectLinksObj
 _objectAddLink :: TextS.Text -> Maybe TextS.Text -> Maybe TextS.Text -> ClientM ObjectLinksObj
 _objectGet :: TextS.Text -> ClientM ObjectGetObj
+_objectDiff :: TextS.Text -> Maybe TextS.Text -> ClientM ObjectDiffObj
 _objectStat :: TextS.Text -> ClientM ObjectStatObj
 _pinAdd :: TextS.Text -> ClientM PinObj
 _pinRemove :: TextS.Text -> ClientM PinObj
@@ -601,8 +634,8 @@ _shutdown :: ClientM NoContent
 _cat :<|> _ls :<|> _get :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> _swarmConnect :<|> _swarmDisconnect :<|>
   _swarmFilters :<|> _swarmFilterAdd :<|> _swarmFilterRm :<|>  _bitswapStat :<|> _bitswapWL :<|> _bitswapLedger :<|> 
   _bitswapReprovide :<|> _cidBases :<|> _cidCodecs :<|> _cidHashes :<|> _cidBase32 :<|> _cidFormat :<|> 
-  _blockGet :<|> _blockStat :<|> _dagGet :<|> _dagResolve :<|> _configGet :<|> 
+  _blockGet  :<|> _blockStat :<|> _dagGet :<|> _dagResolve :<|> _configGet :<|> 
   _configSet :<|> _objectData :<|> _objectNew :<|> _objectGetLinks :<|> _objectAddLink :<|> 
-  _objectGet :<|> _objectStat :<|> _pinAdd :<|> _pinRemove :<|> _bootstrapAdd :<|>
+  _objectGet :<|> _objectDiff :<|> _objectStat :<|> _pinAdd :<|> _pinRemove :<|> _bootstrapAdd :<|>
   _bootstrapList :<|> _bootstrapRM :<|> _statsBw :<|> _statsRepo :<|> _version :<|> _id :<|> _idPeer :<|>
   _dns :<|> _shutdown = client ipfsApi

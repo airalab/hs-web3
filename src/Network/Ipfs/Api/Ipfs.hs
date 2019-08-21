@@ -21,16 +21,18 @@ import qualified Codec.Archive.Tar            as Tar
 import           Data.Aeson                   (decode)
 import           Data.Text                    as TextS
 import qualified Data.Text.Encoding           as TextS
+import qualified Data.Text.IO                 as TextIO
 import qualified Data.ByteString.Lazy         as BS (ByteString, fromStrict) 
 import           Network.HTTP.Client          as Net  hiding (Proxy)
 import           Network.HTTP.Client.MultipartFormData
+import           Network.HTTP.Types           (Status(..))
 import           Servant.Client
 
 import           Network.Ipfs.Api.Api         (_cat, _ls, _get, _refs, _refsLocal, _swarmPeers, _swarmConnect,
                                               _swarmDisconnect, _swarmFilterAdd, _swarmFilters,
                                               _swarmFilterRm, _bitswapStat, _bitswapWL, _bitswapLedger,
                                               _bitswapReprovide, _cidBases, _cidCodecs, _cidHashes, _cidBase32,
-                                              _cidFormat, _blockGet, _blockStat, _dagGet,
+                                              _cidFormat, _blockGet, _objectDiff, _blockStat, _dagGet,
                                               _dagResolve, _configGet, _configSet, _objectData,
                                               _objectNew, _objectGetLinks, _objectAddLink,
                                               _objectGet, _objectStat, _pinAdd, _pinRemove,_bootstrapList, 
@@ -39,20 +41,20 @@ import           Network.Ipfs.Api.Api         (_cat, _ls, _get, _refs, _refsLoca
 
 import           Network.Ipfs.Api.Multipart   (AddObj)
 
+
 call :: ClientM a -> IO (Either ServantError a)
 call func = do 
     manager' <- newManager defaultManagerSettings
     runClientM func (mkClientEnv manager' (BaseUrl Http "localhost" 5001 "/api/v0"))
 
-multipartCall ::  Text -> Text -> IO BS.ByteString
+multipartCall ::  Text -> Text -> IO (Net.Response BS.ByteString)
 multipartCall uri filePath = do
     reqManager <- newManager defaultManagerSettings
     req <- parseRequest $ TextS.unpack uri
     resp <- flip httpLbs reqManager =<< formDataBody form req
-    return (Net.responseBody resp)
+    return (resp)
     
     where form = [ partFileSource "file" $ TextS.unpack filePath ]
-
 
 
 cat :: Text -> IO ()
@@ -60,12 +62,12 @@ cat hash = do
     res <- call $ _cat hash
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
-        Right v -> print v
+        Right v -> TextIO.putStr v
 
 add :: Text -> IO()
 add filePath = do 
-    respBody <- multipartCall (TextS.pack "http://localhost:5001/api/v0/add") filePath 
-    print (decode (respBody)  :: Maybe AddObj)
+    responseVal <- multipartCall (TextS.pack "http://localhost:5001/api/v0/add") filePath 
+    print (decode (Net.responseBody responseVal)  :: Maybe AddObj)
     
 ls :: Text -> IO ()
 ls hash = do 
@@ -79,7 +81,8 @@ get hash = do
     res <- call $ _get hash
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
-        Right v ->  Tar.unpack "getResponseDirectory" . Tar.read $ BS.fromStrict $ TextS.encodeUtf8 v
+        Right v ->  do  Tar.unpack "getResponseDirectory" . Tar.read $ BS.fromStrict $ TextS.encodeUtf8 v
+                        print "The content has been stored in getResponseDirectory."
 
 refs :: Text -> IO ()
 refs hash = do 
@@ -166,7 +169,7 @@ bitswapReprovide = do
     res <- call $ _bitswapReprovide
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
-        Right v -> print v 
+        Right v -> TextIO.putStr v 
 
 cidBases :: IO ()
 cidBases = do 
@@ -208,12 +211,12 @@ blockGet key = do
     res <- call $ _blockGet key
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
-        Right v -> print v
+        Right v -> TextIO.putStr v
         
 blockPut :: Text -> IO()
 blockPut filePath = do 
-    respBody <- multipartCall (TextS.pack "http://localhost:5001/api/v0/block/put") filePath 
-    print (decode (respBody)  :: Maybe BlockObj)
+    responseVal <- multipartCall (TextS.pack "http://localhost:5001/api/v0/block/put") filePath 
+    print (decode (Net.responseBody responseVal)  :: Maybe BlockObj)
         
 blockStat :: Text -> IO ()
 blockStat key = do 
@@ -227,7 +230,7 @@ dagGet ref = do
     res <- call $ _dagGet ref
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
-        Right v -> print v 
+        Right v ->  TextIO.putStr v 
 
 dagResolve :: Text -> IO ()
 dagResolve ref = do 
@@ -238,15 +241,15 @@ dagResolve ref = do
 
 dagPut :: Text -> IO()
 dagPut filePath = do 
-    respBody <- multipartCall (TextS.pack "http://localhost:5001/api/v0/dag/put") filePath 
-    print (decode (respBody)  :: Maybe DagPutObj)
+    responseVal <- multipartCall (TextS.pack "http://localhost:5001/api/v0/dag/put") filePath 
+    print (decode (Net.responseBody responseVal)  :: Maybe DagPutObj)
 
 configGet :: Text -> IO ()
 configGet key = do 
     res <- call $ _configGet key
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
-        Right v -> print v 
+        Right v -> print v
 
 configSet :: Text -> Text -> IO ()
 configSet key value = do 
@@ -257,15 +260,18 @@ configSet key value = do
 
 configReplace :: Text -> IO()
 configReplace filePath = do 
-    respBody <- multipartCall (TextS.pack "http://localhost:5001/api/v0/config/replace") filePath 
-    print (decode (respBody)  :: Maybe String)
-
+    responseVal <- multipartCall (TextS.pack "http://localhost:5001/api/v0/config/replace") filePath 
+    case statusCode $ Net.responseStatus responseVal of 
+        200 -> putStrLn "Config File Replaced Successfully with status code - "
+        _   -> putStrLn $ "Error occured with status code - "
+    print $ statusCode $ Net.responseStatus responseVal
+                
 objectData :: Text -> IO ()
 objectData key = do 
     res <- call $ _objectData key
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
-        Right v -> print v
+        Right v -> TextIO.putStr v
 
 objectNew :: IO ()
 objectNew = do 
@@ -295,10 +301,17 @@ objectGet key = do
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v 
 
+objectDiff :: Text -> Text -> IO ()
+objectDiff firstKey secondKey = do 
+    res <- call $ _objectDiff firstKey (Just secondKey)
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v 
+
 objectPut :: Text -> IO()
 objectPut filePath = do 
-    respBody <- multipartCall (TextS.pack "http://localhost:5001/api/v0/object/put") filePath 
-    print (decode (respBody)  :: Maybe ObjectObj)        
+    responseVal <- multipartCall (TextS.pack "http://localhost:5001/api/v0/object/put") filePath 
+    print (decode ( Net.responseBody responseVal)  :: Maybe ObjectObj)        
 
 objectStat :: Text -> IO ()
 objectStat key = do 
