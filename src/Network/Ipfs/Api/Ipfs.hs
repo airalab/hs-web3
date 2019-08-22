@@ -34,10 +34,11 @@ import           Network.Ipfs.Api.Api         (_cat, _ls, _get, _refs, _refsLoca
                                               _bitswapReprovide, _cidBases, _cidCodecs, _cidHashes, _cidBase32,
                                               _cidFormat, _blockGet, _objectDiff, _blockStat, _dagGet,
                                               _dagResolve, _configGet, _configSet, _objectData,
-                                              _objectNew, _objectGetLinks, _objectAddLink,
+                                              _objectNew, _objectGetLinks, _objectAddLink, _objectRmLink,
                                               _objectGet, _objectStat, _pinAdd, _pinRemove,_bootstrapList, 
                                               _bootstrapAdd, _bootstrapRM, _statsBw, _statsRepo, _version,
-                                              _id, _idPeer, _dns, _shutdown, BlockObj, DagPutObj, ObjectObj)
+                                              _id, _idPeer, _dns, _shutdown, BlockObj, DagPutObj, ObjectObj,
+                                              ObjectLinksObj)
 
 import           Network.Ipfs.Api.Multipart   (AddObj)
 
@@ -293,7 +294,24 @@ objectAddLink hash name key = do
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v
-                
+
+objectRmLink :: Text -> Text -> IO ()
+objectRmLink key name = do 
+    res <- call $ _objectRmLink key (Just name)
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+objectAppendData :: Text -> Text -> IO()
+objectAppendData key filePath = do 
+    responseVal <- multipartCall ( ( TextS.pack "http://localhost:5001/api/v0/object/patch/append-data?arg=" ) <> key) filePath 
+    print (decode ( Net.responseBody responseVal)  :: Maybe ObjectLinksObj)        
+
+objectSetData :: Text -> Text -> IO()
+objectSetData key filePath = do 
+    responseVal <- multipartCall ( ( TextS.pack "http://localhost:5001/api/v0/object/patch/set-data?arg=" ) <>key) filePath 
+    print (decode ( Net.responseBody responseVal)  :: Maybe ObjectLinksObj)        
+        
 objectGet :: Text -> IO ()
 objectGet key = do 
     res <- call $ _objectGet key

@@ -158,10 +158,11 @@ data ObjectLinkObj = ObjectLinkObj
 
 data ObjectObj = ObjectObj { newObjectHash  :: TextS.Text } deriving (Show)
 
-data ObjectLinksObj = ObjectLinksObj
+data ObjectLinksObj = WithLinks
     { objectHash  :: TextS.Text
     , objectLinks :: [ObjectLinkObj]   
-    } deriving (Show)
+    } 
+    | WithoutLinks { objectHash  :: TextS.Text } deriving (Show)
 
 data ObjectGetObj = ObjectGetObj
     { objectName     :: TextS.Text
@@ -190,7 +191,7 @@ data ObjectDiffObj = ObjectDiffObj {  changes :: [ObjectChangeObj] } deriving (S
 
 data PinObj = WithoutProgress
     { pins  :: [TextS.Text] }  
-
+    
     | WithProgress
     {  pins     :: [TextS.Text]
     ,  progress :: Int
@@ -400,9 +401,15 @@ instance FromJSON ObjectObj where
     parseJSON _ = mzero
 
 instance FromJSON ObjectLinksObj where
-    parseJSON (Object o) =
-        ObjectLinksObj  <$> o .: "Hash"
-                       <*> o .: "Links"
+    parseJSON (Object v) =
+        case H.lookup "Links" v of
+            Just (_) -> WithLinks <$> v .: "Hash" 
+                                  <*> v .: "Links"
+
+            Nothing -> 
+                case H.lookup "Hash" v of
+                      Just (_) -> WithoutLinks <$> v .: "Hash" 
+                      Nothing -> mzero
     
     parseJSON _ = mzero
 
@@ -449,7 +456,7 @@ instance FromJSON PinObj where
     parseJSON (Object v) =
         case H.lookup "Progress" v of
             Just (_) -> WithProgress <$> v .: "Pins" 
-                                            <*> v .: "Progress"
+                                     <*> v .: "Progress"
 
             Nothing -> 
                 case H.lookup "Pins" v of
@@ -564,8 +571,9 @@ type IpfsApi = "cat" :> Capture "arg" TextS.Text :> Get '[IpfsText] CatReturnTyp
             :<|> "object" :> "new" :> Get '[JSON] ObjectObj 
             :<|> "object" :> "links" :>  Capture "ref" TextS.Text :> Get '[JSON] ObjectLinksObj  
             :<|> "object" :> "patch" :> "add-link" :> Capture "arg" TextS.Text 
-                :> QueryParam "arg" TextS.Text :> QueryParam "arg" TextS.Text
-                :> Get '[JSON] ObjectLinksObj 
+                :> QueryParam "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] ObjectLinksObj 
+            :<|> "object" :> "patch" :> "rm-link" :> Capture "arg" TextS.Text 
+                :> QueryParam "arg" TextS.Text :> Get '[JSON] ObjectLinksObj 
             :<|> "object" :> "get" :> Capture "arg" TextS.Text :> Get '[JSON] ObjectGetObj 
             :<|> "object" :> "diff" :> Capture "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] ObjectDiffObj 
             :<|> "object" :> "stat" :> Capture "arg" TextS.Text :> Get '[JSON] ObjectStatObj 
@@ -615,6 +623,7 @@ _objectData :: TextS.Text -> ClientM ObjectReturnType
 _objectNew :: ClientM ObjectObj
 _objectGetLinks :: TextS.Text -> ClientM ObjectLinksObj
 _objectAddLink :: TextS.Text -> Maybe TextS.Text -> Maybe TextS.Text -> ClientM ObjectLinksObj
+_objectRmLink :: TextS.Text -> Maybe TextS.Text -> ClientM ObjectLinksObj
 _objectGet :: TextS.Text -> ClientM ObjectGetObj
 _objectDiff :: TextS.Text -> Maybe TextS.Text -> ClientM ObjectDiffObj
 _objectStat :: TextS.Text -> ClientM ObjectStatObj
@@ -635,7 +644,7 @@ _cat :<|> _ls :<|> _get :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> _swarmC
   _swarmFilters :<|> _swarmFilterAdd :<|> _swarmFilterRm :<|>  _bitswapStat :<|> _bitswapWL :<|> _bitswapLedger :<|> 
   _bitswapReprovide :<|> _cidBases :<|> _cidCodecs :<|> _cidHashes :<|> _cidBase32 :<|> _cidFormat :<|> 
   _blockGet  :<|> _blockStat :<|> _dagGet :<|> _dagResolve :<|> _configGet :<|> 
-  _configSet :<|> _objectData :<|> _objectNew :<|> _objectGetLinks :<|> _objectAddLink :<|> 
+  _configSet :<|> _objectData :<|> _objectNew :<|> _objectGetLinks :<|> _objectAddLink :<|> _objectRmLink :<|> 
   _objectGet :<|> _objectDiff :<|> _objectStat :<|> _pinAdd :<|> _pinRemove :<|> _bootstrapAdd :<|>
   _bootstrapList :<|> _bootstrapRM :<|> _statsBw :<|> _statsRepo :<|> _version :<|> _id :<|> _idPeer :<|>
   _dns :<|> _shutdown = client ipfsApi
