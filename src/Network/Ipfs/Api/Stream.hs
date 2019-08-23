@@ -36,13 +36,13 @@ data PingObj = PingObj
     } deriving (Show)
 
 data ResponseObj = ResponseObj
-    { addrs  :: [TextS.Text] 
+    { addrs  :: Maybe [TextS.Text] 
     , id     :: TextS.Text
     } deriving (Show)
 
 data DhtObj = DhtObj
     { extra       :: TextS.Text 
-    , addid       :: TextS.Text
+    , addrid       :: TextS.Text
     , responses   :: Maybe [ResponseObj]
     , addrType    :: Int
     } deriving (Show)
@@ -74,11 +74,19 @@ instance FromJSON ResponseObj where
 
 type IpfsStreamApi = "ping" :> Capture "arg" TextS.Text :> StreamGet NewlineFraming JSON ( SourceIO PingObj )
                 :<|> "dht" :> "findpeer" :> Capture "arg" TextS.Text :> StreamGet NewlineFraming JSON ( SourceIO DhtObj )
+                :<|> "dht" :> "findprovs" :> Capture "arg" TextS.Text :> StreamGet NewlineFraming JSON ( SourceIO DhtObj )
+                :<|> "dht" :> "get" :> Capture "arg" TextS.Text :> StreamGet NewlineFraming JSON ( SourceIO DhtObj )
+                :<|> "dht" :> "provide" :> Capture "arg" TextS.Text :> StreamGet NewlineFraming JSON ( SourceIO DhtObj )
+                :<|> "dht" :> "query" :>  Capture "arg" TextS.Text :>  StreamGet NewlineFraming JSON ( SourceIO DhtObj )
 
 ipfsStreamApi :: Proxy IpfsStreamApi
 ipfsStreamApi =  Proxy
 
 _ping :: TextS.Text -> ClientM (SourceIO PingObj)
 _dhtFindPeer :: TextS.Text -> ClientM (SourceIO DhtObj)
+_dhtFindProvs :: TextS.Text -> ClientM (SourceIO DhtObj)
+_dhtGet :: TextS.Text -> ClientM (SourceIO DhtObj)
+_dhtProvide :: TextS.Text -> ClientM (SourceIO DhtObj)
+_dhtQuery :: TextS.Text -> ClientM (SourceIO DhtObj)
 
-_ping :<|> _dhtFindPeer = client ipfsStreamApi
+_ping :<|> _dhtFindPeer :<|> _dhtFindProvs :<|> _dhtGet :<|> _dhtProvide :<|> _dhtQuery = client ipfsStreamApi

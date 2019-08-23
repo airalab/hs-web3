@@ -231,6 +231,8 @@ data IdObj = IdObj
 
 data DnsObj = DnsObj { dnsPath  :: TextS.Text } deriving (Show)
 
+data PubsubObj = PubsubObj {  pubsubStrings :: [TextS.Text]  } deriving (Show)  
+
 instance FromJSON DirLink where
     parseJSON (Object o) =
         DirLink  <$> o .: "Name"
@@ -516,6 +518,12 @@ instance FromJSON DnsObj where
     
     parseJSON _ = mzero
 
+instance FromJSON PubsubObj where
+    parseJSON (Object o) =
+        PubsubObj  <$> o .: "Strings"
+    
+    parseJSON _ = mzero
+
 {--
 instance FromJSON RefsObj where
     parseJSON (Objecto o) =
@@ -598,6 +606,8 @@ type IpfsApi = "cat" :> Capture "arg" TextS.Text :> Get '[IpfsText] CatReturnTyp
             :<|> "id" :> Get '[JSON] IdObj 
             :<|> "id" :> Capture "arg" TextS.Text :> Get '[JSON] IdObj 
             :<|> "dns" :> Capture "arg" TextS.Text :> Get '[JSON] DnsObj 
+            :<|> "pubsub" :> "ls" :>  Get '[JSON] PubsubObj 
+            :<|> "pubsub" :> "peers" :>  Get '[JSON] PubsubObj 
             :<|> "shutdown" :> Get '[JSON] NoContent 
 
 ipfsApi :: Proxy IpfsApi
@@ -648,6 +658,8 @@ _version :: ClientM VersionObj
 _id :: ClientM IdObj 
 _idPeer :: TextS.Text -> ClientM IdObj 
 _dns :: TextS.Text -> ClientM DnsObj 
+_pubsubLs :: ClientM PubsubObj 
+_pubsubPeers :: ClientM PubsubObj 
 _shutdown :: ClientM NoContent 
 
 _cat :<|> _ls :<|> _get :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> _swarmConnect :<|> _swarmDisconnect :<|>
@@ -657,4 +669,4 @@ _cat :<|> _ls :<|> _get :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> _swarmC
   _configSet :<|> _objectData :<|> _objectNew :<|> _objectGetLinks :<|> _objectAddLink :<|> _objectRmLink :<|> 
   _objectGet :<|> _objectDiff :<|> _objectStat :<|> _pinAdd :<|> _pinRemove :<|> _bootstrapAdd :<|>
   _bootstrapList :<|> _bootstrapRM :<|> _statsBw :<|> _statsRepo :<|> _version :<|> _id :<|> _idPeer :<|>
-  _dns :<|> _shutdown = client ipfsApi
+  _dns :<|> _pubsubLs :<|> _pubsubPeers :<|> _shutdown = client ipfsApi

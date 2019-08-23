@@ -40,11 +40,11 @@ import           Network.Ipfs.Api.Api         (_cat, _ls, _get, _refs, _refsLoca
                                               _objectNew, _objectGetLinks, _objectAddLink, _objectRmLink,
                                               _objectGet, _objectStat, _pinAdd, _pinRemove,_bootstrapList, 
                                               _bootstrapAdd, _bootstrapRM, _statsBw, _statsRepo, _version,
-                                              _id, _idPeer, _dns, _shutdown, BlockObj, DagPutObj, ObjectObj,
-                                              ObjectLinksObj)
+                                              _id, _idPeer, _dns, _pubsubLs, _pubsubPeers, _shutdown,
+                                              BlockObj, DagPutObj, ObjectObj, ObjectLinksObj)
 
 import           Network.Ipfs.Api.Multipart   (AddObj)
-import           Network.Ipfs.Api.Stream      (_ping, _dhtFindPeer)
+import           Network.Ipfs.Api.Stream      (_ping, _dhtFindPeer, _dhtFindProvs, _dhtGet, _dhtProvide, _dhtQuery)
 
 
 call :: ClientM a -> IO (Either ServantError a)
@@ -429,7 +429,33 @@ ping :: Text -> IO ()
 ping cid = streamCall $ _ping cid  
 
 dhtFindPeer :: Text -> IO ()
-dhtFindPeer cid = streamCall $ _dhtFindPeer cid  
+dhtFindPeer peerid = streamCall $ _dhtFindPeer peerid  
+
+dhtFindProvs :: Text -> IO ()
+dhtFindProvs cid = streamCall $ _dhtFindProvs cid  
+
+dhtGet :: Text -> IO ()
+dhtGet cid = streamCall $ _dhtGet cid  
+
+dhtProvide :: Text -> IO ()
+dhtProvide cid = streamCall $ _dhtProvide cid 
+
+dhtQuery ::  Text -> IO ()
+dhtQuery peerId = streamCall $ _dhtQuery peerId
+
+pubsubLs :: IO ()
+pubsubLs = do 
+    res <- call _pubsubLs  
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+pubsubPeers :: IO ()
+pubsubPeers = do 
+    res <- call _pubsubPeers
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
 
 shutdown :: IO ()
 shutdown = do 
