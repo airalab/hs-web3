@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns          #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE FlexibleInstances     #-}
@@ -27,6 +28,8 @@ import           Network.HTTP.Client          as Net  hiding (Proxy)
 import           Network.HTTP.Client.MultipartFormData
 import           Network.HTTP.Types           (Status(..))
 import           Servant.Client
+import qualified Servant.Client.Streaming     as S
+import           Servant.Types.SourceT        (SourceT, foreach)
 
 import           Network.Ipfs.Api.Api         (_cat, _ls, _get, _refs, _refsLocal, _swarmPeers, _swarmConnect,
                                               _swarmDisconnect, _swarmFilterAdd, _swarmFilters,
@@ -41,12 +44,20 @@ import           Network.Ipfs.Api.Api         (_cat, _ls, _get, _refs, _refsLoca
                                               ObjectLinksObj)
 
 import           Network.Ipfs.Api.Multipart   (AddObj)
+import           Network.Ipfs.Api.Stream      (_ping, _dhtFindPeer)
 
 
 call :: ClientM a -> IO (Either ServantError a)
 call func = do 
     manager' <- newManager defaultManagerSettings
     runClientM func (mkClientEnv manager' (BaseUrl Http "localhost" 5001 "/api/v0"))
+
+streamCall :: Show a => S.ClientM (SourceT IO a) -> IO()
+streamCall func = do 
+    manager' <- newManager defaultManagerSettings
+    S.withClientM func (S.mkClientEnv manager' (BaseUrl Http "localhost" 5001 "/api/v0")) $ \e -> case e of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right rs -> foreach fail print rs
 
 multipartCall ::  Text -> Text -> IO (Net.Response BS.ByteString)
 multipartCall uri filePath = do
@@ -56,7 +67,6 @@ multipartCall uri filePath = do
     return (resp)
     
     where form = [ partFileSource "file" $ TextS.unpack filePath ]
-
 
 cat :: Text -> IO ()
 cat hash = do 
@@ -414,6 +424,12 @@ dns name = do
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v
+
+ping :: Text -> IO ()
+ping cid = streamCall $ _ping cid  
+
+dhtFindPeer :: Text -> IO ()
+dhtFindPeer cid = streamCall $ _dhtFindPeer cid  
 
 shutdown :: IO ()
 shutdown = do 

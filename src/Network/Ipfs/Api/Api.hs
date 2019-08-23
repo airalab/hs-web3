@@ -36,7 +36,6 @@ import           Network.HTTP.Client()
 import qualified Network.HTTP.Media            as M ((//))
 import           Servant.API
 import           Servant.Client
---import           Servant.Multipart 
 
 
 type CatReturnType = TextS.Text
@@ -536,6 +535,17 @@ instance Servant.API.Accept IpfsText where
 instance MimeUnrender IpfsText TextS.Text where
     mimeUnrender _ = left show . TextS.decodeUtf8' . toStrict
 
+
+-- | Defining a content type same as DagGetJSON 
+data DagGetJSON deriving Typeable
+
+instance Servant.API.Accept DagGetJSON where
+    contentType _ = "application" M.// "json"
+
+-- | @left show . TextS.decodeUtf8' . toStrict@
+instance MimeUnrender DagGetJSON TextS.Text where
+    mimeUnrender _ = left show . TextS.decodeUtf8' . toStrict
+
 instance {-# OVERLAPPING #-} MimeUnrender JSON (Vec.Vector RefsObj) where
   mimeUnrender _ bs = do
     t <- fmapL show (TextS.decodeUtf8' (toStrict bs))
@@ -563,7 +573,7 @@ type IpfsApi = "cat" :> Capture "arg" TextS.Text :> Get '[IpfsText] CatReturnTyp
             :<|> "cid" :> "format" :> Capture "cid" TextS.Text :> Get '[JSON] CidObj
             :<|> "block" :> "get" :> Capture "key" TextS.Text :> Get '[IpfsText] BlockReturnType
             :<|> "block" :> "stat" :> Capture "key" TextS.Text :> Get '[JSON] BlockObj
-            :<|> "dag" :> "get" :> Capture "ref" TextS.Text :> Get '[JSON] DagReturnType 
+            :<|> "dag" :> "get" :> Capture "ref" TextS.Text :> Get '[DagGetJSON] DagReturnType 
             :<|> "dag" :> "resolve" :> Capture "ref" TextS.Text :> Get '[JSON] DagResolveObj 
             :<|> "config" :> Capture "ref" TextS.Text :> Get '[JSON] ConfigObj 
             :<|> "config" :> Capture "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] ConfigObj 
