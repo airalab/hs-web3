@@ -29,6 +29,10 @@ import           Network.HTTP.Client()
 import           Servant.API
 import           Servant.Client.Streaming      as S
 
+import           Network.Ipfs.Api.Api         (IpfsText)
+
+type LogReturnType = TextS.Text
+
 data PingObj = PingObj
     { success  :: Bool 
     , text     :: TextS.Text
@@ -78,6 +82,7 @@ type IpfsStreamApi = "ping" :> Capture "arg" TextS.Text :> StreamGet NewlineFram
                 :<|> "dht" :> "get" :> Capture "arg" TextS.Text :> StreamGet NewlineFraming JSON ( SourceIO DhtObj )
                 :<|> "dht" :> "provide" :> Capture "arg" TextS.Text :> StreamGet NewlineFraming JSON ( SourceIO DhtObj )
                 :<|> "dht" :> "query" :>  Capture "arg" TextS.Text :>  StreamGet NewlineFraming JSON ( SourceIO DhtObj )
+                :<|> "log" :> "tail" :>  StreamGet NewlineFraming IpfsText ( SourceIO LogReturnType)
 
 ipfsStreamApi :: Proxy IpfsStreamApi
 ipfsStreamApi =  Proxy
@@ -88,5 +93,6 @@ _dhtFindProvs :: TextS.Text -> ClientM (SourceIO DhtObj)
 _dhtGet :: TextS.Text -> ClientM (SourceIO DhtObj)
 _dhtProvide :: TextS.Text -> ClientM (SourceIO DhtObj)
 _dhtQuery :: TextS.Text -> ClientM (SourceIO DhtObj)
+_logTail :: ClientM (SourceIO LogReturnType)
 
-_ping :<|> _dhtFindPeer :<|> _dhtFindProvs :<|> _dhtGet :<|> _dhtProvide :<|> _dhtQuery = client ipfsStreamApi
+_ping :<|> _dhtFindPeer :<|> _dhtFindProvs :<|> _dhtGet :<|> _dhtProvide :<|> _dhtQuery :<|> _logTail  = client ipfsStreamApi

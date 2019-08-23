@@ -40,11 +40,13 @@ import           Network.Ipfs.Api.Api         (_cat, _ls, _get, _refs, _refsLoca
                                               _objectNew, _objectGetLinks, _objectAddLink, _objectRmLink,
                                               _objectGet, _objectStat, _pinAdd, _pinRemove,_bootstrapList, 
                                               _bootstrapAdd, _bootstrapRM, _statsBw, _statsRepo, _version,
-                                              _id, _idPeer, _dns, _pubsubLs, _pubsubPeers, _shutdown,
-                                              BlockObj, DagPutObj, ObjectObj, ObjectLinksObj)
+                                              _id, _idPeer, _dns, _pubsubLs, _pubsubPeers, _logLs, _logLevel,
+                                              _repoVersion, _shutdown, BlockObj, DagPutObj, ObjectObj,
+                                              ObjectLinksObj)
 
 import           Network.Ipfs.Api.Multipart   (AddObj)
-import           Network.Ipfs.Api.Stream      (_ping, _dhtFindPeer, _dhtFindProvs, _dhtGet, _dhtProvide, _dhtQuery)
+import           Network.Ipfs.Api.Stream      (_ping, _dhtFindPeer, _dhtFindProvs, _dhtGet, _dhtProvide,
+                                              _dhtQuery, _logTail)
 
 
 call :: ClientM a -> IO (Either ServantError a)
@@ -453,6 +455,30 @@ pubsubLs = do
 pubsubPeers :: IO ()
 pubsubPeers = do 
     res <- call _pubsubPeers
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+logLs :: IO ()
+logLs = do 
+    res <- call _logLs
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+logLevel :: Text -> Text -> IO ()
+logLevel subsystem level = do 
+    res <- call $ _logLevel subsystem $ Just level
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+logTail :: IO ()
+logTail = streamCall $ _logTail
+
+repoVersion :: IO ()
+repoVersion = do 
+    res <- call _repoVersion
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v

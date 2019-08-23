@@ -231,7 +231,13 @@ data IdObj = IdObj
 
 data DnsObj = DnsObj { dnsPath  :: TextS.Text } deriving (Show)
 
-data PubsubObj = PubsubObj {  pubsubStrings :: [TextS.Text]  } deriving (Show)  
+data PubsubObj = PubsubObj { pubsubStrings :: [TextS.Text] } deriving (Show)  
+
+data LogLsObj = LogLsObj { logLsStrings :: [TextS.Text] } deriving (Show)  
+
+data LogLevelObj = LogLevelObj { message :: TextS.Text } deriving (Show)  
+
+data RepoVersionObj = RepoVersionObj { repoVer :: TextS.Text } deriving (Show)  
 
 instance FromJSON DirLink where
     parseJSON (Object o) =
@@ -524,6 +530,24 @@ instance FromJSON PubsubObj where
     
     parseJSON _ = mzero
 
+instance FromJSON LogLsObj where
+    parseJSON (Object o) =
+        LogLsObj  <$> o .: "Strings"
+    
+    parseJSON _ = mzero
+
+instance FromJSON LogLevelObj where
+    parseJSON (Object o) =
+        LogLevelObj  <$> o .: "Message"
+    
+    parseJSON _ = mzero
+
+instance FromJSON RepoVersionObj where
+    parseJSON (Object o) =
+        RepoVersionObj  <$> o .: "Version"
+    
+    parseJSON _ = mzero
+
 {--
 instance FromJSON RefsObj where
     parseJSON (Objecto o) =
@@ -608,6 +632,9 @@ type IpfsApi = "cat" :> Capture "arg" TextS.Text :> Get '[IpfsText] CatReturnTyp
             :<|> "dns" :> Capture "arg" TextS.Text :> Get '[JSON] DnsObj 
             :<|> "pubsub" :> "ls" :>  Get '[JSON] PubsubObj 
             :<|> "pubsub" :> "peers" :>  Get '[JSON] PubsubObj 
+            :<|> "log" :> "ls" :>  Get '[JSON] LogLsObj 
+            :<|> "log" :> "level" :> Capture "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] LogLevelObj 
+            :<|> "repo" :> "version" :>  Get '[JSON] RepoVersionObj 
             :<|> "shutdown" :> Get '[JSON] NoContent 
 
 ipfsApi :: Proxy IpfsApi
@@ -660,6 +687,9 @@ _idPeer :: TextS.Text -> ClientM IdObj
 _dns :: TextS.Text -> ClientM DnsObj 
 _pubsubLs :: ClientM PubsubObj 
 _pubsubPeers :: ClientM PubsubObj 
+_logLs :: ClientM LogLsObj 
+_logLevel :: TextS.Text -> Maybe TextS.Text -> ClientM LogLevelObj
+_repoVersion :: ClientM RepoVersionObj 
 _shutdown :: ClientM NoContent 
 
 _cat :<|> _ls :<|> _get :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> _swarmConnect :<|> _swarmDisconnect :<|>
@@ -669,4 +699,4 @@ _cat :<|> _ls :<|> _get :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> _swarmC
   _configSet :<|> _objectData :<|> _objectNew :<|> _objectGetLinks :<|> _objectAddLink :<|> _objectRmLink :<|> 
   _objectGet :<|> _objectDiff :<|> _objectStat :<|> _pinAdd :<|> _pinRemove :<|> _bootstrapAdd :<|>
   _bootstrapList :<|> _bootstrapRM :<|> _statsBw :<|> _statsRepo :<|> _version :<|> _id :<|> _idPeer :<|>
-  _dns :<|> _pubsubLs :<|> _pubsubPeers :<|> _shutdown = client ipfsApi
+  _dns :<|> _pubsubLs :<|> _pubsubPeers :<|> _logLs :<|> _logLevel :<|> _repoVersion :<|> _shutdown = client ipfsApi
