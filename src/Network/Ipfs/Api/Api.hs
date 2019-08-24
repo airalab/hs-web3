@@ -97,7 +97,7 @@ data BitswapStatObj = BitswapStatObj
     ,  wantlist         :: [WantlistObj]
     }  deriving (Show)
 
-data BitswapWLObj = BitswapWLObj {  keys :: [WantlistObj] } deriving (Show)
+data BitswapWLObj = BitswapWLObj {  bitswapKeys :: [WantlistObj] } deriving (Show)
 
 data BitswapLedgerObj = BitswapLedgerObj
     {  exchanged  :: Int64
@@ -238,6 +238,15 @@ data LogLsObj = LogLsObj { logLsStrings :: [TextS.Text] } deriving (Show)
 data LogLevelObj = LogLevelObj { message :: TextS.Text } deriving (Show)  
 
 data RepoVersionObj = RepoVersionObj { repoVer :: TextS.Text } deriving (Show)  
+
+data RepoFsckObj = RepoFsckObj { repoMessage :: TextS.Text } deriving (Show)  
+
+data KeyDetailsObj = KeyDetailsObj
+    { keyId    :: TextS.Text 
+    , keyName  :: TextS.Text 
+    } deriving (Show)
+
+data KeyObj = KeyObj { keys :: [KeyDetailsObj] } deriving (Show)  
 
 instance FromJSON DirLink where
     parseJSON (Object o) =
@@ -548,6 +557,26 @@ instance FromJSON RepoVersionObj where
     
     parseJSON _ = mzero
 
+instance FromJSON RepoFsckObj where
+    parseJSON (Object o) =
+        RepoFsckObj  <$> o .: "Message"
+    
+    parseJSON _ = mzero
+
+
+instance FromJSON KeyDetailsObj where
+    parseJSON (Object o) =
+        KeyDetailsObj <$> o .: "Id"
+                      <*> o .: "Name"
+    
+    parseJSON _ = mzero
+
+instance FromJSON KeyObj where
+    parseJSON (Object o) =
+        KeyObj  <$> o .: "Keys"
+    
+    parseJSON _ = mzero
+
 {--
 instance FromJSON RefsObj where
     parseJSON (Objecto o) =
@@ -635,6 +664,8 @@ type IpfsApi = "cat" :> Capture "arg" TextS.Text :> Get '[IpfsText] CatReturnTyp
             :<|> "log" :> "ls" :>  Get '[JSON] LogLsObj 
             :<|> "log" :> "level" :> Capture "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] LogLevelObj 
             :<|> "repo" :> "version" :>  Get '[JSON] RepoVersionObj 
+            :<|> "repo" :> "fsck" :>  Get '[JSON] RepoFsckObj 
+            :<|> "key" :> "list" :>  Get '[JSON] KeyObj 
             :<|> "shutdown" :> Get '[JSON] NoContent 
 
 ipfsApi :: Proxy IpfsApi
@@ -690,6 +721,8 @@ _pubsubPeers :: ClientM PubsubObj
 _logLs :: ClientM LogLsObj 
 _logLevel :: TextS.Text -> Maybe TextS.Text -> ClientM LogLevelObj
 _repoVersion :: ClientM RepoVersionObj 
+_repoFsck :: ClientM RepoFsckObj 
+_keyList :: ClientM KeyObj 
 _shutdown :: ClientM NoContent 
 
 _cat :<|> _ls :<|> _get :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> _swarmConnect :<|> _swarmDisconnect :<|>
@@ -699,4 +732,5 @@ _cat :<|> _ls :<|> _get :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> _swarmC
   _configSet :<|> _objectData :<|> _objectNew :<|> _objectGetLinks :<|> _objectAddLink :<|> _objectRmLink :<|> 
   _objectGet :<|> _objectDiff :<|> _objectStat :<|> _pinAdd :<|> _pinRemove :<|> _bootstrapAdd :<|>
   _bootstrapList :<|> _bootstrapRM :<|> _statsBw :<|> _statsRepo :<|> _version :<|> _id :<|> _idPeer :<|>
-  _dns :<|> _pubsubLs :<|> _pubsubPeers :<|> _logLs :<|> _logLevel :<|> _repoVersion :<|> _shutdown = client ipfsApi
+  _dns :<|> _pubsubLs :<|> _pubsubPeers :<|> _logLs :<|> _logLevel :<|> _repoVersion :<|> 
+  _repoFsck :<|> _keyList :<|> _shutdown = client ipfsApi

@@ -41,12 +41,12 @@ import           Network.Ipfs.Api.Api         (_cat, _ls, _get, _refs, _refsLoca
                                               _objectGet, _objectStat, _pinAdd, _pinRemove,_bootstrapList, 
                                               _bootstrapAdd, _bootstrapRM, _statsBw, _statsRepo, _version,
                                               _id, _idPeer, _dns, _pubsubLs, _pubsubPeers, _logLs, _logLevel,
-                                              _repoVersion, _shutdown, BlockObj, DagPutObj, ObjectObj,
-                                              ObjectLinksObj)
+                                              _repoVersion, _repoFsck, _keyList, _shutdown, BlockObj, 
+                                              DagPutObj, ObjectObj, ObjectLinksObj)
 
 import           Network.Ipfs.Api.Multipart   (AddObj)
 import           Network.Ipfs.Api.Stream      (_ping, _dhtFindPeer, _dhtFindProvs, _dhtGet, _dhtProvide,
-                                              _dhtQuery, _logTail)
+                                              _dhtQuery, _logTail, _repoGc, _repoVerify)
 
 
 call :: ClientM a -> IO (Either ServantError a)
@@ -474,11 +474,31 @@ logLevel subsystem level = do
         Right v -> print v
 
 logTail :: IO ()
-logTail = streamCall $ _logTail
+logTail = streamCall _logTail
 
 repoVersion :: IO ()
 repoVersion = do 
     res <- call _repoVersion
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+repoFsck :: IO ()
+repoFsck = do 
+    res <- call _repoFsck
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+repoGc :: IO ()
+repoGc = streamCall _repoGc
+
+repoVerify :: IO ()
+repoVerify = streamCall _repoVerify
+
+keyList :: IO ()
+keyList = do 
+    res <- call _keyList
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v

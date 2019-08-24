@@ -45,10 +45,19 @@ data ResponseObj = ResponseObj
     } deriving (Show)
 
 data DhtObj = DhtObj
-    { extra       :: TextS.Text 
-    , addrid       :: TextS.Text
-    , responses   :: Maybe [ResponseObj]
-    , addrType    :: Int
+    { extra      :: TextS.Text 
+    , addrid     :: TextS.Text
+    , responses  :: Maybe [ResponseObj]
+    , addrType   :: Int
+    } deriving (Show)
+
+data RepoKeyObj = RepoKeyObj { repoSlash :: TextS.Text } deriving (Show)  
+
+data RepoGcObj = RepoGcObj { repoKey :: RepoKeyObj } deriving (Show)  
+
+data RepoVerifyObj = RepoVerifyObj
+    { msg       :: TextS.Text 
+    , progress  :: Int
     } deriving (Show)
 
 instance FromJSON PingObj where
@@ -75,6 +84,24 @@ instance FromJSON ResponseObj where
     
     parseJSON _ = mzero
 
+instance FromJSON RepoKeyObj where
+    parseJSON (Object o) =
+        RepoKeyObj  <$> o .: "/"
+    
+    parseJSON _ = mzero
+
+instance FromJSON RepoGcObj where
+    parseJSON (Object o) =
+        RepoGcObj  <$> o .: "Key"
+    
+    parseJSON _ = mzero
+
+instance FromJSON RepoVerifyObj where
+    parseJSON (Object o) =
+        RepoVerifyObj <$> o .: "Msg"
+                      <*> o .: "Progress"
+    
+    parseJSON _ = mzero
 
 type IpfsStreamApi = "ping" :> Capture "arg" TextS.Text :> StreamGet NewlineFraming JSON ( SourceIO PingObj )
                 :<|> "dht" :> "findpeer" :> Capture "arg" TextS.Text :> StreamGet NewlineFraming JSON ( SourceIO DhtObj )
@@ -83,6 +110,8 @@ type IpfsStreamApi = "ping" :> Capture "arg" TextS.Text :> StreamGet NewlineFram
                 :<|> "dht" :> "provide" :> Capture "arg" TextS.Text :> StreamGet NewlineFraming JSON ( SourceIO DhtObj )
                 :<|> "dht" :> "query" :>  Capture "arg" TextS.Text :>  StreamGet NewlineFraming JSON ( SourceIO DhtObj )
                 :<|> "log" :> "tail" :>  StreamGet NewlineFraming IpfsText ( SourceIO LogReturnType)
+                :<|> "repo" :> "gc" :>  StreamGet NewlineFraming JSON ( SourceIO RepoGcObj)
+                :<|> "repo" :> "verify" :>  StreamGet NewlineFraming JSON ( SourceIO RepoVerifyObj)
 
 ipfsStreamApi :: Proxy IpfsStreamApi
 ipfsStreamApi =  Proxy
@@ -94,5 +123,8 @@ _dhtGet :: TextS.Text -> ClientM (SourceIO DhtObj)
 _dhtProvide :: TextS.Text -> ClientM (SourceIO DhtObj)
 _dhtQuery :: TextS.Text -> ClientM (SourceIO DhtObj)
 _logTail :: ClientM (SourceIO LogReturnType)
+_repoGc :: ClientM (SourceIO RepoGcObj)
+_repoVerify :: ClientM (SourceIO RepoVerifyObj)
 
-_ping :<|> _dhtFindPeer :<|> _dhtFindProvs :<|> _dhtGet :<|> _dhtProvide :<|> _dhtQuery :<|> _logTail  = client ipfsStreamApi
+_ping :<|> _dhtFindPeer :<|> _dhtFindProvs :<|> _dhtGet :<|> _dhtProvide :<|> _dhtQuery :<|>
+  _logTail :<|> _repoGc :<|> _repoVerify = client ipfsStreamApi
