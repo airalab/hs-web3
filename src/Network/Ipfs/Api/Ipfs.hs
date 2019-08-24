@@ -41,8 +41,9 @@ import           Network.Ipfs.Api.Api         (_cat, _ls, _get, _refs, _refsLoca
                                               _objectGet, _objectStat, _pinAdd, _pinRemove,_bootstrapList, 
                                               _bootstrapAdd, _bootstrapRM, _statsBw, _statsRepo, _version,
                                               _id, _idPeer, _dns, _pubsubLs, _pubsubPeers, _logLs, _logLevel,
-                                              _repoVersion, _repoFsck, _keyList, _shutdown, BlockObj, 
-                                              DagPutObj, ObjectObj, ObjectLinksObj)
+                                              _repoVersion, _repoFsck, _keyGen, _keyList, _keyRm, _keyRename,
+                                              _shutdown, _filesMkdir, BlockObj, DagPutObj, ObjectObj, 
+                                              ObjectLinksObj)
 
 import           Network.Ipfs.Api.Multipart   (AddObj)
 import           Network.Ipfs.Api.Stream      (_ping, _dhtFindPeer, _dhtFindProvs, _dhtGet, _dhtProvide,
@@ -502,6 +503,34 @@ keyList = do
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v
+
+keyGen :: Text -> Text -> IO ()
+keyGen name keyType = do 
+    res <- call $ _keyGen name (Just keyType)
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+keyRename :: Text -> Text -> IO ()
+keyRename was now  = do 
+    res <- call $ _keyRename was $ Just now 
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v        
+
+keyRm :: Text -> IO ()
+keyRm name  = do 
+    res <- call $ _keyRm name 
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+filesMkdir :: Text -> IO ()
+filesMkdir mfsPath  = do 
+    res <- call $ _filesMkdir $ Just mfsPath 
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right _ -> print "The Directory has been created on the specified path."
 
 shutdown :: IO ()
 shutdown = do 

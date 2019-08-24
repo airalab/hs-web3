@@ -248,6 +248,13 @@ data KeyDetailsObj = KeyDetailsObj
 
 data KeyObj = KeyObj { keys :: [KeyDetailsObj] } deriving (Show)  
 
+data KeyRenameObj = KeyRenameObj
+    {  peerId     :: TextS.Text
+    ,  now        :: TextS.Text
+    ,  overwrite  :: Bool
+    ,  was        :: TextS.Text
+    }  deriving (Show)
+
 instance FromJSON DirLink where
     parseJSON (Object o) =
         DirLink  <$> o .: "Name"
@@ -496,7 +503,6 @@ instance FromJSON StatsBwObj where
     
     parseJSON _ = mzero
 
-
 instance FromJSON StatsRepoObj where
     parseJSON (Object o) =
         StatsRepoObj  <$> o .: "NumObjects"
@@ -577,6 +583,15 @@ instance FromJSON KeyObj where
     
     parseJSON _ = mzero
 
+instance FromJSON KeyRenameObj where
+    parseJSON (Object o) =
+        KeyRenameObj  <$> o .: "Id"
+                      <*> o .: "Now"
+                      <*> o .: "Overwrite"
+                      <*> o .: "Was"
+    
+    parseJSON _ = mzero
+
 {--
 instance FromJSON RefsObj where
     parseJSON (Objecto o) =
@@ -597,14 +612,14 @@ instance MimeUnrender IpfsText TextS.Text where
     mimeUnrender _ = left show . TextS.decodeUtf8' . toStrict
 
 
--- | Defining a content type same as DagGetJSON 
-data DagGetJSON deriving Typeable
+-- | Defining a content type same as IpfsJSON 
+data IpfsJSON deriving Typeable
 
-instance Servant.API.Accept DagGetJSON where
+instance Servant.API.Accept IpfsJSON where
     contentType _ = "application" M.// "json"
 
 -- | @left show . TextS.decodeUtf8' . toStrict@
-instance MimeUnrender DagGetJSON TextS.Text where
+instance MimeUnrender IpfsJSON TextS.Text where
     mimeUnrender _ = left show . TextS.decodeUtf8' . toStrict
 
 instance {-# OVERLAPPING #-} MimeUnrender JSON (Vec.Vector RefsObj) where
@@ -634,7 +649,7 @@ type IpfsApi = "cat" :> Capture "arg" TextS.Text :> Get '[IpfsText] CatReturnTyp
             :<|> "cid" :> "format" :> Capture "cid" TextS.Text :> Get '[JSON] CidObj
             :<|> "block" :> "get" :> Capture "key" TextS.Text :> Get '[IpfsText] BlockReturnType
             :<|> "block" :> "stat" :> Capture "key" TextS.Text :> Get '[JSON] BlockObj
-            :<|> "dag" :> "get" :> Capture "ref" TextS.Text :> Get '[DagGetJSON] DagReturnType 
+            :<|> "dag" :> "get" :> Capture "ref" TextS.Text :> Get '[IpfsJSON] DagReturnType 
             :<|> "dag" :> "resolve" :> Capture "ref" TextS.Text :> Get '[JSON] DagResolveObj 
             :<|> "config" :> Capture "ref" TextS.Text :> Get '[JSON] ConfigObj 
             :<|> "config" :> Capture "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] ConfigObj 
@@ -665,7 +680,11 @@ type IpfsApi = "cat" :> Capture "arg" TextS.Text :> Get '[IpfsText] CatReturnTyp
             :<|> "log" :> "level" :> Capture "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] LogLevelObj 
             :<|> "repo" :> "version" :>  Get '[JSON] RepoVersionObj 
             :<|> "repo" :> "fsck" :>  Get '[JSON] RepoFsckObj 
+            :<|> "key" :> "gen" :> Capture "arg" TextS.Text :> QueryParam "type" TextS.Text :> Get '[JSON] KeyDetailsObj 
             :<|> "key" :> "list" :>  Get '[JSON] KeyObj 
+            :<|> "key" :> "rename" :> Capture "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] KeyRenameObj 
+            :<|> "key" :> "rm" :> Capture "arg" TextS.Text :> Get '[JSON] KeyObj 
+            :<|> "files" :> "mkdir" :> QueryParam "arg" TextS.Text :> Get '[IpfsJSON] NoContent 
             :<|> "shutdown" :> Get '[JSON] NoContent 
 
 ipfsApi :: Proxy IpfsApi
@@ -722,7 +741,11 @@ _logLs :: ClientM LogLsObj
 _logLevel :: TextS.Text -> Maybe TextS.Text -> ClientM LogLevelObj
 _repoVersion :: ClientM RepoVersionObj 
 _repoFsck :: ClientM RepoFsckObj 
+_keyGen :: TextS.Text -> (Maybe TextS.Text) -> ClientM KeyDetailsObj 
 _keyList :: ClientM KeyObj 
+_keyRename :: TextS.Text -> (Maybe TextS.Text) -> ClientM KeyRenameObj 
+_keyRm :: TextS.Text -> ClientM KeyObj 
+_filesMkdir :: Maybe TextS.Text -> ClientM NoContent 
 _shutdown :: ClientM NoContent 
 
 _cat :<|> _ls :<|> _get :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> _swarmConnect :<|> _swarmDisconnect :<|>
@@ -733,4 +756,4 @@ _cat :<|> _ls :<|> _get :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> _swarmC
   _objectGet :<|> _objectDiff :<|> _objectStat :<|> _pinAdd :<|> _pinRemove :<|> _bootstrapAdd :<|>
   _bootstrapList :<|> _bootstrapRM :<|> _statsBw :<|> _statsRepo :<|> _version :<|> _id :<|> _idPeer :<|>
   _dns :<|> _pubsubLs :<|> _pubsubPeers :<|> _logLs :<|> _logLevel :<|> _repoVersion :<|> 
-  _repoFsck :<|> _keyList :<|> _shutdown = client ipfsApi
+  _repoFsck :<|> _keyGen :<|> _keyList :<|> _keyRename :<|> _keyRm :<|> _filesMkdir :<|> _shutdown = client ipfsApi
