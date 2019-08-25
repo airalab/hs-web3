@@ -264,6 +264,17 @@ data FilesStatObj = FilesStatObj
     ,  objectType            :: TextS.Text
     }  deriving (Show)
 
+data FilesEntryObj = FilesEntryObj
+    {  entryName  :: TextS.Text
+    ,  entryType  :: Int
+    ,  entrySize  :: Int
+    ,  entryHash  :: TextS.Text
+    }  deriving (Show)
+
+data FilesLsObj = FilesLsObj { enteries :: [FilesEntryObj] } deriving (Show)  
+
+data FilesFlushObj = FilesFlushObj { fileCid :: TextS.Text } deriving (Show)  
+
 instance FromJSON DirLink where
     parseJSON (Object o) =
         DirLink  <$> o .: "Name"
@@ -611,6 +622,27 @@ instance FromJSON FilesStatObj where
     
     parseJSON _ = mzero
 
+instance FromJSON FilesEntryObj where
+    parseJSON (Object o) =
+        FilesEntryObj  <$> o .: "Name"
+                       <*> o .: "Type"
+                       <*> o .: "Size"
+                       <*> o .: "Hash"
+    
+    parseJSON _ = mzero
+
+instance FromJSON FilesLsObj where
+    parseJSON (Object o) =
+        FilesLsObj  <$> o .: "Entries"
+
+    parseJSON _ = mzero
+
+instance FromJSON FilesFlushObj where
+    parseJSON (Object o) =
+        FilesFlushObj  <$> o .: "Cid"
+
+    parseJSON _ = mzero
+
 {--
 instance FromJSON RefsObj where
     parseJSON (Objecto o) =
@@ -703,8 +735,12 @@ type IpfsApi = "cat" :> Capture "arg" TextS.Text :> Get '[IpfsText] CatReturnTyp
             :<|> "key" :> "list" :>  Get '[JSON] KeyObj 
             :<|> "key" :> "rename" :> Capture "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] KeyRenameObj 
             :<|> "key" :> "rm" :> Capture "arg" TextS.Text :> Get '[JSON] KeyObj 
-            :<|> "files" :> "cp" :> QueryParam "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[IpfsJSON] NoContent 
-            :<|> "files" :> "mkdir" :> QueryParam "arg" TextS.Text :> Get '[IpfsJSON] NoContent 
+            :<|> "files" :> "chcid" :> QueryParam "arg" TextS.Text :> QueryParam "cid-version" Int :> Get '[JSON] NoContent 
+            :<|> "files" :> "cp" :> QueryParam "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] NoContent 
+            :<|> "files" :> "flush" :> QueryParam "arg" TextS.Text :> Get '[JSON] FilesFlushObj 
+            :<|> "files" :> "ls" :> QueryParam "arg" TextS.Text :> Get '[JSON] FilesLsObj 
+            :<|> "files" :> "mkdir" :> QueryParam "arg" TextS.Text :> Get '[JSON] NoContent 
+            :<|> "files" :> "mv" :> QueryParam "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] NoContent 
             :<|> "files" :> "read" :> QueryParam "arg" TextS.Text :> Get '[IpfsText] FilesReadType 
             :<|> "files" :> "rm" :> QueryParam "arg" TextS.Text :> QueryParam "recursive" Bool :> Get '[JSON] NoContent 
             :<|> "files" :> "stat" :> QueryParam "arg" TextS.Text :> Get '[JSON] FilesStatObj 
@@ -768,8 +804,12 @@ _keyGen :: TextS.Text -> (Maybe TextS.Text) -> ClientM KeyDetailsObj
 _keyList :: ClientM KeyObj 
 _keyRename :: TextS.Text -> (Maybe TextS.Text) -> ClientM KeyRenameObj 
 _keyRm :: TextS.Text -> ClientM KeyObj 
+_filesChcid :: Maybe TextS.Text -> Maybe Int -> ClientM NoContent 
 _filesCp :: Maybe TextS.Text -> Maybe TextS.Text -> ClientM NoContent 
+_filesFlush :: Maybe TextS.Text -> ClientM FilesFlushObj
+_filesLs :: Maybe TextS.Text -> ClientM FilesLsObj 
 _filesMkdir :: Maybe TextS.Text -> ClientM NoContent 
+_filesMv :: Maybe TextS.Text -> Maybe TextS.Text -> ClientM NoContent 
 _filesRead :: Maybe TextS.Text -> ClientM FilesReadType 
 _filesRm :: Maybe TextS.Text -> Maybe Bool -> ClientM NoContent 
 _filesStat :: Maybe TextS.Text -> ClientM FilesStatObj 
@@ -783,5 +823,6 @@ _cat :<|> _ls :<|> _get :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> _swarmC
   _objectGet :<|> _objectDiff :<|> _objectStat :<|> _pinAdd :<|> _pinRemove :<|> _bootstrapAdd :<|>
   _bootstrapList :<|> _bootstrapRM :<|> _statsBw :<|> _statsRepo :<|> _version :<|> _id :<|> _idPeer :<|>
   _dns :<|> _pubsubLs :<|> _pubsubPeers :<|> _logLs :<|> _logLevel :<|> _repoVersion :<|> 
-  _repoFsck :<|> _keyGen :<|> _keyList :<|> _keyRename :<|> _keyRm :<|> _filesCp :<|> _filesMkdir :<|> 
-  _filesRead :<|> _filesRm :<|> _filesStat :<|> _shutdown = client ipfsApi
+  _repoFsck :<|> _keyGen :<|> _keyList :<|> _keyRename :<|> _keyRm :<|> _filesChcid :<|> _filesCp :<|> 
+  _filesFlush :<|> _filesLs :<|> _filesMkdir :<|> _filesMv :<|> _filesRead :<|> _filesRm :<|> _filesStat :<|> 
+  _shutdown = client ipfsApi

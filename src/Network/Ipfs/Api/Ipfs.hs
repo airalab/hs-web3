@@ -42,7 +42,7 @@ import           Network.Ipfs.Api.Api         (_cat, _ls, _get, _refs, _refsLoca
                                               _bootstrapAdd, _bootstrapRM, _statsBw, _statsRepo, _version,
                                               _id, _idPeer, _dns, _pubsubLs, _pubsubPeers, _logLs, _logLevel,
                                               _repoVersion, _repoFsck, _keyGen, _keyList, _keyRm, _keyRename,
-                                              _filesCp, _filesMkdir, _filesRead, _filesRm, _filesStat, _shutdown, BlockObj, DagPutObj,
+                                              _filesChcid, _filesCp, _filesFlush, _filesLs, _filesMkdir, _filesMv, _filesRead, _filesRm, _filesStat, _shutdown, BlockObj, DagPutObj,
                                               ObjectObj, ObjectLinksObj)
 
 import           Network.Ipfs.Api.Multipart   (AddObj)
@@ -525,6 +525,13 @@ keyRm name  = do
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v
 
+filesChcidVer :: Text -> Int -> IO ()
+filesChcidVer mfsPath cidVersion = do 
+    res <- call $ _filesChcid (Just mfsPath) (Just cidVersion)
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right _ -> putStrLn "The directory's cid version has been changed."
+
 filesCp :: Text -> Text -> IO ()
 filesCp src dest  = do 
     res <- call $ _filesCp (Just src) (Just dest)
@@ -532,12 +539,33 @@ filesCp src dest  = do
         Left err -> putStrLn $ "Error: " ++ show err
         Right _ -> putStrLn "The object has been copied to the specified destination"
 
+filesFlush ::Text -> IO ()
+filesFlush mfsPath = do 
+    res <- call $ _filesFlush $ Just mfsPath 
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+filesLs :: Text -> IO ()
+filesLs mfsPath  = do 
+    res <- call $ _filesLs $ Just mfsPath 
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
 filesMkdir :: Text -> IO ()
 filesMkdir mfsPath  = do 
     res <- call $ _filesMkdir $ Just mfsPath 
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right _ -> putStrLn "The Directory has been created on the specified path."
+
+filesMv :: Text -> Text -> IO ()
+filesMv src dest  = do 
+    res <- call $ _filesMv (Just src) (Just dest)
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right _ -> putStrLn "The object has been moved to the specified destination"
 
 filesRead :: Text -> IO ()
 filesRead mfsPath  = do 
@@ -559,6 +587,15 @@ filesRm mfsPath  = do
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right _ -> putStrLn "The object has been removed."
+
+filesWrite :: Text -> Text -> Bool -> IO()
+filesWrite mfsPath filePath toTruncate = do 
+    responseVal <- multipartCall ((TextS.pack "http://localhost:5001/api/v0/files/write?arg=") 
+        <> mfsPath <> (TextS.pack "&create=true") <>  (TextS.pack "&truncate=") <> (TextS.pack $ show toTruncate) ) filePath 
+    case statusCode $ Net.responseStatus responseVal of 
+        200 -> putStrLn "Config File Replaced Successfully with status code - "
+        _   -> putStrLn $ "Error occured with status code - "
+    print $ statusCode $ Net.responseStatus responseVal    
 
 shutdown :: IO ()
 shutdown = do 
