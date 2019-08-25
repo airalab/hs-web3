@@ -42,8 +42,8 @@ import           Network.Ipfs.Api.Api         (_cat, _ls, _get, _refs, _refsLoca
                                               _bootstrapAdd, _bootstrapRM, _statsBw, _statsRepo, _version,
                                               _id, _idPeer, _dns, _pubsubLs, _pubsubPeers, _logLs, _logLevel,
                                               _repoVersion, _repoFsck, _keyGen, _keyList, _keyRm, _keyRename,
-                                              _shutdown, _filesMkdir, BlockObj, DagPutObj, ObjectObj, 
-                                              ObjectLinksObj)
+                                              _filesCp, _filesMkdir, _filesRead, _filesRm, _filesStat, _shutdown, BlockObj, DagPutObj,
+                                              ObjectObj, ObjectLinksObj)
 
 import           Network.Ipfs.Api.Multipart   (AddObj)
 import           Network.Ipfs.Api.Stream      (_ping, _dhtFindPeer, _dhtFindProvs, _dhtGet, _dhtProvide,
@@ -525,16 +525,44 @@ keyRm name  = do
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v
 
+filesCp :: Text -> Text -> IO ()
+filesCp src dest  = do 
+    res <- call $ _filesCp (Just src) (Just dest)
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right _ -> putStrLn "The object has been copied to the specified destination"
+
 filesMkdir :: Text -> IO ()
 filesMkdir mfsPath  = do 
     res <- call $ _filesMkdir $ Just mfsPath 
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
-        Right _ -> print "The Directory has been created on the specified path."
+        Right _ -> putStrLn "The Directory has been created on the specified path."
+
+filesRead :: Text -> IO ()
+filesRead mfsPath  = do 
+    res <- call $ _filesRead $ Just mfsPath 
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> TextIO.putStr v
+
+filesStat :: Text -> IO ()
+filesStat mfsPath  = do 
+    res <- call $ _filesStat $ Just mfsPath 
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right v -> print v
+
+filesRm :: Text -> IO ()
+filesRm mfsPath  = do 
+    res <- call $ _filesRm (Just mfsPath) (Just True)  
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right _ -> putStrLn "The object has been removed."
 
 shutdown :: IO ()
 shutdown = do 
     res <- call $ _shutdown   
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
-        Right _ -> print "The daemon has been shutdown, your welcome."
+        Right _ -> putStrLn "The daemon has been shutdown, your welcome."

@@ -44,6 +44,7 @@ type GetReturnType = TextS.Text
 type BlockReturnType = TextS.Text
 type DagReturnType = TextS.Text
 type ObjectReturnType = TextS.Text
+type FilesReadType = TextS.Text
 
 data DirLink = DirLink
     { name        :: TextS.Text 
@@ -253,6 +254,14 @@ data KeyRenameObj = KeyRenameObj
     ,  now        :: TextS.Text
     ,  overwrite  :: Bool
     ,  was        :: TextS.Text
+    }  deriving (Show)
+
+data FilesStatObj = FilesStatObj
+    {  fileObjectHash        :: TextS.Text
+    ,  objectSize            :: Int
+    ,  cumulativeObjectSize  :: Int
+    ,  blocks                :: Int
+    ,  objectType            :: TextS.Text
     }  deriving (Show)
 
 instance FromJSON DirLink where
@@ -592,6 +601,16 @@ instance FromJSON KeyRenameObj where
     
     parseJSON _ = mzero
 
+instance FromJSON FilesStatObj where
+    parseJSON (Object o) =
+        FilesStatObj  <$> o .: "Hash"
+                      <*> o .: "Size"
+                      <*> o .: "CumulativeSize"
+                      <*> o .: "Blocks"
+                      <*> o .: "Type"
+    
+    parseJSON _ = mzero
+
 {--
 instance FromJSON RefsObj where
     parseJSON (Objecto o) =
@@ -684,7 +703,11 @@ type IpfsApi = "cat" :> Capture "arg" TextS.Text :> Get '[IpfsText] CatReturnTyp
             :<|> "key" :> "list" :>  Get '[JSON] KeyObj 
             :<|> "key" :> "rename" :> Capture "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] KeyRenameObj 
             :<|> "key" :> "rm" :> Capture "arg" TextS.Text :> Get '[JSON] KeyObj 
+            :<|> "files" :> "cp" :> QueryParam "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[IpfsJSON] NoContent 
             :<|> "files" :> "mkdir" :> QueryParam "arg" TextS.Text :> Get '[IpfsJSON] NoContent 
+            :<|> "files" :> "read" :> QueryParam "arg" TextS.Text :> Get '[IpfsText] FilesReadType 
+            :<|> "files" :> "rm" :> QueryParam "arg" TextS.Text :> QueryParam "recursive" Bool :> Get '[JSON] NoContent 
+            :<|> "files" :> "stat" :> QueryParam "arg" TextS.Text :> Get '[JSON] FilesStatObj 
             :<|> "shutdown" :> Get '[JSON] NoContent 
 
 ipfsApi :: Proxy IpfsApi
@@ -745,7 +768,11 @@ _keyGen :: TextS.Text -> (Maybe TextS.Text) -> ClientM KeyDetailsObj
 _keyList :: ClientM KeyObj 
 _keyRename :: TextS.Text -> (Maybe TextS.Text) -> ClientM KeyRenameObj 
 _keyRm :: TextS.Text -> ClientM KeyObj 
+_filesCp :: Maybe TextS.Text -> Maybe TextS.Text -> ClientM NoContent 
 _filesMkdir :: Maybe TextS.Text -> ClientM NoContent 
+_filesRead :: Maybe TextS.Text -> ClientM FilesReadType 
+_filesRm :: Maybe TextS.Text -> Maybe Bool -> ClientM NoContent 
+_filesStat :: Maybe TextS.Text -> ClientM FilesStatObj 
 _shutdown :: ClientM NoContent 
 
 _cat :<|> _ls :<|> _get :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> _swarmConnect :<|> _swarmDisconnect :<|>
@@ -756,4 +783,5 @@ _cat :<|> _ls :<|> _get :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> _swarmC
   _objectGet :<|> _objectDiff :<|> _objectStat :<|> _pinAdd :<|> _pinRemove :<|> _bootstrapAdd :<|>
   _bootstrapList :<|> _bootstrapRM :<|> _statsBw :<|> _statsRepo :<|> _version :<|> _id :<|> _idPeer :<|>
   _dns :<|> _pubsubLs :<|> _pubsubPeers :<|> _logLs :<|> _logLevel :<|> _repoVersion :<|> 
-  _repoFsck :<|> _keyGen :<|> _keyList :<|> _keyRename :<|> _keyRm :<|> _filesMkdir :<|> _shutdown = client ipfsApi
+  _repoFsck :<|> _keyGen :<|> _keyList :<|> _keyRename :<|> _keyRm :<|> _filesCp :<|> _filesMkdir :<|> 
+  _filesRead :<|> _filesRm :<|> _filesStat :<|> _shutdown = client ipfsApi
