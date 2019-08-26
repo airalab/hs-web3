@@ -58,7 +58,9 @@ dependencies:
 - http-media           >= 0.7     && <0.8
 - errors               >= 2.2     && <2.4
 - hspec                >= 2.6     && <2.8
- 
+- base58string         >= 0.10.0  && <0.11
+- tar                  >= 0.5     && <0.6  
+
 ghc-options:
 - -funbox-strict-fields
 - -Wduplicate-exports

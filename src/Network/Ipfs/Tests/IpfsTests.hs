@@ -11,12 +11,12 @@
 -- Module containing Ipfs command functions.
 --
 
-module Network.Ipfs.Tests.IpfsTest where
+module Network.Ipfs.Tests.IpfsTests where
 
-import Test.Hspec
-import Test.QuickCheck
-import Control.Exception (evaluate)
-import           Data.Text                    as TextS
+import  Data.Text           as TextS
+import  Control.Exception   (evaluate)
+import  Test.Hspec
+import  Test.QuickCheck
 
 import Network.Ipfs.Api.Api (KeyDetailsObj(..), KeyObj(..))
 import Network.Ipfs.Api.Ipfs (keyGen, keyList, keyRm)

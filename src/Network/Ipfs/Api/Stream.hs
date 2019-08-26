@@ -5,7 +5,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 -- |
--- Module      :  Network.Ipfs.Api.Api
+-- Module      :  Network.Ipfs.Api.Stream
 -- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
@@ -25,7 +25,6 @@ import qualified Data.ByteString.Lazy.Char8()
 import           Data.Map()                    
 import           Data.Proxy           
 import qualified Data.Text                     as TextS
-import           GHC.Generics
 import           Network.HTTP.Client()
 import           Servant.API
 import           Servant.Client.Streaming      as S

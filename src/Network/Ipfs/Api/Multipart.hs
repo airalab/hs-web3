@@ -3,7 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- |
--- Module      :  Network.Ipfs.Api.Api
+-- Module      :  Network.Ipfs.Api.Multipart
 -- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
