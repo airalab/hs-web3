@@ -76,7 +76,7 @@ runWeb3With manager provider f = do
     where
       changeManager jsonRpc = jsonRpc {jsonRpcManager = manager} 
 
--- | 'Web3' monad runner for http
+-- | 'Web3' monad runner 
 runWeb3' :: MonadIO m
          => Provider
          -> Web3 a
@@ -95,7 +95,7 @@ runWeb3' (WSProvider host port) f = do
     liftIO $ WS.sendClose currentConnection ("Bye-" :: Text)
     return response 
 
--- | 'Web3' runner for default http provider
+-- | 'Web3' runner for default Http provider
 runWeb3 :: MonadIO m
         => Web3 a
         -> m (Either Web3Error a)

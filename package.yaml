@@ -58,7 +58,8 @@ dependencies:
 - http-media           >= 0.7     && <0.8
 - vector               >= 0.12    && <0.13
 - errors               >= 2.2     && <2.4
-
+- hspec                >= 2.6     && <2.8
+ 
 ghc-options:
 - -funbox-strict-fields
 - -Wduplicate-exports

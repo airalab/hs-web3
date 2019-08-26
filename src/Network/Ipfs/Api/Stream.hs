@@ -60,6 +60,11 @@ data RepoVerifyObj = RepoVerifyObj
     , progress  :: Int
     } deriving (Show)
 
+data RefsObj = RefsObj
+    { error :: TextS.Text
+    , ref   :: TextS.Text 
+    } deriving (Show)
+
 instance FromJSON PingObj where
     parseJSON (Object o) =
         PingObj  <$> o .: "Success"
@@ -103,6 +108,13 @@ instance FromJSON RepoVerifyObj where
     
     parseJSON _ = mzero
 
+instance FromJSON RefsObj where
+    parseJSON (Object o) =
+        RefsObj  <$> o .: "Err"
+                 <*> o .: "Ref"
+
+    parseJSON _ = mzero
+
 type IpfsStreamApi = "ping" :> Capture "arg" TextS.Text :> StreamGet NewlineFraming JSON ( SourceIO PingObj )
                 :<|> "dht" :> "findpeer" :> Capture "arg" TextS.Text :> StreamGet NewlineFraming JSON ( SourceIO DhtObj )
                 :<|> "dht" :> "findprovs" :> Capture "arg" TextS.Text :> StreamGet NewlineFraming JSON ( SourceIO DhtObj )
@@ -112,7 +124,9 @@ type IpfsStreamApi = "ping" :> Capture "arg" TextS.Text :> StreamGet NewlineFram
                 :<|> "log" :> "tail" :>  StreamGet NewlineFraming IpfsText ( SourceIO LogReturnType)
                 :<|> "repo" :> "gc" :>  StreamGet NewlineFraming JSON ( SourceIO RepoGcObj)
                 :<|> "repo" :> "verify" :>  StreamGet NewlineFraming JSON ( SourceIO RepoVerifyObj)
-
+                :<|> "refs" :> Capture "arg" TextS.Text :> StreamGet NewlineFraming JSON (SourceIO RefsObj)
+                :<|> "refs" :> "local" :> StreamGet NewlineFraming JSON (SourceIO RefsObj)
+    
 ipfsStreamApi :: Proxy IpfsStreamApi
 ipfsStreamApi =  Proxy
 
@@ -125,6 +139,8 @@ _dhtQuery :: TextS.Text -> ClientM (SourceIO DhtObj)
 _logTail :: ClientM (SourceIO LogReturnType)
 _repoGc :: ClientM (SourceIO RepoGcObj)
 _repoVerify :: ClientM (SourceIO RepoVerifyObj)
+_refs :: TextS.Text -> ClientM (SourceIO RefsObj)
+_refsLocal :: ClientM (SourceIO RefsObj) 
 
 _ping :<|> _dhtFindPeer :<|> _dhtFindProvs :<|> _dhtGet :<|> _dhtProvide :<|> _dhtQuery :<|>
-  _logTail :<|> _repoGc :<|> _repoVerify = client ipfsStreamApi
+  _logTail :<|> _repoGc :<|> _repoVerify :<|> _refs :<|> _refsLocal = client ipfsStreamApi

@@ -19,7 +19,6 @@
 module Network.Ipfs.Api.Api where
 
 import           Control.Arrow                 (left)
-import           Control.Error                 (fmapL)
 import           Control.Monad
 import           Data.Aeson
 import           Data.Int
@@ -31,7 +30,6 @@ import           Data.Proxy
 import qualified Data.Text                     as TextS
 import qualified Data.Text.Encoding            as TextS
 import           Data.Typeable            
-import qualified Data.Vector                   as Vec (fromList,Vector)
 import           Network.HTTP.Client()
 import qualified Network.HTTP.Media            as M ((//))
 import           Servant.API
@@ -60,13 +58,6 @@ data DirObj = DirObj
     } deriving (Show)
 
 data LsObj = LsObj {  objs :: [DirObj]  } deriving (Show)
-
-
-data RefsObj = RefsObj TextS.Text deriving (Show)
-{--    {   error :: TextS.Text
-    ,   ref   :: TextS.Text 
-    } deriving (Show)
---}
 
 data SwarmStreamObj = SwarmStreamObj {  protocol :: TextS.Text  } deriving (Show)  
 
@@ -643,15 +634,6 @@ instance FromJSON FilesFlushObj where
 
     parseJSON _ = mzero
 
-{--
-instance FromJSON RefsObj where
-    parseJSON (Objecto o) =
-        RefsObj  <$> o .: "Err"
-                    <*> o .: "Ref"
-
-    parseJSON _ = mzero
---}
-
 -- | Defining a content type same as PlainText without charset
 data IpfsText deriving Typeable
 
@@ -672,17 +654,11 @@ instance Servant.API.Accept IpfsJSON where
 -- | @left show . TextS.decodeUtf8' . toStrict@
 instance MimeUnrender IpfsJSON TextS.Text where
     mimeUnrender _ = left show . TextS.decodeUtf8' . toStrict
-
-instance {-# OVERLAPPING #-} MimeUnrender JSON (Vec.Vector RefsObj) where
-  mimeUnrender _ bs = do
-    t <- fmapL show (TextS.decodeUtf8' (toStrict bs))
-    pure (Vec.fromList (map RefsObj (map TextS.pack (lines $ TextS.unpack t))))    
+  
 
 type IpfsApi = "cat" :> Capture "arg" TextS.Text :> Get '[IpfsText] CatReturnType
             :<|> "ls" :> Capture "arg" TextS.Text :> Get '[JSON] LsObj
             :<|> "get" :> Capture "arg" TextS.Text :> Get '[IpfsText] GetReturnType
-            :<|> "refs" :> Capture "arg" TextS.Text :> Get '[JSON] (Vec.Vector RefsObj)
-            :<|> "refs" :> "local" :> Get '[JSON] (Vec.Vector RefsObj)
             :<|> "swarm" :> "peers" :> Get '[JSON] SwarmPeersObj
             :<|> "swarm" :> "connect" :> QueryParam "arg" TextS.Text :> Get '[JSON] SwarmObj 
             :<|> "swarm" :> "disconnect" :> QueryParam "arg" TextS.Text :> Get '[JSON] SwarmObj 
@@ -752,8 +728,6 @@ ipfsApi =  Proxy
 _cat :: TextS.Text -> ClientM CatReturnType
 _ls :: TextS.Text -> ClientM LsObj
 _get :: TextS.Text -> ClientM GetReturnType
-_refs :: TextS.Text -> ClientM (Vec.Vector RefsObj)
-_refsLocal :: ClientM (Vec.Vector RefsObj) 
 _swarmPeers :: ClientM SwarmPeersObj 
 _swarmConnect :: Maybe TextS.Text -> ClientM SwarmObj 
 _swarmDisconnect :: Maybe TextS.Text -> ClientM SwarmObj 
@@ -815,7 +789,7 @@ _filesRm :: Maybe TextS.Text -> Maybe Bool -> ClientM NoContent
 _filesStat :: Maybe TextS.Text -> ClientM FilesStatObj 
 _shutdown :: ClientM NoContent 
 
-_cat :<|> _ls :<|> _get :<|> _refs :<|> _refsLocal :<|> _swarmPeers :<|> _swarmConnect :<|> _swarmDisconnect :<|>
+_cat :<|> _ls :<|> _get :<|> _swarmPeers :<|> _swarmConnect :<|> _swarmDisconnect :<|>
   _swarmFilters :<|> _swarmFilterAdd :<|> _swarmFilterRm :<|>  _bitswapStat :<|> _bitswapWL :<|> _bitswapLedger :<|> 
   _bitswapReprovide :<|> _cidBases :<|> _cidCodecs :<|> _cidHashes :<|> _cidBase32 :<|> _cidFormat :<|> 
   _blockGet  :<|> _blockStat :<|> _dagGet :<|> _dagResolve :<|> _configGet :<|> 
