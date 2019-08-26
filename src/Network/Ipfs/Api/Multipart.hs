@@ -24,7 +24,7 @@ data AddObj = AddObj
     { name        :: TextS.Text 
     , hash        :: TextS.Text
     , size        :: TextS.Text
-    } deriving (Show)
+    } deriving (Show, Eq)
 
 instance FromJSON AddObj where
     parseJSON (Object o) =

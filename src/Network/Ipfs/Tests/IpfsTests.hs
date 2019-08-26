@@ -1,6 +1,6 @@
 
 -- |
--- Module      :  Network.Ipfs.Test.IpfsTest.hs
+-- Module      :  Network.Ipfs.Tests.IpfsTest
 -- Copyright   :  Alexander Krupenkin 2016-2018
 -- License     :  BSD3
 --
@@ -10,6 +10,8 @@
 --
 -- Module containing Ipfs command functions.
 --
+
+module Network.Ipfs.Tests.IpfsTest where
 
 import Test.Hspec
 import Test.QuickCheck

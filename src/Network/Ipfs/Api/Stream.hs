@@ -25,6 +25,7 @@ import qualified Data.ByteString.Lazy.Char8()
 import           Data.Map()                    
 import           Data.Proxy           
 import qualified Data.Text                     as TextS
+import           GHC.Generics
 import           Network.HTTP.Client()
 import           Servant.API
 import           Servant.Client.Streaming      as S
@@ -37,33 +38,40 @@ data PingObj = PingObj
     { success  :: Bool 
     , text     :: TextS.Text
     , time     :: Int64
-    } deriving (Show)
+    } deriving (Show, Eq)
 
 data ResponseObj = ResponseObj
     { addrs  :: Maybe [TextS.Text] 
     , id     :: TextS.Text
-    } deriving (Show)
+    } deriving (Show, Eq)
 
 data DhtObj = DhtObj
     { extra      :: TextS.Text 
     , addrid     :: TextS.Text
     , responses  :: Maybe [ResponseObj]
     , addrType   :: Int
-    } deriving (Show)
+    } deriving (Show, Eq)
 
-data RepoKeyObj = RepoKeyObj { repoSlash :: TextS.Text } deriving (Show)  
+data RepoKeyObj = RepoKeyObj { repoSlash :: TextS.Text } deriving (Show, Eq)  
 
-data RepoGcObj = RepoGcObj { repoKey :: RepoKeyObj } deriving (Show)  
+data RepoGcObj = RepoGcObj { repoKey :: RepoKeyObj } deriving (Show, Eq)  
 
 data RepoVerifyObj = RepoVerifyObj
     { msg       :: TextS.Text 
     , progress  :: Int
-    } deriving (Show)
+    } deriving (Show, Eq)
 
 data RefsObj = RefsObj
     { error :: TextS.Text
     , ref   :: TextS.Text 
-    } deriving (Show)
+    } deriving (Show, Eq)
+
+data PubsubSubObj = PubsubSubObj
+    {  mssgdata  :: TextS.Text
+    ,  from      :: TextS.Text
+    ,  seqno     :: TextS.Text
+    ,  topicIDs  :: [TextS.Text]
+    }  deriving (Show, Eq)
 
 instance FromJSON PingObj where
     parseJSON (Object o) =
@@ -115,6 +123,15 @@ instance FromJSON RefsObj where
 
     parseJSON _ = mzero
 
+instance FromJSON PubsubSubObj where
+    parseJSON (Object o) =
+        PubsubSubObj   <$> o .: "data"
+                       <*> o .: "from"
+                       <*> o .: "seqno"
+                       <*> o .: "topicIDs"
+    
+    parseJSON _ = mzero
+
 type IpfsStreamApi = "ping" :> Capture "arg" TextS.Text :> StreamGet NewlineFraming JSON ( SourceIO PingObj )
                 :<|> "dht" :> "findpeer" :> Capture "arg" TextS.Text :> StreamGet NewlineFraming JSON ( SourceIO DhtObj )
                 :<|> "dht" :> "findprovs" :> Capture "arg" TextS.Text :> StreamGet NewlineFraming JSON ( SourceIO DhtObj )
@@ -126,7 +143,8 @@ type IpfsStreamApi = "ping" :> Capture "arg" TextS.Text :> StreamGet NewlineFram
                 :<|> "repo" :> "verify" :>  StreamGet NewlineFraming JSON ( SourceIO RepoVerifyObj)
                 :<|> "refs" :> Capture "arg" TextS.Text :> StreamGet NewlineFraming JSON (SourceIO RefsObj)
                 :<|> "refs" :> "local" :> StreamGet NewlineFraming JSON (SourceIO RefsObj)
-    
+                :<|> "pubsub" :> "sub" :>  Capture "arg" TextS.Text :>  StreamGet NewlineFraming JSON ( SourceIO PubsubSubObj )
+
 ipfsStreamApi :: Proxy IpfsStreamApi
 ipfsStreamApi =  Proxy
 
@@ -141,6 +159,7 @@ _repoGc :: ClientM (SourceIO RepoGcObj)
 _repoVerify :: ClientM (SourceIO RepoVerifyObj)
 _refs :: TextS.Text -> ClientM (SourceIO RefsObj)
 _refsLocal :: ClientM (SourceIO RefsObj) 
+_pubsubSubscribe :: TextS.Text -> ClientM (SourceIO PubsubSubObj)
 
 _ping :<|> _dhtFindPeer :<|> _dhtFindProvs :<|> _dhtGet :<|> _dhtProvide :<|> _dhtQuery :<|>
-  _logTail :<|> _repoGc :<|> _repoVerify :<|> _refs :<|> _refsLocal = client ipfsStreamApi
+  _logTail :<|> _repoGc :<|> _repoVerify :<|> _refs :<|> _refsLocal :<|> _pubsubSubscribe = client ipfsStreamApi

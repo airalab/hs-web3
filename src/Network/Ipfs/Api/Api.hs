@@ -50,16 +50,16 @@ data DirLink = DirLink
     , size        :: Int64
     , contentType :: Int
     , target      :: TextS.Text
-    } deriving (Show)
+    } deriving (Show, Eq)
  
 data DirObj = DirObj
     { dirHash :: TextS.Text
     , links   :: [DirLink] 
-    } deriving (Show)
+    } deriving (Show, Eq)
 
-data LsObj = LsObj {  objs :: [DirObj]  } deriving (Show)
+data LsObj = LsObj {  objs :: [DirObj]  } deriving (Show, Eq)
 
-data SwarmStreamObj = SwarmStreamObj {  protocol :: TextS.Text  } deriving (Show)  
+data SwarmStreamObj = SwarmStreamObj {  protocol :: TextS.Text  } deriving (Show, Eq)  
 
 data SwarmPeerObj = SwarmPeerObj
    {  address   :: TextS.Text
@@ -68,13 +68,13 @@ data SwarmPeerObj = SwarmPeerObj
     , muxer     :: TextS.Text
     , peer      :: TextS.Text
     , streams   :: Maybe [SwarmStreamObj]
-   } deriving (Show)
+   } deriving (Show, Eq)
 
-data SwarmPeersObj = SwarmPeersObj {  peers :: [SwarmPeerObj]  } deriving (Show)  
+data SwarmPeersObj = SwarmPeersObj {  peers :: [SwarmPeerObj]  } deriving (Show, Eq)  
 
-data SwarmObj = SwarmObj {  strings :: [TextS.Text]  } deriving (Show)  
+data SwarmObj = SwarmObj {  strings :: [TextS.Text]  } deriving (Show, Eq)  
 
-data WantlistObj = WantlistObj {  forSlash :: TextS.Text } deriving (Show)
+data WantlistObj = WantlistObj {  forSlash :: TextS.Text } deriving (Show, Eq)
 
 data BitswapStatObj = BitswapStatObj
     {  blocksReceived   :: Int64
@@ -87,9 +87,9 @@ data BitswapStatObj = BitswapStatObj
     ,  bitswapPeers     :: [TextS.Text]
     ,  provideBufLen    :: Int
     ,  wantlist         :: [WantlistObj]
-    }  deriving (Show)
+    }  deriving (Show, Eq)
 
-data BitswapWLObj = BitswapWLObj {  bitswapKeys :: [WantlistObj] } deriving (Show)
+data BitswapWLObj = BitswapWLObj {  bitswapKeys :: [WantlistObj] } deriving (Show, Eq)
 
 data BitswapLedgerObj = BitswapLedgerObj
     {  exchanged  :: Int64
@@ -97,68 +97,68 @@ data BitswapLedgerObj = BitswapLedgerObj
     ,  recv       :: Int64
     ,  sent       :: Int64
     ,  value      :: Double
-    }  deriving (Show)
+    }  deriving (Show, Eq)
 
 data CidBasesObj = CidBasesObj
     { baseCode :: Int
     , baseName :: TextS.Text
-    } deriving (Show)
+    } deriving (Show, Eq)
 
 data CidCodecsObj = CidCodecsObj
     { codecCode :: Int
     , codecName :: TextS.Text
-    } deriving (Show)
+    } deriving (Show, Eq)
 
 data CidHashesObj = CidHashesObj
     { multihashCode :: Int
     , multihashName :: TextS.Text
-    } deriving (Show)
+    } deriving (Show, Eq)
 
 data CidObj = CidObj
     { cidStr    :: TextS.Text
     , errorMsg  :: TextS.Text
     , formatted :: TextS.Text
-    } deriving (Show)
+    } deriving (Show, Eq)
    
 data BlockObj = BlockObj
     { key       :: TextS.Text
     , blockSize :: Int
-    } deriving (Show)
+    } deriving (Show, Eq)
 
-data DagCidObj = DagCidObj {  cidSlash :: TextS.Text } deriving (Show)
+data DagCidObj = DagCidObj {  cidSlash :: TextS.Text } deriving (Show, Eq)
 
 data DagResolveObj = DagResolveObj
     { cid     :: DagCidObj
     , remPath :: TextS.Text
-    } deriving (Show)
+    } deriving (Show, Eq)
 
 data DagPutObj = DagPutObj
     { putCid     :: DagCidObj
-    } deriving (Show)
+    } deriving (Show, Eq)
 
 data ConfigObj = ConfigObj
     { configKey   :: TextS.Text
     , configValue :: TextS.Text
-    } deriving (Show)
+    } deriving (Show, Eq)
 
 data ObjectLinkObj = ObjectLinkObj
     { linkHash  :: TextS.Text
     , linkName  :: TextS.Text
     , linkSize  :: Int64
-    } deriving (Show)
+    } deriving (Show, Eq)
 
-data ObjectObj = ObjectObj { newObjectHash  :: TextS.Text } deriving (Show)
+data ObjectObj = ObjectObj { newObjectHash  :: TextS.Text } deriving (Show, Eq)
 
 data ObjectLinksObj = WithLinks
     { objectHash  :: TextS.Text
     , objectLinks :: [ObjectLinkObj]   
     } 
-    | WithoutLinks { objectHash  :: TextS.Text } deriving (Show)
+    | WithoutLinks { objectHash  :: TextS.Text } deriving (Show, Eq)
 
 data ObjectGetObj = ObjectGetObj
     { objectName     :: TextS.Text
     , objectGetLinks :: [ObjectLinkObj]   
-    } deriving (Show)
+    } deriving (Show, Eq)
 
 data ObjectStatObj = ObjectStatObj
     {  objBlockSize   :: Int
@@ -167,18 +167,18 @@ data ObjectStatObj = ObjectStatObj
     ,  objHash        :: TextS.Text
     ,  linksSize      :: Int
     ,  numLinks       :: Int    
-    }  deriving (Show)
+    }  deriving (Show, Eq)
 
-data DiffObj = DiffObj {  diffSlash :: TextS.Text } deriving (Show)
+data DiffObj = DiffObj {  diffSlash :: TextS.Text } deriving (Show, Eq)
 
 data ObjectChangeObj = ObjectChangeObj
     { after    :: Maybe DiffObj 
     , before   :: DiffObj
     , path     :: TextS.Text
     , diffType :: Int
-    } deriving (Show)
+    } deriving (Show, Eq)
 
-data ObjectDiffObj = ObjectDiffObj {  changes :: [ObjectChangeObj] } deriving (Show)
+data ObjectDiffObj = ObjectDiffObj {  changes :: [ObjectChangeObj] } deriving (Show, Eq)
 
 data PinObj = WithoutProgress
     { pins  :: [TextS.Text] }  
@@ -186,16 +186,16 @@ data PinObj = WithoutProgress
     | WithProgress
     {  pins     :: [TextS.Text]
     ,  progress :: Int
-    } deriving (Show)
+    } deriving (Show, Eq)
 
-data BootstrapObj = BootstrapObj { bootstrapPeers  :: [TextS.Text] } deriving (Show)
+data BootstrapObj = BootstrapObj { bootstrapPeers  :: [TextS.Text] } deriving (Show, Eq)
 
 data StatsBwObj = StatsBwObj
     {  rateIn   :: Double
     ,  rateOut  :: Double
     ,  totalIn  :: Int64
     ,  totalOut :: Int64
-    }  deriving (Show)
+    }  deriving (Show, Eq)
 
 data StatsRepoObj = StatsRepoObj
     {  numObjects  :: Int64
@@ -203,7 +203,7 @@ data StatsRepoObj = StatsRepoObj
     ,  repoSize    :: Int64
     ,  storageMax  :: Int64
     ,  repoVersion :: TextS.Text
-    }  deriving (Show)
+    }  deriving (Show, Eq)
 
 data VersionObj = VersionObj
     {  commit  :: TextS.Text
@@ -211,7 +211,7 @@ data VersionObj = VersionObj
     ,  repo    :: TextS.Text
     ,  system  :: TextS.Text
     ,  version :: TextS.Text
-    }  deriving (Show)
+    }  deriving (Show, Eq)
 
 data IdObj = IdObj
     {  addresses       :: [TextS.Text]
@@ -219,33 +219,33 @@ data IdObj = IdObj
     ,  id              :: TextS.Text
     ,  protocolVersion :: TextS.Text
     ,  publicKey       :: TextS.Text
-    }  deriving (Show)
+    }  deriving (Show, Eq)
 
-data DnsObj = DnsObj { dnsPath  :: TextS.Text } deriving (Show)
+data DnsObj = DnsObj { dnsPath  :: TextS.Text } deriving (Show, Eq)
 
-data PubsubObj = PubsubObj { pubsubStrings :: [TextS.Text] } deriving (Show)  
+data PubsubObj = PubsubObj { pubsubStrings :: [TextS.Text] } deriving (Show, Eq)  
 
-data LogLsObj = LogLsObj { logLsStrings :: [TextS.Text] } deriving (Show)  
+data LogLsObj = LogLsObj { logLsStrings :: [TextS.Text] } deriving (Show, Eq)  
 
-data LogLevelObj = LogLevelObj { message :: TextS.Text } deriving (Show)  
+data LogLevelObj = LogLevelObj { message :: TextS.Text } deriving (Show, Eq)  
 
-data RepoVersionObj = RepoVersionObj { repoVer :: TextS.Text } deriving (Show)  
+data RepoVersionObj = RepoVersionObj { repoVer :: TextS.Text } deriving (Show, Eq)  
 
-data RepoFsckObj = RepoFsckObj { repoMessage :: TextS.Text } deriving (Show)  
+data RepoFsckObj = RepoFsckObj { repoMessage :: TextS.Text } deriving (Show, Eq)  
 
 data KeyDetailsObj = KeyDetailsObj
     { keyId    :: TextS.Text 
     , keyName  :: TextS.Text 
     } deriving (Show, Eq)
 
-data KeyObj = KeyObj { keys :: [KeyDetailsObj] } deriving (Show)  
+data KeyObj = KeyObj { keys :: [KeyDetailsObj] } deriving (Show, Eq)  
 
 data KeyRenameObj = KeyRenameObj
     {  peerId     :: TextS.Text
     ,  now        :: TextS.Text
     ,  overwrite  :: Bool
     ,  was        :: TextS.Text
-    }  deriving (Show)
+    }  deriving (Show, Eq)
 
 data FilesStatObj = FilesStatObj
     {  fileObjectHash        :: TextS.Text
@@ -253,18 +253,18 @@ data FilesStatObj = FilesStatObj
     ,  cumulativeObjectSize  :: Int
     ,  blocks                :: Int
     ,  objectType            :: TextS.Text
-    }  deriving (Show)
+    }  deriving (Show, Eq)
 
 data FilesEntryObj = FilesEntryObj
     {  entryName  :: TextS.Text
     ,  entryType  :: Int
     ,  entrySize  :: Int
     ,  entryHash  :: TextS.Text
-    }  deriving (Show)
+    }  deriving (Show, Eq)
 
-data FilesLsObj = FilesLsObj { enteries :: [FilesEntryObj] } deriving (Show)  
+data FilesLsObj = FilesLsObj { enteries :: [FilesEntryObj] } deriving (Show, Eq)  
 
-data FilesFlushObj = FilesFlushObj { fileCid :: TextS.Text } deriving (Show)  
+data FilesFlushObj = FilesFlushObj { fileCid :: TextS.Text } deriving (Show, Eq)  
 
 instance FromJSON DirLink where
     parseJSON (Object o) =
@@ -703,6 +703,7 @@ type IpfsApi = "cat" :> Capture "arg" TextS.Text :> Get '[IpfsText] CatReturnTyp
             :<|> "dns" :> Capture "arg" TextS.Text :> Get '[JSON] DnsObj 
             :<|> "pubsub" :> "ls" :>  Get '[JSON] PubsubObj 
             :<|> "pubsub" :> "peers" :>  Get '[JSON] PubsubObj 
+            :<|> "pubsub" :> "pub" :> Capture "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] NoContent 
             :<|> "log" :> "ls" :>  Get '[JSON] LogLsObj 
             :<|> "log" :> "level" :> Capture "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] LogLevelObj 
             :<|> "repo" :> "version" :>  Get '[JSON] RepoVersionObj 
@@ -770,6 +771,7 @@ _idPeer :: TextS.Text -> ClientM IdObj
 _dns :: TextS.Text -> ClientM DnsObj 
 _pubsubLs :: ClientM PubsubObj 
 _pubsubPeers :: ClientM PubsubObj 
+_pubsubPublish :: TextS.Text -> Maybe TextS.Text -> ClientM NoContent 
 _logLs :: ClientM LogLsObj 
 _logLevel :: TextS.Text -> Maybe TextS.Text -> ClientM LogLevelObj
 _repoVersion :: ClientM RepoVersionObj 
@@ -796,7 +798,7 @@ _cat :<|> _ls :<|> _get :<|> _swarmPeers :<|> _swarmConnect :<|> _swarmDisconnec
   _configSet :<|> _objectData :<|> _objectNew :<|> _objectGetLinks :<|> _objectAddLink :<|> _objectRmLink :<|> 
   _objectGet :<|> _objectDiff :<|> _objectStat :<|> _pinAdd :<|> _pinRemove :<|> _bootstrapAdd :<|>
   _bootstrapList :<|> _bootstrapRM :<|> _statsBw :<|> _statsRepo :<|> _version :<|> _id :<|> _idPeer :<|>
-  _dns :<|> _pubsubLs :<|> _pubsubPeers :<|> _logLs :<|> _logLevel :<|> _repoVersion :<|> 
+  _dns :<|> _pubsubLs :<|> _pubsubPeers :<|> _pubsubPublish :<|> _logLs :<|> _logLevel :<|> _repoVersion :<|> 
   _repoFsck :<|> _keyGen :<|> _keyList :<|> _keyRename :<|> _keyRm :<|> _filesChcid :<|> _filesCp :<|> 
   _filesFlush :<|> _filesLs :<|> _filesMkdir :<|> _filesMv :<|> _filesRead :<|> _filesRm :<|> _filesStat :<|> 
   _shutdown = client ipfsApi

@@ -40,7 +40,7 @@ import           Network.Ipfs.Api.Api         (_cat, _ls, _get, _swarmPeers, _sw
                                               _objectNew, _objectGetLinks, _objectAddLink, _objectRmLink,
                                               _objectGet, _objectStat, _pinAdd, _pinRemove,_bootstrapList, 
                                               _bootstrapAdd, _bootstrapRM, _statsBw, _statsRepo, _version,
-                                              _id, _idPeer, _dns, _pubsubLs, _pubsubPeers, _logLs, _logLevel,
+                                              _id, _idPeer, _dns, _pubsubLs, _pubsubPeers, _pubsubPublish, _logLs, _logLevel,
                                               _repoVersion, _repoFsck, _keyGen, _keyList, _keyRm, _keyRename,
                                               _filesChcid, _filesCp, _filesFlush, _filesLs, _filesMkdir, 
                                               _filesMv, _filesRead, _filesRm, _filesStat, _shutdown,
@@ -48,7 +48,7 @@ import           Network.Ipfs.Api.Api         (_cat, _ls, _get, _swarmPeers, _sw
 
 import           Network.Ipfs.Api.Multipart   (AddObj)
 import           Network.Ipfs.Api.Stream      (_ping, _dhtFindPeer, _dhtFindProvs, _dhtGet, _dhtProvide,
-                                              _dhtQuery, _logTail, _repoGc, _repoVerify, _refs, _refsLocal)
+                                              _dhtQuery, _logTail, _repoGc, _repoVerify, _refs, _refsLocal, _pubsubSubscribe)
 
 -- | Regular Call function
 call :: ClientM a -> IO (Either ServantError a)
@@ -511,6 +511,18 @@ pubsubPeers = do
     case res of
         Left err -> putStrLn $ "Error: " ++ show err
         Right v -> print v
+
+-- | Publish a message to a given pubsub topic.
+pubsubPublish :: Text -> Text -> IO ()
+pubsubPublish topic mssg = do 
+    res <- call $ _pubsubPublish topic $ Just mssg
+    case res of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right _ -> putStrLn "The given message has been published."
+     
+-- | Subscribe to messages on a given topic.
+pubsubSubscribe :: Text -> IO ()
+pubsubSubscribe topic = streamCall $ _pubsubSubscribe topic
 
 -- | List the logging subsystems. 
 logLs :: IO ()
