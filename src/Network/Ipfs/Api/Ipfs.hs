@@ -44,7 +44,7 @@ import           Network.Ipfs.Api.Api         (_cat, _ls, _get, _swarmPeers, _sw
                                               _repoVersion, _repoFsck, _keyGen, _keyList, _keyRm, _keyRename,
                                               _filesChcid, _filesCp, _filesFlush, _filesLs, _filesMkdir, 
                                               _filesMv, _filesRead, _filesRm, _filesStat, _shutdown,
-                                              BlockObj, DagPutObj, ObjectObj, ObjectLinksObj, KeyDetailsObj)
+                                              BlockObj, DagPutObj, ObjectObj, ObjectLinksObj, KeyDetailsObj, KeyRenameObj, KeyObj)
 
 import           Network.Ipfs.Api.Multipart   (AddObj)
 import           Network.Ipfs.Api.Stream      (_ping, _dhtFindPeer, _dhtFindProvs, _dhtGet, _dhtProvide,
@@ -557,32 +557,20 @@ repoVerify :: IO ()
 repoVerify = streamCall _repoVerify
 
 -- | 'List all local keypairs. 
-keyList :: IO ()
-keyList = do 
-    res <- call _keyList
-    case res of
-        Left err -> putStrLn $ "Error: " ++ show err
-        Right v -> print v
+keyList :: IO (Either ServantError KeyObj)
+keyList = call _keyList
 
 -- | Create a new keypair. 
 keyGen :: Text -> Text -> IO (Either ServantError KeyDetailsObj) 
 keyGen name keyType = call $ _keyGen name (Just keyType)
 
 -- | Rename a keypair. 
-keyRename :: Text -> Text -> IO ()
-keyRename was now  = do 
-    res <- call $ _keyRename was $ Just now 
-    case res of
-        Left err -> putStrLn $ "Error: " ++ show err
-        Right v -> print v        
+keyRename :: Text -> Text -> IO (Either ServantError KeyRenameObj)
+keyRename was now  = call $ _keyRename was $ Just now       
 
 -- | Remove a keypair. 
-keyRm :: Text -> IO ()
-keyRm name  = do 
-    res <- call $ _keyRm name 
-    case res of
-        Left err -> putStrLn $ "Error: " ++ show err
-        Right v -> print v
+keyRm :: Text -> IO (Either ServantError KeyObj)
+keyRm name  = call $ _keyRm name 
 
 -- | Change the cid version or hash function of the root node of a given mfsPath. 
 filesChcidVer :: Text -> Int -> IO ()

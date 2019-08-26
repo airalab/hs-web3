@@ -236,7 +236,7 @@ data RepoFsckObj = RepoFsckObj { repoMessage :: TextS.Text } deriving (Show)
 data KeyDetailsObj = KeyDetailsObj
     { keyId    :: TextS.Text 
     , keyName  :: TextS.Text 
-    } deriving (Show)
+    } deriving (Show, Eq)
 
 data KeyObj = KeyObj { keys :: [KeyDetailsObj] } deriving (Show)  
 
