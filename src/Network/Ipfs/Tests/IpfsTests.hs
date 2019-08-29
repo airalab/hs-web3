@@ -13,12 +13,11 @@
 
 module Network.Ipfs.Tests.IpfsTests where
 
-import  Data.Text           as TextS
-import  Control.Exception   (evaluate)
+import  Data.Text            as TextS
+import  Control.Exception() 
 import  Test.Hspec
-import  Test.QuickCheck
 
-import Network.Ipfs.Api.Api (KeyDetailsObj(..), KeyObj(..))
+import Network.Ipfs.Api.Api  (KeyDetailsObj(..), KeyObj(..))
 import Network.Ipfs.Api.Ipfs (keyGen, keyList, keyRm)
 
 main :: IO ()

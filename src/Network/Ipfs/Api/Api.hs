@@ -25,7 +25,6 @@ import           Data.Int
 import           Data.ByteString.Lazy          (toStrict)
 import qualified Data.ByteString.Lazy.Char8()
 import qualified Data.HashMap.Strict           as H
-import           Data.Map()                    
 import           Data.Proxy           
 import qualified Data.Text                     as TextS
 import qualified Data.Text.Encoding            as TextS

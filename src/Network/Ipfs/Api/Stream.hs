@@ -22,7 +22,6 @@ import           Control.Monad
 import           Data.Aeson
 import           Data.Int
 import qualified Data.ByteString.Lazy.Char8()
-import           Data.Map()                    
 import           Data.Proxy           
 import qualified Data.Text                     as TextS
 import           Network.HTTP.Client()

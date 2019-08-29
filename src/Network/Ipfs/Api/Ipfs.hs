@@ -18,33 +18,33 @@
 
 module Network.Ipfs.Api.Ipfs where
 
-import qualified Codec.Archive.Tar            as Tar
-import           Data.Aeson                   (decode)
-import           Data.Text                    as TextS
-import qualified Data.Text.Encoding           as TextS
-import qualified Data.Text.IO                 as TextIO
-import qualified Data.ByteString.Lazy         as BS (ByteString, fromStrict) 
-import           Network.HTTP.Client          as Net  hiding (Proxy)
+import qualified Codec.Archive.Tar                      as Tar
+import           Data.Aeson                             (decode)
+import           Data.Text                              as TextS
+import qualified Data.Text.Encoding                     as TextS
+import qualified Data.Text.IO                           as TextIO
+import qualified Data.ByteString.Lazy                   as BS (ByteString, fromStrict) 
+import           Network.HTTP.Client                    as Net  hiding (Proxy)
 import           Network.HTTP.Client.MultipartFormData
-import           Network.HTTP.Types           (Status(..))
+import           Network.HTTP.Types                     (Status(..))
 import           Servant.Client
-import qualified Servant.Client.Streaming     as S
-import           Servant.Types.SourceT        (SourceT, foreach)
+import qualified Servant.Client.Streaming               as S
+import           Servant.Types.SourceT                  (SourceT, foreach)
 
-import           Network.Ipfs.Api.Api         (_cat, _ls, _get, _swarmPeers, _swarmConnect,
-                                              _swarmDisconnect, _swarmFilterAdd, _swarmFilters,
-                                              _swarmFilterRm, _bitswapStat, _bitswapWL, _bitswapLedger,
-                                              _bitswapReprovide, _cidBases, _cidCodecs, _cidHashes, _cidBase32,
-                                              _cidFormat, _blockGet, _objectDiff, _blockStat, _dagGet,
-                                              _dagResolve, _configGet, _configSet, _objectData,
-                                              _objectNew, _objectGetLinks, _objectAddLink, _objectRmLink,
-                                              _objectGet, _objectStat, _pinAdd, _pinRemove,_bootstrapList, 
-                                              _bootstrapAdd, _bootstrapRM, _statsBw, _statsRepo, _version,
-                                              _id, _idPeer, _dns, _pubsubLs, _pubsubPeers, _pubsubPublish, _logLs, _logLevel,
-                                              _repoVersion, _repoFsck, _keyGen, _keyList, _keyRm, _keyRename,
-                                              _filesChcid, _filesCp, _filesFlush, _filesLs, _filesMkdir, 
-                                              _filesMv, _filesRead, _filesRm, _filesStat, _shutdown,
-                                              BlockObj, DagPutObj, ObjectObj, ObjectLinksObj, KeyDetailsObj, KeyRenameObj, KeyObj)
+import           Network.Ipfs.Api.Api                   (_cat, _ls, _get, _swarmPeers, _swarmConnect,
+                                                        _swarmDisconnect, _swarmFilterAdd, _swarmFilters,
+                                                        _swarmFilterRm, _bitswapStat, _bitswapWL, _bitswapLedger,
+                                                        _bitswapReprovide, _cidBases, _cidCodecs, _cidHashes, _cidBase32,
+                                                        _cidFormat, _blockGet, _objectDiff, _blockStat, _dagGet,
+                                                        _dagResolve, _configGet, _configSet, _objectData,
+                                                        _objectNew, _objectGetLinks, _objectAddLink, _objectRmLink,
+                                                        _objectGet, _objectStat, _pinAdd, _pinRemove,_bootstrapList, 
+                                                        _bootstrapAdd, _bootstrapRM, _statsBw, _statsRepo, _version,
+                                                        _id, _idPeer, _dns, _pubsubLs, _pubsubPeers, _pubsubPublish, _logLs, _logLevel,
+                                                        _repoVersion, _repoFsck, _keyGen, _keyList, _keyRm, _keyRename,
+                                                        _filesChcid, _filesCp, _filesFlush, _filesLs, _filesMkdir, 
+                                                        _filesMv, _filesRead, _filesRm, _filesStat, _shutdown,
+                                                        BlockObj, DagPutObj, ObjectObj, ObjectLinksObj, KeyDetailsObj, KeyRenameObj, KeyObj)
 
 import           Network.Ipfs.Api.Multipart   (AddObj)
 import           Network.Ipfs.Api.Stream      (_ping, _dhtFindPeer, _dhtFindProvs, _dhtGet, _dhtProvide,
