@@ -34,7 +34,6 @@ import qualified Network.HTTP.Media            as M ((//))
 import           Servant.API
 import           Servant.Client
 
-
 type CatReturnType = TextS.Text
 type ReprovideReturnType = TextS.Text
 type GetReturnType = TextS.Text
