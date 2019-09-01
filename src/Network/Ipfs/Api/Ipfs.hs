@@ -26,7 +26,6 @@ import           Control.Monad.Reader
 import           Data.Aeson                             (decode)
 import           Data.Text                              as TextS
 import qualified Data.Text.Encoding                     as TextS
-import qualified Data.Text.IO                           as TextIO
 import qualified Data.ByteString.Lazy                   as BS (ByteString, fromStrict) 
 import           Network.HTTP.Client                    as Net  hiding (Proxy)
 import           Network.HTTP.Client.MultipartFormData
@@ -41,12 +40,12 @@ import           Network.Ipfs.Api.Multipart             (AddObj)
 import           Network.Ipfs.Api.Stream                (_ping, _dhtFindPeer, _dhtFindProvs, _dhtGet, _dhtProvide,
                                                         _dhtQuery, _logTail, _repoGc, _repoVerify, _refs, _refsLocal, _pubsubSubscribe)
 
-newtype IpfsT m a = IpfsT { unIpfs :: ReaderT (Manager, BaseUrl) (ExceptT ServantError m) a}
+newtype IpfsT m a = IpfsT { unIpfs :: ReaderT (Manager, BaseUrl, String) (ExceptT ServantError m) a}
   deriving ( Functor
            , Applicative
            , Monad
            , MonadIO
-           , MonadReader (Manager, BaseUrl)
+           , MonadReader (Manager, BaseUrl, String)
            , MonadError ServantError
            )
 
@@ -55,22 +54,24 @@ instance MonadTrans IpfsT where
 
 type Ipfs a = IpfsT IO a
 
+-- | 'IpfsT' monad runner.
 runIpfs' :: BaseUrl -> Ipfs a -> IO ()
 runIpfs' url ipfs = do
-  manager <- liftIO $ newManager defaultManagerSettings
-  ret <- runExceptT (runReaderT (unIpfs ipfs) (manager, url))
+  manager' <- liftIO $ newManager defaultManagerSettings
+  ret <- runExceptT (runReaderT (unIpfs ipfs) (manager', url, showBaseUrl url))
   case ret of
     Left err -> putStrLn $ "Error: " ++ show err
     Right _ -> putStr ""
 
+-- | 'IpfsT' monad runner with default arguments.
 runIpfs :: Ipfs a -> IO ()
-runIpfs =
-  runIpfs' (BaseUrl Http "localhost" 5001 "/api/v0")
+runIpfs = runIpfs' (BaseUrl Http "localhost" 5001 "/api/v0")
 
+-- | Regular Call function.
 call :: (ClientM a) -> Ipfs a
 call func = do
-  (manager, url) <- ask
-  resp <- lift (runClientM func (mkClientEnv manager url))
+  (manager', url, _) <- ask
+  resp <- lift (runClientM func (mkClientEnv manager' url))
   case resp of
     Left l -> throwError l
     Right r -> pure r                                             
@@ -84,12 +85,12 @@ streamCall func = do
         Right rs -> foreach fail print rs
 
 -- | Call function for ‘multipart/form-data’. 
-multipartCall ::  Text -> Text -> IO (Net.Response BS.ByteString)
-multipartCall uri filePath = do
-    reqManager <- newManager defaultManagerSettings
-    req <- parseRequest $ TextS.unpack uri
-    resp <- flip httpLbs reqManager =<< formDataBody form req
-    return (resp)
+multipartCall :: Text -> Text -> Ipfs (Net.Response BS.ByteString)
+multipartCall funcUri filePath = do
+    (reqManager, _, url) <- ask
+    req <- liftIO $ parseRequest $ TextS.unpack (( TextS.pack  url ) <>  (TextS.pack "/") <> funcUri )
+    resp <- liftIO $ flip httpLbs reqManager =<< formDataBody form req
+    pure resp
     
     where form = [ partFileSource "file" $ TextS.unpack filePath ]
 
@@ -98,11 +99,11 @@ cat :: Text -> Ipfs Api.CatReturnType
 cat hash = call $ Api._cat hash
 
 -- | Add a file or directory to ipfs. 
-add :: Text -> IO()
-add filePath = do 
-    responseVal <- multipartCall (TextS.pack "http://localhost:5001/api/v0/add") filePath 
-    print (decode (Net.responseBody responseVal)  :: Maybe AddObj)
-    
+add :: Text -> Ipfs (Maybe AddObj)
+add filePath =  do 
+    responseVal <- ( multipartCall (TextS.pack "add") filePath )
+    pure (decode (Net.responseBody responseVal)  :: Maybe AddObj)
+        
 -- | List directory contents for Unix filesystem objects. 
 ls :: Text -> Ipfs Api.LsObj
 ls hash = call $ Api._ls hash
@@ -188,11 +189,11 @@ blockGet :: Text -> Ipfs Api.BlockReturnType
 blockGet key = call $ Api._blockGet key
         
 -- | Store input as an IPFS block. 
-blockPut :: Text -> IO()
+blockPut :: Text -> Ipfs (Maybe Api.BlockObj)
 blockPut filePath = do 
-    responseVal <- multipartCall (TextS.pack "http://localhost:5001/api/v0/block/put") filePath 
-    print (decode (Net.responseBody responseVal)  :: Maybe Api.BlockObj)
-        
+    responseVal <- multipartCall (TextS.pack "block/put") filePath 
+    pure (decode (Net.responseBody responseVal)  :: Maybe Api.BlockObj)
+
 -- | Print information of a raw IPFS block. 
 blockStat :: Text -> Ipfs Api.BlockObj
 blockStat key = call $ Api._blockStat key
@@ -206,10 +207,10 @@ dagResolve :: Text -> Ipfs Api.DagResolveObj
 dagResolve ref = call $ Api._dagResolve ref
 
 -- | Add a dag node to ipfs. 
-dagPut :: Text -> IO()
+dagPut :: Text -> Ipfs (Maybe Api.DagPutObj)
 dagPut filePath = do 
-    responseVal <- multipartCall (TextS.pack "http://localhost:5001/api/v0/dag/put") filePath 
-    print (decode (Net.responseBody responseVal)  :: Maybe Api.DagPutObj)
+    responseVal <- multipartCall (TextS.pack "dag/put") filePath 
+    pure (decode (Net.responseBody responseVal)  :: Maybe Api.DagPutObj)
 
 -- | Get ipfs config values. 
 configGet :: Text -> Ipfs Api.ConfigObj
@@ -220,13 +221,12 @@ configSet :: Text -> Text -> Ipfs Api.ConfigObj
 configSet key value = call $ Api._configSet key $ Just value
 
 -- | Replace the config with the file at <filePath>. 
-configReplace :: Text -> IO()
+configReplace :: Text -> Ipfs (Maybe Text)
 configReplace filePath = do 
-    responseVal <- multipartCall (TextS.pack "http://localhost:5001/api/v0/config/replace") filePath 
-    case statusCode $ Net.responseStatus responseVal of 
-        200 -> putStrLn "Config File Replaced Successfully with status code - "
-        _   -> putStrLn $ "Error occured with status code - "
-    print $ statusCode $ Net.responseStatus responseVal
+    responseVal <- multipartCall (TextS.pack "config/replace") filePath 
+    pure $ case statusCode $ Net.responseStatus responseVal of 
+            200 -> Just $ "Config File Replaced Successfully with status code - " <> (TextS.pack "200")
+            _   -> Just $ "Error occured with status code - " <>  (TextS.pack $ show (statusCode $ Net.responseStatus responseVal))
                 
 -- | Output the raw bytes of an IPFS object. 
 objectData :: Text -> Ipfs Api.ObjectReturnType
@@ -249,17 +249,17 @@ objectRmLink :: Text -> Text -> Ipfs Api.ObjectLinksObj
 objectRmLink key name = call $ Api._objectRmLink key (Just name)
 
 -- | Append data to what already exists in the data segment in the given object. 
-objectAppendData :: Text -> Text -> IO()
+objectAppendData :: Text -> Text -> Ipfs (Maybe Api.ObjectLinksObj)
 objectAppendData key filePath = do 
-    responseVal <- multipartCall ( ( TextS.pack "http://localhost:5001/api/v0/object/patch/append-data?arg=" ) <> key) filePath 
-    print (decode ( Net.responseBody responseVal)  :: Maybe Api.ObjectLinksObj)        
+    responseVal <- multipartCall ( ( TextS.pack "object/patch/append-data?arg=" ) <> key) filePath 
+    pure ( decode ( Net.responseBody responseVal)  :: Maybe Api.ObjectLinksObj ) 
 
 -- | Set the data field of an IPFS object. 
-objectSetData :: Text -> Text -> IO()
+objectSetData :: Text -> Text -> Ipfs (Maybe Api.ObjectLinksObj)
 objectSetData key filePath = do 
-    responseVal <- multipartCall ( ( TextS.pack "http://localhost:5001/api/v0/object/patch/set-data?arg=" ) <>key) filePath 
-    print (decode ( Net.responseBody responseVal)  :: Maybe Api.ObjectLinksObj)        
-        
+    responseVal <- multipartCall ( ( TextS.pack "object/patch/set-data?arg=" ) <> key) filePath 
+    pure ( decode ( Net.responseBody responseVal)  :: Maybe Api.ObjectLinksObj )      
+
 -- | Get and serialize the DAG node named by key. 
 objectGet :: Text -> Ipfs Api.ObjectGetObj
 objectGet key = call $ Api._objectGet key
@@ -269,12 +269,12 @@ objectDiff :: Text -> Text -> Ipfs Api.ObjectDiffObj
 objectDiff firstKey secondKey = call $ Api._objectDiff firstKey (Just secondKey)
 
 -- | Store input as a DAG object, print its key. 
-objectPut :: Text -> IO()
+objectPut :: Text -> Ipfs ( Maybe Api.ObjectObj )
 objectPut filePath = do 
-    responseVal <- multipartCall (TextS.pack "http://localhost:5001/api/v0/object/put") filePath 
-    print (decode ( Net.responseBody responseVal)  :: Maybe Api.ObjectObj)        
+    responseVal <- multipartCall (TextS.pack "object/put") filePath 
+    pure (decode ( Net.responseBody responseVal)  :: Maybe Api.ObjectObj)        
 
--- | Get stats for the DAG node named by key. 
+    -- | Get stats for the DAG node named by key. 
 objectStat :: Text -> Ipfs Api.ObjectStatObj
 objectStat key = call $ Api._objectStat key
 
@@ -455,14 +455,13 @@ filesRm mfsPath  = do
     pure "The object has been removed."
 
 -- | Write to a mutable file in a given filesystem. 
-filesWrite :: Text -> Text -> Bool -> IO()
+filesWrite :: Text -> Text -> Bool -> Ipfs (Maybe Text)
 filesWrite mfsPath filePath toTruncate = do 
-    responseVal <- multipartCall ((TextS.pack "http://localhost:5001/api/v0/files/write?arg=") 
+    responseVal <- multipartCall ((TextS.pack "files/write?arg=") 
         <> mfsPath <> (TextS.pack "&create=true") <>  (TextS.pack "&truncate=") <> (TextS.pack $ show toTruncate) ) filePath 
-    case statusCode $ Net.responseStatus responseVal of 
-        200 -> putStrLn "Config File Replaced Successfully with status code - "
-        _   -> putStrLn $ "Error occured with status code - "
-    print $ statusCode $ Net.responseStatus responseVal    
+    pure $ case statusCode $ Net.responseStatus responseVal of 
+            200 -> Just $ "File has been written Successfully with status code - " <> (TextS.pack "200")
+            _   -> Just $ "Error occured with status code - " <>  (TextS.pack $ show (statusCode $ Net.responseStatus responseVal))
 
 -- | Shut down the ipfs daemon. 
 shutdown :: Ipfs Text
