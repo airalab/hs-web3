@@ -16,7 +16,6 @@ Installation
 Dependencies for building from source without Nix:
 
 - `zlib <https://packages.ubuntu.com/ru/trusty/zlib1g-dev>`_
-- `secp256k1 <https://launchpad.net/ubuntu/+source/libsecp256k1>`_
 - optional: `solidity <https://solidity.readthedocs.io/en/v0.4.21/installing-solidity.html#binary-packages>`_
 
 Quick start

@@ -15,11 +15,11 @@ Ethereum accounts
   PrivateKey_    derived from secp256k1 private key, use JSON-RPC `sendRawTransaction`
  ============== =======================================================================
 
-.. _Default: http://hackage.haskell.org/package/web3-0.8.1.0/docs/Network-Ethereum-Account-Default.html
-.. _Personal: http://hackage.haskell.org/package/web3-0.8.1.0/docs/Network-Ethereum-Account-Personal.html
-.. _PrivateKey: http://hackage.haskell.org/package/web3-0.8.1.0/docs/Network-Ethereum-Account-PrivateKey.html
+.. _Default: http://hackage.haskell.org/package/web3/docs/Network-Ethereum-Account-Default.html
+.. _Personal: http://hackage.haskell.org/package/web3/docs/Network-Ethereum-Account-Personal.html
+.. _PrivateKey: http://hackage.haskell.org/package/web3/docs/Network-Ethereum-Account-PrivateKey.html
 
-All of them has an instance for `Account <http://hackage.haskell.org/package/web3-0.8.1.0/docs/Network-Ethereum-Account-Class.html>`_ typeclass.
+All of them has an instance for `Account <http://hackage.haskell.org/package/web3/docs/Network-Ethereum-Account-Class.html>`_ typeclass.
 
 .. code-block:: haskell
 
@@ -98,16 +98,16 @@ The first argument of ``withParam`` function is state transition function, secon
 
 Where lens ``to`` is used for setting transaction recipient address. All transaction parametrization lenses presended in table below.
 
- ============================================================================================================ ======================
+ ==================================================================================================== ======================
   Lens                                                                                                        Description
- ============================================================================================================ ======================
-  `to <http://hackage.haskell.org/package/web3-0.8.1.0/docs/Network-Ethereum-Account.html#v:to>`_             Recipient address
-  `value <http://hackage.haskell.org/package/web3-0.8.1.0/docs/Network-Ethereum-Account.html#v:value>`_       Transaction value
-  `gasLimit <http://hackage.haskell.org/package/web3-0.8.1.0/docs/Network-Ethereum-Account.html#v:gasLimit>`_ Execution gas limit
-  `gasPrice <http://hackage.haskell.org/package/web3-0.8.1.0/docs/Network-Ethereum-Account.html#v:gasPrice>`_ Gas price
-  `block <http://hackage.haskell.org/package/web3-0.8.1.0/docs/Network-Ethereum-Account.html#v:block>`_       Execution block (for call only)
-  `account <http://hackage.haskell.org/package/web3-0.8.1.0/docs/Network-Ethereum-Account.html#v:account>`_   Account credentials
- ============================================================================================================ ======================
+ ==================================================================================================== ======================
+  `to <http://hackage.haskell.org/package/web3/docs/Network-Ethereum-Account.html#v:to>`_             Recipient address
+  `value <http://hackage.haskell.org/package/web3/docs/Network-Ethereum-Account.html#v:value>`_       Transaction value
+  `gasLimit <http://hackage.haskell.org/package/web3/docs/Network-Ethereum-Account.html#v:gasLimit>`_ Execution gas limit
+  `gasPrice <http://hackage.haskell.org/package/web3/docs/Network-Ethereum-Account.html#v:gasPrice>`_ Gas price
+  `block <http://hackage.haskell.org/package/web3/docs/Network-Ethereum-Account.html#v:block>`_       Execution block (for call only)
+  `account <http://hackage.haskell.org/package/web3/docs/Network-Ethereum-Account.html#v:account>`_   Account credentials
+ ==================================================================================================== =======================
 
 .. note::
 
