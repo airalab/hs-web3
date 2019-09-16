@@ -26,19 +26,23 @@ import           Control.Monad.Reader
 import           Data.Aeson                             (decode)
 import           Data.Text                              as TextS
 import qualified Data.Text.Encoding                     as TextS
+import           Data.Base58String.Bitcoin              (fromBytes, toText)
+import qualified Data.ByteString                        as BS'(ByteString, foldr)
+import qualified Data.ByteArray.Encoding                as Enc(convertFromBase, Base(..))
 import qualified Data.ByteString.Lazy                   as BS (ByteString, fromStrict) 
 import           Network.HTTP.Client                    as Net  hiding (Proxy)
 import           Network.HTTP.Client.MultipartFormData
 import           Network.HTTP.Types                     (Status(..))
+import           Numeric                                (showInt)
 import           Servant.Client
+import           Servant.Types.SourceT                  (SourceT(..), foreach)
 import qualified Servant.Client.Streaming               as S
-import           Servant.Types.SourceT                  (SourceT, foreach)
 
 import qualified Network.Ipfs.Api.Api                   as Api
-
 import           Network.Ipfs.Api.Multipart             (AddObj)
 import           Network.Ipfs.Api.Stream                (_ping, _dhtFindPeer, _dhtFindProvs, _dhtGet, _dhtProvide,
-                                                        _dhtQuery, _logTail, _repoGc, _repoVerify, _refs, _refsLocal, _pubsubSubscribe)
+                                                        _dhtQuery, _logTail, _repoGc, _repoVerify, _refs, _refsLocal,
+                                                        _pubsubSubscribe, PubsubSubObj(..))
 
 newtype IpfsT m a = IpfsT { unIpfs :: ReaderT (Manager, BaseUrl, String) (ExceptT ServantError m) a}
   deriving ( Functor
@@ -54,6 +58,8 @@ instance MonadTrans IpfsT where
 
 type Ipfs a = IpfsT IO a
 
+------------------------------------------- Monad Runners ---------------------------------------------------
+
 -- | 'IpfsT' monad runner.
 runIpfs' :: BaseUrl -> Ipfs a -> IO ()
 runIpfs' url ipfs = do
@@ -67,6 +73,9 @@ runIpfs' url ipfs = do
 runIpfs :: Ipfs a -> IO ()
 runIpfs = runIpfs' (BaseUrl Http "localhost" 5001 "/api/v0")
 
+
+------------------------------------------- Call functions ---------------------------------------------------
+
 -- | Regular Call function.
 call :: (ClientM a) -> Ipfs a
 call func = do
@@ -74,7 +83,7 @@ call func = do
   resp <- lift (runClientM func (mkClientEnv manager' url))
   case resp of
     Left l -> throwError l
-    Right r -> pure r                                             
+    Right r -> pure r
 
 -- | Call function for Streams. 
 streamCall :: Show a => S.ClientM (SourceT IO a) -> IO()
@@ -83,6 +92,14 @@ streamCall func = do
     S.withClientM func (S.mkClientEnv manager' (BaseUrl Http "localhost" 5001 "/api/v0")) $ \e -> case e of
         Left err -> putStrLn $ "Error: " ++ show err
         Right rs -> foreach fail print rs
+
+-- | Call function for 'PubsubSubObj'. 
+pubsubCall :: S.ClientM (SourceT IO PubsubSubObj) -> IO()
+pubsubCall func = do 
+    manager' <- newManager defaultManagerSettings
+    S.withClientM func (S.mkClientEnv manager' (BaseUrl Http "localhost" 5001 "/api/v0")) $ \e -> case e of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right rs -> foreach fail printPubsub rs
 
 -- | Call function for ‘multipart/form-data’. 
 multipartCall :: Text -> Text -> Ipfs (Net.Response BS.ByteString)
@@ -93,6 +110,28 @@ multipartCall funcUri filePath = do
     pure resp
     
     where form = [ partFileSource "file" $ TextS.unpack filePath ]
+
+
+------------------------------------------- Print Functions ---------------------------------------------------
+
+-- | Print function for the Base64 decoded 'PubsubSubObj'.
+printPubsub :: PubsubSubObj -> IO ()
+printPubsub PubsubSubObj {mssgdata = mssg, from = sender, seqno = num, topicIDs = topic } = 
+    print $ PubsubSubObj (fromB64 mssg) (fromB64toB58 sender) (fromB64' num) topic
+    where fromB64toB58 val = case Enc.convertFromBase Enc.Base64 (TextS.encodeUtf8 val) of
+                                Left e -> TextS.pack $ "Invalid input: " ++ e
+                                Right decoded -> toText $ fromBytes (decoded :: BS'.ByteString)
+          
+          fromB64 val = case Enc.convertFromBase Enc.Base64 (TextS.encodeUtf8 val) of
+                            Left e -> TextS.pack $ "Invalid input: " ++ e
+                            Right decoded -> TextS.decodeUtf8 (decoded :: BS'.ByteString)
+
+          fromB64' val = case Enc.convertFromBase Enc.Base64 (TextS.encodeUtf8 val) of
+                            Left e -> TextS.pack $ "Invalid input: " ++ e
+                            Right decoded -> TextS.pack $ BS'.foldr showInt "" (decoded :: BS'.ByteString)
+
+
+------------------------------------------- Ipfs functions ---------------------------------------------------
 
 -- | Show IPFS object data. 
 cat :: Text -> Ipfs Api.CatReturnType
@@ -115,11 +154,11 @@ get hash = do
     do liftIO $ Tar.unpack "getResponseDirectory" . Tar.read $ BS.fromStrict $ TextS.encodeUtf8 ret
        pure "The content has been stored in getResponseDirectory."
 
--- | List links (references) from an object. 
+-- | List links (references) from an object. Stream function, returns IO(), use liftIO while passing to 'runIpfs' or 'runIpfs''.
 refs :: Text -> IO ()
 refs hash = streamCall $ _refs hash
 
--- | List all local references. 
+-- | List all local references. Stream function, returns IO(), use liftIO while passing to 'runIpfs' or 'runIpfs''. 
 refsLocal :: IO ()
 refsLocal = streamCall _refsLocal
 
@@ -322,27 +361,27 @@ idPeer peerId = call $ Api._idPeer peerId
 dns :: Text -> Ipfs Api.DnsObj
 dns name = call $ Api._dns name  
 
--- | Send echo request packets to IPFS hosts. 
+-- | Send echo request packets to IPFS hosts. Stream function, returns IO(), use liftIO while passing to 'runIpfs' or 'runIpfs''. 
 ping :: Text -> IO ()
 ping cid = streamCall $ _ping cid  
 
--- | Find the multiaddresses associated with the given peerId. 
+-- | Find the multiaddresses associated with the given peerId. Stream function, returns IO(), use liftIO while passing to 'runIpfs' or 'runIpfs''. 
 dhtFindPeer :: Text -> IO ()
 dhtFindPeer peerId = streamCall $ _dhtFindPeer peerId  
 
--- | Find peers that can provide a specific value, given a key. 
+-- | Find peers that can provide a specific value, given a key. Stream function, returns IO(), use liftIO while passing to 'runIpfs' or 'runIpfs''. 
 dhtFindProvs :: Text -> IO ()
 dhtFindProvs cid = streamCall $ _dhtFindProvs cid  
 
--- | 'Given a key, query the routing system for its best value. 
+-- | 'Given a key, query the routing system for its best value. Stream function, returns IO(), use liftIO while passing to 'runIpfs' or 'runIpfs''. 
 dhtGet :: Text -> IO ()
 dhtGet cid = streamCall $ _dhtGet cid  
 
--- | 'Announce to the network that you are providing given values. 
+-- | 'Announce to the network that you are providing given values. Stream function, returns IO(), use liftIO while passing to 'runIpfs' or 'runIpfs''. 
 dhtProvide :: Text -> IO ()
 dhtProvide cid = streamCall $ _dhtProvide cid 
 
--- | Find the closest Peer IDs to a given peerID by querying the DHT. 
+-- | Find the closest Peer IDs to a given peerID by querying the DHT. Stream function, returns IO(), use liftIO while passing to 'runIpfs' or 'runIpfs''. 
 dhtQuery ::  Text -> IO ()
 dhtQuery peerId = streamCall $ _dhtQuery peerId
 
@@ -360,9 +399,9 @@ pubsubPublish topic mssg = do
     call $ Api._pubsubPublish topic $ Just mssg
     pure "The given message has been published."
      
--- | Subscribe to messages on a given topic.
+-- | Subscribe to messages on a given topic. Stream function, returns IO(), use liftIO while passing to 'runIpfs' or 'runIpfs''.
 pubsubSubscribe :: Text -> IO ()
-pubsubSubscribe topic = streamCall $ _pubsubSubscribe topic
+pubsubSubscribe topic = pubsubCall $ _pubsubSubscribe topic
 
 -- | List the logging subsystems. 
 logLs :: Ipfs Api.LogLsObj
@@ -372,7 +411,7 @@ logLs = call Api._logLs
 logLevel :: Text -> Text -> Ipfs Api.LogLevelObj
 logLevel subsystem level = call $ Api._logLevel subsystem $ Just level
 
--- | Read the event log. 
+-- | Read the event log. Stream function, returns IO(), use liftIO while passing to 'runIpfs' or 'runIpfs''.
 logTail :: IO ()
 logTail = streamCall _logTail
 
@@ -384,11 +423,11 @@ repoVersion = call Api._repoVersion
 repoFsck :: Ipfs Api.RepoFsckObj
 repoFsck = call Api._repoFsck
 
--- | Perform a garbage collection sweep on the repo. 
+-- | Perform a garbage collection sweep on the repo. Stream function, returns IO(), use liftIO while passing to 'runIpfs' or 'runIpfs''.
 repoGc :: IO ()
 repoGc = streamCall _repoGc
 
--- | Verify all blocks in repo are not corrupted. 
+-- | Verify all blocks in repo are not corrupted. Stream function, returns IO(), use liftIO while passing to 'runIpfs' or 'runIpfs''. 
 repoVerify :: IO ()
 repoVerify = streamCall _repoVerify
 
