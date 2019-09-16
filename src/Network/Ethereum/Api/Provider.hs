@@ -2,7 +2,8 @@
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE RecordWildCards            #-}
 
 -- |
 -- Module      :  Network.Ethereum.Api.Provider
@@ -25,6 +26,7 @@ import           Control.Monad.Catch        (MonadThrow)
 import           Control.Monad.IO.Class     (MonadIO (..))
 import           Control.Monad.State        (MonadState (..))
 import           Control.Monad.Trans.State  (StateT, evalStateT, withStateT)
+import           Data.Default               (Default (..))
 import           GHC.Generics               (Generic)
 import           Network.HTTP.Client        (Manager)
 import qualified Network.Socket             as S
@@ -59,11 +61,8 @@ instance Exception Web3Error
 data Provider = HttpProvider String | WSProvider String Int
   deriving (Show, Eq, Generic)
 
-defaultHttpPovider :: Provider
-defaultHttpPovider = HttpProvider "http://localhost:8545" -- ^ Default HTTP Provider URI
-
-defaultWSPovider   :: Provider
-defaultWSPovider   = WSProvider   "127.0.0.1" 8546        -- ^ Default WS Provider URI 
+instance Default Provider where
+  def = HttpProvider "http://localhost:8545" -- ^ Default Provider URI
 
 -- | 'Web3' monad runner, using the supplied Manager
 runWeb3With :: MonadIO m
@@ -74,7 +73,9 @@ runWeb3With :: MonadIO m
 runWeb3With manager provider f = do  
     runWeb3' provider Web3{ unWeb3 = withStateT changeManager $ unWeb3 f}
     where
-      changeManager jsonRpc = jsonRpc {jsonRpcManager = manager} 
+      changeManager jRpcClient = case jRpcClient of 
+        JsonRpcHTTPClient{..} -> jRpcClient {jsonRpcManager = manager}
+        JsonRpcWSClient{..}   -> jRpcClient
 
 -- | 'Web3' monad runner 
 runWeb3' :: MonadIO m
@@ -100,14 +101,14 @@ runWeb3 :: MonadIO m
         => Web3 a
         -> m (Either Web3Error a)
 {-# INLINE runWeb3 #-}
-runWeb3 = runWeb3' defaultHttpPovider
+runWeb3 = runWeb3' def
 
 -- | 'Web3' runner for default WS provider
 runWeb3WS :: MonadIO m
           => Web3 a
           -> m (Either Web3Error a)
 {-# INLINE runWeb3WS #-}
-runWeb3WS = runWeb3' defaultWSPovider
+runWeb3WS = runWeb3' $ WSProvider "127.0.0.1" 8546 
 
 -- | Fork 'Web3' with the same 'Provider' and 'Manager'
 forkWeb3 :: Web3 a -> Web3 (Async a)

@@ -26,53 +26,53 @@ import           Data.ByteString.Lazy          (toStrict)
 import qualified Data.ByteString.Lazy.Char8()
 import qualified Data.HashMap.Strict           as H
 import           Data.Proxy           
-import qualified Data.Text                     as TextS
-import qualified Data.Text.Encoding            as TextS
+import           Data.Text                     (Text)
+import qualified Data.Text.Encoding            as TextS 
 import           Data.Typeable            
 import           Network.HTTP.Client()
 import qualified Network.HTTP.Media            as M ((//))
 import           Servant.API
 import           Servant.Client
 
-type CatReturnType = TextS.Text
-type ReprovideReturnType = TextS.Text
-type GetReturnType = TextS.Text
-type BlockReturnType = TextS.Text
-type DagReturnType = TextS.Text
-type ObjectReturnType = TextS.Text
-type FilesReadType = TextS.Text
+type CatReturnType = Text
+type ReprovideReturnType = Text
+type GetReturnType = Text
+type BlockReturnType = Text
+type DagReturnType = Text
+type ObjectReturnType = Text
+type FilesReadType = Text
 
 data DirLink = DirLink
-    { name        :: TextS.Text 
-    , hash        :: TextS.Text
+    { name        :: Text 
+    , hash        :: Text
     , size        :: Int64
     , contentType :: Int
-    , target      :: TextS.Text
+    , target      :: Text
     } deriving (Show, Eq)
  
 data DirObj = DirObj
-    { dirHash :: TextS.Text
+    { dirHash :: Text
     , links   :: [DirLink] 
     } deriving (Show, Eq)
 
 data LsObj = LsObj {  objs :: [DirObj]  } deriving (Show, Eq)
 
-data SwarmStreamObj = SwarmStreamObj {  protocol :: TextS.Text  } deriving (Show, Eq)  
+data SwarmStreamObj = SwarmStreamObj {  protocol :: Text  } deriving (Show, Eq)  
 
 data SwarmPeerObj = SwarmPeerObj
-   {  address   :: TextS.Text
+   {  address   :: Text
     , direction :: Int
-    , latency   :: TextS.Text
-    , muxer     :: TextS.Text
-    , peer      :: TextS.Text
+    , latency   :: Text
+    , muxer     :: Text
+    , peer      :: Text
     , streams   :: Maybe [SwarmStreamObj]
    } deriving (Show, Eq)
 
 data SwarmPeersObj = SwarmPeersObj {  peers :: [SwarmPeerObj]  } deriving (Show, Eq)  
 
-data SwarmObj = SwarmObj {  strings :: [TextS.Text]  } deriving (Show, Eq)  
+data SwarmObj = SwarmObj {  strings :: [Text]  } deriving (Show, Eq)  
 
-data WantlistObj = WantlistObj {  forSlash :: TextS.Text } deriving (Show, Eq)
+data WantlistObj = WantlistObj {  forSlash :: Text } deriving (Show, Eq)
 
 data BitswapStatObj = BitswapStatObj
     {  blocksReceived   :: Int64
@@ -82,7 +82,7 @@ data BitswapStatObj = BitswapStatObj
     ,  dupBlksReceived  :: Int64
     ,  dupDataReceived  :: Int64
     ,  messagesReceived :: Int64
-    ,  bitswapPeers     :: [TextS.Text]
+    ,  bitswapPeers     :: [Text]
     ,  provideBufLen    :: Int
     ,  wantlist         :: [WantlistObj]
     }  deriving (Show, Eq)
@@ -91,7 +91,7 @@ data BitswapWLObj = BitswapWLObj {  bitswapKeys :: [WantlistObj] } deriving (Sho
 
 data BitswapLedgerObj = BitswapLedgerObj
     {  exchanged  :: Int64
-    ,  ledgerPeer :: TextS.Text
+    ,  ledgerPeer :: Text
     ,  recv       :: Int64
     ,  sent       :: Int64
     ,  value      :: Double
@@ -99,35 +99,35 @@ data BitswapLedgerObj = BitswapLedgerObj
 
 data CidBasesObj = CidBasesObj
     { baseCode :: Int
-    , baseName :: TextS.Text
+    , baseName :: Text
     } deriving (Show, Eq)
 
 data CidCodecsObj = CidCodecsObj
     { codecCode :: Int
-    , codecName :: TextS.Text
+    , codecName :: Text
     } deriving (Show, Eq)
 
 data CidHashesObj = CidHashesObj
     { multihashCode :: Int
-    , multihashName :: TextS.Text
+    , multihashName :: Text
     } deriving (Show, Eq)
 
 data CidObj = CidObj
-    { cidStr    :: TextS.Text
-    , errorMsg  :: TextS.Text
-    , formatted :: TextS.Text
+    { cidStr    :: Text
+    , errorMsg  :: Text
+    , formatted :: Text
     } deriving (Show, Eq)
    
 data BlockObj = BlockObj
-    { key       :: TextS.Text
+    { key       :: Text
     , blockSize :: Int
     } deriving (Show, Eq)
 
-data DagCidObj = DagCidObj {  cidSlash :: TextS.Text } deriving (Show, Eq)
+data DagCidObj = DagCidObj {  cidSlash :: Text } deriving (Show, Eq)
 
 data DagResolveObj = DagResolveObj
     { cid     :: DagCidObj
-    , remPath :: TextS.Text
+    , remPath :: Text
     } deriving (Show, Eq)
 
 data DagPutObj = DagPutObj
@@ -135,26 +135,26 @@ data DagPutObj = DagPutObj
     } deriving (Show, Eq)
 
 data ConfigObj = ConfigObj
-    { configKey   :: TextS.Text
-    , configValue :: TextS.Text
+    { configKey   :: Text
+    , configValue :: Text
     } deriving (Show, Eq)
 
 data ObjectLinkObj = ObjectLinkObj
-    { linkHash  :: TextS.Text
-    , linkName  :: TextS.Text
+    { linkHash  :: Text
+    , linkName  :: Text
     , linkSize  :: Int64
     } deriving (Show, Eq)
 
-data ObjectObj = ObjectObj { newObjectHash  :: TextS.Text } deriving (Show, Eq)
+data ObjectObj = ObjectObj { newObjectHash  :: Text } deriving (Show, Eq)
 
 data ObjectLinksObj = WithLinks
-    { objectHash  :: TextS.Text
+    { objectHash  :: Text
     , objectLinks :: [ObjectLinkObj]   
     } 
-    | WithoutLinks { objectHash  :: TextS.Text } deriving (Show, Eq)
+    | WithoutLinks { objectHash  :: Text } deriving (Show, Eq)
 
 data ObjectGetObj = ObjectGetObj
-    { objectName     :: TextS.Text
+    { objectName     :: Text
     , objectGetLinks :: [ObjectLinkObj]   
     } deriving (Show, Eq)
 
@@ -162,31 +162,31 @@ data ObjectStatObj = ObjectStatObj
     {  objBlockSize   :: Int
     ,  cumulativeSize :: Int
     ,  dataSize       :: Int
-    ,  objHash        :: TextS.Text
+    ,  objHash        :: Text
     ,  linksSize      :: Int
     ,  numLinks       :: Int    
     }  deriving (Show, Eq)
 
-data DiffObj = DiffObj {  diffSlash :: TextS.Text } deriving (Show, Eq)
+data DiffObj = DiffObj {  diffSlash :: Text } deriving (Show, Eq)
 
 data ObjectChangeObj = ObjectChangeObj
     { after    :: Maybe DiffObj 
     , before   :: DiffObj
-    , path     :: TextS.Text
+    , path     :: Text
     , diffType :: Int
     } deriving (Show, Eq)
 
 data ObjectDiffObj = ObjectDiffObj {  changes :: [ObjectChangeObj] } deriving (Show, Eq)
 
 data PinObj = WithoutProgress
-    { pins  :: [TextS.Text] }  
+    { pins  :: [Text] }  
     
     | WithProgress
-    {  pins     :: [TextS.Text]
+    {  pins     :: [Text]
     ,  progress :: Int
     } deriving (Show, Eq)
 
-data BootstrapObj = BootstrapObj { bootstrapPeers  :: [TextS.Text] } deriving (Show, Eq)
+data BootstrapObj = BootstrapObj { bootstrapPeers  :: [Text] } deriving (Show, Eq)
 
 data StatsBwObj = StatsBwObj
     {  rateIn   :: Double
@@ -197,72 +197,72 @@ data StatsBwObj = StatsBwObj
 
 data StatsRepoObj = StatsRepoObj
     {  numObjects  :: Int64
-    ,  repoPath    :: TextS.Text
+    ,  repoPath    :: Text
     ,  repoSize    :: Int64
     ,  storageMax  :: Int64
-    ,  repoVersion :: TextS.Text
+    ,  repoVersion :: Text
     }  deriving (Show, Eq)
 
 data VersionObj = VersionObj
-    {  commit  :: TextS.Text
-    ,  golang  :: TextS.Text
-    ,  repo    :: TextS.Text
-    ,  system  :: TextS.Text
-    ,  version :: TextS.Text
+    {  commit  :: Text
+    ,  golang  :: Text
+    ,  repo    :: Text
+    ,  system  :: Text
+    ,  version :: Text
     }  deriving (Show, Eq)
 
 data IdObj = IdObj
-    {  addresses       :: [TextS.Text]
-    ,  agentVersion    :: TextS.Text
-    ,  id              :: TextS.Text
-    ,  protocolVersion :: TextS.Text
-    ,  publicKey       :: TextS.Text
+    {  addresses       :: [Text]
+    ,  agentVersion    :: Text
+    ,  id              :: Text
+    ,  protocolVersion :: Text
+    ,  publicKey       :: Text
     }  deriving (Show, Eq)
 
-data DnsObj = DnsObj { dnsPath  :: TextS.Text } deriving (Show, Eq)
+data DnsObj = DnsObj { dnsPath  :: Text } deriving (Show, Eq)
 
-data PubsubObj = PubsubObj { pubsubStrings :: [TextS.Text] } deriving (Show, Eq)  
+data PubsubObj = PubsubObj { pubsubStrings :: [Text] } deriving (Show, Eq)  
 
-data LogLsObj = LogLsObj { logLsStrings :: [TextS.Text] } deriving (Show, Eq)  
+data LogLsObj = LogLsObj { logLsStrings :: [Text] } deriving (Show, Eq)  
 
-data LogLevelObj = LogLevelObj { message :: TextS.Text } deriving (Show, Eq)  
+data LogLevelObj = LogLevelObj { message :: Text } deriving (Show, Eq)  
 
-data RepoVersionObj = RepoVersionObj { repoVer :: TextS.Text } deriving (Show, Eq)  
+data RepoVersionObj = RepoVersionObj { repoVer :: Text } deriving (Show, Eq)  
 
-data RepoFsckObj = RepoFsckObj { repoMessage :: TextS.Text } deriving (Show, Eq)  
+data RepoFsckObj = RepoFsckObj { repoMessage :: Text } deriving (Show, Eq)  
 
 data KeyDetailsObj = KeyDetailsObj
-    { keyId    :: TextS.Text 
-    , keyName  :: TextS.Text 
+    { keyId    :: Text 
+    , keyName  :: Text 
     } deriving (Show, Eq)
 
 data KeyObj = KeyObj { keys :: [KeyDetailsObj] } deriving (Show, Eq)  
 
 data KeyRenameObj = KeyRenameObj
-    {  peerId     :: TextS.Text
-    ,  now        :: TextS.Text
+    {  peerId     :: Text
+    ,  now        :: Text
     ,  overwrite  :: Bool
-    ,  was        :: TextS.Text
+    ,  was        :: Text
     }  deriving (Show, Eq)
 
 data FilesStatObj = FilesStatObj
-    {  fileObjectHash        :: TextS.Text
+    {  fileObjectHash        :: Text
     ,  objectSize            :: Int
     ,  cumulativeObjectSize  :: Int
     ,  blocks                :: Int
-    ,  objectType            :: TextS.Text
+    ,  objectType            :: Text
     }  deriving (Show, Eq)
 
 data FilesEntryObj = FilesEntryObj
-    {  entryName  :: TextS.Text
+    {  entryName  :: Text
     ,  entryType  :: Int
     ,  entrySize  :: Int
-    ,  entryHash  :: TextS.Text
+    ,  entryHash  :: Text
     }  deriving (Show, Eq)
 
 data FilesLsObj = FilesLsObj { enteries :: [FilesEntryObj] } deriving (Show, Eq)  
 
-data FilesFlushObj = FilesFlushObj { fileCid :: TextS.Text } deriving (Show, Eq)  
+data FilesFlushObj = FilesFlushObj { fileCid :: Text } deriving (Show, Eq)  
 
 instance FromJSON DirLink where
     parseJSON (Object o) =
@@ -639,7 +639,7 @@ instance Servant.API.Accept IpfsText where
     contentType _ = "text" M.// "plain"
 
 -- | @left show . TextS.decodeUtf8' . toStrict@
-instance MimeUnrender IpfsText TextS.Text where
+instance MimeUnrender IpfsText Text where
     mimeUnrender _ = left show . TextS.decodeUtf8' . toStrict
 
 
@@ -650,143 +650,143 @@ instance Servant.API.Accept IpfsJSON where
     contentType _ = "application" M.// "json"
 
 -- | @left show . TextS.decodeUtf8' . toStrict@
-instance MimeUnrender IpfsJSON TextS.Text where
+instance MimeUnrender IpfsJSON Text where
     mimeUnrender _ = left show . TextS.decodeUtf8' . toStrict
   
 
-type IpfsApi = "cat" :> Capture "arg" TextS.Text :> Get '[IpfsText] CatReturnType
-            :<|> "ls" :> Capture "arg" TextS.Text :> Get '[JSON] LsObj
-            :<|> "get" :> Capture "arg" TextS.Text :> Get '[IpfsText] GetReturnType
+type IpfsApi = "cat" :> Capture "arg" Text :> Get '[IpfsText] CatReturnType
+            :<|> "ls" :> Capture "arg" Text :> Get '[JSON] LsObj
+            :<|> "get" :> Capture "arg" Text :> Get '[IpfsText] GetReturnType
             :<|> "swarm" :> "peers" :> Get '[JSON] SwarmPeersObj
-            :<|> "swarm" :> "connect" :> QueryParam "arg" TextS.Text :> Get '[JSON] SwarmObj 
-            :<|> "swarm" :> "disconnect" :> QueryParam "arg" TextS.Text :> Get '[JSON] SwarmObj 
+            :<|> "swarm" :> "connect" :> QueryParam "arg" Text :> Get '[JSON] SwarmObj 
+            :<|> "swarm" :> "disconnect" :> QueryParam "arg" Text :> Get '[JSON] SwarmObj 
             :<|> "swarm" :> "filters" :> Get '[JSON] SwarmObj
-            :<|> "swarm" :> "filters" :> "add" :> QueryParam "arg" TextS.Text :> Get '[JSON] SwarmObj 
-            :<|> "swarm" :> "filters" :> "rm" :> QueryParam "arg" TextS.Text :> Get '[JSON] SwarmObj 
+            :<|> "swarm" :> "filters" :> "add" :> QueryParam "arg" Text :> Get '[JSON] SwarmObj 
+            :<|> "swarm" :> "filters" :> "rm" :> QueryParam "arg" Text :> Get '[JSON] SwarmObj 
             :<|> "bitswap" :> "stat" :> Get '[JSON] BitswapStatObj
             :<|> "bitswap" :> "wantlist" :> Get '[JSON] BitswapWLObj
-            :<|> "bitswap" :> "ledger" :> Capture "peerId" TextS.Text :> Get '[JSON] BitswapLedgerObj
+            :<|> "bitswap" :> "ledger" :> Capture "peerId" Text :> Get '[JSON] BitswapLedgerObj
             :<|> "bitswap" :> "reprovide" :> Get '[IpfsText] ReprovideReturnType
             :<|> "cid" :> "bases" :> Get '[JSON] [CidBasesObj]
             :<|> "cid" :> "codecs" :> Get '[JSON] [CidCodecsObj]
             :<|> "cid" :> "hashes" :> Get '[JSON] [CidHashesObj]
-            :<|> "cid" :> "base32" :> Capture "cid" TextS.Text :> Get '[JSON] CidObj
-            :<|> "cid" :> "format" :> Capture "cid" TextS.Text :> Get '[JSON] CidObj
-            :<|> "block" :> "get" :> Capture "key" TextS.Text :> Get '[IpfsText] BlockReturnType
-            :<|> "block" :> "stat" :> Capture "key" TextS.Text :> Get '[JSON] BlockObj
-            :<|> "dag" :> "get" :> Capture "ref" TextS.Text :> Get '[IpfsJSON] DagReturnType 
-            :<|> "dag" :> "resolve" :> Capture "ref" TextS.Text :> Get '[JSON] DagResolveObj 
-            :<|> "config" :> Capture "ref" TextS.Text :> Get '[JSON] ConfigObj 
-            :<|> "config" :> Capture "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] ConfigObj 
-            :<|> "object" :> "data" :> Capture "ref" TextS.Text :> Get '[IpfsText] ObjectReturnType
+            :<|> "cid" :> "base32" :> Capture "cid" Text :> Get '[JSON] CidObj
+            :<|> "cid" :> "format" :> Capture "cid" Text :> Get '[JSON] CidObj
+            :<|> "block" :> "get" :> Capture "key" Text :> Get '[IpfsText] BlockReturnType
+            :<|> "block" :> "stat" :> Capture "key" Text :> Get '[JSON] BlockObj
+            :<|> "dag" :> "get" :> Capture "ref" Text :> Get '[IpfsJSON] DagReturnType 
+            :<|> "dag" :> "resolve" :> Capture "ref" Text :> Get '[JSON] DagResolveObj 
+            :<|> "config" :> Capture "ref" Text :> Get '[JSON] ConfigObj 
+            :<|> "config" :> Capture "arg" Text :> QueryParam "arg" Text :> Get '[JSON] ConfigObj 
+            :<|> "object" :> "data" :> Capture "ref" Text :> Get '[IpfsText] ObjectReturnType
             :<|> "object" :> "new" :> Get '[JSON] ObjectObj 
-            :<|> "object" :> "links" :>  Capture "ref" TextS.Text :> Get '[JSON] ObjectLinksObj  
-            :<|> "object" :> "patch" :> "add-link" :> Capture "arg" TextS.Text 
-                :> QueryParam "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] ObjectLinksObj 
-            :<|> "object" :> "patch" :> "rm-link" :> Capture "arg" TextS.Text 
-                :> QueryParam "arg" TextS.Text :> Get '[JSON] ObjectLinksObj 
-            :<|> "object" :> "get" :> Capture "arg" TextS.Text :> Get '[JSON] ObjectGetObj 
-            :<|> "object" :> "diff" :> Capture "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] ObjectDiffObj 
-            :<|> "object" :> "stat" :> Capture "arg" TextS.Text :> Get '[JSON] ObjectStatObj 
-            :<|> "pin" :> "add" :> Capture "arg" TextS.Text :> Get '[JSON] PinObj 
-            :<|> "pin" :> "rm" :> Capture "arg" TextS.Text :> Get '[JSON] PinObj 
-            :<|> "bootstrap" :> "add" :> QueryParam "arg" TextS.Text :> Get '[JSON] BootstrapObj 
+            :<|> "object" :> "links" :>  Capture "ref" Text :> Get '[JSON] ObjectLinksObj  
+            :<|> "object" :> "patch" :> "add-link" :> Capture "arg" Text 
+                :> QueryParam "arg" Text :> QueryParam "arg" Text :> Get '[JSON] ObjectLinksObj 
+            :<|> "object" :> "patch" :> "rm-link" :> Capture "arg" Text 
+                :> QueryParam "arg" Text :> Get '[JSON] ObjectLinksObj 
+            :<|> "object" :> "get" :> Capture "arg" Text :> Get '[JSON] ObjectGetObj 
+            :<|> "object" :> "diff" :> Capture "arg" Text :> QueryParam "arg" Text :> Get '[JSON] ObjectDiffObj 
+            :<|> "object" :> "stat" :> Capture "arg" Text :> Get '[JSON] ObjectStatObj 
+            :<|> "pin" :> "add" :> Capture "arg" Text :> Get '[JSON] PinObj 
+            :<|> "pin" :> "rm" :> Capture "arg" Text :> Get '[JSON] PinObj 
+            :<|> "bootstrap" :> "add" :> QueryParam "arg" Text :> Get '[JSON] BootstrapObj 
             :<|> "bootstrap" :> "list" :> Get '[JSON] BootstrapObj 
-            :<|> "bootstrap" :> "rm" :> QueryParam "arg" TextS.Text :> Get '[JSON] BootstrapObj 
+            :<|> "bootstrap" :> "rm" :> QueryParam "arg" Text :> Get '[JSON] BootstrapObj 
             :<|> "stats" :> "bw" :> Get '[JSON] StatsBwObj 
             :<|> "stats" :> "repo" :> Get '[JSON] StatsRepoObj 
             :<|> "version" :> Get '[JSON] VersionObj 
             :<|> "id" :> Get '[JSON] IdObj 
-            :<|> "id" :> Capture "arg" TextS.Text :> Get '[JSON] IdObj 
-            :<|> "dns" :> Capture "arg" TextS.Text :> Get '[JSON] DnsObj 
+            :<|> "id" :> Capture "arg" Text :> Get '[JSON] IdObj 
+            :<|> "dns" :> Capture "arg" Text :> Get '[JSON] DnsObj 
             :<|> "pubsub" :> "ls" :>  Get '[JSON] PubsubObj 
             :<|> "pubsub" :> "peers" :>  Get '[JSON] PubsubObj 
-            :<|> "pubsub" :> "pub" :> Capture "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] NoContent 
+            :<|> "pubsub" :> "pub" :> Capture "arg" Text :> QueryParam "arg" Text :> Get '[JSON] NoContent 
             :<|> "log" :> "ls" :>  Get '[JSON] LogLsObj 
-            :<|> "log" :> "level" :> Capture "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] LogLevelObj 
+            :<|> "log" :> "level" :> Capture "arg" Text :> QueryParam "arg" Text :> Get '[JSON] LogLevelObj 
             :<|> "repo" :> "version" :>  Get '[JSON] RepoVersionObj 
             :<|> "repo" :> "fsck" :>  Get '[JSON] RepoFsckObj 
-            :<|> "key" :> "gen" :> Capture "arg" TextS.Text :> QueryParam "type" TextS.Text :> Get '[JSON] KeyDetailsObj 
+            :<|> "key" :> "gen" :> Capture "arg" Text :> QueryParam "type" Text :> Get '[JSON] KeyDetailsObj 
             :<|> "key" :> "list" :>  Get '[JSON] KeyObj 
-            :<|> "key" :> "rename" :> Capture "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] KeyRenameObj 
-            :<|> "key" :> "rm" :> Capture "arg" TextS.Text :> Get '[JSON] KeyObj 
-            :<|> "files" :> "chcid" :> QueryParam "arg" TextS.Text :> QueryParam "cid-version" Int :> Get '[JSON] NoContent 
-            :<|> "files" :> "cp" :> QueryParam "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] NoContent 
-            :<|> "files" :> "flush" :> QueryParam "arg" TextS.Text :> Get '[JSON] FilesFlushObj 
-            :<|> "files" :> "ls" :> QueryParam "arg" TextS.Text :> Get '[JSON] FilesLsObj 
-            :<|> "files" :> "mkdir" :> QueryParam "arg" TextS.Text :> Get '[JSON] NoContent 
-            :<|> "files" :> "mv" :> QueryParam "arg" TextS.Text :> QueryParam "arg" TextS.Text :> Get '[JSON] NoContent 
-            :<|> "files" :> "read" :> QueryParam "arg" TextS.Text :> Get '[IpfsText] FilesReadType 
-            :<|> "files" :> "rm" :> QueryParam "arg" TextS.Text :> QueryParam "recursive" Bool :> Get '[JSON] NoContent 
-            :<|> "files" :> "stat" :> QueryParam "arg" TextS.Text :> Get '[JSON] FilesStatObj 
+            :<|> "key" :> "rename" :> Capture "arg" Text :> QueryParam "arg" Text :> Get '[JSON] KeyRenameObj 
+            :<|> "key" :> "rm" :> Capture "arg" Text :> Get '[JSON] KeyObj 
+            :<|> "files" :> "chcid" :> QueryParam "arg" Text :> QueryParam "cid-version" Int :> Get '[JSON] NoContent 
+            :<|> "files" :> "cp" :> QueryParam "arg" Text :> QueryParam "arg" Text :> Get '[JSON] NoContent 
+            :<|> "files" :> "flush" :> QueryParam "arg" Text :> Get '[JSON] FilesFlushObj 
+            :<|> "files" :> "ls" :> QueryParam "arg" Text :> Get '[JSON] FilesLsObj 
+            :<|> "files" :> "mkdir" :> QueryParam "arg" Text :> Get '[JSON] NoContent 
+            :<|> "files" :> "mv" :> QueryParam "arg" Text :> QueryParam "arg" Text :> Get '[JSON] NoContent 
+            :<|> "files" :> "read" :> QueryParam "arg" Text :> Get '[IpfsText] FilesReadType 
+            :<|> "files" :> "rm" :> QueryParam "arg" Text :> QueryParam "recursive" Bool :> Get '[JSON] NoContent 
+            :<|> "files" :> "stat" :> QueryParam "arg" Text :> Get '[JSON] FilesStatObj 
             :<|> "shutdown" :> Get '[JSON] NoContent 
 
 ipfsApi :: Proxy IpfsApi
 ipfsApi =  Proxy
 
-_cat :: TextS.Text -> ClientM CatReturnType
-_ls :: TextS.Text -> ClientM LsObj
-_get :: TextS.Text -> ClientM GetReturnType
+_cat :: Text -> ClientM CatReturnType
+_ls :: Text -> ClientM LsObj
+_get :: Text -> ClientM GetReturnType
 _swarmPeers :: ClientM SwarmPeersObj 
-_swarmConnect :: Maybe TextS.Text -> ClientM SwarmObj 
-_swarmDisconnect :: Maybe TextS.Text -> ClientM SwarmObj 
+_swarmConnect :: Maybe Text -> ClientM SwarmObj 
+_swarmDisconnect :: Maybe Text -> ClientM SwarmObj 
 _swarmFilters :: ClientM SwarmObj 
-_swarmFilterAdd :: Maybe TextS.Text -> ClientM SwarmObj 
-_swarmFilterRm :: Maybe TextS.Text -> ClientM SwarmObj 
+_swarmFilterAdd :: Maybe Text -> ClientM SwarmObj 
+_swarmFilterRm :: Maybe Text -> ClientM SwarmObj 
 _bitswapStat :: ClientM BitswapStatObj 
 _bitswapWL :: ClientM BitswapWLObj 
-_bitswapLedger :: TextS.Text -> ClientM BitswapLedgerObj 
+_bitswapLedger :: Text -> ClientM BitswapLedgerObj 
 _bitswapReprovide :: ClientM ReprovideReturnType  
 _cidBases :: ClientM [CidBasesObj]  
 _cidCodecs :: ClientM [CidCodecsObj]  
 _cidHashes :: ClientM [CidHashesObj]  
-_cidBase32 :: TextS.Text -> ClientM CidObj  
-_cidFormat :: TextS.Text -> ClientM CidObj
-_blockGet :: TextS.Text -> ClientM BlockReturnType
-_blockStat :: TextS.Text -> ClientM BlockObj
-_dagGet :: TextS.Text -> ClientM DagReturnType
-_dagResolve :: TextS.Text -> ClientM DagResolveObj
-_configGet :: TextS.Text -> ClientM ConfigObj
-_configSet :: TextS.Text -> Maybe TextS.Text -> ClientM ConfigObj
-_objectData :: TextS.Text -> ClientM ObjectReturnType
+_cidBase32 :: Text -> ClientM CidObj  
+_cidFormat :: Text -> ClientM CidObj
+_blockGet :: Text -> ClientM BlockReturnType
+_blockStat :: Text -> ClientM BlockObj
+_dagGet :: Text -> ClientM DagReturnType
+_dagResolve :: Text -> ClientM DagResolveObj
+_configGet :: Text -> ClientM ConfigObj
+_configSet :: Text -> Maybe Text -> ClientM ConfigObj
+_objectData :: Text -> ClientM ObjectReturnType
 _objectNew :: ClientM ObjectObj
-_objectGetLinks :: TextS.Text -> ClientM ObjectLinksObj
-_objectAddLink :: TextS.Text -> Maybe TextS.Text -> Maybe TextS.Text -> ClientM ObjectLinksObj
-_objectRmLink :: TextS.Text -> Maybe TextS.Text -> ClientM ObjectLinksObj
-_objectGet :: TextS.Text -> ClientM ObjectGetObj
-_objectDiff :: TextS.Text -> Maybe TextS.Text -> ClientM ObjectDiffObj
-_objectStat :: TextS.Text -> ClientM ObjectStatObj
-_pinAdd :: TextS.Text -> ClientM PinObj
-_pinRemove :: TextS.Text -> ClientM PinObj
-_bootstrapAdd ::Maybe TextS.Text -> ClientM BootstrapObj 
+_objectGetLinks :: Text -> ClientM ObjectLinksObj
+_objectAddLink :: Text -> Maybe Text -> Maybe Text -> ClientM ObjectLinksObj
+_objectRmLink :: Text -> Maybe Text -> ClientM ObjectLinksObj
+_objectGet :: Text -> ClientM ObjectGetObj
+_objectDiff :: Text -> Maybe Text -> ClientM ObjectDiffObj
+_objectStat :: Text -> ClientM ObjectStatObj
+_pinAdd :: Text -> ClientM PinObj
+_pinRemove :: Text -> ClientM PinObj
+_bootstrapAdd ::Maybe Text -> ClientM BootstrapObj 
 _bootstrapList :: ClientM BootstrapObj 
-_bootstrapRM :: Maybe TextS.Text -> ClientM BootstrapObj 
+_bootstrapRM :: Maybe Text -> ClientM BootstrapObj 
 _statsBw :: ClientM StatsBwObj 
 _statsRepo :: ClientM StatsRepoObj 
 _version :: ClientM VersionObj 
 _id :: ClientM IdObj 
-_idPeer :: TextS.Text -> ClientM IdObj 
-_dns :: TextS.Text -> ClientM DnsObj 
+_idPeer :: Text -> ClientM IdObj 
+_dns :: Text -> ClientM DnsObj 
 _pubsubLs :: ClientM PubsubObj 
 _pubsubPeers :: ClientM PubsubObj 
-_pubsubPublish :: TextS.Text -> Maybe TextS.Text -> ClientM NoContent 
+_pubsubPublish :: Text -> Maybe Text -> ClientM NoContent 
 _logLs :: ClientM LogLsObj 
-_logLevel :: TextS.Text -> Maybe TextS.Text -> ClientM LogLevelObj
+_logLevel :: Text -> Maybe Text -> ClientM LogLevelObj
 _repoVersion :: ClientM RepoVersionObj 
 _repoFsck :: ClientM RepoFsckObj 
-_keyGen :: TextS.Text -> (Maybe TextS.Text) -> ClientM KeyDetailsObj 
+_keyGen :: Text -> (Maybe Text) -> ClientM KeyDetailsObj 
 _keyList :: ClientM KeyObj 
-_keyRename :: TextS.Text -> (Maybe TextS.Text) -> ClientM KeyRenameObj 
-_keyRm :: TextS.Text -> ClientM KeyObj 
-_filesChcid :: Maybe TextS.Text -> Maybe Int -> ClientM NoContent 
-_filesCp :: Maybe TextS.Text -> Maybe TextS.Text -> ClientM NoContent 
-_filesFlush :: Maybe TextS.Text -> ClientM FilesFlushObj
-_filesLs :: Maybe TextS.Text -> ClientM FilesLsObj 
-_filesMkdir :: Maybe TextS.Text -> ClientM NoContent 
-_filesMv :: Maybe TextS.Text -> Maybe TextS.Text -> ClientM NoContent 
-_filesRead :: Maybe TextS.Text -> ClientM FilesReadType 
-_filesRm :: Maybe TextS.Text -> Maybe Bool -> ClientM NoContent 
-_filesStat :: Maybe TextS.Text -> ClientM FilesStatObj 
+_keyRename :: Text -> (Maybe Text) -> ClientM KeyRenameObj 
+_keyRm :: Text -> ClientM KeyObj 
+_filesChcid :: Maybe Text -> Maybe Int -> ClientM NoContent 
+_filesCp :: Maybe Text -> Maybe Text -> ClientM NoContent 
+_filesFlush :: Maybe Text -> ClientM FilesFlushObj
+_filesLs :: Maybe Text -> ClientM FilesLsObj 
+_filesMkdir :: Maybe Text -> ClientM NoContent 
+_filesMv :: Maybe Text -> Maybe Text -> ClientM NoContent 
+_filesRead :: Maybe Text -> ClientM FilesReadType 
+_filesRm :: Maybe Text -> Maybe Bool -> ClientM NoContent 
+_filesStat :: Maybe Text -> ClientM FilesStatObj 
 _shutdown :: ClientM NoContent 
 
 _cat :<|> _ls :<|> _get :<|> _swarmPeers :<|> _swarmConnect :<|> _swarmDisconnect :<|>

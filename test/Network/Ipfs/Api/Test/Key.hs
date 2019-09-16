@@ -13,7 +13,7 @@
 
 module Network.Ipfs.Api.Test.Key where
 
-import  Data.Text              as TextS
+import  Data.Text
 import  Control.Exception() 
 import  Control.Monad.Trans
 import  Test.Hspec

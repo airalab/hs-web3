@@ -18,12 +18,12 @@ module Network.Ipfs.Api.Multipart where
 
 import           Control.Monad
 import           Data.Aeson     (FromJSON (..), Value(Object), (.:))
-import qualified Data.Text      as TextS
+import           Data.Text
 
 data AddObj = AddObj
-    { name        :: TextS.Text 
-    , hash        :: TextS.Text
-    , size        :: TextS.Text
+    { name        :: Text 
+    , hash        :: Text
+    , size        :: Text
     } deriving (Show, Eq)
 
 instance FromJSON AddObj where

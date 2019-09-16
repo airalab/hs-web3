@@ -24,8 +24,8 @@ import qualified Codec.Archive.Tar                      as Tar
 import           Control.Monad.Except
 import           Control.Monad.Reader
 import           Data.Aeson                             (decode)
-import           Data.Text                              as TextS
-import qualified Data.Text.Encoding                     as TextS
+import           Data.Text
+import           Data.Text.Encoding
 import           Data.Base58String.Bitcoin              (fromBytes, toText)
 import qualified Data.ByteString                        as BS'(ByteString, foldr)
 import qualified Data.ByteArray.Encoding                as Enc(convertFromBase, Base(..))
@@ -105,11 +105,11 @@ pubsubCall func = do
 multipartCall :: Text -> Text -> Ipfs (Net.Response BS.ByteString)
 multipartCall funcUri filePath = do
     (reqManager, _, url) <- ask
-    req <- liftIO $ parseRequest $ TextS.unpack (( TextS.pack  url ) <>  (TextS.pack "/") <> funcUri )
+    req <- liftIO $ parseRequest $ unpack (( pack  url ) <>  (pack "/") <> funcUri )
     resp <- liftIO $ flip httpLbs reqManager =<< formDataBody form req
     pure resp
     
-    where form = [ partFileSource "file" $ TextS.unpack filePath ]
+    where form = [ partFileSource "file" $ unpack filePath ]
 
 
 ------------------------------------------- Print Functions ---------------------------------------------------
@@ -118,17 +118,17 @@ multipartCall funcUri filePath = do
 printPubsub :: PubsubSubObj -> IO ()
 printPubsub PubsubSubObj {mssgdata = mssg, from = sender, seqno = num, topicIDs = topic } = 
     print $ PubsubSubObj (fromB64 mssg) (fromB64toB58 sender) (fromB64' num) topic
-    where fromB64toB58 val = case Enc.convertFromBase Enc.Base64 (TextS.encodeUtf8 val) of
-                                Left e -> TextS.pack $ "Invalid input: " ++ e
+    where fromB64toB58 val = case Enc.convertFromBase Enc.Base64 (encodeUtf8 val) of
+                                Left e -> pack $ "Invalid input: " ++ e
                                 Right decoded -> toText $ fromBytes (decoded :: BS'.ByteString)
           
-          fromB64 val = case Enc.convertFromBase Enc.Base64 (TextS.encodeUtf8 val) of
-                            Left e -> TextS.pack $ "Invalid input: " ++ e
-                            Right decoded -> TextS.decodeUtf8 (decoded :: BS'.ByteString)
+          fromB64 val = case Enc.convertFromBase Enc.Base64 (encodeUtf8 val) of
+                            Left e -> pack $ "Invalid input: " ++ e
+                            Right decoded -> decodeUtf8 (decoded :: BS'.ByteString)
 
-          fromB64' val = case Enc.convertFromBase Enc.Base64 (TextS.encodeUtf8 val) of
-                            Left e -> TextS.pack $ "Invalid input: " ++ e
-                            Right decoded -> TextS.pack $ BS'.foldr showInt "" (decoded :: BS'.ByteString)
+          fromB64' val = case Enc.convertFromBase Enc.Base64 (encodeUtf8 val) of
+                            Left e -> pack $ "Invalid input: " ++ e
+                            Right decoded -> pack $ BS'.foldr showInt "" (decoded :: BS'.ByteString)
 
 
 ------------------------------------------- Ipfs functions ---------------------------------------------------
@@ -140,7 +140,7 @@ cat hash = call $ Api._cat hash
 -- | Add a file or directory to ipfs. 
 add :: Text -> Ipfs (Maybe AddObj)
 add filePath =  do 
-    responseVal <- ( multipartCall (TextS.pack "add") filePath )
+    responseVal <- ( multipartCall (pack "add") filePath )
     pure (decode (Net.responseBody responseVal)  :: Maybe AddObj)
         
 -- | List directory contents for Unix filesystem objects. 
@@ -151,7 +151,7 @@ ls hash = call $ Api._ls hash
 get :: Text -> Ipfs Text
 get hash = do 
     ret <- call $ Api._get hash
-    do liftIO $ Tar.unpack "getResponseDirectory" . Tar.read $ BS.fromStrict $ TextS.encodeUtf8 ret
+    do liftIO $ Tar.unpack "getResponseDirectory" . Tar.read $ BS.fromStrict $ encodeUtf8 ret
        pure "The content has been stored in getResponseDirectory."
 
 -- | List links (references) from an object. Stream function, returns IO(), use liftIO while passing to 'runIpfs' or 'runIpfs''.
@@ -230,7 +230,7 @@ blockGet key = call $ Api._blockGet key
 -- | Store input as an IPFS block. 
 blockPut :: Text -> Ipfs (Maybe Api.BlockObj)
 blockPut filePath = do 
-    responseVal <- multipartCall (TextS.pack "block/put") filePath 
+    responseVal <- multipartCall (pack "block/put") filePath 
     pure (decode (Net.responseBody responseVal)  :: Maybe Api.BlockObj)
 
 -- | Print information of a raw IPFS block. 
@@ -248,7 +248,7 @@ dagResolve ref = call $ Api._dagResolve ref
 -- | Add a dag node to ipfs. 
 dagPut :: Text -> Ipfs (Maybe Api.DagPutObj)
 dagPut filePath = do 
-    responseVal <- multipartCall (TextS.pack "dag/put") filePath 
+    responseVal <- multipartCall (pack "dag/put") filePath 
     pure (decode (Net.responseBody responseVal)  :: Maybe Api.DagPutObj)
 
 -- | Get ipfs config values. 
@@ -262,10 +262,10 @@ configSet key value = call $ Api._configSet key $ Just value
 -- | Replace the config with the file at <filePath>. 
 configReplace :: Text -> Ipfs (Maybe Text)
 configReplace filePath = do 
-    responseVal <- multipartCall (TextS.pack "config/replace") filePath 
+    responseVal <- multipartCall (pack "config/replace") filePath 
     pure $ case statusCode $ Net.responseStatus responseVal of 
-            200 -> Just $ "Config File Replaced Successfully with status code - " <> (TextS.pack "200")
-            _   -> Just $ "Error occured with status code - " <>  (TextS.pack $ show (statusCode $ Net.responseStatus responseVal))
+            200 -> Just $ "Config File Replaced Successfully with status code - " <> (pack "200")
+            _   -> Just $ "Error occured with status code - " <>  (pack $ show (statusCode $ Net.responseStatus responseVal))
                 
 -- | Output the raw bytes of an IPFS object. 
 objectData :: Text -> Ipfs Api.ObjectReturnType
@@ -290,13 +290,13 @@ objectRmLink key name = call $ Api._objectRmLink key (Just name)
 -- | Append data to what already exists in the data segment in the given object. 
 objectAppendData :: Text -> Text -> Ipfs (Maybe Api.ObjectLinksObj)
 objectAppendData key filePath = do 
-    responseVal <- multipartCall ( ( TextS.pack "object/patch/append-data?arg=" ) <> key) filePath 
+    responseVal <- multipartCall ( ( pack "object/patch/append-data?arg=" ) <> key) filePath 
     pure ( decode ( Net.responseBody responseVal)  :: Maybe Api.ObjectLinksObj ) 
 
 -- | Set the data field of an IPFS object. 
 objectSetData :: Text -> Text -> Ipfs (Maybe Api.ObjectLinksObj)
 objectSetData key filePath = do 
-    responseVal <- multipartCall ( ( TextS.pack "object/patch/set-data?arg=" ) <> key) filePath 
+    responseVal <- multipartCall ( ( pack "object/patch/set-data?arg=" ) <> key) filePath 
     pure ( decode ( Net.responseBody responseVal)  :: Maybe Api.ObjectLinksObj )      
 
 -- | Get and serialize the DAG node named by key. 
@@ -310,7 +310,7 @@ objectDiff firstKey secondKey = call $ Api._objectDiff firstKey (Just secondKey)
 -- | Store input as a DAG object, print its key. 
 objectPut :: Text -> Ipfs ( Maybe Api.ObjectObj )
 objectPut filePath = do 
-    responseVal <- multipartCall (TextS.pack "object/put") filePath 
+    responseVal <- multipartCall (pack "object/put") filePath 
     pure (decode ( Net.responseBody responseVal)  :: Maybe Api.ObjectObj)        
 
     -- | Get stats for the DAG node named by key. 
@@ -496,11 +496,11 @@ filesRm mfsPath  = do
 -- | Write to a mutable file in a given filesystem. 
 filesWrite :: Text -> Text -> Bool -> Ipfs (Maybe Text)
 filesWrite mfsPath filePath toTruncate = do 
-    responseVal <- multipartCall ((TextS.pack "files/write?arg=") 
-        <> mfsPath <> (TextS.pack "&create=true") <>  (TextS.pack "&truncate=") <> (TextS.pack $ show toTruncate) ) filePath 
+    responseVal <- multipartCall ((pack "files/write?arg=") 
+        <> mfsPath <> (pack "&create=true") <>  (pack "&truncate=") <> (pack $ show toTruncate) ) filePath 
     pure $ case statusCode $ Net.responseStatus responseVal of 
-            200 -> Just $ "File has been written Successfully with status code - " <> (TextS.pack "200")
-            _   -> Just $ "Error occured with status code - " <>  (TextS.pack $ show (statusCode $ Net.responseStatus responseVal))
+            200 -> Just $ "File has been written Successfully with status code - " <> (pack "200")
+            _   -> Just $ "Error occured with status code - " <>  (pack $ show (statusCode $ Net.responseStatus responseVal))
 
 -- | Shut down the ipfs daemon. 
 shutdown :: Ipfs Text
