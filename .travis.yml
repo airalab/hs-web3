@@ -17,6 +17,8 @@ matrix:
     compiler: "LTS12"
   - env: RESOLVER=lts-13
     compiler: "LTS13"
+  - env: RESOLVER=lts-14
+    compiler: "LTS14"
   - env: RESOLVER=nightly
     compiler: "nightly"
 
@@ -28,6 +30,9 @@ matrix:
     os: osx
   - env: RESOLVER=lts-13
     compiler: "LTS13"
+    os: osx
+  - env: RESOLVER=lts-14
+    compiler: "LTS14"
     os: osx
   - env: RESOLVER=nightly
     compiler: "nightly"
@@ -41,6 +46,9 @@ matrix:
     os: windows
   - env: RESOLVER=lts-13
     compiler: "LTS13"
+    os: windows
+  - env: RESOLVER=lts-14
+    compiler: "LTS14"
     os: windows
   - env: RESOLVER=nightly
     compiler: "nightly"
