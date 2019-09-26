@@ -44,13 +44,13 @@ import           Network.Ipfs.Api.Stream                (_ping, _dhtFindPeer, _d
                                                         _dhtQuery, _logTail, _repoGc, _repoVerify, _refs, _refsLocal,
                                                         _pubsubSubscribe, PubsubSubObj(..))
 
-newtype IpfsT m a = IpfsT { unIpfs :: ReaderT (Manager, BaseUrl, String) (ExceptT ServantError m) a}
+newtype IpfsT m a = IpfsT { unIpfs :: ReaderT (Manager, BaseUrl, String) (ExceptT ClientError m) a}
   deriving ( Functor
            , Applicative
            , Monad
            , MonadIO
            , MonadReader (Manager, BaseUrl, String)
-           , MonadError ServantError
+           , MonadError ClientError
            )
 
 instance MonadTrans IpfsT where
