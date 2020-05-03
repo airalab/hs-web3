@@ -19,6 +19,7 @@
 
 module Network.Ethereum.Account.LocalKey where
 
+import           Control.Monad.Catch               (throwM)
 import           Control.Monad.State.Strict        (get, runStateT)
 import           Control.Monad.Trans               (lift)
 import           Crypto.PubKey.ECC.ECDSA           (PrivateKey)
@@ -40,6 +41,7 @@ import           Network.Ethereum.Account.Internal (AccountT (..),
 import qualified Network.Ethereum.Api.Eth          as Eth (call, estimateGas,
                                                            getTransactionCount,
                                                            sendRawTransaction)
+import           Network.Ethereum.Api.Provider     (Web3Error (ParserFail))
 import           Network.Ethereum.Api.Types        (Call (..))
 import           Network.Ethereum.Chain            (foundation)
 import           Network.Ethereum.Contract.Method  (selector)
@@ -49,7 +51,8 @@ import           Network.Ethereum.Transaction      (encodeTransaction)
 data LocalKey = LocalKey
     { localKeyPrivate :: !PrivateKey
     , localKeyChainId :: !Integer
-    } deriving (Eq, Show)
+    }
+    deriving (Eq, Show)
 
 instance Default LocalKey where
     def = LocalKey (importKey empty) foundation
@@ -92,4 +95,4 @@ instance Account LocalKey LocalKeyAccount where
         res <- lift $ Eth.call params _block
         case decode res of
             Right r -> return r
-            Left e  -> fail e
+            Left e  -> lift $ throwM (ParserFail e)

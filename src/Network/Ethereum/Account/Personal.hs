@@ -19,6 +19,7 @@
 
 module Network.Ethereum.Account.Personal where
 
+import           Control.Monad.Catch               (throwM)
 import           Control.Monad.State.Strict        (get, runStateT)
 import           Control.Monad.Trans               (lift)
 import qualified Data.ByteArray                    as BA (convert)
@@ -36,14 +37,16 @@ import           Network.Ethereum.Account.Internal (AccountT (..),
 import qualified Network.Ethereum.Api.Eth          as Eth (call, estimateGas)
 import           Network.Ethereum.Api.Personal     (Passphrase)
 import qualified Network.Ethereum.Api.Personal     as Personal (sendTransaction)
+import           Network.Ethereum.Api.Provider     (Web3Error (ParserFail))
 import           Network.Ethereum.Api.Types        (Call (callData, callFrom, callGas))
 import           Network.Ethereum.Contract.Method  (selector)
 
 -- | Unlockable node managed account params
-data Personal = Personal {
-    personalAddress    :: !Address
-  , personalPassphrase :: !Passphrase
-  } deriving (Eq, Show)
+data Personal = Personal
+    { personalAddress    :: !Address
+    , personalPassphrase :: !Passphrase
+    }
+    deriving (Eq, Show)
 
 instance Default Personal where
     def = Personal def ""
@@ -80,4 +83,4 @@ instance Account Personal PersonalAccount where
                 res <- lift $ Eth.call params block
                 case decode res of
                     Right r -> return r
-                    Left e  -> fail e
+                    Left e  -> lift $ throwM (ParserFail e)
