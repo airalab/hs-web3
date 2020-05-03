@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.8.4.0] 2020-05-03
+### Added
+- Tuple support for `pragma experimental ABIEncoderV2`
+- Fixed dependencies bounds for stackage LTS-15
+
+### Changed
+- Fixed reusing of HTTP request Manager
+
 ## [0.8.3.2] 2019-05-13
 ### Changed
 - Fixed dependencies bounds for stackage distribution
