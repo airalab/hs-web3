@@ -10,6 +10,7 @@ Haskell Web3 Documentation
    ethereum_node_api
    ethereum_accounts
    smart_contracts
+   ipfs_client_api
    ens
 
 .. toctree::
