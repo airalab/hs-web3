@@ -10,7 +10,7 @@
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- Web3 Secret Storage implementation.
+-- Ethereum Secret Storage implementation.
 -- Spec https://github.com/ethereum/wiki/wiki/Web3-Secret-Storage-Definition.
 --
 
@@ -44,25 +44,32 @@ import           Data.Text                (Text)
 import           Data.UUID.Types          (UUID)
 import           Data.UUID.Types.Internal (buildFromBytes)
 
-import           Crypto.Ethereum.Utils    (sha3)
+import           Crypto.Ethereum.Utils    (keccak256)
 import           Data.ByteArray.HexString (HexString)
 
 -- | Key derivation function parameters and salt.
 data Kdf = Pbkdf2 !Pbkdf2.Parameters !HexString
-         | Scrypt !Scrypt.Parameters !HexString
+    | Scrypt !Scrypt.Parameters !HexString
 
 -- | Cipher parameters.
 data Cipher = Aes128Ctr
-    { cipherIv :: !(IV AES128), cipherText :: !HexString }
+    { cipherIv   :: !(IV AES128)
+    , cipherText :: !HexString
+    }
 
 -- | Secret Storage representation on memory.
 data EncryptedKey = EncryptedKey
-  { encryptedKeyId      :: !UUID        -- ^ Random key ID
-  , encryptedKeyVersion :: !Int         -- ^ Version (suppoted version 3 only)
-  , encryptedKeyCipher  :: !Cipher      -- ^ Cipher (supported AES-128-CTR only)
-  , encryptedKeyKdf     :: !Kdf         -- ^ Key derivation function
-  , encryptedKeyMac     :: !HexString   -- ^ MAC
-  }
+    { encryptedKeyId      :: !UUID
+    -- ^ Random key ID
+    , encryptedKeyVersion :: !Int
+    -- ^ Version (suppoted version 3 only)
+    , encryptedKeyCipher  :: !Cipher
+    -- ^ Cipher (supported AES-128-CTR only)
+    , encryptedKeyKdf     :: !Kdf
+    -- ^ Key derivation function
+    , encryptedKeyMac     :: !HexString
+    -- ^ MAC
+    }
 
 instance Eq EncryptedKey where
     a == b = encryptedKeyId a == encryptedKeyId b
@@ -195,7 +202,7 @@ decrypt EncryptedKey{..} password
     cipher = throwCryptoError $ cipherInit (BA.take 16 derivedKey) :: AES128
     derivedKey = deriveKey encryptedKeyKdf password
     ciphertext = cipherText encryptedKeyCipher
-    mac = sha3 (BA.drop 16 derivedKey <> ciphertext)
+    mac = keccak256 (BA.drop 16 derivedKey <> ciphertext)
     iv  = cipherIv encryptedKeyCipher
 
 -- | Encrypt Ethereum private key.
@@ -213,7 +220,7 @@ encrypt privateKey password = do
     let derivedKey = deriveKey kdf password
         cipher = throwCryptoError $ cipherInit (BA.take 16 derivedKey) :: AES128
         ciphertext = ctrCombine cipher iv privateKey
-        mac = sha3 (BA.drop 16 derivedKey <> ciphertext)
+        mac = keccak256 (BA.drop 16 derivedKey <> ciphertext)
     uuid <- randomUUID
     return $ EncryptedKey uuid 3 (Aes128Ctr iv $ convert ciphertext) kdf mac
   where

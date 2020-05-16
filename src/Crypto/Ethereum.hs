@@ -7,12 +7,12 @@
 -- Stability   :  experimental
 -- Portability :  unportable
 --
--- Ethereum ECC support module.
+-- Ethereum cryptography primitives.
 --
 
 module Crypto.Ethereum
     (
-    -- * Ethereum crypto key ops
+    -- * ECDSA crypto key ops
       PrivateKey
     , PublicKey
     , importKey
@@ -22,9 +22,10 @@ module Crypto.Ethereum
     , signMessage
 
     -- * Hash function
-    , sha3
+    , keccak256
     ) where
 
+import           Crypto.Ecdsa.Utils        (derivePubKey, importKey)
 import           Crypto.Ethereum.Signature (signMessage)
-import           Crypto.Ethereum.Utils     (derivePubKey, importKey, sha3)
+import           Crypto.Ethereum.Utils     (keccak256)
 import           Crypto.PubKey.ECC.ECDSA   (PrivateKey, PublicKey)

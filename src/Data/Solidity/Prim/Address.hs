@@ -49,7 +49,8 @@ import           Data.Text.Encoding       as T (encodeUtf8)
 import           Generics.SOP             (Generic)
 import qualified GHC.Generics             as GHC (Generic)
 
-import           Crypto.Ethereum.Utils    (exportPubKey, sha3)
+import           Crypto.Ecdsa.Utils       (exportPubKey)
+import           Crypto.Ethereum.Utils    (keccak256)
 import           Data.ByteArray.HexString (HexString, fromBytes, toBytes,
                                            toText)
 import           Data.Solidity.Abi        (AbiGet (..), AbiPut (..),
@@ -95,7 +96,7 @@ fromPubKey key =
         Left e  -> error $ "Impossible error: " ++ e
   where
     toAddress :: HexString -> HexString
-    toAddress = BA.drop 12 . sha3
+    toAddress = BA.drop 12 . keccak256
 
 -- | Decode address from hex string
 fromHexString :: HexString -> Either String Address
@@ -113,7 +114,7 @@ toHexString = fromBytes . C8.drop 12 . encode
 toChecksum :: ByteString -> ByteString
 toChecksum addr = ("0x" <>) . C8.pack $ zipWith ($) upcaseVector lower
   where
-    upcaseVector = (>>= fourthBits) . BS.unpack . BS.take 20 $ sha3 (C8.pack lower)
+    upcaseVector = (>>= fourthBits) . BS.unpack . BS.take 20 $ keccak256 (C8.pack lower)
     fourthBits n = bool id C.toUpper <$> [n .&. 0x80 /= 0, n .&. 0x08 /= 0]
     lower = drop 2 . fmap C.toLower . C8.unpack $ addr
 
