@@ -21,7 +21,7 @@
 -- Stability   :  experimental
 -- Portability :  unportable
 --
--- Support for parallel multiple event filters.
+-- Parallel multiple event filters.
 --
 
 module  Network.Ethereum.Contract.Event.MultiFilter
@@ -34,13 +34,11 @@ module  Network.Ethereum.Contract.Event.MultiFilter
 
     -- * With geth filters
     , multiEvent
-    , multiEvent'
-    , multiEventMany'
+    , multiEventMany
 
     -- * Without geth filters
     , multiEventNoFilter
-    , multiEventNoFilter'
-    , multiEventManyNoFilter'
+    , multiEventManyNoFilter
 
     -- * Re-exports
     , Handlers
@@ -49,7 +47,6 @@ module  Network.Ethereum.Contract.Event.MultiFilter
     ) where
 
 import           Control.Concurrent                     (threadDelay)
-import           Control.Concurrent.Async               (Async)
 import           Control.Monad                          (forM, void, when)
 import           Control.Monad.IO.Class                 (MonadIO (..))
 import           Control.Monad.Trans.Class              (lift)
@@ -83,10 +80,10 @@ import           Data.Vinyl.TypeLevel                   (AllAllSat)
 
 import           Data.Solidity.Event                    (DecodeEvent (..))
 import qualified Network.Ethereum.Api.Eth               as Eth
-import           Network.Ethereum.Api.Provider          (Web3, forkWeb3)
 import           Network.Ethereum.Api.Types             (Change (..),
                                                          DefaultBlock (..),
                                                          Filter (..), Quantity)
+import Network.JsonRpc.TinyClient (JsonRpc(..))
 import           Network.Ethereum.Contract.Event.Common
 
 --------------------------------------------------------------------------------
@@ -122,34 +119,19 @@ modifyMultiFilter h (f :? fs)  = h f :? modifyMultiFilter h fs
 multiEvent
   :: ( PollFilters es
      , QueryAllLogs es
-     , MapHandlers Web3 es (WithChange es)
+     , MapHandlers m es (WithChange es)
 #if MIN_VERSION_vinyl(0,10,0)
      , RPureConstrained HasLogIndex (WithChange es)
 #else
      , AllAllSat '[HasLogIndex] (WithChange es)
 #endif
      , RecApplicative (WithChange es)
+     , JsonRpc m
      )
   => MultiFilter es
-  -> Handlers es (ReaderT Change Web3 EventAction)
-  -> Web3 (Async ())
-multiEvent fltrs = forkWeb3 . multiEvent' fltrs
-
-multiEvent'
-  :: ( PollFilters es
-     , QueryAllLogs es
-     , MapHandlers Web3 es (WithChange es)
-#if MIN_VERSION_vinyl(0,10,0)
-     , RPureConstrained HasLogIndex (WithChange es)
-#else
-     , AllAllSat '[HasLogIndex] (WithChange es)
-#endif
-     , RecApplicative (WithChange es)
-     )
-  => MultiFilter es
-  -> Handlers es (ReaderT Change Web3 EventAction)
-  -> Web3 ()
-multiEvent' fltrs = multiEventMany' fltrs 0
+  -> Handlers es (ReaderT Change m EventAction)
+  -> m ()
+multiEvent fltrs = multiEventMany fltrs 0
 
 data MultiFilterStreamState es =
   MultiFilterStreamState { mfssCurrentBlock       :: Quantity
@@ -158,22 +140,23 @@ data MultiFilterStreamState es =
                          }
 
 
-multiEventMany'
+multiEventMany
   :: ( PollFilters es
      , QueryAllLogs es
-     , MapHandlers Web3 es (WithChange es)
+     , MapHandlers m es (WithChange es)
 #if MIN_VERSION_vinyl(0,10,0)
      , RPureConstrained HasLogIndex (WithChange es)
 #else
      , AllAllSat '[HasLogIndex] (WithChange es)
 #endif
      , RecApplicative (WithChange es)
+     , JsonRpc m
      )
   => MultiFilter es
   -> Integer
-  -> Handlers es (ReaderT Change Web3 EventAction)
-  -> Web3 ()
-multiEventMany' fltrs window handlers = do
+  -> Handlers es (ReaderT Change m EventAction)
+  -> m ()
+multiEventMany fltrs window handlers = do
     start <- mkBlockNumber $ minStartBlock fltrs
     let initState =
           MultiFilterStreamState { mfssCurrentBlock = start
@@ -194,15 +177,18 @@ multiEventMany' fltrs window handlers = do
       let pollTo = minEndBlock fltrs'
       void $ reduceMultiEventStream (pollMultiFilter fIds pollTo) handlers
 
-multiFilterStream
-  :: MultiFilterStreamState es
-  -> MachineT Web3 k (MultiFilter es)
+multiFilterStream :: JsonRpc m
+                  => MultiFilterStreamState es
+                  -> MachineT m k (MultiFilter es)
 multiFilterStream initialPlan = do
   unfoldPlan initialPlan $ \s -> do
     end <- lift . mkBlockNumber . minEndBlock . mfssInitialMultiFilter $ initialPlan
     filterPlan end s
   where
-    filterPlan :: Quantity -> MultiFilterStreamState es -> PlanT k (MultiFilter es) Web3 (MultiFilterStreamState es)
+    filterPlan :: JsonRpc m
+               => Quantity
+               -> MultiFilterStreamState es
+               -> PlanT k (MultiFilter es) m (MultiFilterStreamState es)
     filterPlan end initialState@MultiFilterStreamState{..} = do
       if mfssCurrentBlock > end
         then stop
@@ -228,7 +214,7 @@ type family WithChange (es :: [*]) = (es' :: [*]) | es' -> es where
   WithChange (e : es) = FilterChange e : WithChange es
 
 class QueryAllLogs (es :: [*]) where
-  queryAllLogs :: MultiFilter es -> Web3 [Field (WithChange es)]
+    queryAllLogs :: JsonRpc m => MultiFilter es -> m [Field (WithChange es)]
 
 instance QueryAllLogs '[] where
   queryAllLogs NilFilters = pure []
@@ -315,7 +301,7 @@ reduceMultiEventStream filterChanges handlers = fmap listToMaybe . runT $
 
 -- | 'playLogs' streams the 'filterStream' and calls eth_getLogs on these 'Filter' objects.
 playMultiLogs
-  :: forall es k.
+  :: forall es k m.
      ( QueryAllLogs es
 #if MIN_VERSION_vinyl(0,10,0)
      , RPureConstrained HasLogIndex (WithChange es)
@@ -323,26 +309,27 @@ playMultiLogs
      , AllAllSat '[HasLogIndex] (WithChange es)
 #endif
      , RecApplicative (WithChange es)
+     , JsonRpc m
      )
   => MultiFilterStreamState es
-  -> MachineT Web3 k [Field (WithChange es)]
+  -> MachineT m k [Field (WithChange es)]
 playMultiLogs s = fmap sortChanges $
      multiFilterStream s
   ~> autoM queryAllLogs
 
 data TaggedFilterIds (es :: [*]) where
-  TaggedFilterNil :: TaggedFilterIds '[]
-  TaggedFilterCons :: Tagged e Quantity -> TaggedFilterIds es -> TaggedFilterIds (e : es)
+    TaggedFilterNil :: TaggedFilterIds '[]
+    TaggedFilterCons :: Tagged e Quantity -> TaggedFilterIds es -> TaggedFilterIds (e : es)
 
 class PollFilters (es :: [*]) where
-  openMultiFilter :: MultiFilter es -> Web3 (TaggedFilterIds es)
-  checkMultiFilter :: TaggedFilterIds es -> Web3 [Field (WithChange es)]
-  closeMultiFilter :: TaggedFilterIds es -> Web3 ()
+    openMultiFilter :: JsonRpc m => MultiFilter es -> m (TaggedFilterIds es)
+    checkMultiFilter :: JsonRpc m => TaggedFilterIds es -> m [Field (WithChange es)]
+    closeMultiFilter :: JsonRpc m => TaggedFilterIds es -> m ()
 
 instance PollFilters '[] where
-  openMultiFilter _ = pure TaggedFilterNil
-  checkMultiFilter _ = pure []
-  closeMultiFilter _ = pure ()
+    openMultiFilter _ = pure TaggedFilterNil
+    checkMultiFilter _ = pure []
+    closeMultiFilter _ = pure ()
 
 instance forall e i ni es.
   ( DecodeEvent i ni e
@@ -375,13 +362,13 @@ pollMultiFilter
 #else
      , AllAllSat '[HasLogIndex] (WithChange es)
 #endif
+     , JsonRpc m
      )
   => TaggedFilterIds es
   -> DefaultBlock
-  -> MachineT Web3 k [Field (WithChange es)]
+  -> MachineT m k [Field (WithChange es)]
 pollMultiFilter is = construct . pollPlan is
   where
-    -- pollPlan :: TaggedFilterIds es -> DefaultBlock -> PlanT k [Field (Map (TyCon1 FilterChange) es)] Web3 ()
     pollPlan (fIds :: TaggedFilterIds es) end = do
       bn <- lift $ Eth.blockNumber
       if BlockWithNumber bn > end
@@ -396,53 +383,39 @@ pollMultiFilter is = construct . pollPlan is
 
 --------------------------------------------------------------------------------
 
-
 multiEventNoFilter
   :: ( QueryAllLogs es
-     , MapHandlers Web3 es (WithChange es)
+     , MapHandlers m es (WithChange es)
 #if MIN_VERSION_vinyl(0,10,0)
      , RPureConstrained HasLogIndex (WithChange es)
 #else
      , AllAllSat '[HasLogIndex] (WithChange es)
 #endif
      , RecApplicative (WithChange es)
+     , JsonRpc m
      )
   => MultiFilter es
-  -> Handlers es (ReaderT Change Web3 EventAction)
-  -> Web3 (Async ())
-multiEventNoFilter fltrs = forkWeb3 . multiEventNoFilter' fltrs
+  -> Handlers es (ReaderT Change m EventAction)
+  -> m ()
+multiEventNoFilter fltrs = multiEventManyNoFilter fltrs 0
 
-multiEventNoFilter'
+
+multiEventManyNoFilter
   :: ( QueryAllLogs es
-     , MapHandlers Web3 es (WithChange es)
+     , MapHandlers m es (WithChange es)
 #if MIN_VERSION_vinyl(0,10,0)
      , RPureConstrained HasLogIndex (WithChange es)
 #else
      , AllAllSat '[HasLogIndex] (WithChange es)
 #endif
      , RecApplicative (WithChange es)
-     )
-  => MultiFilter es
-  -> Handlers es (ReaderT Change Web3 EventAction)
-  -> Web3 ()
-multiEventNoFilter' fltrs = multiEventManyNoFilter' fltrs 0
-
-
-multiEventManyNoFilter'
-  :: ( QueryAllLogs es
-     , MapHandlers Web3 es (WithChange es)
-#if MIN_VERSION_vinyl(0,10,0)
-     , RPureConstrained HasLogIndex (WithChange es)
-#else
-     , AllAllSat '[HasLogIndex] (WithChange es)
-#endif
-     , RecApplicative (WithChange es)
+     , JsonRpc m
      )
   => MultiFilter es
   -> Integer
-  -> Handlers es (ReaderT Change Web3 EventAction)
-  -> Web3 ()
-multiEventManyNoFilter' fltrs window handlers = do
+  -> Handlers es (ReaderT Change m EventAction)
+  -> m ()
+multiEventManyNoFilter fltrs window handlers = do
     start <- mkBlockNumber $ minStartBlock fltrs
     let initState =
           MultiFilterStreamState { mfssCurrentBlock = start
@@ -467,15 +440,18 @@ multiEventManyNoFilter' fltrs window handlers = do
                                                           }
           in void $ reduceMultiEventStream (playNewMultiLogs pollingFilterState) handlers
 
-newMultiFilterStream
-  :: MultiFilterStreamState es
-  -> MachineT Web3 k (MultiFilter es)
+newMultiFilterStream :: JsonRpc m
+                     => MultiFilterStreamState es
+                     -> MachineT m k (MultiFilter es)
 newMultiFilterStream initialPlan = do
   unfoldPlan initialPlan $ \s -> do
     let end = minEndBlock . mfssInitialMultiFilter $ initialPlan
     filterPlan end s
   where
-    filterPlan :: DefaultBlock -> MultiFilterStreamState es -> PlanT k (MultiFilter es) Web3 (MultiFilterStreamState es)
+    filterPlan :: JsonRpc m
+               => DefaultBlock
+               -> MultiFilterStreamState es
+               -> PlanT k (MultiFilter es) m (MultiFilterStreamState es)
     filterPlan end initialState@MultiFilterStreamState{..} = do
       if BlockWithNumber mfssCurrentBlock > end
         then stop
@@ -489,7 +465,7 @@ newMultiFilterStream initialPlan = do
           filterPlan end initialState { mfssCurrentBlock = newestBlockNumber + 1 }
 
 playNewMultiLogs
-  :: forall es k.
+  :: forall es k m.
      ( QueryAllLogs es
 #if MIN_VERSION_vinyl(0,10,0)
      , RPureConstrained HasLogIndex (WithChange es)
@@ -497,9 +473,10 @@ playNewMultiLogs
      , AllAllSat '[HasLogIndex] (WithChange es)
 #endif
      , RecApplicative (WithChange es)
+     , JsonRpc m
      )
   => MultiFilterStreamState es
-  -> MachineT Web3 k [Field (WithChange es)]
+  -> MachineT m k [Field (WithChange es)]
 playNewMultiLogs s = fmap sortChanges $
      newMultiFilterStream s
   ~> autoM queryAllLogs

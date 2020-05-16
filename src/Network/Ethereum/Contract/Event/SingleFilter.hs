@@ -19,21 +19,18 @@
 -- Stability   :  experimental
 -- Portability :  unportable
 --
--- Simple contract event filter support.
+-- Contract event filters.
 --
 
 module Network.Ethereum.Contract.Event.SingleFilter
     (
       event
-    , event'
-    , eventMany'
+    , eventMany
     , eventNoFilter
-    , eventNoFilter'
-    , eventManyNoFilter'
+    , eventManyNoFilter
     ) where
 
 import           Control.Concurrent                     (threadDelay)
-import           Control.Concurrent.Async               (Async)
 import           Control.Monad                          (forM, void, when)
 import           Control.Monad.IO.Class                 (MonadIO (..))
 import           Control.Monad.Trans.Class              (lift)
@@ -48,38 +45,31 @@ import           Data.Maybe                             (catMaybes, listToMaybe)
 
 import           Data.Solidity.Event                    (DecodeEvent (..))
 import qualified Network.Ethereum.Api.Eth               as Eth
-import           Network.Ethereum.Api.Provider          (Web3, forkWeb3)
 import           Network.Ethereum.Api.Types             (Change (..),
                                                          DefaultBlock (..),
                                                          Filter (..), Quantity)
 import           Network.Ethereum.Contract.Event.Common
+import           Network.JsonRpc.TinyClient             (JsonRpc (..))
 
--- | Run 'event\'' one block at a time.
-event :: DecodeEvent i ni e
-      => Filter e
-      -> (e -> ReaderT Change Web3 EventAction)
-      -> Web3 (Async ())
-event fltr = forkWeb3 . event' fltr
-
--- | Same as 'event', but does not immediately spawn a new thread.
-event' :: DecodeEvent i ni e
+-- | Run one block at a time.
+event :: (DecodeEvent i ni e, JsonRpc m)
        => Filter e
-       -> (e -> ReaderT Change Web3 EventAction)
-       -> Web3 ()
-event' fltr = eventMany' fltr 0
+       -> (e -> ReaderT Change m EventAction)
+       -> m ()
+event fltr = eventMany fltr 0
 
--- | 'eventMany\'' take s a filter, a window size, and a handler.
+-- | 'eventMany' take s a filter, a window size, and a handler.
 --
 -- It runs the handler over the results of 'eventLogs' results using
 -- 'reduceEventStream'. If no 'TerminateEvent' action is thrown and
 -- the toBlock is not yet reached, it then transitions to polling.
 --
-eventMany' :: DecodeEvent i ni e
+eventMany :: (DecodeEvent i ni e, JsonRpc m)
            => Filter e
            -> Integer
-           -> (e -> ReaderT Change Web3 EventAction)
-           -> Web3 ()
-eventMany' fltr window handler = do
+           -> (e -> ReaderT Change m EventAction)
+           -> m ()
+eventMany fltr window handler = do
     start <- mkBlockNumber $ filterFromBlock fltr
     let initState = FilterStreamState { fssCurrentBlock = start
                                       , fssInitialFilter = fltr
@@ -127,22 +117,21 @@ reduceEventStream filterChanges handler = fmap listToMaybe . runT $
             return ((,) act <$> changeBlockNumber filterChangeRawChange)
 
 -- | 'playLogs' streams the 'filterStream' and calls eth_getLogs on these 'Filter' objects.
-playOldLogs
-  :: DecodeEvent i ni e
-  => FilterStreamState e
-  -> MachineT Web3 k [FilterChange e]
+playOldLogs :: (DecodeEvent i ni e, JsonRpc m)
+            => FilterStreamState e
+            -> MachineT m k [FilterChange e]
 playOldLogs s = filterStream s
           ~> autoM Eth.getLogs
           ~> autoM (liftIO . mkFilterChanges)
 
 -- | Polls a filter from the given filterId until the target toBlock is reached.
-pollFilter :: forall i ni e k . DecodeEvent i ni e
+pollFilter :: forall i ni e k m . (DecodeEvent i ni e, JsonRpc m)
            => Quantity
            -> DefaultBlock
-           -> MachineT Web3 k [FilterChange e]
+           -> MachineT m k [FilterChange e]
 pollFilter i = construct . pollPlan i
   where
-    pollPlan :: Quantity -> DefaultBlock -> PlanT k [FilterChange e] Web3 ()
+    pollPlan :: Quantity -> DefaultBlock -> PlanT k [FilterChange e] m ()
     pollPlan fid end = do
       bn <- lift $ Eth.blockNumber
       if BlockWithNumber bn > end
@@ -162,11 +151,12 @@ pollFilter i = construct . pollPlan i
 -- which cover this filter in intervals of size `windowSize`. The machine
 -- halts whenever the `fromBlock` of a spanning filter either (1) excedes then
 -- initial filter's `toBlock` or (2) is greater than the chain head's block number.
-filterStream :: FilterStreamState e
-             -> MachineT Web3 k (Filter e)
+filterStream :: JsonRpc m
+             => FilterStreamState e
+             -> MachineT m k (Filter e)
 filterStream initialPlan = unfoldPlan initialPlan filterPlan
   where
-    filterPlan :: FilterStreamState e -> PlanT k (Filter e) Web3 (FilterStreamState e)
+    filterPlan :: JsonRpc m => FilterStreamState e -> PlanT k (Filter e) m (FilterStreamState e)
     filterPlan initialState@FilterStreamState{..} = do
       end <- lift . mkBlockNumber $ filterToBlock fssInitialFilter
       if fssCurrentBlock > end
@@ -181,29 +171,18 @@ filterStream initialPlan = unfoldPlan initialPlan filterPlan
 
 --------------------------------------------------------------------------------
 
--- | Run 'event\'' one block at a time.
-eventNoFilter
-  :: DecodeEvent i ni e
-  => Filter e
-  -> (e -> ReaderT Change Web3 EventAction)
-  -> Web3 (Async ())
-eventNoFilter fltr = forkWeb3 . event' fltr
+eventNoFilter :: (DecodeEvent i ni e, JsonRpc m)
+              => Filter e
+              -> (e -> ReaderT Change m EventAction)
+              -> m ()
+eventNoFilter fltr = eventManyNoFilter fltr 0
 
--- | Same as 'event', but does not immediately spawn a new thread.
-eventNoFilter'
-  :: DecodeEvent i ni e
-  => Filter e
-  -> (e -> ReaderT Change Web3 EventAction)
-  -> Web3 ()
-eventNoFilter' fltr = eventManyNoFilter' fltr 0
-
-eventManyNoFilter'
-  :: DecodeEvent i ni e
-  => Filter e
-  -> Integer
-  -> (e -> ReaderT Change Web3 EventAction)
-  -> Web3 ()
-eventManyNoFilter' fltr window handler = do
+eventManyNoFilter :: (DecodeEvent i ni e, JsonRpc m)
+                  => Filter e
+                  -> Integer
+                  -> (e -> ReaderT Change m EventAction)
+                  -> m ()
+eventManyNoFilter fltr window handler = do
     start <- mkBlockNumber $ filterFromBlock fltr
     let initState = FilterStreamState { fssCurrentBlock = start
                                       , fssInitialFilter = fltr
@@ -228,21 +207,20 @@ eventManyNoFilter' fltr window handler = do
           in void $ reduceEventStream (playNewLogs pollingFilterState) handler
 
 -- | 'playLogs' streams the 'filterStream' and calls eth_getLogs on these 'Filter' objects.
-playNewLogs
-  :: DecodeEvent i ni e
-  => FilterStreamState e
-  -> MachineT Web3 k [FilterChange e]
+playNewLogs :: (DecodeEvent i ni e, JsonRpc m)
+            => FilterStreamState e
+            -> MachineT m k [FilterChange e]
 playNewLogs s =
      newFilterStream s
   ~> autoM Eth.getLogs
   ~> autoM (liftIO . mkFilterChanges)
 
-newFilterStream
-  :: FilterStreamState e
-  -> MachineT Web3 k (Filter e)
+newFilterStream :: JsonRpc m
+                => FilterStreamState e
+                -> MachineT m k (Filter e)
 newFilterStream initialState = unfoldPlan initialState filterPlan
   where
-    filterPlan :: FilterStreamState e -> PlanT k (Filter e) Web3 (FilterStreamState e)
+    filterPlan :: JsonRpc m => FilterStreamState e -> PlanT k (Filter e) m (FilterStreamState e)
     filterPlan s@FilterStreamState{..} = do
       if BlockWithNumber fssCurrentBlock > filterToBlock fssInitialFilter
         then stop

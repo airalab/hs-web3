@@ -17,6 +17,7 @@
 
 module Network.Ethereum.Account.Default where
 
+import           Control.Exception                 (TypeError (..))
 import           Control.Monad.Catch               (throwM)
 import           Control.Monad.State.Strict        (get, runStateT)
 import           Control.Monad.Trans               (MonadTrans (..))
@@ -34,7 +35,6 @@ import           Network.Ethereum.Account.Internal (AccountT (..),
 import qualified Network.Ethereum.Api.Eth          as Eth (accounts, call,
                                                            estimateGas,
                                                            sendTransaction)
-import           Network.Ethereum.Api.Provider     (Web3Error (ParserFail))
 import           Network.Ethereum.Api.Types        (Call (callData, callFrom, callGas))
 import           Network.Ethereum.Contract.Method  (Method (..))
 
@@ -71,4 +71,4 @@ instance Account () DefaultAccount where
             Eth.call params _block
         case decode res of
             Right r -> return r
-            Left e  -> lift $ throwM (ParserFail e)
+            Left e  -> lift (throwM $ TypeError e)
