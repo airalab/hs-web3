@@ -76,7 +76,7 @@ Currently implemented the following Ethereum APIs in modules:
   ``personal_*``   `Network.Ethereum.Api.Personal <http://hackage.haskell.org/package/web3/docs/Network-Ethereum-Api-Personal.html>`_
  ===============  ================
 
-All modules use descriptive types according to official Ethereum specification. It placed at `Network.Ethereum.Api.Types <http://hackage.haskell.org/package/web3-0.8.1.0/docs/Network-Ethereum-Api-Types.html>`_.
+All modules use descriptive types according to official Ethereum specification. It placed at `Network.Ethereum.Api.Types <http://hackage.haskell.org/package/web3/docs/Network-Ethereum-Api-Types.html>`_.
 
 .. note::
    

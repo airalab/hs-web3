@@ -8,6 +8,7 @@ Haskell Web3 Documentation
 
    getting_started
    ethereum_node_api
+   polkadot_node_api
    ethereum_accounts
    smart_contracts
    ipfs_client_api

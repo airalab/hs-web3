@@ -15,11 +15,11 @@
 
 module Network.Polkadot.Api.Rpc where
 
-import           Data.Text                  (Text)
+import           Data.Aeson                 (Value)
 
 import           Network.JsonRpc.TinyClient (JsonRpc (..))
 
 -- | Retrieves the list of RPC methods that are exposed by the node.
-methods :: JsonRpc m => m [Text]
+methods :: JsonRpc m => m Value
 {-# INLINE methods #-}
 methods = remote "rpc_methods"
