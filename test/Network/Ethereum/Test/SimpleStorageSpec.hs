@@ -12,7 +12,7 @@
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
--- Module      :  Network.Ethereum.Web3.Test.SimpleStorageSpec
+-- Module      :  Network.Ethereum.Test.SimpleStorageSpec
 -- Copyright   :  Alexander Krupenkin 2016
 -- License     :  BSD3
 --
@@ -25,29 +25,28 @@
 -- read the value, as well as an event monitor.
 --
 
-module Network.Ethereum.Web3.Test.SimpleStorageSpec where
+module Network.Ethereum.Test.SimpleStorageSpec where
 
-import           Control.Concurrent.Async         (wait)
+import           Control.Concurrent.Async     (wait)
 import           Control.Concurrent.MVar
-import           Control.Monad.IO.Class           (liftIO)
-import           Control.Monad.Trans.Class        (lift)
-import           Control.Monad.Trans.Reader       (ask)
-import           Data.Default                     (def)
-import           Data.List                        (sort)
-import           Data.Monoid                      ((<>))
-import           Lens.Micro                       ((.~))
+import           Control.Monad.IO.Class       (liftIO)
+import           Control.Monad.Trans.Class    (lift)
+import           Control.Monad.Trans.Reader   (ask)
+import           Data.Default                 (def)
+import           Data.List                    (sort)
+import           Data.Monoid                  ((<>))
+import           Lens.Micro                   ((.~))
 import           Test.Hspec
 
-import qualified Network.Ethereum.Api.Eth         as Eth
-import           Network.Ethereum.Api.Provider    (forkWeb3)
+import           Network.Ethereum
+import qualified Network.Ethereum.Api.Eth     as Eth
 import           Network.Ethereum.Api.Types
-import           Network.Ethereum.Contract        (new)
-import           Network.Ethereum.Contract.Event  (event')
+import           Network.Ethereum.Contract    (new)
 import           Network.Ethereum.Contract.TH
-import           Network.Ethereum.Web3
+import           Network.Web3
+import           Network.Web3.Provider        (forkWeb3)
 
-
-import           Network.Ethereum.Web3.Test.Utils
+import           Network.Ethereum.Test.Utils
 
 [abiFrom|test/contracts/SimpleStorage.json|]
 
@@ -184,7 +183,7 @@ processUntil :: MVar [EvT_CountSet]
              -> (Change -> Web3 ())
              -> Web3 ()
 processUntil var fltr predicate action = do
-  event' fltr $ \(ev :: EvT_CountSet) -> do
+  event fltr $ \(ev :: EvT_CountSet) -> do
     newV <- liftIO $ modifyMVar var $ \v -> return (ev:v, ev:v)
     if predicate newV
         then do

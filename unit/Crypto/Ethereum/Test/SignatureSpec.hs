@@ -6,9 +6,9 @@ import           Data.Foldable                (for_)
 import           Test.Hspec
 import           Test.Hspec.QuickCheck
 
+import           Crypto.Ecdsa.Utils           (importKey)
 import           Crypto.Ethereum.Signature    (hashMessage, signMessage,
                                                signTransaction)
-import           Crypto.Ethereum.Utils        (importKey)
 import           Data.ByteArray.HexString     (HexString)
 import           Data.Solidity.Prim.Address   (fromPubKey)
 import           Network.Ethereum.Api.Types   (Call (..))

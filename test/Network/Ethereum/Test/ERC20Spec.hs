@@ -5,12 +5,24 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE QuasiQuotes           #-}
-module Network.Ethereum.Web3.Test.ERC20Spec where
+
+-- |
+-- Module      :  Network.Ethereum.Test.ERC20Spec
+-- Copyright   :  Alexander Krupenkin 2016
+-- License     :  BSD3
+--
+-- Maintainer  :  mail@akru.me
+-- Stability   :  experimental
+-- Portability :  unportable
+--
+--
+
+module Network.Ethereum.Test.ERC20Spec where
 
 import           Test.Hspec
 
+import           Network.Ethereum             (Account, UIntN)
 import           Network.Ethereum.Contract.TH (abiFrom)
-import           Network.Ethereum.Web3        (Account, UIntN)
 import           Network.JsonRpc.TinyClient   (JsonRpc)
 
 [abiFrom|examples/token/ERC20.json|]

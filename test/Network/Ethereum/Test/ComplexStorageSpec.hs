@@ -10,7 +10,7 @@
 {-# LANGUAGE TemplateHaskell       #-}
 
 -- |
--- Module      :  Network.Ethereum.Web3.Test.ComplexStorageSpec
+-- Module      :  Network.Ethereum.Test.ComplexStorageSpec
 -- Copyright   :  Alexander Krupenkin 2016
 -- License     :  BSD3
 --
@@ -24,19 +24,18 @@
 -- sized components.
 --
 
-module Network.Ethereum.Web3.Test.ComplexStorageSpec where
+module Network.Ethereum.Test.ComplexStorageSpec where
 
-import           Control.Concurrent.Async         (wait)
-import           Control.Concurrent.MVar          (newEmptyMVar, putMVar,
-                                                   takeMVar)
-import           Control.Monad.IO.Class           (liftIO)
-import           Data.Default                     (def)
+import           Control.Concurrent.Async     (async, wait)
+import           Control.Concurrent.MVar      (newEmptyMVar, putMVar, takeMVar)
+import           Control.Monad.IO.Class       (liftIO)
+import           Data.Default                 (def)
 
-import           Network.Ethereum.Api.Types       (Filter (..))
-import           Network.Ethereum.Contract        (new)
+import           Network.Ethereum             hiding (convert)
+import           Network.Ethereum.Api.Types   (Filter (..))
+import           Network.Ethereum.Contract    (new)
 import           Network.Ethereum.Contract.TH
-import           Network.Ethereum.Web3            hiding (convert)
-import           Network.Ethereum.Web3.Test.Utils
+import           Network.Ethereum.Test.Utils
 
 
 import           Test.Hspec
@@ -72,7 +71,7 @@ complexStorageSpec = do
             let fltr = (def :: Filter ValsSet) { filterAddress = Just [storage] }
             -- kick off listening for the ValsSet event
             vals <- newEmptyMVar
-            fiber <- web3 $
+            fiber <- async . web3 $
                 event fltr $ \vs -> do
                     liftIO $ putMVar vals vs
                     pure TerminateEvent

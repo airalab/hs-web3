@@ -13,7 +13,7 @@
 {-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TypeApplications      #-}
 
--- Module      :  Network.Ethereum.Web3.Test.LinearizationSpec
+-- Module      :  Network.Ethereum.Test.LinearizationSpec
 -- Copyright   :  Alexander Krupenkin 2016
 -- License     :  BSD3
 --
@@ -22,32 +22,33 @@
 -- Portability :  unportable
 --
 
-module Network.Ethereum.Web3.Test.LinearizationSpec where
+module Network.Ethereum.Test.LinearizationSpec where
 
-import           Control.Concurrent               (forkIO)
-import           Control.Concurrent.Async         (forConcurrently_)
+import           Control.Concurrent              (forkIO)
+import           Control.Concurrent.Async        (forConcurrently_)
 import           Control.Concurrent.MVar
-import           Control.Concurrent.STM           (atomically)
-import           Control.Concurrent.STM.TQueue    (TQueue, flushTQueue,
-                                                   newTQueueIO, writeTQueue)
-import           Control.Monad                    (void)
-import           Control.Monad.IO.Class           (MonadIO (..))
-import           Control.Monad.Trans.Reader       (ReaderT, ask)
+import           Control.Concurrent.STM          (atomically)
+import           Control.Concurrent.STM.TQueue   (TQueue, flushTQueue,
+                                                  newTQueueIO, writeTQueue)
+import           Control.Monad                   (void)
+import           Control.Monad.IO.Class          (MonadIO (..))
+import           Control.Monad.Trans.Reader      (ReaderT, ask)
 import           Data.Default
 import           Data.Either
-import           Data.List                        (sort)
-import           Data.Maybe                       (fromJust)
-import           System.Random                    (randomRIO)
+import           Data.List                       (sort)
+import           Data.Maybe                      (fromJust)
+import           System.Random                   (randomRIO)
 import           Test.Hspec
 
-import qualified Network.Ethereum.Api.Eth         as Eth
-import           Network.Ethereum.Api.Types       (Change (..), Filter (..),
-                                                   TxReceipt, unQuantity)
-import           Network.Ethereum.Contract        (new)
+import           Network.Ethereum
+import qualified Network.Ethereum.Api.Eth        as Eth
+import           Network.Ethereum.Api.Types      (Change (..), Filter (..),
+                                                  TxReceipt, unQuantity)
+import           Network.Ethereum.Contract       (new)
 import           Network.Ethereum.Contract.Event
-import           Network.Ethereum.Contract.TH     (abiFrom)
-import           Network.Ethereum.Web3
-import           Network.Ethereum.Web3.Test.Utils
+import           Network.Ethereum.Contract.TH    (abiFrom)
+import           Network.Ethereum.Test.Utils
+import           Network.Web3
 
 [abiFrom|test/contracts/Linearization.json|]
 
@@ -94,7 +95,7 @@ singleFlood linearization = liftIO $ do
             _ -> error "got a number outside of (1,4) after randomR (1,4)"
 
 floodSpec :: SpecWith Address
-floodSpec = describe "can correctly demonstrate the difference between `multiEvent` and multiple `event'`s" $ do
+floodSpec = describe "can correctly demonstrate the difference between `multiEvent` and multiple `event`s" $ do
     it "properly linearizes with `multiEvent` when flooded and doesn't with multiple `event`s" $ \linearization -> do
         multiQ <- monitorAllFourMulti linearization
         parQ <- monitorAllFourPar linearization
@@ -139,7 +140,10 @@ monitorE1OrE2 addr = do
     _ <- web3 $ multiEvent filters handlers
     return var
 
-data EventTag = ETE1 | ETE2 | ETE3 | ETE4
+data EventTag = ETE1
+    | ETE2
+    | ETE3
+    | ETE4
     deriving (Eq, Read, Show)
 
 instance {-# OVERLAPPING #-} Ord (EventTag, Integer, Integer) where
@@ -169,10 +173,10 @@ monitorAllFourPar addr = do
         h = enqueueingHandler q
         unH (H h) = h
 
-    void . forkIO . web3 $ event' (f @E1) (unH $ h ETE1)
-    void . forkIO . web3 $ event' (f @E2) (unH $ h ETE2)
-    void . forkIO . web3 $ event' (f @E3) (unH $ h ETE3)
-    void . forkIO . web3 $ event' (f @E4) (unH $ h ETE4)
+    void . forkIO . web3 $ event (f @E1) (unH $ h ETE1)
+    void . forkIO . web3 $ event (f @E2) (unH $ h ETE2)
+    void . forkIO . web3 $ event (f @E3) (unH $ h ETE3)
+    void . forkIO . web3 $ event (f @E4) (unH $ h ETE4)
     return q
 
 defFilter :: forall a. Default (Filter a) => Address -> Filter a

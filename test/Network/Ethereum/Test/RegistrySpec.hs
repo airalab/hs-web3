@@ -7,15 +7,16 @@
 {-# LANGUAGE QuasiQuotes           #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
-module Network.Ethereum.Web3.Test.RegistrySpec where
+module Network.Ethereum.Test.RegistrySpec where
 
 import           Data.Default                 (def)
 import           Test.Hspec                   (Spec)
 
+import           Network.Ethereum             (EventAction (TerminateEvent),
+                                               event)
 import           Network.Ethereum.Api.Types   (Filter)
 import           Network.Ethereum.Contract.TH (abiFrom)
-import           Network.Ethereum.Web3        (EventAction (TerminateEvent),
-                                               Web3, event)
+import           Network.Web3                 (Web3)
 
 [abiFrom|test/contracts/Registry.json|]
 

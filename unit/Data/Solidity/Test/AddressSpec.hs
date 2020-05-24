@@ -7,7 +7,7 @@ import           Data.Foldable              (for_)
 import           Data.Monoid                ((<>))
 import           Test.Hspec
 
-import           Crypto.Ethereum.Utils      (derivePubKey, importKey)
+import           Crypto.Ecdsa.Utils         (derivePubKey, importKey)
 import           Data.ByteArray.HexString   (HexString)
 import           Data.Solidity.Prim.Address
 

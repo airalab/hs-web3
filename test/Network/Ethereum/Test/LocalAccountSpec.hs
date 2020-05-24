@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
--- Module      :  Network.Ethereum.Web3.Test.LocalAccountSpec
--- Copyright   :  Alexander Krupenkin 2018
+-- Module      :  Network.Ethereum.Test.LocalAccountSpec
+-- Copyright   :  Alexander Krupenkin 2016
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me
@@ -11,22 +11,21 @@
 -- Simple local account transaction test.
 --
 
-module Network.Ethereum.Web3.Test.LocalAccountSpec where
+module Network.Ethereum.Test.LocalAccountSpec where
 
-import           Lens.Micro                       ((.~))
-import           Lens.Micro.Mtl                   ((.=))
+import           Lens.Micro                  ((.~))
+import           Lens.Micro.Mtl              ((.=))
 import           Test.Hspec
 
-import           Crypto.Ethereum.Utils            (derivePubKey, importKey)
-import           Data.ByteArray.HexString         (HexString)
-import           Data.Solidity.Prim.Address       (fromPubKey)
-import           Network.Ethereum.Account         (LocalKey (..), send, to,
-                                                   value, withAccount,
-                                                   withParam)
-import           Network.Ethereum.Api.Eth         (getBalance)
-import           Network.Ethereum.Api.Types       (DefaultBlock (Pending))
-import           Network.Ethereum.Unit            (Ether, toWei)
-import           Network.Ethereum.Web3.Test.Utils (web3)
+import           Crypto.Ecdsa.Utils          (derivePubKey, importKey)
+import           Data.ByteArray.HexString    (HexString)
+import           Data.Solidity.Prim.Address  (fromPubKey)
+import           Network.Ethereum.Account    (LocalKey (..), send, to, value,
+                                              withAccount, withParam)
+import           Network.Ethereum.Api.Eth    (getBalance)
+import           Network.Ethereum.Api.Types  (DefaultBlock (Pending))
+import           Network.Ethereum.Test.Utils (web3)
+import           Network.Ethereum.Unit       (Ether, toWei)
 
 spec :: Spec
 spec = describe "Local account transactions" $ do

@@ -1,30 +1,29 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Network.Ethereum.Web3.Test.Utils where
+module Network.Ethereum.Test.Utils where
 
-import           Control.Concurrent            (threadDelay)
-import           Control.Exception             (SomeException, catch)
-import           Control.Monad.IO.Class        (liftIO)
-import           Data.Maybe                    (fromMaybe)
-import           Data.Ratio                    (numerator)
-import           Data.Time.Clock.POSIX         (getPOSIXTime)
-import           Lens.Micro                    ((.~))
-import           Network.HTTP.Client           (Manager, defaultManagerSettings,
-                                                managerConnCount,
-                                                managerRawConnection,
-                                                managerRetryableException,
-                                                newManager)
-import           System.Environment            (lookupEnv)
-import           System.IO.Unsafe              (unsafePerformIO)
+import           Control.Concurrent         (threadDelay)
+import           Control.Exception          (SomeException, catch)
+import           Control.Monad.IO.Class     (liftIO)
+import           Data.Maybe                 (fromMaybe)
+import           Data.Ratio                 (numerator)
+import           Data.Time.Clock.POSIX      (getPOSIXTime)
+import           Lens.Micro                 ((.~))
+import           Network.HTTP.Client        (Manager, defaultManagerSettings,
+                                             managerConnCount,
+                                             managerRawConnection,
+                                             managerRetryableException,
+                                             newManager)
+import           System.Environment         (lookupEnv)
+import           System.IO.Unsafe           (unsafePerformIO)
 
-import           Data.Solidity.Prim.Address    (Address)
-import           Network.Ethereum.Account      (DefaultAccount, to, withAccount,
-                                                withParam)
-import           Network.Ethereum.Api.Eth      (accounts, blockNumber)
-import           Network.Ethereum.Api.Provider (Provider (..), Web3,
-                                                runWeb3With)
-import           Network.Ethereum.Api.Types    (Quantity)
+import           Data.Solidity.Prim.Address (Address)
+import           Network.Ethereum.Account   (DefaultAccount, to, withAccount,
+                                             withParam)
+import           Network.Ethereum.Api.Eth   (accounts, blockNumber)
+import           Network.Ethereum.Api.Types (Quantity)
+import           Network.Web3.Provider      (Provider (..), Web3, runWeb3With)
 
 -- shared manager used throughout the helpers here to prevent hammering geth from ruining everything
 -- this also retrys on ALL exceptions, including ConnectionResetByPeer and stuff like that
