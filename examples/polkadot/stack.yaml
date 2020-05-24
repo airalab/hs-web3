@@ -68,4 +68,3 @@ extra-deps:
 nix:
     packages:
     - zlib
-    - secp256k1

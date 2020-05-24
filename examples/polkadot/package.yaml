@@ -1,0 +1,22 @@
+name:                example-polkadot
+version:             0.0.0.0
+synopsis:            Polkadot API example
+github:              "airalab/hs-web3"
+license:             BSD3
+author:              Alexander Krupenkin
+maintainer:          mail@akru.me
+copyright:           "(c) Alexander Krupenkin 2016"
+category:            Network
+
+dependencies:
+- base
+- web3 
+
+executables:
+  example-polkadot:
+    main:             Main.hs
+    source-dirs:      ./
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N

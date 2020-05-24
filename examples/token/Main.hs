@@ -6,8 +6,9 @@ import           Data.Text                (unpack)
 import           Text.Printf              (printf)
 
 import           Lens.Micro               ((.~))
+import           Network.Ethereum         hiding (name)
 import           Network.Ethereum.Account
-import           Network.Ethereum.Web3    hiding (name)
+import           Network.Web3
 
 import           ERC20
 
