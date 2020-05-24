@@ -12,6 +12,9 @@ All notable changes to this project will be documented in this file.
 - Split from common ECDSA staff from `Crypto.Ethereum` to `Crypto.Ecdsa`
 - Ethereum related tests moved to `Network.Ethereum.Test`
 
+### Removed
+- Support for build on LTS-11, LTS-12, LTS-13
+
 ## [0.8.4.0] 2020-05-03
 ### Added
 - Tuple support for `pragma experimental ABIEncoderV2`
