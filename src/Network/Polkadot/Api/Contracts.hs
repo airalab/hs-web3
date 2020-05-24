@@ -19,14 +19,15 @@ import           Data.Text                  (Text)
 
 import           Data.ByteArray.HexString   (HexString)
 import           Network.JsonRpc.TinyClient (JsonRpc (..))
+import           Network.Polkadot.Api.Types (ContractCall, ContractExecResult)
 
 -- | Executes a call to a contract.
 call :: JsonRpc m
-     => ContractCallRequest
+     => ContractCall
      -- ^ Contract call
      -> Maybe HexString
      -- ^ Block hash or nothing for head
-     -> ContractExecResult
+     -> m ContractExecResult
 {-# INLINE call #-}
 call = remote "contracts_call"
 
@@ -38,16 +39,16 @@ getStorage :: JsonRpc m
            -- ^ Storage key
            -> Maybe HexString
            -- ^ Block hash or nothing for head
-           -> Maybe HexString
+           -> m (Maybe HexString)
 {-# INLINE getStorage #-}
 getStorage = remote "contracts_getStorage"
 
 -- | Returns the projected time a given contract will be able to sustain paying its rent.
-rentProjection :: JsonRpc
+rentProjection :: JsonRpc m
                => Text
                -- ^ AccountId
                -> Maybe HexString
                -- ^ Block hash or nothing for head
-               -> Maybe Int
+               -> m (Maybe Int)
 {-# INLINE rentProjection #-}
 rentProjection = remote "contracts_rentProjection"

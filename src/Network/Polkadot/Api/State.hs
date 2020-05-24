@@ -159,7 +159,7 @@ getStorageSize :: JsonRpc m
                -- ^ Block hash or nothing for head
                -> m Int
 {-# INLINE getStorageSize #-}
-getStorageHash = remote "state_getStorageSize"
+getStorageSize = remote "state_getStorageSize"
 
 -- | Query historical storage entries (by key) starting from a start block.
 queryStorage :: JsonRpc m

@@ -15,8 +15,6 @@
 
 module Network.Polkadot.Api.Offchain where
 
-import           Data.Text                  (Text)
-
 import           Data.ByteArray.HexString   (HexString)
 import           Network.JsonRpc.TinyClient (JsonRpc (..))
 import           Network.Polkadot.Api.Types (StorageKind)

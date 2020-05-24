@@ -15,8 +15,7 @@
 
 module Network.Polkadot.Api.Engine where
 
-import           Data.Text                  (Text)
-
+import           Data.ByteArray.HexString   (HexString)
 import           Network.JsonRpc.TinyClient (JsonRpc (..))
 import           Network.Polkadot.Api.Types (CreatedBlock)
 

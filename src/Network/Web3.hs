@@ -16,18 +16,6 @@ module Network.Web3
       Web3
     , runWeb3
     -- ^ Single entry point for any Web3 family network.
-
-    -- * Ethereum Network
-    , module Network.Ethereum
-
-    -- * Polkadot Network
-    , module Network.Polkadot
-
-    -- * IPFS Network
-    , module Network.Ipfs
     ) where
 
-import qualified Network.Ethereum
-import qualified Network.Ipfs
-import qualified Network.Polkadot
 import           Network.Web3.Provider (Web3, runWeb3)

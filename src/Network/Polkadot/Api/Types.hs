@@ -18,14 +18,17 @@
 
 module Network.Polkadot.Api.Types where
 
-import           Data.Aeson        (FromJSON (..), Options (fieldLabelModifier, omitNothingFields),
-                                    ToJSON (..), Value (Bool, String),
-                                    defaultOptions, object, (.=))
-import           Data.Aeson.TH     (deriveJSON)
-import           Data.Text         (Text)
-import           GHC.Generics      (Generic)
+import           Data.Aeson               (FromJSON (..),
+                                           Options (fieldLabelModifier),
+                                           ToJSON (..), Value (String),
+                                           defaultOptions)
+import           Data.Aeson.TH            (deriveJSON)
+import           Data.Text                (Text)
+import           Data.Word                (Word32, Word64, Word8)
+import           GHC.Generics             (Generic)
 
-import           Data.String.Extra (toLowerFirst)
+import           Data.ByteArray.HexString (HexString)
+import           Data.String.Extra        (toLowerFirst)
 
 -- | The role the node is running as.
 data NodeRole = Full
@@ -87,14 +90,181 @@ data PeerInfo = PeerInfo
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 8 }) ''PeerInfo)
 
-data ContractCallRequest = ContractCallRequest
+-- | Executes a call to a contract.
+data ContractCall = ContractCall
+    { callOrigin    :: HexString
+    , callDest      :: HexString
+    , callValue     :: Integer
+    , callGasLimit  :: Integer
+    , callInputData :: HexString
+    }
     deriving (Eq, Generic, Show)
 
 $(deriveJSON (defaultOptions
-    { fieldLabelModifier = toLowerFirst . drop 8 }) ''ContractCallRequest)
+    { fieldLabelModifier = toLowerFirst . drop 4 }) ''ContractCall)
 
-data ContractExecResult = ContractExecResult
+-- | A result of execution of a contract.
+data ContractExecResult = SuccessExec
+    { execStatus :: Word8
+    -- ^ Status code returned by contract.
+    , execData   :: Maybe HexString
+    -- ^ Output data returned by contract. Can be empty.
+    }
+    | ExecResultError
     deriving (Eq, Generic, Show)
 
 $(deriveJSON (defaultOptions
-    { fieldLabelModifier = toLowerFirst . drop 8 }) ''ContractExecResult)
+    { fieldLabelModifier = toLowerFirst . drop 4 }) ''ContractExecResult)
+
+type Metadata = Value
+
+-- | ReadProof struct returned by RPC.
+data ReadProof = ReadProof
+    { readProofAt    :: HexString
+    -- ^ Block hash used to generate the proof.
+    , readProofProof :: [HexString]
+    -- ^ A proof used to prove that storage entries are included in the storage trie.
+    }
+    deriving (Eq, Generic, Show)
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 9 }) ''ReadProof)
+
+-- | Runtime version.
+-- This should not be thought of as classic Semver (major/minor/tiny).
+-- This triplet have different semantics and mis-interpretation could cause problems.
+-- In particular: bug fixes should result in an increment of `spec_version` and possibly `authoring_version`,
+-- absolutely not `impl_version` since they change the semantics of the runtime.
+data RuntimeVersion = RuntimeVersion
+    { runtimeSpecName           :: Text
+    -- ^ Identifies the different Substrate runtimes.
+    , runtimeImplName           :: Text
+    -- ^ Name of the implementation of the spec.
+    , runtimeAuthoringVersion   :: Word32
+    -- ^ `authoring_version` is the version of the authorship interface.
+    , runtimeSpecVersion        :: Word32
+    -- ^ Version of the runtime specification.
+    , runtimeImplVersion        :: Word32
+    -- ^ Version of the implementation of the specification.
+    , runtimeApis               :: [(HexString, Word32)]
+    -- ^ List of supported API "features" along with their versions.
+    , runtimeTransactionVersion :: Word32
+    -- ^ All existing dispatches are fully compatible when this number doesn't change.
+    }
+    deriving (Eq, Generic, Show)
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 7 }) ''RuntimeVersion)
+
+-- | Type of supported offchain storages.
+--
+-- 1: persistent storage is non-revertible and not fork-aware;
+-- 2: local storage is revertible and fork-aware.
+type StorageKind = Word8
+
+-- | Storage changes.
+data StorageChangeSet = StorageChangeSet
+    { storageBlock   :: HexString
+    -- ^ Block hash.
+    , storageChanges :: [(HexString, Maybe HexString)]
+    -- ^ A list of changes.
+    }
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 7 }) ''StorageChangeSet)
+
+-- | Numeric range of transaction weight.
+type Weight = Word64
+
+-- | Generalized group of dispatch types.
+data DispatchClass = Normal
+    | Operational
+    | Mandatory
+    deriving (Eq, Generic, Show)
+
+$(deriveJSON defaultOptions ''DispatchClass)
+
+-- | Some information related to a dispatchable that can be queried from the runtime.
+data RuntimeDispatchInfo = RuntimeDispatchInfo
+    { dispatchWeight     :: Weight
+    -- ^ Weight of this dispatch.
+    , dispatchClass      :: DispatchClass
+    -- ^ Class of this dispatch.
+    , dispatchPartialFee :: Integer
+    -- ^ The partial inclusion fee of this dispatch.
+    }
+    deriving (Eq, Generic, Show)
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 8 }) ''RuntimeDispatchInfo)
+
+-- | Auxiliary data associated with an imported block result.
+data ImportedAux = ImportedAux
+    { auxHeaderOnly                 :: Bool
+    -- ^ Only the header has been imported. Block body verification was skipped.
+    , auxClearJustificationRequests :: Bool
+    -- ^ Clear all pending justification requests.
+    , auxNeedsJustification         :: Bool
+    -- ^ Request a justification for the given block.
+    , auxBadJustification           :: Bool
+    -- ^ Received a bad justification.
+    , auxNeedsFinalityProof         :: Bool
+    -- ^ Request a finality proof for the given block.
+    , auxIsNewBest                  :: Bool
+    -- ^ Whether the block that was imported is the new best block.
+    }
+    deriving (Eq, Generic, Show)
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 3 }) ''ImportedAux)
+
+data CreatedBlock = CreatedBlock
+    { createdBlockHash :: HexString
+    , createdBlockAux  :: ImportedAux
+    }
+    deriving (Eq, Generic, Show)
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 12 }) ''CreatedBlock)
+
+-- | Abstraction over a block header for a substrate chain.
+data Header = Header
+    { headerParentHash     :: HexString
+    -- ^ The parent hash.
+    , headerNumber         :: Int
+    -- ^ The block number.
+    , headerStateRoot      :: HexString
+    -- ^ The state trie merkle root
+    , headerExtrinsicsRoot :: HexString
+    -- ^ The merkle root of the extrinsics.
+    , headerDigest         :: HexString
+    -- ^ A chain-specific digest of data useful for light clients or referencing auxiliary data.
+    }
+    deriving (Eq, Generic, Show)
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 5 }) ''Header)
+
+-- | Abstraction over a substrate block.
+data Block = Block
+    { blockHeader     :: Header
+    -- ^ The block header.
+    , blockExtrinsics :: [HexString]
+    -- ^ The accompanying extrinsics.
+    }
+    deriving (Eq, Generic, Show)
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 5 }) ''Block)
+
+-- | Abstraction over a substrate block and justification.
+data SignedBlock = SignedBlock
+    { signedBlock         :: Block
+    -- ^ Full block.
+    , signedJustification :: Maybe HexString
+    -- ^ Block justification.
+    }
+    deriving (Eq, Generic, Show)
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 6 }) ''SignedBlock)
