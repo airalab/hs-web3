@@ -17,6 +17,11 @@ extra-source-files:
 - examples/token/ERC20.hs
 - examples/token/ERC20.json
 - examples/token/Main.hs
+- examples/token/stack.yaml
+- examples/token/package.yaml
+- examples/polkadot/Main.hs
+- examples/polkadot/stack.yaml
+- examples/polkadot/package.yaml
 - test/contracts/Registry.json
 - test/contracts/SimpleStorage.json
 - test/contracts/ComplexStorage.json
