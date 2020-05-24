@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.9.0.0] 2020-05-24
+### Added
+- Experimental IPFS REST API client
+- Experimental Polkadot JSON-RPC API client
+
+### Changed
+- Web3 abstraction moved to `Network.Web3`
+- Ethereum entry point renamed `Network.Ethereum.Web3` -> `Network.Ethereum`
+- Split from common ECDSA staff from `Crypto.Ethereum` to `Crypto.Ecdsa`
+- Ethereum related tests moved to `Network.Ethereum.Test`
+
 ## [0.8.4.0] 2020-05-03
 ### Added
 - Tuple support for `pragma experimental ABIEncoderV2`
