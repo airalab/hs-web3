@@ -7,15 +7,14 @@
 -- Stability   :  experimental
 -- Portability :  unportable
 --
--- Haskell library for next generation of Web.
+-- Client library for Third Generation of Web.
 --
 
 module Network.Web3
     (
-    -- * Web3 library uses JSON-RPC over HTTP(S) to access node functionality.
+    -- * Web3 library uses JSON-RPC over WebSocket/HTTP(S) to access node functionality.
       Web3
     , runWeb3
-    -- ^ Single entry point for any Web3 family network.
     ) where
 
 import           Network.Web3.Provider (Web3, runWeb3)

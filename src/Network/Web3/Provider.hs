@@ -59,8 +59,9 @@ data Provider = HttpProvider String
     | WsProvider String Int
     deriving (Show, Eq, Generic)
 
+-- | Default Provider URI
 instance Default Provider where
-  def = HttpProvider "http://localhost:8545" -- ^ Default Provider URI
+  def = HttpProvider "http://localhost:8545"
 
 -- | 'Web3' monad runner, using the supplied Manager
 runWeb3With :: MonadIO m
