@@ -1,7 +1,7 @@
-Ethereum API for Haskell
-========================
+Web3 API for Haskell
+====================
 
-The Haskell Ethereum API which implements the [Generic JSON RPC](https://github.com/ethereum/wiki/wiki/JSON-RPC).
+This library implements Haskell API client for popular Web3 platforms.
 
 [![Documentation Status](https://readthedocs.org/projects/hs-web3/badge/?version=latest)](https://hs-web3.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/airalab/hs-web3.svg?branch=master)](https://travis-ci.org/airalab/hs-web3)
@@ -25,7 +25,8 @@ Usage
 module Main where
 
 -- Basic imports
-import           Network.Ethereum.Web3
+import           Network.Ethereum
+import           Network.Web3
 
 -- Eth API support
 import qualified Network.Ethereum.Api.Eth   as Eth
