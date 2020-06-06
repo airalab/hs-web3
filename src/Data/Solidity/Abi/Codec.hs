@@ -63,4 +63,5 @@ decode' :: (Generic a,
             ByteArrayAccess ba)
         => ba
         -> Either String a
+{-# INLINE decode' #-}
 decode' = runGet (to <$> gAbiGet) . convert
