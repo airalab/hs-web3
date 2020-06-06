@@ -14,7 +14,7 @@
 -- Particular core type instances.
 --
 
-module Codec.Scale.Core (Compact, Skip) where
+module Codec.Scale.Core (Compact) where
 
 import           Control.Monad       (replicateM)
 import           Data.Bit            (Bit, castFromWords8, cloneToWords8)
@@ -34,7 +34,6 @@ import           Generics.SOP        ()
 import           Codec.Scale.Class   (Decode (..), Encode (..))
 import           Codec.Scale.Compact (Compact)
 import           Codec.Scale.Generic ()
-import           Codec.Scale.Skip    (Skip)
 import           Codec.Scale.TH      (tupleInstances)
 
 --
