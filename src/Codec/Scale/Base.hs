@@ -23,11 +23,12 @@ import           Data.Serialize.Get  (getInt16le, getInt32le, getInt64le,
 import           Data.Serialize.Put  (putInt16le, putInt32le, putInt64le,
                                       putInt8, putWord16le, putWord32le,
                                       putWord64le, putWord8)
+import           Data.Tagged         (Tagged (..))
 import           Data.Word           (Word16, Word32, Word64, Word8)
 import           Generics.SOP        ()
 
 import           Codec.Scale.Class   (Decode (..), Encode (..))
-import           Codec.Scale.Compact (Compact (..))
+import           Codec.Scale.Compact (Compact)
 import           Codec.Scale.Generic ()
 import           Codec.Scale.TH      (tupleInstances)
 
@@ -163,10 +164,13 @@ $(concat <$> mapM tupleInstances [2..20])
 
 instance Encode a => Encode [a] where
     put list = do
-        put (Compact $ length list)
+        let len :: Tagged Compact Int
+            len = Tagged (length list)
+        put len
         mapM_ put list
 
 instance Decode a => Decode [a] where
     get = do
-        Compact len <- get
+        compactLen <- get
+        let len = unTagged (compactLen :: Tagged Compact Int)
         replicateM len get
