@@ -14,7 +14,7 @@
 -- Particular core type instances.
 --
 
-module Codec.Scale.Core (Compact) where
+module Codec.Scale.Core (Compact(..)) where
 
 import           Control.Monad       (replicateM)
 import           Data.Bit            (Bit, castFromWords8, cloneToWords8)
@@ -25,14 +25,13 @@ import           Data.Serialize.Get  (getInt16le, getInt32le, getInt64le,
 import           Data.Serialize.Put  (putInt16le, putInt32le, putInt64le,
                                       putInt8, putWord16le, putWord32le,
                                       putWord64le, putWord8)
-import           Data.Tagged         (Tagged)
 import           Data.Vector.Unboxed (Unbox, Vector)
 import qualified Data.Vector.Unboxed as V
 import           Data.Word           (Word16, Word32, Word64, Word8)
 import           Generics.SOP        ()
 
 import           Codec.Scale.Class   (Decode (..), Encode (..))
-import           Codec.Scale.Compact (Compact)
+import           Codec.Scale.Compact (Compact (..))
 import           Codec.Scale.Generic ()
 import           Codec.Scale.TH      (tupleInstances)
 
@@ -168,37 +167,31 @@ $(concat <$> mapM tupleInstances [2..20])
 
 instance Encode a => Encode [a] where
     put list = do
-        let len :: Tagged Compact Int
-            len = fromIntegral (length list)
-        put len
+        put (Compact $ length list)
         mapM_ put list
 
 instance Decode a => Decode [a] where
     get = do
-        (len :: Tagged Compact Int) <- get
-        replicateM (fromIntegral len) get
+        len <- get
+        replicateM (unCompact len) get
 
 instance (Encode a, Unbox a) => Encode (Vector a) where
     put vec = do
-        let len :: Tagged Compact Int
-            len = fromIntegral (V.length vec)
-        put len
+        put (Compact $ V.length vec)
         V.mapM_ put vec
 
 instance (Decode a, Unbox a) => Decode (Vector a) where
     get = do
-        (len :: Tagged Compact Int) <- get
-        V.replicateM (fromIntegral len) get
+        len <- get
+        V.replicateM (unCompact len) get
 
 instance Encode (Vector Bit) where
     put vec = do
         let encoded = cloneToWords8 vec
-            len :: Tagged Compact Int
-            len = fromIntegral (V.length encoded)
-        put len
+        put (Compact $ V.length encoded)
         V.mapM_ put encoded
 
 instance Decode (Vector Bit) where
     get = do
-        (len :: Tagged Compact Int) <- get
-        castFromWords8 <$> V.replicateM (fromIntegral len) get
+        len <- get
+        castFromWords8 <$> V.replicateM (unCompact len) get
