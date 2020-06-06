@@ -23,16 +23,16 @@ module Codec.Scale
     , decode
     , encode'
     , decode'
-    , Compact
+    , module Core
     ) where
 
 import           Data.ByteArray    (ByteArray, ByteArrayAccess, convert)
 import           Data.Serialize    (runGet, runPut)
 import           Generics.SOP      (Generic, Rep, from, to)
 
-import           Codec.Scale.Base  (Compact)
 import           Codec.Scale.Class (Decode (..), Encode (..), GDecode (..),
                                     GEncode (..))
+import           Codec.Scale.Core  as Core
 
 -- | Encode datatype to SCALE format.
 encode :: (Encode a, ByteArray ba)

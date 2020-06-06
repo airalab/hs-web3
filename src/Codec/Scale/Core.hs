@@ -2,7 +2,7 @@
 {-# LANGUAGE TemplateHaskell   #-}
 
 -- |
--- Module      :  Codec.Scale.Base
+-- Module      :  Codec.Scale.Core
 -- Copyright   :  Alexander Krupenkin 2016
 -- License     :  BSD3
 --
@@ -10,10 +10,10 @@
 -- Stability   :  experimental
 -- Portability :  unportable
 --
--- Particular type instances.
+-- Particular core type instances.
 --
 
-module Codec.Scale.Base (Compact) where
+module Codec.Scale.Core (Compact, Skip) where
 
 import           Control.Monad       (replicateM)
 import           Data.Int            (Int16, Int32, Int64, Int8)
@@ -30,6 +30,7 @@ import           Generics.SOP        ()
 import           Codec.Scale.Class   (Decode (..), Encode (..))
 import           Codec.Scale.Compact (Compact)
 import           Codec.Scale.Generic ()
+import           Codec.Scale.Skip    (Skip)
 import           Codec.Scale.TH      (tupleInstances)
 
 --
