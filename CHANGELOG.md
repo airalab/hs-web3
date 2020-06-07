@@ -10,6 +10,9 @@ All notable changes to this project will be documented in this file.
 - Supported GHC version: >=8.4.4
 - Imports optimized 
 
+### Removed
+- LTS-14 support
+
 ## [0.9.0.0] 2020-05-24
 ### Added
 - Experimental IPFS REST API client
