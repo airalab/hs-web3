@@ -1,5 +1,5 @@
 name:                web3
-version:             0.9.0.0
+version:             0.9.1.0
 synopsis:            Web3 API for Haskell.
 description:         Client library for Third Generation of Web.
 github:              "airalab/hs-web3"

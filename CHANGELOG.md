@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.9.1.0] 2020-06-07
+### Added
+- SCALE codec 
+
 ## [0.9.0.0] 2020-05-24
 ### Added
 - Experimental IPFS REST API client
