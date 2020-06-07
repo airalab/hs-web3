@@ -24,7 +24,6 @@ import qualified GHC.Generics              as GHC (Generic)
 import           Test.Hspec
 
 import           Codec.Scale
-import           Codec.Scale.Class
 import           Codec.Scale.SingletonEnum
 import           Codec.Scale.Skip
 import           Data.ByteArray.HexString

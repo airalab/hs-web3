@@ -33,7 +33,6 @@ import           Test.Hspec
 import           Test.Hspec.QuickCheck
 
 import           Codec.Scale
-import           Codec.Scale.Class
 
 data Unit = Unit
     deriving (Eq, Show, GHC.Generic, Generic, Encode, Decode)
