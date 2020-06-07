@@ -22,6 +22,9 @@ extra-source-files:
 - examples/polkadot/Main.hs
 - examples/polkadot/stack.yaml
 - examples/polkadot/package.yaml
+- examples/scale/Main.hs
+- examples/scale/stack.yaml
+- examples/scale/package.yaml
 - test/contracts/Registry.json
 - test/contracts/SimpleStorage.json
 - test/contracts/ComplexStorage.json
