@@ -18,7 +18,6 @@ import           Crypto.PubKey.ECC.Generate (generateQ)
 import           Crypto.PubKey.ECC.Types    (CurveName (SEC_p256k1), Point (..),
                                              getCurveByName)
 import           Data.ByteArray             (ByteArray, ByteArrayAccess)
-import           Data.Monoid                ((<>))
 
 -- | Import ECDSA private key from byte array.
 --

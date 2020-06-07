@@ -50,7 +50,6 @@ import           Data.ByteArray                   (convert)
 import qualified Data.Char                        as Char
 import           Data.Default                     (Default (..))
 import           Data.List                        (group, sort, uncons)
-import           Data.Monoid                      ((<>))
 import           Data.Tagged                      (Tagged)
 import           Data.Text                        (Text)
 import qualified Data.Text                        as T
@@ -74,7 +73,9 @@ import           Language.Solidity.Abi            (ContractAbi (..),
                                                    EventArg (..),
                                                    FunctionArg (..),
                                                    SolidityType (..), eventId,
-                                                   methodId, parseSolidityFunctionArgType, parseSolidityEventArgType)
+                                                   methodId,
+                                                   parseSolidityEventArgType,
+                                                   parseSolidityFunctionArgType)
 import           Network.Ethereum.Account.Class   (Account (..))
 import           Network.Ethereum.Api.Types       (DefaultBlock (..),
                                                    Filter (..), TxReceipt)

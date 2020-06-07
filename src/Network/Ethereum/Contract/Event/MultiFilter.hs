@@ -60,7 +60,6 @@ import           Data.Machine                           (MachineT, asParts,
 import           Data.Machine.Plan                      (PlanT, stop, yield)
 import           Data.Maybe                             (catMaybes, fromJust,
                                                          listToMaybe)
-import           Data.Monoid                            ((<>))
 import           Data.Tagged                            (Tagged (..))
 import           Data.Vinyl                             (Rec ((:&), RNil),
                                                          RecApplicative)

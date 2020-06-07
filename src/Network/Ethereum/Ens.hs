@@ -24,7 +24,6 @@ import           Data.ByteArray                      (convert, zero)
 import           Data.ByteArray.Sized                (unsafeFromByteArrayAccess)
 import           Data.ByteString                     (ByteString)
 import           Data.ByteString.Char8               (split)
-import           Data.Monoid                         ((<>))
 import           Lens.Micro                          ((.~))
 
 import           Data.Solidity.Prim                  (Address, BytesN)

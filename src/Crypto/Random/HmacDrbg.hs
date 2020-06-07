@@ -30,7 +30,6 @@ import           Data.ByteArray  (ByteArray, convert, singleton)
 import qualified Data.ByteArray  as BA (null, take)
 import qualified Data.ByteString as B (replicate)
 import           Data.Maybe      (fromJust)
-import           Data.Monoid     ((<>))
 import           Data.Word       (Word8)
 
 -- | HMAC Deterministic Random Bytes Generator.

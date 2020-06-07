@@ -38,7 +38,6 @@ import           Data.Aeson         (FromJSON (parseJSON), Options (constructorT
                                      SumEncoding (TaggedObject),
                                      ToJSON (toJSON), defaultOptions)
 import           Data.Aeson.TH      (deriveJSON)
-import           Data.Monoid        ((<>))
 import           Data.Text          (Text)
 import qualified Data.Text          as T (dropEnd, pack, take, unlines, unpack)
 import           Data.Text.Encoding (encodeUtf8)
@@ -51,13 +50,14 @@ import           Data.String.Extra  (toLowerFirst)
 
 -- | Method argument
 data FunctionArg = FunctionArg
-  { funArgName :: Text
-  -- ^ Argument name
-  , funArgType :: Text
-  -- ^ Argument type
-  , funArgComponents :: Maybe [FunctionArg]
-  -- ^ Argument components for tuples
-  } deriving (Show, Eq, Ord)
+    { funArgName       :: Text
+    -- ^ Argument name
+    , funArgType       :: Text
+    -- ^ Argument type
+    , funArgComponents :: Maybe [FunctionArg]
+    -- ^ Argument components for tuples
+    }
+    deriving (Show, Eq, Ord)
 
 $(deriveJSON
     (defaultOptions {fieldLabelModifier = toLowerFirst . drop 6})
@@ -65,34 +65,42 @@ $(deriveJSON
 
 -- | Event argument
 data EventArg = EventArg
-  { eveArgName    :: Text
-  -- ^ Argument name
-  , eveArgType    :: Text
-  -- ^ Argument type
-  , eveArgIndexed :: Bool
-  -- ^ Argument is indexed (e.g. placed on topics of event)
-  } deriving (Show, Eq, Ord)
+    { eveArgName    :: Text
+    -- ^ Argument name
+    , eveArgType    :: Text
+    -- ^ Argument type
+    , eveArgIndexed :: Bool
+    -- ^ Argument is indexed (e.g. placed on topics of event)
+    }
+    deriving (Show, Eq, Ord)
 
 $(deriveJSON
     (defaultOptions {fieldLabelModifier = toLowerFirst . drop 6})
     ''EventArg)
 
 -- | Elementrary contract interface item
-data Declaration
-  = DConstructor { conInputs :: [FunctionArg] }
-  -- ^ Contract constructor
-  | DFunction { funName     :: Text
-              , funConstant :: Bool
-              , funInputs   :: [FunctionArg]
-              , funOutputs  :: Maybe [FunctionArg] }
-  -- ^ Method
-  | DEvent { eveName      :: Text
-           , eveInputs    :: [EventArg]
-           , eveAnonymous :: Bool }
-  -- ^ Event
-  | DFallback { falPayable :: Bool }
-  -- ^ Fallback function
-  deriving Show
+data Declaration = DConstructor
+    { conInputs :: [FunctionArg]
+    -- ^ Contract constructor
+    }
+    | DFunction
+    { funName     :: Text
+    , funConstant :: Bool
+    , funInputs   :: [FunctionArg]
+    , funOutputs  :: Maybe [FunctionArg]
+    -- ^ Method
+    }
+    | DEvent
+    { eveName      :: Text
+    , eveInputs    :: [EventArg]
+    , eveAnonymous :: Bool
+    -- ^ Event
+    }
+    | DFallback
+    { falPayable :: Bool
+    -- ^ Fallback function
+    }
+    deriving Show
 
 instance Eq Declaration where
     (DConstructor a) == (DConstructor b) = length a == length b
@@ -172,7 +180,7 @@ signature (DConstructor inputs) = "(" <> args inputs <> ")"
     args [] = ""
     args [x] = funArgType x
     args (x:xs) = case funArgComponents x of
-      Nothing -> funArgType x <> "," <> args xs
+      Nothing   -> funArgType x <> "," <> args xs
       Just cmps -> "(" <> args cmps <> ")," <> args xs
 
 signature (DFallback _) = "()"
@@ -183,7 +191,7 @@ signature (DFunction name _ inputs _) = name <> "(" <> args inputs <> ")"
     args [] = ""
     args [x] = funArgType x
     args (x:xs) = case funArgComponents x of
-      Nothing -> funArgType x <> "," <> args xs
+      Nothing   -> funArgType x <> "," <> args xs
       Just cmps -> "(" <> args cmps <> ")," <> args xs
 
 signature (DEvent name inputs _) = name <> "(" <> args inputs <> ")"
@@ -209,17 +217,16 @@ eventId :: Declaration -> Text
 eventId = ("0x" <>) . sha3 . signature
 
 -- | Solidity types and parsers
-data SolidityType =
-    SolidityBool
-  | SolidityAddress
-  | SolidityUint Int
-  | SolidityInt Int
-  | SolidityString
-  | SolidityBytesN Int
-  | SolidityBytes
-  | SolidityTuple Int [SolidityType]
-  | SolidityVector [Int] SolidityType
-  | SolidityArray SolidityType
+data SolidityType = SolidityBool
+    | SolidityAddress
+    | SolidityUint Int
+    | SolidityInt Int
+    | SolidityString
+    | SolidityBytesN Int
+    | SolidityBytes
+    | SolidityTuple Int [SolidityType]
+    | SolidityVector [Int] SolidityType
+    | SolidityArray SolidityType
     deriving (Eq, Show)
 
 numberParser :: Parser Int
@@ -294,8 +301,8 @@ solidityTypeParser =
 parseSolidityFunctionArgType :: FunctionArg -> Either ParseError SolidityType
 parseSolidityFunctionArgType (FunctionArg _ typ mcmps) = case mcmps of
   Nothing -> parse solidityTypeParser "Solidity" typ
-  Just cmps -> 
-    SolidityTuple (length cmps) 
+  Just cmps ->
+    SolidityTuple (length cmps)
     <$>  mapM parseSolidityFunctionArgType cmps
 
 

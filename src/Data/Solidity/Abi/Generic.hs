@@ -26,7 +26,6 @@ module Data.Solidity.Abi.Generic () where
 import qualified Data.ByteString.Lazy   as LBS
 import           Data.Int               (Int64)
 import qualified Data.List              as L
-import           Data.Monoid            ((<>))
 import           Data.Proxy             (Proxy (..))
 import           Data.Serialize         (Get, Put)
 import           Data.Serialize.Get     (bytesRead, lookAheadE, skip)
@@ -37,11 +36,11 @@ import           Data.Solidity.Abi      (AbiGet (..), AbiPut (..), AbiType (..),
                                          GenericAbiGet (..), GenericAbiPut (..))
 import           Data.Solidity.Prim.Int (getWord256, putWord256)
 
-data EncodedValue =
-  EncodedValue { order    :: Int64
-               , offset   :: Maybe Int64
-               , encoding :: Put
-               }
+data EncodedValue = EncodedValue
+    { order    :: Int64
+    , offset   :: Maybe Int64
+    , encoding :: Put
+    }
 
 instance Eq EncodedValue where
   ev1 == ev2 = order ev1 == order ev2

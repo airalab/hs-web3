@@ -35,7 +35,6 @@ import           Data.ByteArray              (ByteArray, ByteArrayAccess, Bytes,
                                               convert, singleton, takeView,
                                               view)
 import qualified Data.ByteArray              as BA (unpack)
-import           Data.Monoid                 ((<>))
 import           Data.Word                   (Word8)
 
 import           Crypto.Ecdsa.Utils          (exportKey)

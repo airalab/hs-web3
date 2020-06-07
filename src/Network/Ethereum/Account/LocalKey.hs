@@ -27,7 +27,6 @@ import           Crypto.PubKey.ECC.ECDSA           (PrivateKey)
 import           Data.ByteArray                    (convert)
 import           Data.ByteString                   (empty)
 import           Data.Default                      (Default (..))
-import           Data.Monoid                       ((<>))
 import           Data.Proxy                        (Proxy (..))
 
 import           Crypto.Ethereum                   (derivePubKey, importKey)

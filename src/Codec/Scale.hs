@@ -23,6 +23,8 @@ module Codec.Scale
     , decode
     , encode'
     , decode'
+    , Encode
+    , Decode
     , module Core
     ) where
 

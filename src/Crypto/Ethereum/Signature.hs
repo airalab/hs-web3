@@ -25,7 +25,6 @@ import           Data.ByteArray          (ByteArray, ByteArrayAccess, convert)
 import qualified Data.ByteArray          as BA (length)
 import           Data.ByteString.Builder (intDec, toLazyByteString)
 import qualified Data.ByteString.Lazy    as LBS (toStrict)
-import           Data.Monoid             ((<>))
 import           Data.Word               (Word8)
 
 import           Crypto.Ecdsa.Signature  (pack, sign)

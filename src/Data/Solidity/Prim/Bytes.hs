@@ -38,7 +38,6 @@ import           Data.ByteArray.Sized    (SizedByteArray, unSizedByteArray,
 import qualified Data.ByteArray.Sized    as S (take)
 import           Data.ByteString         (ByteString)
 import qualified Data.ByteString.Char8   as C8
-import           Data.Monoid             ((<>))
 import           Data.Proxy              (Proxy (..))
 import           Data.Serialize          (Get, Putter, getBytes, putByteString)
 import           Data.String             (IsString (..))

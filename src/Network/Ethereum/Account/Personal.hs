@@ -25,7 +25,6 @@ import           Control.Monad.State.Strict        (get, runStateT)
 import           Control.Monad.Trans               (lift)
 import qualified Data.ByteArray                    as BA (convert)
 import           Data.Default                      (Default (..))
-import           Data.Monoid                       ((<>))
 import           Data.Proxy                        (Proxy (..))
 
 import           Data.Solidity.Abi.Codec           (decode, encode)

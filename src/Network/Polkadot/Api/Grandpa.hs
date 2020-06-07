@@ -16,7 +16,6 @@
 module Network.Polkadot.Api.Grandpa where
 
 import           Data.Aeson                 (Object)
-import           Data.Text                  (Text)
 
 import           Network.JsonRpc.TinyClient (JsonRpc (..))
 

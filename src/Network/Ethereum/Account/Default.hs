@@ -23,7 +23,6 @@ import           Control.Monad.State.Strict        (get, runStateT)
 import           Control.Monad.Trans               (MonadTrans (..))
 import qualified Data.ByteArray                    as BA (convert)
 import           Data.Maybe                        (listToMaybe)
-import           Data.Monoid                       ((<>))
 import           Data.Proxy                        (Proxy (..))
 
 import           Data.Solidity.Abi.Codec           (decode, encode)

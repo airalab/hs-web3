@@ -28,7 +28,7 @@ extra-source-files:
 - test/contracts/Linearization.json
 
 dependencies:
-- base                 >4.10      && <4.14
+- base                 >4.11      && <4.14
 - template-haskell     >=2.12     && <2.16
 - http-client-tls      >=0.3.5.1  && <0.4
 - microlens-aeson      >=2.2.0.2  && <2.4
