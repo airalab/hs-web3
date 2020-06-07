@@ -3,7 +3,12 @@ All notable changes to this project will be documented in this file.
 
 ## [0.9.1.0] 2020-06-07
 ### Added
-- SCALE codec 
+- SCALE codec implementation and tests 
+- SCALE codec example 
+
+### Changed
+- Supported GHC version: >=8.4.4
+- Imports optimized 
 
 ## [0.9.0.0] 2020-05-24
 ### Added

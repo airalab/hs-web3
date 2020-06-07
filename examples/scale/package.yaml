@@ -1,0 +1,23 @@
+name:                example-scale
+version:             0.0.0.0
+synopsis:            SCALE codec example
+github:              "airalab/hs-web3"
+license:             BSD3
+author:              Alexander Krupenkin
+maintainer:          mail@akru.me
+copyright:           "(c) Alexander Krupenkin 2016"
+category:            Network
+
+dependencies:
+- base
+- web3 
+- generics-sop
+
+executables:
+  example-scale:
+    main:             Main.hs
+    source-dirs:      ./
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
