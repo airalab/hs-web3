@@ -28,23 +28,25 @@ newtype Compact a = Compact { unCompact :: a }
   deriving (Eq, Ord)
 
 instance Show a => Show (Compact a) where
-    show = ("Compact " ++) . show
+    show = ("Compact " ++) . show . unCompact
 
 instance Integral a => Encode (Compact a) where
     put (Compact x)
-      | x >= 0 && x < 64 = singleByteMode x
-      | x >= 64 && x < (2^14-1) = twoByteMode x
-      | x >= (2^14-1) && x < (2^30-1) = fourByteMode x
-      | x >= (2^30-1) && x < (2^536-1) = bigIntegerMode x
-      | otherwise = error $ show (toInteger x) ++ " could not be encoded as compact number"
+      | n < 0 = error "negatives not supported by compact codec"
+      | n < 64 = singleByteMode
+      | n < 2^14 = twoByteMode
+      | n < 2^30 = fourByteMode
+      | n < 2^536 = bigIntegerMode
+      | otherwise = error $ "unable to encode " ++ show n ++ " as compact"
       where
-        singleByteMode a = putWord8 (fromIntegral a `shiftL` 2)
-        twoByteMode a = putWord16le (fromIntegral a `shiftL` 2 .|. 1)
-        fourByteMode a = putWord32le (fromIntegral a `shiftL` 2 .|. 2)
-        bigIntegerMode a = do
+        n = toInteger x
+        singleByteMode = putWord8 (fromIntegral x `shiftL` 2)
+        twoByteMode = putWord16le (fromIntegral x `shiftL` 2 .|. 1)
+        fourByteMode = putWord32le (fromIntegral x `shiftL` 2 .|. 2)
+        bigIntegerMode = do
             let step 0 = Nothing
                 step i = Just (fromIntegral i, i `shiftR` 8)
-                unroll = unfoldr step (toInteger a)
+                unroll = unfoldr step n
             putWord8 (fromIntegral (length unroll) `shiftL` 2 .|. 3)
             mapM_ putWord8 unroll
 

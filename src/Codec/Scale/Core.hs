@@ -185,13 +185,13 @@ instance (Decode a, Unbox a) => Decode (Vector a) where
         len <- get
         V.replicateM (unCompact len) get
 
-instance Encode (Vector Bit) where
+instance {-# OVERLAPPING #-} Encode (Vector Bit) where
     put vec = do
         let encoded = cloneToWords8 vec
         put (Compact $ V.length encoded)
         V.mapM_ put encoded
 
-instance Decode (Vector Bit) where
+instance {-# OVERLAPPING #-} Decode (Vector Bit) where
     get = do
         len <- get
         castFromWords8 <$> V.replicateM (unCompact len) get

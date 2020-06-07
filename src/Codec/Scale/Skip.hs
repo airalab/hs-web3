@@ -20,9 +20,13 @@ import           Codec.Scale.Class (Decode (..), Encode (..))
 -- It's useful in cases when serialization impossible or not needed.
 -- For decoding wrapped type should have 'Default' instance.
 newtype Skip a = Skip { unSkip :: a }
+  deriving (Eq, Ord, Show)
 
 instance Encode (Skip a) where
     put _ = return ()
 
 instance Default a => Decode (Skip a) where
-    get = return (Skip def)
+    get = return def
+
+instance Default a => Default (Skip a) where
+    def = Skip def
