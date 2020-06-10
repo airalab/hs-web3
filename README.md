@@ -10,7 +10,6 @@ This library implements Haskell API client for popular Web3 platforms.
 [![LTS-14](http://stackage.org/package/web3/badge/lts-14)](http://stackage.org/lts-14/package/web3)
 [![nightly](http://stackage.org/package/web3/badge/nightly)](http://stackage.org/nightly/package/web3)
 [![Code Triagers](https://www.codetriage.com/airalab/hs-web3/badges/users.svg)](https://www.codetriage.com/airalab/hs-web3)
-![BSD3 License](http://img.shields.io/badge/license-BSD3-brightgreen.svg)
 
 Install
 -------
@@ -79,3 +78,9 @@ main = do
 ---
 
 Read more in the [documentation on ReadTheDocs](https://hs-web3.readthedocs.io).
+
+License
+-------
+
+* `Network.Polkadot` and `Codec.Scale` is licensed under [Apache 2.0](https://github.com/airalab/hs-web3/blob/master/LICENSE-APACHE2)
+* All other source is licensed under [BSD-3-Clause](https://github.com/airalab/hs-web3/blob/master/LICENSE-BSD3)

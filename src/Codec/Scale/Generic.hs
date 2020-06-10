@@ -9,7 +9,7 @@
 -- |
 -- Module      :  Codec.Scale.Generic
 -- Copyright   :  Alexander Krupenkin 2016
--- License     :  BSD3
+-- License     :  Apache-2.0
 --
 -- Maintainer  :  mail@akru.me
 -- Stability   :  experimental
