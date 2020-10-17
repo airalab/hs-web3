@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.0.0.0] 2020-10-00
+### Changed
+- Library splitted for multiple independent packages
+
 ## [0.9.1.0] 2020-06-07
 ### Added
 - SCALE codec implementation and tests 
