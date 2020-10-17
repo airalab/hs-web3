@@ -1,0 +1,80 @@
+name:                web3-ethereum
+version:             1.0.0.0
+synopsis:            Ethereum support for Haskell Web3 library.
+description:         Client library for Third Generation of Web.
+github:              "airalab/hs-web3"
+license:             Apache-2.0
+license-file:        LICENSE
+author:              Aleksandr Krupenkin
+maintainer:          mail@akru.me
+copyright:           "(c) Aleksandr Krupenkin 2016-2020"
+category:            Network
+
+dependencies:
+- base                 >4.11 && <4.14
+- text                 >1.2  && <1.3
+- vinyl                >0.5  && <0.13
+- aeson                >1.2  && <1.5
+- tagged               >0.8  && <0.9
+- memory               >0.14 && <0.16
+- relapse              >=1.0 && <2.0
+- OneTuple             >0.2  && <0.3
+- machines             >0.6  && <0.8
+- microlens            >0.4  && <0.5
+- bytestring           >0.10 && <0.11
+- exceptions           >0.8  && <0.11
+- generics-sop         >0.3  && <0.6
+- data-default         >0.7  && <0.8
+- transformers         >0.5  && <0.6
+- microlens-aeson      >2.2  && <2.4
+- template-haskell     >2.11 && <2.16
+- mtl                  >2.2  && <2.3
+- web3-crypto          >=1.0 && <1.1
+- web3-jsonrpc         >=1.0 && <1.1
+- web3-solidity        >=1.0 && <1.1
+- web3-hexstring       >=1.0 && <1.1
+
+ghc-options:
+- -funbox-strict-fields
+- -Wduplicate-exports
+- -Whi-shadowing
+- -Widentities
+- -Woverlapping-patterns
+- -Wpartial-type-signatures
+- -Wunrecognised-pragmas
+- -Wtyped-holes
+- -Wincomplete-patterns
+- -Wincomplete-uni-patterns
+- -Wmissing-fields
+- -Wmissing-methods
+- -Wmissing-exported-signatures
+- -Wmissing-monadfail-instances
+- -Wmissing-signatures
+- -Wname-shadowing
+- -Wunused-binds
+- -Wunused-top-binds
+- -Wunused-local-binds
+- -Wunused-pattern-binds
+- -Wunused-imports
+- -Wunused-matches
+- -Wunused-foralls
+- -Wtabs
+
+library:
+  source-dirs: src
+
+tests:
+  tests:
+    main:             Spec.hs
+    source-dirs:
+    - tests 
+    - src
+    dependencies:
+    - hspec-expectations   >=0.8.2  && <0.9
+    - hspec-discover       >=2.4.4  && <2.8
+    - hspec-contrib        >=0.4.0  && <0.6
+    - hspec                >=2.4.4  && <2.8
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N

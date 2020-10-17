@@ -1,0 +1,16 @@
+on: [push]
+name: Testing
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+    name: Haskell Web3 tests on ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - nameuses: actions/setup-haskell@v1
+        with:
+          enable-stack: true
+          stack-version: 'latest'
+      - run: stack test

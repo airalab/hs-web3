@@ -1,16 +1,17 @@
 name:                example-polkadot
 version:             0.0.0.0
-synopsis:            Polkadot API example
+synopsis:            Polkadot API example.
 github:              "airalab/hs-web3"
-license:             BSD3
-author:              Alexander Krupenkin
+license:             Apache-2.0
+author:              Aleksandr Krupenkin
 maintainer:          mail@akru.me
-copyright:           "(c) Alexander Krupenkin 2016"
+copyright:           "(c) Aleksandr Krupenkin 2016-2020"
 category:            Network
 
 dependencies:
 - base
-- web3 
+- web3
+- web3-polkadot
 
 executables:
   example-polkadot:

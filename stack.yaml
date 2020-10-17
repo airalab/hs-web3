@@ -1,9 +1,20 @@
 # Resolver to choose a 'specific' stackage snapshot or a compiler version.
-resolver: lts-15.13
+resolver: lts-16.18
 
 # User packages to be built.
 packages:
-- '.'
+- 'packages/web3'
+- 'packages/ipfs'
+- 'packages/scale'
+- 'packages/crypto'
+- 'packages/jsonrpc'
+- 'packages/solidity'
+- 'packages/ethereum'
+- 'packages/polkadot'
+- 'packages/hexstring'
+- 'examples/erc20'
+- 'examples/scale'
+- 'examples/polkadot'
 
 # Extra package dependencies
 extra-deps:

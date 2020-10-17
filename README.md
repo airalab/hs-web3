@@ -21,6 +21,7 @@ Usage
 
 ```haskell
 {-# LANGUAGE OverloadedStrings #-}
+
 module Main where
 
 -- Basic imports
