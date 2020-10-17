@@ -32,7 +32,7 @@ module Network.Ethereum.Account
     , LocalKeyAccount
     , LocalKey(..)
 
-    -- * Transaction paramitrization function and lenses
+    -- * Transaction parameterization function and lenses
     , withParam
     , to
     , value

@@ -1,12 +1,12 @@
 on: [push]
 name: Testing
 jobs:
-  test:
+  unit-tests:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-    name: Haskell Web3 tests on ${{ matrix.os }}
+    name: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-haskell@v1
