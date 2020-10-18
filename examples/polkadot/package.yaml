@@ -10,7 +10,7 @@ category:            Network
 
 dependencies:
 - base
-- web3
+- web3-provider
 - web3-polkadot
 
 executables:

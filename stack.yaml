@@ -8,6 +8,7 @@ packages:
 - 'packages/scale'
 - 'packages/crypto'
 - 'packages/jsonrpc'
+- 'packages/provider'
 - 'packages/solidity'
 - 'packages/ethereum'
 - 'packages/polkadot'
