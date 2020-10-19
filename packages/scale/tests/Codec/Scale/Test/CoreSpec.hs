@@ -22,12 +22,12 @@ import           Control.Monad         (forM_)
 import           Data.Bit              (castFromWords8)
 import           Data.Bits             (bit)
 import           Data.ByteString       (ByteString)
-import qualified Data.ByteString       as BS (length, unpack)
+import qualified Data.ByteString       as BS (length, pack, unpack)
 import           Data.Int              (Int16, Int32, Int64, Int8)
+import qualified Data.Text             as T (pack, unpack)
 import           Data.Vector.Unboxed   (Vector)
 import qualified Data.Vector.Unboxed   as V (fromList)
 import           Data.Word             (Word16, Word32, Word64, Word8)
-import           Generics.SOP          (Generic)
 import qualified GHC.Generics          as GHC (Generic)
 import           Test.Hspec
 import           Test.Hspec.QuickCheck
@@ -132,6 +132,10 @@ spec = parallel $ do
         prop "Vector<u8>" $ \(v :: [Word8]) -> decode (encode (V.fromList v) :: ByteString) == Right v
 
         prop "BitVec" $ \(v :: [Word8]) -> decode (encode $ castFromWords8 $ V.fromList v :: ByteString) == Right v
+
+        prop "ByteString" $ \(v :: [Word8]) -> decode (encode (BS.pack v) :: ByteString) == Right (BS.pack v)
+
+        prop "Text" $ \(v :: String) -> decode (encode (T.pack v) :: ByteString) == Right (T.pack v)
 
         prop "List<u64>" $ \(v :: [Word64]) -> decode (encode v :: ByteString) == Right v
         prop "List<u32>" $ \(v :: [Word32]) -> decode (encode v :: ByteString) == Right v

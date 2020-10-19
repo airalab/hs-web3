@@ -19,7 +19,6 @@ module Codec.Scale.Test.SkipSpec where
 
 import           Data.Default              (Default)
 import           Data.Word                 (Word32)
-import           Generics.SOP              (Generic)
 import qualified GHC.Generics              as GHC (Generic)
 import           Test.Hspec
 

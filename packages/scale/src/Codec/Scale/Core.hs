@@ -18,13 +18,17 @@ module Codec.Scale.Core (Compact(..)) where
 
 import           Control.Monad       (replicateM)
 import           Data.Bit            (Bit, castFromWords8, cloneToWords8)
+import           Data.ByteString     (ByteString)
+import qualified Data.ByteString     as BS (length)
 import           Data.Int            (Int16, Int32, Int64, Int8)
-import           Data.Serialize.Get  (getInt16le, getInt32le, getInt64le,
-                                      getInt8, getWord16le, getWord32le,
-                                      getWord64le, getWord8)
-import           Data.Serialize.Put  (putInt16le, putInt32le, putInt64le,
-                                      putInt8, putWord16le, putWord32le,
-                                      putWord64le, putWord8)
+import           Data.Serialize.Get  (getByteString, getInt16le, getInt32le,
+                                      getInt64le, getInt8, getWord16le,
+                                      getWord32le, getWord64le, getWord8)
+import           Data.Serialize.Put  (putByteString, putInt16le, putInt32le,
+                                      putInt64le, putInt8, putWord16le,
+                                      putWord32le, putWord64le, putWord8)
+import           Data.Text           (Text)
+import           Data.Text.Encoding  (decodeUtf8', encodeUtf8)
 import           Data.Vector.Unboxed (Unbox, Vector)
 import qualified Data.Vector.Unboxed as V
 import           Data.Word           (Word16, Word32, Word64, Word8)
@@ -195,3 +199,29 @@ instance {-# OVERLAPPING #-} Decode (Vector Bit) where
     get = do
         len <- get
         castFromWords8 <$> V.replicateM (unCompact len) get
+
+instance Encode ByteString where
+    put bs = do
+        put (Compact $ BS.length bs)
+        putByteString bs
+
+instance Decode ByteString where
+    get = do
+        len <- get
+        getByteString (unCompact len)
+
+--
+-- Text type instances.
+--
+
+instance Encode Text where
+    put str = do
+        let encoded = encodeUtf8 str
+        put (Compact $ BS.length encoded)
+        putByteString encoded
+
+instance Decode Text where
+    get = do
+        len <- get
+        str <- getByteString (unCompact len)
+        either (fail . show) return (decodeUtf8' str)

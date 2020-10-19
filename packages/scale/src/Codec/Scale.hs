@@ -25,6 +25,7 @@ module Codec.Scale
     , decode'
     , Encode
     , Decode
+    , Generic
     , module Core
     ) where
 

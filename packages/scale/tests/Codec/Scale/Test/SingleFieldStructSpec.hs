@@ -20,7 +20,6 @@ module Codec.Scale.Test.SingleFieldStructSpec where
 import           Data.ByteString  as BS (pack)
 import           Data.Default     (def)
 import           Data.Word        (Word32, Word64)
-import           Generics.SOP     (Generic)
 import qualified GHC.Generics     as GHC (Generic)
 import           Test.Hspec
 
