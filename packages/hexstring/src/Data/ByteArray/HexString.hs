@@ -1,5 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE QuasiQuotes                #-}
+{-# LANGUAGE TemplateHaskell            #-}
 
 -- |
 -- Module      :  Data.ByteArray.HexString
@@ -15,16 +17,17 @@
 
 module Data.ByteArray.HexString where
 
-import           Data.Aeson              (FromJSON (..), ToJSON (..),
-                                          Value (String), withText)
-import           Data.ByteArray          (ByteArray, ByteArrayAccess, convert)
-import qualified Data.ByteArray          as BA (drop, take)
-import           Data.ByteArray.Encoding (Base (Base16), convertFromBase,
-                                          convertToBase)
-import           Data.ByteString         (ByteString)
-import           Data.String             (IsString (..))
-import           Data.Text               (Text)
-import           Data.Text.Encoding      (decodeUtf8, encodeUtf8)
+import           Data.Aeson                (FromJSON (..), ToJSON (..),
+                                            Value (String), withText)
+import           Data.ByteArray            (ByteArray, ByteArrayAccess, convert)
+import qualified Data.ByteArray            as BA (drop, take)
+import           Data.ByteArray.Encoding   (Base (Base16), convertFromBase,
+                                            convertToBase)
+import           Data.ByteString           (ByteString)
+import           Data.String               (IsString (..))
+import           Data.Text                 (Text)
+import           Data.Text.Encoding        (decodeUtf8, encodeUtf8)
+import           Language.Haskell.TH.Quote (QuasiQuoter (..), quoteFile)
 
 -- | Represents a Hex string. Guarantees that all characters it contains
 --   are valid hex characters.
@@ -65,3 +68,14 @@ toBytes = convert . unHexString
 -- | Access to a 'Text' representation of the 'HexString'
 toText :: HexString -> Text
 toText = ("0x" <>) . decodeUtf8 . convertToBase Base16 . unHexString
+
+hexFrom :: QuasiQuoter
+hexFrom = quoteFile hex
+
+hex :: QuasiQuoter
+hex = QuasiQuoter
+    { quoteExp = \s -> [|fromString s :: HexString|]
+    , quotePat = undefined
+    , quoteType = undefined
+    , quoteDec = undefined
+    }
