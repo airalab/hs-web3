@@ -19,8 +19,8 @@ import           Data.Text                  (Text)
 
 import           Data.ByteArray.HexString   (HexString)
 import           Network.JsonRpc.TinyClient (JsonRpc (..))
-import           Network.Polkadot.Api.Types (Metadata, ReadProof,
-                                             RuntimeVersion, StorageChangeSet)
+import           Network.Polkadot.Api.Types (ReadProof, RuntimeVersion,
+                                             StorageChangeSet)
 
 -- | Perform a call to a builtin on the chain.
 call :: JsonRpc m
@@ -109,7 +109,7 @@ getKeys :: JsonRpc m
 getKeys = remote "state_getKeys"
 
 -- | Returns the runtime metadata.
-getMetadata :: JsonRpc m => m Metadata
+getMetadata :: JsonRpc m => m HexString
 {-# INLINE getMetadata #-}
 getMetadata = remote "state_getMetadata"
 

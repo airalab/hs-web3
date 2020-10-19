@@ -116,8 +116,6 @@ data ContractExecResult = SuccessExec
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = over _head toLower . drop 4 }) ''ContractExecResult)
 
-type Metadata = Value
-
 -- | ReadProof struct returned by RPC.
 data ReadProof = ReadProof
     { readProofAt    :: HexString
