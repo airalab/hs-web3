@@ -72,7 +72,9 @@ import           Language.Solidity.Abi            (ContractAbi (..),
                                                    Declaration (..),
                                                    EventArg (..),
                                                    FunctionArg (..),
-                                                   SolidityType (..), eventId,
+                                                   SolidityType (..),
+                                                   StateMutability(..),
+                                                   eventId,
                                                    methodId,
                                                    parseSolidityEventArgType,
                                                    parseSolidityFunctionArgType)
@@ -226,9 +228,9 @@ mkDecl ev@(DEvent uncheckedName inputs anonymous) = sequence
     derivingD = [''Show, ''Eq, ''Ord, ''GHC.Generic]
 
 -- TODO change this type name also
--- | Method delcarations maker
-mkDecl fun@(DFunction name constant inputs outputs) = (++)
-  <$> funWrapper constant fnName dataName inputs outputs
+-- | Method declarations maker
+mkDecl fun@(DFunction name stateMutability inputs outputs) = (++)
+  <$> funWrapper (stateMutability `elem` [SMPure, SMView]) fnName dataName inputs outputs
   <*> sequence
         [ dataD' dataName (normalC dataName bangInput) derivingD
         , instanceD' dataName (conT ''Generic) []
