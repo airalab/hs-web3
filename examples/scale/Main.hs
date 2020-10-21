@@ -6,7 +6,6 @@ import           Codec.Scale
 import           Codec.Scale.Skip
 import           Data.ByteArray.HexString (HexString)
 import           Data.Word                (Word32)
-import           Generics.SOP             (Generic)
 import qualified GHC.Generics             as GHC (Generic)
 
 data MyTransaction a = Tx

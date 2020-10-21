@@ -1,4 +1,4 @@
-name: Main
+name: CI
 
 on:
   pull_request: {}
@@ -9,7 +9,7 @@ on:
 
 jobs:
   Tests:
-    name: ${{ matrix.os }}
+    name: Test ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     strategy:

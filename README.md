@@ -4,7 +4,7 @@ Web3 API for Haskell
 This library implements Haskell API client for popular Web3 platforms.
 
 [![Documentation Status](https://readthedocs.org/projects/hs-web3/badge/?version=latest)](https://hs-web3.readthedocs.io/en/latest/?badge=latest)
-[![CI](https://github.com/airalab/hs-web3/workflows/Main/badge.svg)](https://github.com/airalab/hs-web3/actions)
+[![CI](https://github.com/airalab/hs-web3/workflows/CI/badge.svg)](https://github.com/airalab/hs-web3/actions)
 [![Hackage Matrix](https://matrix.hackage.haskell.org/api/v2/packages/web3/badge)](https://matrix.hackage.haskell.org/package/web3)
 [![Hackage](https://img.shields.io/hackage/v/web3.svg)](http://hackage.haskell.org/package/web3)
 [![LTS-14](http://stackage.org/package/web3/badge/lts-14)](http://stackage.org/lts-14/package/web3)
