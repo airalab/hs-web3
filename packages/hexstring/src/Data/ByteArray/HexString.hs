@@ -17,6 +17,8 @@
 
 module Data.ByteArray.HexString where
 
+import           Codec.Scale.Class         (Decode (..), Encode (..))
+import           Codec.Scale.Core          ()
 import           Data.Aeson                (FromJSON (..), ToJSON (..),
                                             Value (String), withText)
 import           Data.ByteArray            (ByteArray, ByteArrayAccess, convert)
@@ -32,7 +34,7 @@ import           Language.Haskell.TH.Quote (QuasiQuoter (..), quoteFile)
 -- | Represents a Hex string. Guarantees that all characters it contains
 --   are valid hex characters.
 newtype HexString = HexString { unHexString :: ByteString }
-  deriving (Eq, Ord, Semigroup, Monoid, ByteArrayAccess, ByteArray)
+    deriving (Eq, Ord, Semigroup, Monoid, ByteArrayAccess, ByteArray)
 
 instance Show HexString where
     show = ("HexString " ++) . show . toText
@@ -48,6 +50,12 @@ instance FromJSON HexString where
 
 instance ToJSON HexString where
     toJSON = String . toText
+
+instance Decode HexString where
+    get = HexString <$> get
+
+instance Encode HexString where
+    put = put . unHexString
 
 -- | Smart constructor which trims '0x' and validates length is even.
 hexString :: ByteArray ba => ba -> Either String HexString

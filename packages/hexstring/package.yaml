@@ -17,6 +17,7 @@ dependencies:
 - memory               >0.14 && <0.16
 - bytestring           >0.10 && <0.11
 - template-haskell     >2.11 && <2.16
+- web3-scale           >=1.0 && <1.1
 
 ghc-options:
 - -funbox-strict-fields
