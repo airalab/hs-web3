@@ -1,5 +1,6 @@
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric  #-}
+{-# LANGUAGE DeriveAnyClass  #-}
+{-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- |
 -- Module      :  Network.Polkadot.Metadata.V12
@@ -10,13 +11,46 @@
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- Metadata V12 data type.
+-- Metadata version 12 definitions.
 --
 
 module Network.Polkadot.Metadata.V12 where
 
-import           Codec.Scale  (Decode, Encode, Generic)
-import qualified GHC.Generics as GHC (Generic)
+import           Codec.Scale                   (Decode, Encode, Generic)
+import           Data.Aeson                    (Options (fieldLabelModifier),
+                                                defaultOptions)
+import           Data.Aeson.TH                 (deriveJSON)
+import           Data.Char                     (toLower)
+import           Data.Text                     (Text)
+import           Data.Word                     (Word8)
+import qualified GHC.Generics                  as GHC (Generic)
+import           Lens.Micro                    (over, _head)
 
-data MetadataV12 = MetadataV12
-    deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
+import qualified Network.Polkadot.Metadata.V11 as V11
+
+type ExtrinsicMetadata = V11.ExtrinsicMetadata
+type StorageMetadata = V11.StorageMetadata
+type FunctionMetadata = V11.FunctionMetadata
+type EventMetadata = V11.EventMetadata
+type ModuleConstantMetadata = V11.ModuleConstantMetadata
+type ErrorMetadata = V11.ErrorMetadata
+
+data ModuleMetadata = ModuleMetadata
+    { moduleName      :: !Text
+    , moduleStorage   :: !(Maybe StorageMetadata)
+    , moduleCalls     :: !(Maybe [FunctionMetadata])
+    , moduleEvents    :: !(Maybe [EventMetadata])
+    , moduleConstants :: ![ModuleConstantMetadata]
+    , moduleErrors    :: ![ErrorMetadata]
+    , moduleIndex     :: !Word8
+    } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = over _head toLower . drop 6 }) ''ModuleMetadata)
+
+data Metadata = Metadata
+    { modules    :: ![ModuleMetadata]
+    , extrinsics :: ![ExtrinsicMetadata]
+    } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
+
+$(deriveJSON defaultOptions ''Metadata)

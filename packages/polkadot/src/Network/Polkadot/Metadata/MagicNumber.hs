@@ -18,6 +18,7 @@ module Network.Polkadot.Metadata.MagicNumber where
 import           Codec.Scale.Class (Decode (..), Encode (..))
 import           Codec.Scale.Core  ()
 import           Control.Monad     (when)
+import           Data.Aeson        (FromJSON (..), ToJSON (..), Value (Number))
 import           Data.Word         (Word32)
 
 -- | `meta`, reversed for Little Endian encoding
@@ -37,3 +38,14 @@ instance Decode MagicNumber where
 
 instance Encode MagicNumber where
     put _ = put magic_number
+
+instance FromJSON MagicNumber where
+    parseJSON (Number n) = do
+        when (n /= fromIntegral magic_number) $
+            fail "Bad magic number"
+        return MagicNumber
+    parseJSON _ = fail "Magic number should be a number"
+
+instance ToJSON MagicNumber where
+    toJSON _ = toJSON magic_number
+

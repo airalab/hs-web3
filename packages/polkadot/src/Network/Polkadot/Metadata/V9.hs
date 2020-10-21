@@ -1,5 +1,6 @@
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric  #-}
+{-# LANGUAGE DeriveAnyClass  #-}
+{-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- |
 -- Module      :  Network.Polkadot.Metadata.V9
@@ -10,97 +11,144 @@
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- Metadata V9 data type.
+-- Metadata version 9 definitions.
 --
 
 module Network.Polkadot.Metadata.V9 where
 
-import           Codec.Scale     (Decode, Encode, Generic)
-import           Data.ByteString (ByteString)
-import           Data.Text       (Text)
-import qualified GHC.Generics    as GHC (Generic)
+import           Codec.Scale                     (Decode, Encode, Generic)
+import           Data.Aeson                      (Options (fieldLabelModifier),
+                                                  defaultOptions)
+import           Data.Aeson.TH                   (deriveJSON)
+import           Data.ByteArray.HexString        (HexString)
+import           Data.Char                       (toLower)
+import           Data.Text                       (Text)
+import qualified GHC.Generics                    as GHC (Generic)
+import           Lens.Micro                      (over, _head)
 
--- TODO
-type Type = Text
+import           Network.Polkadot.Metadata.Types (Type)
 
-data MetadataV9 = MetadataV9 [ModuleMetadataV9]
+data FunctionArgumentMetadata = FunctionArgumentMetadata
+    { argumentName :: !Text
+    , argumentType :: !Type
+    } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = over _head toLower . drop 8 }) ''FunctionArgumentMetadata)
+
+data FunctionMetadata = FunctionMetadata
+    { functionName          :: !Text
+    , functionArgs          :: ![FunctionArgumentMetadata]
+    , functionDocumentation :: ![Text]
+    } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = over _head toLower . drop 8 }) ''FunctionMetadata)
+
+data EventMetadata = EventMetadata
+    { eventName          :: !Text
+    , eventArgs          :: ![Type]
+    , eventDocumentation :: ![Text]
+    } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = over _head toLower . drop 5 }) ''EventMetadata)
+
+data ModuleConstantMetadata = ModuleConstantMetadata
+    { constantName          :: !Text
+    , constantType          :: !Type
+    , constantValue         :: !HexString
+    , constantDocumentation :: ![Text]
+    } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = over _head toLower . drop 8 }) ''ModuleConstantMetadata)
+
+data ErrorMetadata = ErrorMetadata
+    { errorName          :: !Text
+    , errorDocumentation :: ![Text]
+    } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = over _head toLower . drop 5 }) ''ErrorMetadata)
+
+data StorageHasher
+    = Blake2_128
+    | Blake2_256
+    | Twox128
+    | Twox256
+    | Twox64Concat
     deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
 
-data ModuleMetadataV9 = ModuleMetadataV9
-    { moduleName      :: Text
-    , moduleStorage   :: Maybe StorageMetadataV9
-    , moduleCalls     :: Maybe [FunctionMetadataV9]
-    , moduleEvents    :: Maybe [EventMetadataV9]
-    , moduleConstants :: [ModuleConstantMetadataV9]
-    , moduleErrors    :: [ErrorMetadataV9]
+$(deriveJSON defaultOptions ''StorageHasher)
+
+data MapType = MapType
+    { mapHasher :: !StorageHasher
+    , mapKey    :: !Type
+    , mapValue  :: !Type
+    , mapLinked :: !Bool
     } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
 
-data StorageMetadataV9 = StorageMetadataV9
-    { storagePrefix :: Text
-    , storageItems  :: [StorageEntryMetadataV9]
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = over _head toLower . drop 3 }) ''MapType)
+
+data DoubleMapType = DoubleMapType
+    { doubleMapHasher     :: !StorageHasher
+    , doubleMapKey1       :: !Type
+    , doubleMapKey2       :: !Type
+    , doubleMapValue      :: !Type
+    , doubleMapKey2Hasher :: !StorageHasher
     } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
 
-data StorageEntryMetadataV9 = StorageEntryMetadataV9
-    { entryName          :: Text
-    , entryModifier      :: StorageEntryModifierV9
-    , entryType          :: StorageEntryTypeV9
-    , entryFallback      :: ByteString
-    , entryDocumentation :: [Text]
-    } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = over _head toLower . drop 9 }) ''DoubleMapType)
 
-data StorageEntryModifierV9 = OptionalModifier
-                            | DefaultModifier
-                            | RequiredModifier
+data StorageEntryType
+    = Plain !Type
+    | Map !MapType
+    | DoubleMap !DoubleMapType
     deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
 
-data StorageEntryTypeV9 = PlainType Type
-                        | MapType MapTypeV9
-                        | DoubleMapType DoubleMapTypeV9
+$(deriveJSON defaultOptions ''StorageEntryType)
+
+data StorageEntryModifier = Optional | Default | Required
     deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
 
-data MapTypeV9 = MapTypeV9
-    { mapHasher :: StorageHasherV9
-    , mapKey    :: Type
-    , mapValue  :: Type
-    , mapLinked :: Bool
+$(deriveJSON defaultOptions ''StorageEntryModifier)
+
+data StorageEntryMetadata = StorageEntryMetadata
+    { entryName          :: !Text
+    , entryModifier      :: !StorageEntryModifier
+    , entryType          :: !StorageEntryType
+    , entryFallback      :: !HexString
+    , entryDocumentation :: ![Text]
     } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
 
-data DoubleMapTypeV9 = DoubleMapTypeV9
-    { doubleMapHasher     :: StorageHasherV9
-    , doubleMapKey1       :: Type
-    , doubleMapKey2       :: Type
-    , doubleMapValue      :: Type
-    , doubleMapKey2Hasher :: StorageHasherV9
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = over _head toLower . drop 5 }) ''StorageEntryMetadata)
+
+data StorageMetadata = StorageMetadata
+    { storagePrefix :: !Text
+    , storageItems  :: ![StorageEntryMetadata]
     } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
 
-data StorageHasherV9 = Blake2128 | Blake2256 | Twox128 | Twox256 | Twox64Concat
-    deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = over _head toLower . drop 7 }) ''StorageMetadata)
 
-data FunctionMetadataV9 = FunctionMetadataV9
-    { functionName          :: Text
-    , functionArgs          :: [FunctionArgumentMetadataV9]
-    , functionDocumentation :: [Text]
+data ModuleMetadata = ModuleMetadata
+    { moduleName      :: !Text
+    , moduleStorage   :: !(Maybe StorageMetadata)
+    , moduleCalls     :: !(Maybe [FunctionMetadata])
+    , moduleEvents    :: !(Maybe [EventMetadata])
+    , moduleConstants :: ![ModuleConstantMetadata]
+    , moduleErrors    :: ![ErrorMetadata]
     } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
 
-data FunctionArgumentMetadataV9 = FunctionArgumentMetadataV9
-    { argumentName :: Text
-    , argumentType :: Type
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = over _head toLower . drop 6 }) ''ModuleMetadata)
+
+data Metadata = Metadata
+    { modules :: ![ModuleMetadata]
     } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
 
-data EventMetadataV9 = EventMetadataV9
-    { eventName          :: Text
-    , eventArgs          :: [Type]
-    , eventDocumentation :: [Text]
-    } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
-
-data ModuleConstantMetadataV9 = ModuleConstantMetadataV9
-    { constantName          :: Text
-    , constantType          :: Type
-    , constantValue         :: ByteString
-    , constantDocumentation :: [Text]
-    } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
-
-data ErrorMetadataV9 = ErrorMetadataV9
-    { errorName          :: Text
-    , errorDocumentation :: [Text]
-    } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
+$(deriveJSON defaultOptions ''Metadata)
