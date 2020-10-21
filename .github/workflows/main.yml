@@ -1,0 +1,41 @@
+name: Main
+
+on:
+  pull_request: {}
+  push:
+    branches:
+    - master
+    - rc/*
+
+jobs:
+  Tests:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup latest stack
+        uses: actions/setup-haskell@v1
+        with:
+          enable-stack: true
+          stack-version: 'latest'
+
+      - name: Cache .stack-root
+        uses: actions/cache@v1
+        env:
+          cache-name: stack-root
+        with:
+          path: .stack-root
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('stack.yaml') }}
+
+      - name: Test
+        shell: bash
+        run: |
+          set -ex
+          export STACK_ROOT=$(pwd)/.stack-root
+          stack test --haddock --no-haddock-deps
