@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- |
--- Module      :  Network.Polkadot.Api.System
+-- Module      :  Network.Polkadot.Rpc.System
 -- Copyright   :  Aleksandr Krupenkin 2016-2020
 -- License     :  Apache-2.0
 --
@@ -13,13 +13,13 @@
 -- Polkadot RPC methods with `system` prefix.
 --
 
-module Network.Polkadot.Api.System where
+module Network.Polkadot.Rpc.System where
 
 import           Data.Aeson                 (Object)
 import           Data.Text                  (Text)
-
 import           Network.JsonRpc.TinyClient (JsonRpc (..))
-import           Network.Polkadot.Api.Types (ChainType, Health, NodeRole,
+
+import           Network.Polkadot.Rpc.Types (ChainType, Health, NodeRole,
                                              PeerInfo)
 
 -- | Adds a reserved peer.

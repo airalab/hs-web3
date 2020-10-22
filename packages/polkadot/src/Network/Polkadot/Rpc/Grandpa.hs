@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- |
--- Module      :  Network.Polkadot.Api.Grandpa
+-- Module      :  Network.Polkadot.Rpc.Grandpa
 -- Copyright   :  Aleksandr Krupenkin 2016-2020
 -- License     :  Apache-2.0
 --
@@ -13,10 +13,9 @@
 -- Polkadot RPC methods with `grandpa` prefix.
 --
 
-module Network.Polkadot.Api.Grandpa where
+module Network.Polkadot.Rpc.Grandpa where
 
 import           Data.Aeson                 (Object)
-
 import           Network.JsonRpc.TinyClient (JsonRpc (..))
 
 -- | Returns the state of the current best round state as well as the ongoing background rounds.

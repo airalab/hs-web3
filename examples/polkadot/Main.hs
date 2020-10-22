@@ -3,9 +3,9 @@ module Main where
 
 import           Control.Monad.IO.Class      (liftIO)
 
-import qualified Network.Polkadot.Api.Chain  as Chain
-import qualified Network.Polkadot.Api.State  as State
-import qualified Network.Polkadot.Api.System as System
+import qualified Network.Polkadot.Rpc.Chain  as Chain
+import qualified Network.Polkadot.Rpc.State  as State
+import qualified Network.Polkadot.Rpc.System as System
 import           Network.Web3.Provider       (Provider (..), runWeb3')
 
 main :: IO ()

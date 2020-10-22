@@ -16,17 +16,18 @@
 
 module Network.Polkadot.Metadata.V9 where
 
-import           Codec.Scale                     (Decode, Encode, Generic)
-import           Data.Aeson                      (Options (fieldLabelModifier),
-                                                  defaultOptions)
-import           Data.Aeson.TH                   (deriveJSON)
-import           Data.ByteArray.HexString        (HexString)
-import           Data.Char                       (toLower)
-import           Data.Text                       (Text)
-import qualified GHC.Generics                    as GHC (Generic)
-import           Lens.Micro                      (over, _head)
+import           Codec.Scale                    (Decode, Encode, Generic)
+import           Data.Aeson                     (Options (fieldLabelModifier, sumEncoding),
+                                                 SumEncoding (ObjectWithSingleField),
+                                                 defaultOptions)
+import           Data.Aeson.TH                  (deriveJSON)
+import           Data.ByteArray.HexString       (HexString)
+import           Data.Char                      (toLower)
+import           Data.Text                      (Text)
+import qualified GHC.Generics                   as GHC (Generic)
+import           Lens.Micro                     (over, _head)
 
-import           Network.Polkadot.Metadata.Types (Type)
+import           Network.Polkadot.Metadata.Type (Type)
 
 data FunctionArgumentMetadata = FunctionArgumentMetadata
     { argumentName :: !Text
@@ -109,7 +110,7 @@ data StorageEntryType
     | DoubleMap !DoubleMapType
     deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
 
-$(deriveJSON defaultOptions ''StorageEntryType)
+$(deriveJSON (defaultOptions { sumEncoding = ObjectWithSingleField }) ''StorageEntryType)
 
 data StorageEntryModifier = Optional | Default | Required
     deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)

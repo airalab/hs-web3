@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- |
--- Module      :  Network.Polkadot.Api.Contracts
+-- Module      :  Network.Polkadot.Rpc.Contracts
 -- Copyright   :  Aleksandr Krupenkin 2016-2020
 -- License     :  Apache-2.0
 --
@@ -13,13 +13,13 @@
 -- Polkadot RPC methods with `contracts` prefix.
 --
 
-module Network.Polkadot.Api.Contracts where
-
-import           Data.Text                  (Text)
+module Network.Polkadot.Rpc.Contracts where
 
 import           Data.ByteArray.HexString   (HexString)
+import           Data.Text                  (Text)
 import           Network.JsonRpc.TinyClient (JsonRpc (..))
-import           Network.Polkadot.Api.Types (ContractCall, ContractExecResult)
+
+import           Network.Polkadot.Rpc.Types (ContractCall, ContractExecResult)
 
 -- | Executes a call to a contract.
 call :: JsonRpc m

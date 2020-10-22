@@ -17,7 +17,8 @@
 module Network.Polkadot.Metadata where
 
 import           Codec.Scale                           (Decode, Encode, Generic)
-import           Data.Aeson                            (defaultOptions)
+import           Data.Aeson                            (Options (sumEncoding), SumEncoding (ObjectWithSingleField),
+                                                        defaultOptions)
 import           Data.Aeson.TH                         (deriveJSON)
 import qualified GHC.Generics                          as GHC (Generic)
 
@@ -39,7 +40,7 @@ data MetadataVersioned
   | V12 V12.Metadata
   deriving (Eq, Show, Generic, GHC.Generic, Decode, Encode)
 
-$(deriveJSON defaultOptions ''MetadataVersioned)
+$(deriveJSON (defaultOptions { sumEncoding = ObjectWithSingleField }) ''MetadataVersioned)
 
 -- | The versioned runtime metadata as a decoded structure.
 data Metadata = Metadata

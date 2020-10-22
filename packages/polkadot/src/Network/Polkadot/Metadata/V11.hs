@@ -16,19 +16,19 @@
 
 module Network.Polkadot.Metadata.V11 where
 
-import           Codec.Scale                     (Decode, Encode, Generic)
-import           Data.Aeson                      (Options (fieldLabelModifier),
-                                                  defaultOptions)
-import           Data.Aeson.TH                   (deriveJSON)
-import           Data.ByteArray.HexString        (HexString)
-import           Data.Char                       (toLower)
-import           Data.Text                       (Text)
-import           Data.Word                       (Word8)
-import qualified GHC.Generics                    as GHC (Generic)
-import           Lens.Micro                      (over, _head)
+import           Codec.Scale                    (Decode, Encode, Generic)
+import           Data.Aeson                     (Options (fieldLabelModifier),
+                                                 defaultOptions)
+import           Data.Aeson.TH                  (deriveJSON)
+import           Data.ByteArray.HexString       (HexString)
+import           Data.Char                      (toLower)
+import           Data.Text                      (Text)
+import           Data.Word                      (Word8)
+import qualified GHC.Generics                   as GHC (Generic)
+import           Lens.Micro                     (over, _head)
 
-import           Network.Polkadot.Metadata.Types (Type)
-import qualified Network.Polkadot.Metadata.V10   as V10
+import           Network.Polkadot.Metadata.Type (Type)
+import qualified Network.Polkadot.Metadata.V10  as V10
 
 type StorageEntryModifier = V10.StorageEntryModifier
 type FunctionMetadata = V10.FunctionMetadata

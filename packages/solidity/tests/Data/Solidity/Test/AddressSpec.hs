@@ -11,7 +11,7 @@ import           Data.ByteArray.HexString   (HexString)
 import           Data.Solidity.Prim.Address
 
 spec :: Spec
-spec = do
+spec = parallel $ do
     describe "EIP55 Test Vectors" $ for_ checksummedAddrs $ \addr ->
         it (unpack addr <> " should be checksummed") $ verifyChecksum addr `shouldBe` True
 

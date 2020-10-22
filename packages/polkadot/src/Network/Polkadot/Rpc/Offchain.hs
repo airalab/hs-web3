@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- |
--- Module      :  Network.Polkadot.Api.Offchain
+-- Module      :  Network.Polkadot.Rpc.Offchain
 -- Copyright   :  Aleksandr Krupenkin 2016-2020
 -- License     :  Apache-2.0
 --
@@ -13,11 +13,12 @@
 -- Polkadot RPC methods with `offchain` prefix.
 --
 
-module Network.Polkadot.Api.Offchain where
+module Network.Polkadot.Rpc.Offchain where
 
 import           Data.ByteArray.HexString   (HexString)
 import           Network.JsonRpc.TinyClient (JsonRpc (..))
-import           Network.Polkadot.Api.Types (StorageKind)
+
+import           Network.Polkadot.Rpc.Types (StorageKind)
 
 -- | Get offchain local storage under given key and prefix.
 localStorageGet :: JsonRpc m

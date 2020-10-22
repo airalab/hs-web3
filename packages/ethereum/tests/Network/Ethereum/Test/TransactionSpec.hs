@@ -9,8 +9,8 @@ import           Network.Ethereum.Transaction (encodeTransaction)
 import           Test.Hspec
 
 spec :: Spec
-spec = do
-    describe "Ethereum raw transactions" $ do
+spec = parallel $
+    describe "Ethereum raw transactions" $
         it "can create and sign valid raw transaction" $ do
             -- using same example as in this blog post:
             -- https://medium.com/@codetractio/walkthrough-of-an-ethereum-improvement-proposal-eip-6fda3966d171

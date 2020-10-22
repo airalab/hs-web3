@@ -6,7 +6,7 @@ import           Test.Hspec
 import           Data.Solidity.Prim.Int
 
 spec :: Spec
-spec = do
+spec = parallel $ do
     describe "Unsigned integer overflow" $ do
         it "UIntN 256" $ do
             (negate 1 :: UIntN 256) `shouldBe` 115792089237316195423570985008687907853269984665640564039457584007913129639935

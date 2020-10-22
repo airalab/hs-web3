@@ -71,7 +71,7 @@ test_private :: HexString
 test_private = "7a28b5ba57c53603b0b07b56bba752f7784bf506fa95edc395f5cf6c7514fe9d"
 
 spec :: Spec
-spec = do
+spec = parallel $ do
     describe "AES-128-CTR and PBKDF2-SHA-256" $ do
         it "can decode keyfile" $
             case eitherDecode pbkdf2_test_keyfile of

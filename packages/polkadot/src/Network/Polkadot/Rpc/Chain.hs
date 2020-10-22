@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- |
--- Module      :  Network.Polkadot.Api.Chain
+-- Module      :  Network.Polkadot.Rpc.Chain
 -- Copyright   :  Aleksandr Krupenkin 2016-2020
 -- License     :  Apache-2.0
 --
@@ -13,11 +13,12 @@
 -- Polkadot RPC methods with `chain` prefix.
 --
 
-module Network.Polkadot.Api.Chain where
+module Network.Polkadot.Rpc.Chain where
 
 import           Data.ByteArray.HexString   (HexString)
 import           Network.JsonRpc.TinyClient (JsonRpc (..))
-import           Network.Polkadot.Api.Types (Header, SignedBlock)
+
+import           Network.Polkadot.Rpc.Types (Header, SignedBlock)
 
 -- | Get header and body of a relay chain block.
 getBlock :: JsonRpc m

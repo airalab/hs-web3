@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- |
--- Module      :  Network.Polkadot.Api.Payment
+-- Module      :  Network.Polkadot.Rpc.Payment
 -- Copyright   :  Aleksandr Krupenkin 2016-2020
 -- License     :  Apache-2.0
 --
@@ -13,11 +13,12 @@
 -- Polkadot RPC methods with `payment` prefix.
 --
 
-module Network.Polkadot.Api.Payment where
+module Network.Polkadot.Rpc.Payment where
 
 import           Data.ByteArray.HexString   (HexString)
 import           Network.JsonRpc.TinyClient (JsonRpc (..))
-import           Network.Polkadot.Api.Types (RuntimeDispatchInfo)
+
+import           Network.Polkadot.Rpc.Types (RuntimeDispatchInfo)
 
 -- | Retrieves the fee information for an encoded extrinsic.
 queryInfo :: JsonRpc m

@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- |
--- Module      :  Network.Polkadot.Api.Engine
+-- Module      :  Network.Polkadot.Rpc.Engine
 -- Copyright   :  Aleksandr Krupenkin 2016-2020
 -- License     :  Apache-2.0
 --
@@ -13,11 +13,12 @@
 -- Polkadot RPC methods with `engine` prefix.
 --
 
-module Network.Polkadot.Api.Engine where
+module Network.Polkadot.Rpc.Engine where
 
 import           Data.ByteArray.HexString   (HexString)
 import           Network.JsonRpc.TinyClient (JsonRpc (..))
-import           Network.Polkadot.Api.Types (CreatedBlock)
+
+import           Network.Polkadot.Rpc.Types (CreatedBlock)
 
 -- | Instructs the manual-seal authorship task to create a new block.
 createBlock :: JsonRpc m

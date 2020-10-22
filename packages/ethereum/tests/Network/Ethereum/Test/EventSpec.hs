@@ -8,7 +8,7 @@ module Network.Ethereum.Test.EventSpec where
 import           Data.Tagged                (Tagged)
 import           Generics.SOP               (Generic)
 import qualified GHC.Generics               as GHC (Generic)
-import           Test.Hspec                 (Spec, describe, it, shouldBe)
+import           Test.Hspec
 
 import           Data.Solidity.Abi          (AbiGet, AbiType (..))
 import           Data.Solidity.Event        (IndexedEvent (..), decodeEvent)
@@ -20,7 +20,7 @@ spec :: Spec
 spec = eventTest
 
 eventTest :: Spec
-eventTest =
+eventTest = parallel $
     describe "event tests" $ do
 
       it "can decode simple storage" $

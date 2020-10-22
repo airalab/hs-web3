@@ -14,7 +14,7 @@ import           Test.Hspec
 [abiFrom|tests/contracts/Exchange.json|]
 
 spec :: Spec
-spec =
+spec = parallel $
   describe "quasi-quoter" $
     it "can compile contract with tuples" $
       True `shouldBe` True

@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- |
--- Module      :  Network.Polkadot.Api.Childstate
+-- Module      :  Network.Polkadot.Rpc.Childstate
 -- Copyright   :  Aleksandr Krupenkin 2016-2020
 -- License     :  Apache-2.0
 --
@@ -13,7 +13,7 @@
 -- Polkadot RPC methods with `childstate` prefix.
 --
 
-module Network.Polkadot.Api.Childstate where
+module Network.Polkadot.Rpc.Childstate where
 
 import           Data.ByteArray.HexString   (HexString)
 import           Network.JsonRpc.TinyClient (JsonRpc (..))

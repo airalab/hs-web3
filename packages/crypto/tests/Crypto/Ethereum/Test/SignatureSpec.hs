@@ -26,7 +26,7 @@ test_key :: HexString
 test_key = "29461542faa1acbc968bcb332115e0537c023f8df416317602ca5d15ca12d02d"
 
 spec :: Spec
-spec = do
+spec = parallel $ do
     describe "Ethereum ECDSA" $ do
         it "can hash Ethereum prefixed message" $ for_ test_vector $ \(msg, msgHash, _) ->
             convert (hashMessage msg) `shouldBe` msgHash

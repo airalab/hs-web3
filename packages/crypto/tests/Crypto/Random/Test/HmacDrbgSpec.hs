@@ -11,7 +11,7 @@ import           Crypto.Random.HmacDrbg
 import           Data.ByteArray.HexString (HexString)
 
 spec :: Spec
-spec = do
+spec = parallel $ do
     describe "HMAC-DRBG-SHA256" $ do
         it "indutny/hmac-drbg test vectors" $ do
             let doDrbg :: ByteString -> HexString

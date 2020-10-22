@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- |
--- Module      :  Network.Polkadot.Api.Author
+-- Module      :  Network.Polkadot.Rpc.Author
 -- Copyright   :  Aleksandr Krupenkin 2016-2020
 -- License     :  Apache-2.0
 --
@@ -13,11 +13,10 @@
 -- Polkadot RPC methods with `author` prefix.
 --
 
-module Network.Polkadot.Api.Author where
-
-import           Data.Text                  (Text)
+module Network.Polkadot.Rpc.Author where
 
 import           Data.ByteArray.HexString   (HexString)
+import           Data.Text                  (Text)
 import           Network.JsonRpc.TinyClient (JsonRpc (..))
 
 -- | Returns true if the keystore has private keys for the given public key and key type.

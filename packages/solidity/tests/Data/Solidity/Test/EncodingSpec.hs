@@ -7,7 +7,6 @@
 module Data.Solidity.Test.EncodingSpec where
 
 import           Control.Exception          (evaluate)
-import           Data.Monoid                ((<>))
 import           Data.Text                  (Text)
 import           Data.Tuple.OneTuple        (OneTuple (..))
 import           Generics.SOP               (Generic, Rep)
@@ -21,7 +20,7 @@ import           Data.Solidity.Prim         (Address, Bytes, BytesN, IntN,
 import           Data.Solidity.Prim.Address (fromHexString, toHexString)
 
 spec :: Spec
-spec = do
+spec = parallel $ do
   intNTest
   bytesTest
   bytesNTest

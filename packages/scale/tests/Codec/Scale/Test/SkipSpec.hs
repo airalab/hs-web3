@@ -17,6 +17,7 @@
 
 module Codec.Scale.Test.SkipSpec where
 
+import           Data.ByteString           (ByteString, pack)
 import           Data.Default              (Default)
 import           Data.Word                 (Word32)
 import qualified GHC.Generics              as GHC (Generic)
@@ -25,7 +26,6 @@ import           Test.Hspec
 import           Codec.Scale
 import           Codec.Scale.SingletonEnum
 import           Codec.Scale.Skip
-import           Data.ByteArray.HexString
 
 data UncodecType = UncodecType
     deriving (Eq, Ord, Show, GHC.Generic, Default)
@@ -63,10 +63,10 @@ spec = parallel $ do
                 sn = StructNamed { a = Skip UncodecType, b = 1 }
                 su = StructUnnamed (Skip UncodecType) 1
 
-            let eb_encoded = encode eb :: HexString
-            let ec_encoded = encode ec :: HexString
-            let sn_encoded = encode sn :: HexString
-            let su_encoded = encode su :: HexString
+            let eb_encoded = encode eb :: ByteString
+            let ec_encoded = encode ec :: ByteString
+            let sn_encoded = encode sn :: ByteString
+            let su_encoded = encode su :: ByteString
 
             decode eb_encoded `shouldBe` Right eb
             decode ec_encoded `shouldBe` Right ec
@@ -76,5 +76,5 @@ spec = parallel $ do
         it "skip_enum_struct_inner_variant" $ do
             let struct = NamedStruct { some_named = 1, ignore = Skip (Just 1) }
                 single = SingletonEnum struct
-                encoded = "0x0001000000" :: HexString
+                encoded = pack [0x00, 0x01, 0x00, 0x00, 0x00]
             encode single `shouldBe` encoded

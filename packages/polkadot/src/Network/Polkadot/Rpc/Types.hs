@@ -5,7 +5,7 @@
 {-# LANGUAGE TemplateHaskell            #-}
 
 -- |
--- Module      :  Network.Polkadot.Api.Types
+-- Module      :  Network.Polkadot.Rpc.Types
 -- Copyright   :  Aleksandr Krupenkin 2016-2020
 -- License     :  Apache-2.0
 --
@@ -16,7 +16,7 @@
 -- Polkadot JSON-RPC types.
 --
 
-module Network.Polkadot.Api.Types where
+module Network.Polkadot.Rpc.Types where
 
 import           Data.Aeson               (FromJSON (..),
                                            Options (fieldLabelModifier),

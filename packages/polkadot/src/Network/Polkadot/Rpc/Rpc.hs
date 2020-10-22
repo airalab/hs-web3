@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- |
--- Module      :  Network.Polkadot.Api.Rpc
+-- Module      :  Network.Polkadot.Rpc.Rpc
 -- Copyright   :  Aleksandr Krupenkin 2016-2020
 -- License     :  Apache-2.0
 --
@@ -13,10 +13,9 @@
 -- Polkadot RPC methods with `rpc` prefix.
 --
 
-module Network.Polkadot.Api.Rpc where
+module Network.Polkadot.Rpc.Rpc where
 
 import           Data.Aeson                 (Value)
-
 import           Network.JsonRpc.TinyClient (JsonRpc (..))
 
 -- | Retrieves the list of RPC methods that are exposed by the node.

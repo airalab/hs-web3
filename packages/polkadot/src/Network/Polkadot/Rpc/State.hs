@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- |
--- Module      :  Network.Polkadot.Api.State
+-- Module      :  Network.Polkadot.Rpc.State
 -- Copyright   :  Aleksandr Krupenkin 2016-2020
 -- License     :  Apache-2.0
 --
@@ -13,13 +13,13 @@
 -- Polkadot RPC methods with `state` prefix.
 --
 
-module Network.Polkadot.Api.State where
-
-import           Data.Text                  (Text)
+module Network.Polkadot.Rpc.State where
 
 import           Data.ByteArray.HexString   (HexString)
+import           Data.Text                  (Text)
 import           Network.JsonRpc.TinyClient (JsonRpc (..))
-import           Network.Polkadot.Api.Types (ReadProof, RuntimeVersion,
+
+import           Network.Polkadot.Rpc.Types (ReadProof, RuntimeVersion,
                                              StorageChangeSet)
 
 -- | Perform a call to a builtin on the chain.

@@ -48,4 +48,3 @@ instance FromJSON MagicNumber where
 
 instance ToJSON MagicNumber where
     toJSON _ = toJSON magic_number
-

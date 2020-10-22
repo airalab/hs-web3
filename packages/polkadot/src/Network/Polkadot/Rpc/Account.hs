@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- |
--- Module      :  Network.Polkadot.Api.Account
+-- Module      :  Network.Polkadot.Rpc.Account
 -- Copyright   :  Aleksandr Krupenkin 2016-2020
 -- License     :  Apache-2.0
 --
@@ -13,10 +13,9 @@
 -- Polkadot RPC methods with `account` prefix.
 --
 
-module Network.Polkadot.Api.Account where
+module Network.Polkadot.Rpc.Account where
 
 import           Data.Text                  (Text)
-
 import           Network.JsonRpc.TinyClient (JsonRpc (..))
 
 -- | Retrieves the next accountIndex as available on the node.
