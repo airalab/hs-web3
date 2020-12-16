@@ -16,7 +16,7 @@ dependencies:
 - aeson                >1.2  && <1.5
 - memory               >0.14 && <0.16
 - uuid-types           >1.0  && <1.1
-- cryptonite           >0.22 && <0.27
+- cryptonite           >0.22 && <0.28
 - bytestring           >0.10 && <0.11
 - web3-hexstring       >=1.0 && <1.1
 
@@ -53,7 +53,7 @@ tests:
   tests:
     main:             Spec.hs
     source-dirs:
-    - tests 
+    - tests
     - src
     dependencies:
     - hspec-expectations   >=0.8.2  && <0.9
