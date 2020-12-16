@@ -27,7 +27,7 @@ module Data.Solidity.Prim.Bytes
     , BytesN
     ) where
 
-import           Control.Monad           (unless)
+import           Control.Monad           (unless, void)
 import           Data.Aeson              (FromJSON (..), ToJSON (..),
                                           Value (String))
 import           Data.ByteArray          (Bytes, convert, length, zero)
@@ -113,13 +113,17 @@ instance (KnownNat n, n <= 32) => ToJSON (BytesN n) where
 abiGetByteString :: Get ByteString
 abiGetByteString = do
     len <- fromIntegral <$> getWord256
-    if len == 0
-        then return ""
-        else getBytes len
+    res <- getBytes len
+    let remainder = len `mod` 32
+    unless (remainder == 0) $
+      void $ getBytes (32 - remainder)
+    pure res
 
 abiPutByteString :: Putter ByteString
 abiPutByteString bs = do
     putWord256 $ fromIntegral len
-    unless (len == 0) $
-      putByteString $ bs <> zero (32 - len `mod` 32)
+    putByteString bs
+    unless (remainder == 0) $
+      putByteString $ zero (32 - remainder)
   where len = length bs
+        remainder = len `mod` 32
