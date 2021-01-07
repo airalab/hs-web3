@@ -17,7 +17,8 @@
 module Network.Polkadot.Metadata.V10 where
 
 import           Codec.Scale                    (Decode, Encode, Generic)
-import           Data.Aeson                     (Options (fieldLabelModifier),
+import           Data.Aeson                     (Options (fieldLabelModifier, sumEncoding),
+                                                 SumEncoding (ObjectWithSingleField),
                                                  defaultOptions)
 import           Data.Aeson.TH                  (deriveJSON)
 import           Data.ByteArray.HexString       (HexString)
@@ -73,7 +74,7 @@ data StorageEntryType
     | DoubleMap !DoubleMapType
     deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
 
-$(deriveJSON defaultOptions ''StorageEntryType)
+$(deriveJSON (defaultOptions { sumEncoding = ObjectWithSingleField }) ''StorageEntryType)
 
 data StorageEntryMetadata = StorageEntryMetadata
     { entryName          :: !Text

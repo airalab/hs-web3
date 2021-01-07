@@ -49,8 +49,8 @@ $(deriveJSON (defaultOptions
     { fieldLabelModifier = over _head toLower . drop 6 }) ''ModuleMetadata)
 
 data Metadata = Metadata
-    { modules    :: ![ModuleMetadata]
-    , extrinsics :: ![ExtrinsicMetadata]
+    { modules   :: ![ModuleMetadata]
+    , extrinsic :: !ExtrinsicMetadata
     } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
 
 $(deriveJSON defaultOptions ''Metadata)

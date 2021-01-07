@@ -16,17 +16,26 @@
 
 module Network.Polkadot.Metadata where
 
-import           Codec.Scale                           (Decode, Encode, Generic)
-import           Data.Aeson                            (Options (sumEncoding), SumEncoding (ObjectWithSingleField),
-                                                        defaultOptions)
-import           Data.Aeson.TH                         (deriveJSON)
-import qualified GHC.Generics                          as GHC (Generic)
+import           Codec.Scale                              (Decode, Encode,
+                                                           Generic)
+import           Data.Aeson                               (Options (sumEncoding),
+                                                           SumEncoding (ObjectWithSingleField),
+                                                           defaultOptions)
+import           Data.Aeson.TH                            (deriveJSON)
+import           Data.Set                                 (Set)
+import qualified GHC.Generics                             as GHC (Generic)
 
-import           Network.Polkadot.Metadata.MagicNumber (MagicNumber)
-import qualified Network.Polkadot.Metadata.V10         as V10 (Metadata)
-import qualified Network.Polkadot.Metadata.V11         as V11 (Metadata)
-import qualified Network.Polkadot.Metadata.V12         as V12 (Metadata)
-import qualified Network.Polkadot.Metadata.V9          as V9 (Metadata)
+import           Network.Polkadot.Metadata.MagicNumber    (MagicNumber (..))
+import           Network.Polkadot.Metadata.Type           (Type)
+import           Network.Polkadot.Metadata.Type.Discovery (runDiscovery)
+import qualified Network.Polkadot.Metadata.V10            as V10 (Metadata (Metadata),
+                                                                  moduleName)
+import qualified Network.Polkadot.Metadata.V11            as V11 (Metadata (Metadata),
+                                                                  moduleName)
+import qualified Network.Polkadot.Metadata.V12            as V12 (Metadata (Metadata),
+                                                                  moduleName)
+import qualified Network.Polkadot.Metadata.V9             as V9 (Metadata (Metadata),
+                                                                 moduleName)
 
 -- | All supported metadata versions as enum.
 --
@@ -68,3 +77,24 @@ isV12 _                    = False
 
 isLatest :: Metadata -> Bool
 isLatest = isV12
+
+metadataTypes :: Metadata -> (Metadata, Set Type)
+metadataTypes (Metadata _ (V9 (V9.Metadata modules))) =
+    let (modules', types) = runDiscovery V9.moduleName modules
+    in (Metadata MagicNumber (V9 (V9.Metadata modules')), types)
+
+metadataTypes (Metadata _ (V10 (V10.Metadata modules))) =
+    let (modules', types) = runDiscovery V10.moduleName modules
+    in (Metadata MagicNumber (V10 (V10.Metadata modules')), types)
+
+{- XXX: OOM compilation on my laptop
+metadataTypes (Metadata _ (V11 (V11.Metadata modules extrinsics))) =
+    let (modules', types) = runDiscovery V11.moduleName modules
+    in (Metadata MagicNumber (V11 (V11.Metadata modules' extrinsics)), types)
+-}
+
+metadataTypes (Metadata _ (V12 (V12.Metadata modules extrinsics))) =
+    let (modules', types) = runDiscovery V12.moduleName modules
+    in (Metadata MagicNumber (V12 (V12.Metadata modules' extrinsics)), types)
+
+metadataTypes m = (m, mempty)

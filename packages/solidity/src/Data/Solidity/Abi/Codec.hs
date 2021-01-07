@@ -21,6 +21,9 @@ module Data.Solidity.Abi.Codec
     -- * Generic encoding
     , encode'
     , decode'
+
+    -- * Generic type re-export
+    , Generic
     ) where
 
 import           Data.ByteArray            (ByteArray, ByteArrayAccess, convert)
