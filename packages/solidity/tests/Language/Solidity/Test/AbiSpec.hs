@@ -35,7 +35,7 @@ spec = parallel $ do
       mId `shouldBe` expected
 
 buildFillOrderDec :: Declaration
-buildFillOrderDec = DFunction "fillOrder" False funInputs' funOutputs'
+buildFillOrderDec = DFunction "fillOrder" SMNonPayable funInputs' funOutputs'
   where
     funInputs' =
       [ makeTupleFuncArg ("order", "tuple") tupleComponents

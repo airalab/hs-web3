@@ -20,6 +20,7 @@ module Language.Solidity.Abi
     , Declaration(..)
     , FunctionArg(..)
     , EventArg(..)
+    , StateMutability(..)
 
     -- * Method/Event id encoder
     , signature
@@ -81,14 +82,21 @@ $(deriveJSON
     (defaultOptions {fieldLabelModifier = over _head toLower . drop 6})
     ''EventArg)
 
--- | Elementrary contract interface item
+data StateMutability
+  = SMPure
+  | SMView
+  | SMPayable
+  | SMNonPayable
+  deriving (Eq, Ord, Show)
+
+-- | Elementary contract interface item
 data Declaration = DConstructor
     { conInputs :: [FunctionArg]
     -- ^ Contract constructor
     }
     | DFunction
     { funName     :: Text
-    , funConstant :: Bool
+    , funStateMutability :: StateMutability
     , funInputs   :: [FunctionArg]
     , funOutputs  :: Maybe [FunctionArg]
     -- ^ Method
@@ -139,6 +147,12 @@ $(deriveJSON (defaultOptions {
   , constructorTagModifier = over _head toLower . drop 1
   , fieldLabelModifier = over _head toLower . drop 3 })
     ''Declaration)
+
+$(deriveJSON (defaultOptions {
+    sumEncoding = TaggedObject "stateMutability" "contents"
+  , constructorTagModifier = fmap toLower . drop 2 })
+    ''StateMutability)
+
 
 -- | Contract Abi is a list of method / event declarations
 newtype ContractAbi = ContractAbi { unAbi :: [Declaration] }
