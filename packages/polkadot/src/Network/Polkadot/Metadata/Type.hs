@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 -- |
 -- Module      :  Network.Polkadot.Metadata.Type
 -- Copyright   :  Aleksandr Krupenkin 2016-2020

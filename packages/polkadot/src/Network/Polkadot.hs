@@ -11,5 +11,12 @@
 --
 
 module Network.Polkadot
-    (
-    ) where
+  (
+    query
+  , Argument(..)
+  , module Codec.Scale
+  ) where
+
+import           Codec.Scale
+import           Network.Polkadot.Query       (query)
+import           Network.Polkadot.Storage.Key (Argument (..))
