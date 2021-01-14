@@ -78,6 +78,10 @@ isV12 _                    = False
 isLatest :: Metadata -> Bool
 isLatest = isV12
 
+toLatest :: Metadata -> V12.Metadata
+toLatest (Metadata _ (V12 m)) = m
+toLatest _                    = undefined
+
 metadataTypes :: Metadata -> (Metadata, Set Type)
 metadataTypes (Metadata _ (V9 (V9.Metadata modules))) =
     let (modules', types) = runDiscovery V9.moduleName modules

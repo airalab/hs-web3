@@ -22,7 +22,7 @@ import           Data.Text                             (Text)
 
 import           Network.Polkadot.Metadata.Type.Parser (sanitizeM)
 
--- | Contains information about type structure and it's representation.
+-- | Sanitized name for metadata type.
 newtype Type = Type { unType :: Text }
     deriving (Eq, Ord, Show)
 
