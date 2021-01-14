@@ -20,7 +20,7 @@ module Data.Digest.XXHash (xxhash) where
 
 import           Data.ByteString         (ByteString, useAsCStringLen)
 import           Data.ByteString.Builder (toLazyByteString, word64LE)
-import qualified Data.ByteString.Lazy    as LBS (ByteString)
+import           Data.ByteString.Lazy    (toStrict)
 import           Foreign
 import           Foreign.C.String
 import           Foreign.C.Types
@@ -41,9 +41,9 @@ xxhash :: Integral bitLength
        -- ^ Bit lenght of output, will be ceiling to 64 bit.
        -> ByteString
        -- ^ Input data.
-       -> LBS.ByteString
+       -> ByteString
        -- ^ Output hash.
-xxhash bitLength input = toLazyByteString $ mconcat
+xxhash bitLength input = toStrict . toLazyByteString $ mconcat
     [ word64LE (xxhash_64 seed input) | seed <- [0 .. (iterations - 1)]]
   where
     iterations = ceiling (fromIntegral bitLength / 64)
