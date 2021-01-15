@@ -12,11 +12,15 @@
 
 module Network.Polkadot
   (
+  -- * Query blockchain storage.
     query
   , Argument(..)
-  , module Codec.Scale
+  -- * Base types and codecs.
+  , module Scale
+  , module Primitives
   ) where
 
-import           Codec.Scale
+import           Codec.Scale                  as Scale
+import           Network.Polkadot.Primitives  as Primitives
 import           Network.Polkadot.Query       (query)
 import           Network.Polkadot.Storage.Key (Argument (..))

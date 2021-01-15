@@ -26,6 +26,7 @@ dependencies:
 - microlens-mtl        >0.2  && <0.3
 - web3-scale           >=1.0 && <1.1
 - web3-crypto          >=1.0 && <1.1
+- web3-bignum          >=1.0 && <1.1
 - web3-jsonrpc         >=1.0 && <1.1
 - web3-hexstring       >=1.0 && <1.1
 

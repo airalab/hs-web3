@@ -10,8 +10,8 @@
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- A representation of a storage key (typically hashed) in the system. It can be
--- constructed by passing in a raw key or a StorageEntry with (optional) arguments.
+-- When you use the Substrate RPC to access a storage item,
+-- you only need to provide the key associated with that item.
 --
 
 module Network.Polkadot.Storage.Key where
@@ -31,10 +31,7 @@ import           Network.Polkadot.Metadata.V11 (DoubleMapType (..),
                                                 StorageEntryType (..),
                                                 StorageHasher (..))
 
--- | Hasher is a function that hash given argument.
-type Hasher a = a -> ByteString
-
--- | General type wrapper for SCALE encodable data type.
+-- | General type wrapper for SCALE encodable storage index argument.
 data Argument where
     Argument :: Encode a => a -> Argument
     -- ^ Wrapped type should be encodable.
@@ -42,13 +39,16 @@ data Argument where
 instance Encode Argument where
     put arg = case arg of Argument a -> put a
 
+-- | Hasher is a function that hash given argument.
+type Hasher = Argument -> ByteString
+
 -- | Entry type describe storage prefix for different storage entity types.
-data StorageEntry where
-    PlainEntry :: ByteString -> StorageEntry
+data StorageEntry
+    = PlainEntry ByteString
     -- ^ Simple storage type without arguments.
-    MapEntry :: (Argument -> ByteString) -> StorageEntry
+    | MapEntry (Argument -> ByteString)
     -- ^ Mapping with hashing for arguments.
-    DoubleMapEntry :: (Argument -> Argument -> ByteString) -> StorageEntry
+    | DoubleMapEntry (Argument -> Argument -> ByteString)
     -- ^ Double map with two different hashers.
 
 instance Show StorageEntry where
@@ -56,18 +56,30 @@ instance Show StorageEntry where
     show (MapEntry _)       = "MapEntry"
     show (DoubleMapEntry _) = "DoubleMapEntry"
 
-newEntry :: Text -> StorageEntryMetadata -> Text -> StorageEntry
-newEntry prefix meta method = case entryType meta of
+-- | Create storage key generator from metadata description.
+newEntry :: Text
+         -- ^ Storage prefix (module name).
+         -> StorageEntryMetadata
+         -- ^ Storage key metadata, includes entry type, name, etc.
+         -> StorageEntry
+         -- ^ Storage key generator.
+newEntry prefix meta = case entryType meta of
     Plain _ -> PlainEntry plainKey
-    Map MapType{..} -> MapEntry $ mapCodec (getHasher mapHasher)
-    DoubleMap DoubleMapType{..} ->
-        DoubleMapEntry $ dMapCodec (getHasher doubleMapHasher) (getHasher doubleMapKey2Hasher)
+    Map MapType{..} -> MapEntry (mapCodec mapHasher)
+    DoubleMap DoubleMapType{..} -> DoubleMapEntry (dMapCodec doubleMapHasher doubleMapKey2Hasher)
   where
+    method = entryName meta
+    -- To calculate the key for a simple Storage Value,
+    -- take the TwoX 128 hash of the name of the module that contains the Storage Value
+    -- and append to it the TwoX 128 hash of the name of the Storage Value itself.
     plainKey = xxhash 128 (encodeUtf8 prefix) <> xxhash 128 (encodeUtf8 method)
-    mapCodec hasher arg = plainKey <> hasher arg
-    dMapCodec hasher1 hasher2 arg1 arg2 = plainKey <> hasher1 arg1 <> hasher2 arg2
+    -- Like Storage Values, the keys for Storage Maps are equal to the TwoX 128 hash
+    -- of the name of the module that contains the map prepended to the TwoX 128 hash
+    -- of the name of the Storage Map itself.
+    mapCodec h1 arg1 = plainKey <> getHasher h1 arg1
+    dMapCodec h1 h2 arg1 arg2 = mapCodec h1 arg1 <> getHasher h2 arg2
 
-getHasher :: Encode a => StorageHasher -> Hasher a
+getHasher :: StorageHasher -> Hasher
 getHasher Blake2_128       = blake2_128 . encode
 getHasher Blake2_256       = blake2_256 . encode
 getHasher Blake2_128Concat = uncurry (<>) . (blake2_128 &&& id) . encode

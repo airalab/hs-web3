@@ -9,7 +9,11 @@
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- .
+-- Substrate uses a simple key-value data store implemented as a database-backed,
+-- modified Merkle tree.
+--
+-- Blockchains that are built with Substrate expose a remote procedure call (RPC)
+-- server that can be used to query runtime storage.
 --
 
 module Network.Polkadot.Storage where
@@ -32,10 +36,17 @@ import           Network.Polkadot.Metadata.V12 (Metadata (modules),
 import           Network.Polkadot.Storage.Key  (Argument, StorageEntry (..),
                                                 newEntry)
 
+-- | Runtime storage is a set of named modules.
 type Storage = Map Text ModuleStorage
+
+-- | Each module store data in a set of named entries.
 type ModuleStorage = Map Text StorageEntry
 
-fromMetadata :: Metadata -> Storage
+-- | Create 'Storage' abstraction from runtime metadata.
+fromMetadata :: Metadata
+             -- ^ Runtime metadata (latest version).
+             -> Storage
+             -- ^ Storage entities.
 fromMetadata = Map.fromList . mapMaybe go . modules
   where
     toLowerFirst = uncurry T.cons . (toLower . T.head &&& T.tail)
@@ -43,13 +54,23 @@ fromMetadata = Map.fromList . mapMaybe go . modules
         StorageMetadata prefix items <- moduleStorage
         let section = toCamelCase moduleName
             toEntry meta@StorageEntryMetadata{..} =
-                (toLowerFirst entryName, newEntry prefix meta entryName)
+                (toLowerFirst entryName, newEntry prefix meta)
         return (toLowerFirst section, Map.fromList $ fmap toEntry items)
 
-getPrefix :: Storage -> Text -> Text -> [Argument] -> Maybe HexString
-getPrefix store section method args = convert <$> do
-    entries <- Map.lookup section store
-    entry <- Map.lookup method entries
+-- | Create storage key for given parameters.
+storageKey :: Storage
+           -- ^ Storage entities.
+           -> Text
+           -- ^ Module name.
+           -> Text
+           -- ^ Storage method name.
+           -> [Argument]
+           -- ^ Arguments (for mappings).
+           -> Maybe HexString
+           -- ^ Raw storage key. If module or method was not found
+           -- or wrong number of arguments - returns 'Nothing'.
+storageKey store section method args = convert <$> do
+    entry <- Map.lookup method =<< Map.lookup section store
     case entry of
       PlainEntry x     -> Just x
       MapEntry f       -> case args of

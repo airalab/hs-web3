@@ -13,6 +13,7 @@
 module Network.Polkadot.Query where
 
 import           Codec.Scale                  (Decode, decode)
+import           Data.ByteArray.HexString     (HexString)
 import           Data.Text                    (Text)
 import           Network.JsonRpc.TinyClient   (JsonRpc)
 
@@ -20,18 +21,44 @@ import           Network.Polkadot.Metadata    (Metadata (Metadata),
                                                MetadataVersioned (V12),
                                                metadataTypes, toLatest)
 import           Network.Polkadot.Rpc.State   (getMetadata, getStorage)
-import           Network.Polkadot.Storage     (Storage, fromMetadata, getPrefix)
+import           Network.Polkadot.Storage     (Storage, fromMetadata,
+                                               storageKey)
 import           Network.Polkadot.Storage.Key (Argument)
 
+-- | Loads metadata from runtime and create storage type.
 storage :: JsonRpc m => m (Either String Storage)
 storage = (fmap go . decode) <$> getMetadata
   where
     go raw = let (meta, _) = metadataTypes raw in fromMetadata (toLatest meta)
 
-query :: (JsonRpc m, Decode a) => Text -> Text -> [Argument] -> m (Either String a)
-query section method args = go =<< storage
+-- | Query data from blockchain via 'getStorage' RPC call.
+query :: (JsonRpc m, Decode a)
+      => Text
+      -- ^ Module name.
+      -> Text
+      -- ^ Storage method name.
+      -> [Argument]
+      -- ^ Arguments (for mappings).
+      -> m (Either String a)
+      -- ^ Decoded storage item.
+{-# INLINE query #-}
+query = query' Nothing
+
+-- | Similar to 'query' but get block hash for query as an argument.
+query' :: (JsonRpc m, Decode a)
+       => Maybe HexString
+       -- ^ Block hash for query ('Nothing' for best block).
+       -> Text
+       -- ^ Module name.
+       -> Text
+       -- ^ Storage method name.
+       -> [Argument]
+       -- ^ Arguments (for mappings).
+       -> m (Either String a)
+       -- ^ Decoded storage item.
+query' blockHash section method args = go =<< storage
   where
-    go (Right store) = case getPrefix store section method args of
+    go (Right store) = case storageKey store section method args of
+        Just key -> decode <$> getStorage key blockHash
         Nothing -> return (Left "Unable to find given section/method or wrong argument count")
-        Just prefix -> decode <$> getStorage prefix Nothing
     go (Left err) = return (Left err)
