@@ -1,5 +1,5 @@
 # Resolver to choose a 'specific' stackage snapshot or a compiler version.
-resolver: lts-16.18
+resolver: lts-16.23
 
 # User packages to be built.
 packages:
@@ -7,6 +7,7 @@ packages:
 - 'packages/ipfs'
 - 'packages/scale'
 - 'packages/crypto'
+- 'packages/bignum'
 - 'packages/jsonrpc'
 - 'packages/provider'
 - 'packages/solidity'
@@ -19,6 +20,8 @@ packages:
 
 # Extra package dependencies
 extra-deps:
+- hspec-expectations-json-1.0.0.2@sha256:a8c771b7a5449ef600c984d596304ebace8e109f5830f5351566a4d13c0072d4
+- animalcase-0.1.0.2@sha256:d7b80c3130c68d7ce8ddd9782588b2c4dd7da86461f302c54cc4acddf0902b51
 - relapse-1.0.0.0@sha256:b89ea23189e07f377be4e2a4deccf3d6ba7f547ed8ad77e27b35d78801efd81c
 - vinyl-0.12.1@sha256:03f5e246fae2434250987bbfe708015dc6e23f60c20739c34738acde1383b96c
 
@@ -28,6 +31,6 @@ pvp-bounds: both
 # Nix integration
 nix:
     packages:
-    - zlib
-    - haskellPackages.hlint
     - haskellPackages.stylish-haskell
+    - haskellPackages.hlint
+    - zlib
