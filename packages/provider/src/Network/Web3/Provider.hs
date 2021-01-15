@@ -40,7 +40,7 @@ import qualified Network.WebSockets.Stream  as Stream
 
 -- | Any communication with node wrapped with 'Web3' monad
 newtype Web3 a = Web3 { unWeb3 :: StateT JsonRpcClient IO a }
-    deriving (Functor, Applicative, Monad, MonadIO, MonadThrow, MonadState JsonRpcClient)
+    deriving (Functor, Applicative, Monad, MonadIO, MonadThrow, MonadFail, MonadState JsonRpcClient)
 
 instance JsonRpc Web3
 
