@@ -1,4 +1,6 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
 -- |
@@ -37,8 +39,8 @@ import           Control.Monad            (void)
 import           Crypto.Ethereum.Utils    (keccak256)
 import           Data.Aeson               (FromJSON (parseJSON), Options (constructorTagModifier, fieldLabelModifier, sumEncoding),
                                            SumEncoding (TaggedObject),
-                                           ToJSON (toJSON), defaultOptions)
-import           Data.Aeson.TH            (deriveJSON)
+                                           ToJSON (toJSON), defaultOptions, withObject, (.:), (.:?))
+import           Data.Aeson.TH            (deriveJSON, deriveToJSON)
 import qualified Data.ByteArray           as A (take)
 import           Data.ByteArray.HexString (toText)
 import           Data.Char                (toLower)
@@ -96,7 +98,7 @@ data Declaration = DConstructor
     }
     | DFunction
     { funName     :: Text
-    , funStateMutability :: StateMutability
+    , funConstant :: Bool
     , funInputs   :: [FunctionArg]
     , funOutputs  :: Maybe [FunctionArg]
     -- ^ Method
@@ -142,11 +144,27 @@ instance Ord Declaration where
     compare DFallback {} DFunction {} = GT
     compare DFallback {} DEvent {} = GT
 
-$(deriveJSON (defaultOptions {
-    sumEncoding = TaggedObject "type" "contents"
-  , constructorTagModifier = over _head toLower . drop 1
-  , fieldLabelModifier = over _head toLower . drop 3 })
-    ''Declaration)
+instance FromJSON Declaration where
+  parseJSON = withObject "Declaration" $ \o -> do
+    t :: Text <- o .: "type"
+    case t of
+      "fallback" -> DFallback <$> o .: "payable"
+      "constructor" -> DConstructor <$> o .: "inputs"
+      "event" -> DEvent <$> o .: "name" <*> o .: "inputs" <*> o .: "anonymous"
+      "function" -> DFunction <$> o .: "name" <*> parseSm o <*> o .: "inputs" <*> o .:? "outputs"
+      _ -> fail "value of 'type' not recognized"
+      where
+        parseSm o = do
+          o .:? "stateMutability" >>= \case
+            Nothing -> o .: "constant"
+            Just sm -> pure $ sm `elem` [SMPure, SMView]
+
+$(deriveToJSON
+   (defaultOptions {
+       sumEncoding = TaggedObject "type" "contents"
+       , constructorTagModifier = over _head toLower . drop 1
+       , fieldLabelModifier = over _head toLower . drop 3 })
+   ''Declaration)
 
 $(deriveJSON (defaultOptions {
     sumEncoding = TaggedObject "stateMutability" "contents"
