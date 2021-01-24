@@ -120,7 +120,7 @@ toHSType s = case s of
     SolidityString      -> conT ''Text
     SolidityBytesN n    -> appT (conT ''BytesN) (numLit n)
     SolidityBytes       -> conT ''Bytes
-    SolidityTuple n as  -> foldl ( \b a -> appT b $ toHSType a ) ( tupleT n ) as
+    SolidityTuple as    -> foldl ( \b a -> appT b $ toHSType a ) ( tupleT (length as) ) as
     SolidityVector ns a -> expandVector ns a
     SolidityArray a     -> appT listT $ toHSType a
   where
