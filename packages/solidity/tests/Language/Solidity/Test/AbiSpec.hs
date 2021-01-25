@@ -16,7 +16,7 @@ spec = parallel $ do
               ma = FunctionArg "makeAddress" "address" Nothing
               tupleFA = FunctionArg "order" "tuple" (Just [maa, ma])
               eRes = parseSolidityFunctionArgType tupleFA
-          eRes `shouldBe` Right (SolidityTuple 2 [SolidityUint 256, SolidityAddress])
+          eRes `shouldBe` Right (SolidityTuple [SolidityUint 256, SolidityAddress])
         it "fails to parse a FunctionArg with invalid tuple" $ do
           let tupleFA = FunctionArg "order" "tuple" Nothing
               eRes = parseSolidityFunctionArgType tupleFA

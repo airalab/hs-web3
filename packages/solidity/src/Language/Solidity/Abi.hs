@@ -252,7 +252,7 @@ data SolidityType = SolidityBool
     | SolidityString
     | SolidityBytesN Int
     | SolidityBytes
-    | SolidityTuple Int [SolidityType]
+    | SolidityTuple [SolidityType]
     | SolidityVector [Int] SolidityType
     | SolidityArray SolidityType
     deriving (Eq, Show)
@@ -329,9 +329,7 @@ solidityTypeParser =
 parseSolidityFunctionArgType :: FunctionArg -> Either ParseError SolidityType
 parseSolidityFunctionArgType (FunctionArg _ typ mcmps) = case mcmps of
   Nothing -> parse solidityTypeParser "Solidity" typ
-  Just cmps ->
-    SolidityTuple (length cmps)
-    <$>  mapM parseSolidityFunctionArgType cmps
+  Just cmps -> SolidityTuple <$> mapM parseSolidityFunctionArgType cmps
 
 
 parseSolidityEventArgType :: EventArg -> Either ParseError SolidityType
