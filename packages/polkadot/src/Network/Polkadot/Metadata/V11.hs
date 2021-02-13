@@ -4,7 +4,7 @@
 
 -- |
 -- Module      :  Network.Polkadot.Metadata.V11
--- Copyright   :  Aleksandr Krupenkin 2016-2020
+-- Copyright   :  Aleksandr Krupenkin 2016-2021
 -- License     :  Apache-2.0
 --
 -- Maintainer  :  mail@akru.me

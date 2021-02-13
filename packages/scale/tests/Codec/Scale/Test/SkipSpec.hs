@@ -4,7 +4,7 @@
 
 -- |
 -- Module      :  Codec.Scale.Test.SkipSpec
--- Copyright   :  Aleksandr Krupenkin 2016-2020
+-- Copyright   :  Aleksandr Krupenkin 2016-2021
 -- License     :  BSD3
 --
 -- Maintainer  :  mail@akru.me

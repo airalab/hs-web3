@@ -5,7 +5,7 @@ github:              "airalab/hs-web3"
 license:             Apache-2.0
 author:              Aleksandr Krupenkin
 maintainer:          mail@akru.me
-copyright:           "(c) Aleksandr Krupenkin 2016-2020"
+copyright:           "(c) Aleksandr Krupenkin 2016-2021"
 category:            Network
 
 dependencies:
