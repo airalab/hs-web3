@@ -11,7 +11,7 @@ copyright:           "(c) Aleksandr Krupenkin 2016-2020"
 category:            Network
 
 dependencies:
-- base                 >4.11 && <4.14
+- base                 >4.11 && <4.15
 - memory               >0.14 && <0.16
 - cereal               >0.5  && <0.6
 - basement             >0.0  && <0.1
