@@ -146,12 +146,12 @@ estimateGas :: JsonRpc m => Call -> m Quantity
 estimateGas = remote "eth_estimateGas"
 
 -- | Returns information about a block by hash.
-getBlockByHash :: JsonRpc m => HexString -> m Block
+getBlockByHash :: JsonRpc m => HexString -> m (Maybe Block)
 {-# INLINE getBlockByHash #-}
 getBlockByHash = flip (remote "eth_getBlockByHash") True
 
 -- | Returns information about a block by block number.
-getBlockByNumber :: JsonRpc m => Quantity -> m Block
+getBlockByNumber :: JsonRpc m => Quantity -> m (Maybe Block)
 {-# INLINE getBlockByNumber #-}
 getBlockByNumber = flip (remote "eth_getBlockByNumber") True
 
