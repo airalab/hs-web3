@@ -267,7 +267,7 @@ data Block = Block
     -- ^ DATA, 32 Bytes - the root of the transaction trie of the block.
     , blockStateRoot        :: !HexString
     -- ^ DATA, 32 Bytes - the root of the final state trie of the block.
-    , blockReceiptRoot      :: !(Maybe HexString)
+    , blockReceiptsRoot     :: !(Maybe HexString)
     -- ^ DATA, 32 Bytes - the root of the receipts trie of the block.
     , blockMiner            :: !Address
     -- ^ DATA, 20 Bytes - the address of the beneficiary to whom the mining rewards were given.
