@@ -249,8 +249,13 @@ data Transaction = Transaction
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = over _head toLower . drop 2 }) ''Transaction)
 
+-- | Block information with full transactions.
+type Block = BlockT Transaction
+
 -- | Block information.
-data Block = Block
+-- It is parameterized by the type of transactions stored in the block because
+-- sometimes only TX hashes may be stored.
+data BlockT tx = Block
     { blockNumber           :: !(Maybe Quantity)
     -- ^ QUANTITY - the block number. null when its pending block.
     , blockHash             :: !(Maybe HexString)
@@ -285,7 +290,7 @@ data Block = Block
     -- ^ QUANTITY - the total used gas by all transactions in this block.
     , blockTimestamp        :: !Quantity
     -- ^ QUANTITY - the unix timestamp for when the block was collated.
-    , blockTransactions     :: ![Transaction]
+    , blockTransactions     :: ![tx]
     -- ^ Array of transaction objects.
     , blockUncles           :: ![HexString]
     -- ^ Array - Array of uncle hashes.
@@ -293,4 +298,4 @@ data Block = Block
     deriving (Show, Generic)
 
 $(deriveJSON (defaultOptions
-    { fieldLabelModifier = over _head toLower . drop 5 }) ''Block)
+    { fieldLabelModifier = over _head toLower . drop 5 }) ''BlockT)
