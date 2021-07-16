@@ -16,6 +16,7 @@
 module Data.ByteArray.HexString.TH where
 
 import           Data.ByteArray.HexString.Internal (HexString)
+import           Data.String                       (fromString)
 import           Language.Haskell.TH.Quote         (QuasiQuoter (..), quoteFile)
 
 hexFrom :: QuasiQuoter
