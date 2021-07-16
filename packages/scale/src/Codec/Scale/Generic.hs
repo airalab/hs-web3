@@ -66,7 +66,7 @@ instance EnumParser as => EnumParser (a ': as) where
 
 -- When index out of type scope raise the error.
 instance EnumParser '[] where
-    enumParser _ = fail "wrong prefix during enum decoding"
+    enumParser i = fail ("index out of enum constructors count: " ++ show i)
 
 -- Decode enum when multiple sum types.
 instance ( GDecode (NP f xs)

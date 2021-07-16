@@ -177,7 +177,7 @@ spec = parallel $ do
 
             decode encoded_b `shouldBe` Right sb
             decode encoded_c `shouldBe` Right sc
-            decode ("\x0a" :: ByteString) `shouldBe` (Left "Failed reading: wrong prefix during enum decoding\nEmpty call stack\n" :: Either String EnumType)
+            decode ("\x0a" :: ByteString) `shouldBe` (Left "Failed reading: index out of enum constructors count: 7\nEmpty call stack\n" :: Either String EnumType)
 
         it "should_derive_encode" $ do
             let v :: TestType
