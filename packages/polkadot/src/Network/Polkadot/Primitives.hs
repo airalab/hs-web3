@@ -89,4 +89,4 @@ data MultiAddress
     -- ^ It's a 32 byte representation.
     | MaAddress20 !H160
     -- ^ Its a 20 byte representation.
-  deriving (Eq, Ord, GHC.Generic, Generic, Encode, Decode)
+  deriving (Eq, Ord, Show, GHC.Generic, Generic, Encode, Decode)

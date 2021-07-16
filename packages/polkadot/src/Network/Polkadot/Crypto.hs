@@ -14,7 +14,8 @@
 
 module Network.Polkadot.Crypto
   ( Pair(..)
-  , MultiPair(multi_address, multi_signer, multi_signature)
+  , Verify(..)
+  , MultiPair(..)
   , Ed25519
   , Ecdsa
   ) where
@@ -34,11 +35,10 @@ import           Data.ByteArray              (ByteArrayAccess)
 import           Data.ByteString             (ByteString)
 import qualified Data.ByteString             as BS (last, take)
 import           Data.Maybe                  (fromJust)
-import           Data.Proxy                  (Proxy (..))
 import           Data.Text                   (Text)
 import           Data.Word                   (Word8)
 
-import           Network.Polkadot.Account    (into_account)
+import           Network.Polkadot.Account    (IdentifyAccount (..))
 import qualified Network.Polkadot.Primitives as P (MultiAddress (..),
                                                    MultiSignature (..),
                                                    MultiSigner (..))
@@ -61,6 +61,19 @@ class Pair a where
     -- | Sign a message.
     sign :: ByteArrayAccess ba => a -> ba -> Signature a
 
+-- | Means of signature verification.
+class Verify a where
+    -- | Verify a message.
+    verify :: (IdentifyAccount s, ByteArrayAccess ba)
+           => a
+           -- ^ Message signature.
+           -> ba
+           -- ^ Message content.
+           -> s
+           -- ^ Type of the signer.
+           -> Bool
+           -- ^ Returns `true` if signature is valid for the value.
+
 -- | Multiple cryptographic type support.
 class Pair a => MultiPair a where
     -- | Universal short representation of signer account.
@@ -70,11 +83,11 @@ class Pair a => MultiPair a where
     -- | Universal signature representation.
     type MultiSignature a
     -- | Derive universal account address.
-    multi_address :: Proxy a -> PublicKey a -> MultiAddress a
+    multi_address :: a -> MultiAddress a
     -- | Derive universal signer account identifier.
-    multi_signer :: Proxy a -> PublicKey a -> MultiSigner a
-    -- | Derive universal signature.
-    multi_signature :: Proxy a -> Signature a -> MultiSignature a
+    multi_signer :: a -> MultiSigner a
+    -- | Sign message and derive universal signature.
+    multi_sign :: ByteArrayAccess ba => a -> ba -> MultiSignature a
 
 -- | Ed25519 cryptographic pair.
 data Ed25519 = Ed25519 !Ed25519.PublicKey !Ed25519.SecretKey
@@ -122,14 +135,14 @@ instance MultiPair Ed25519 where
     type MultiSigner Ed25519 = P.MultiSigner
     type MultiAddress Ed25519 = P.MultiAddress
     type MultiSignature Ed25519 = P.MultiSignature
-    multi_signer _ = P.Ed25519Signer
-    multi_address _ = P.MaId . into_account . multi_signer (Proxy :: Proxy Ed25519)
-    multi_signature _ = P.Ed25519Signature
+    multi_signer = P.Ed25519Signer . public
+    multi_address = P.MaId . into_account . multi_signer
+    multi_sign = (P.Ed25519Signature .) . sign
 
 instance MultiPair Ecdsa where
     type MultiSigner Ecdsa = P.MultiSigner
     type MultiAddress Ecdsa = P.MultiAddress
     type MultiSignature Ecdsa = P.MultiSignature
-    multi_signer _ = P.EcdsaSigner
-    multi_address _ = P.MaId . into_account . multi_signer (Proxy :: Proxy Ecdsa)
-    multi_signature _ = uncurry P.EcdsaSignature
+    multi_signer = P.EcdsaSigner . public
+    multi_address = P.MaId . into_account . multi_signer
+    multi_sign = (uncurry P.EcdsaSignature .) . sign

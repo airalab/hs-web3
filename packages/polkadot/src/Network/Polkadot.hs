@@ -22,7 +22,9 @@ module Network.Polkadot
   ) where
 
 import           Codec.Scale                  as Scale
-import           Network.Polkadot.Crypto      as Crypto
+import           Network.Polkadot.Crypto      as Crypto hiding (MultiAddress,
+                                                         MultiSignature,
+                                                         MultiSigner)
 import           Network.Polkadot.Primitives  as Primitives
 import           Network.Polkadot.Query       (query)
 import           Network.Polkadot.Storage.Key (Argument (..))
