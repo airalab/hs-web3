@@ -13,7 +13,7 @@
 -- Big numbers and codecs for Haskell Web3 library.
 --
 
-module Data.BigNum (Word256, Word128, H256, h256, H512, h512) where
+module Data.BigNum (Word256, Word128, H160, h160, H256, h256, H512, h512) where
 
 import           Basement.Block                   (Block)
 import           Basement.Types.Word128           (Word128 (..))
@@ -50,6 +50,36 @@ instance Decode Word256 where
         hx <- get
         lx <- get
         return (Word256 lx hx l h)
+
+-- | 20 byte of data.
+newtype H160 = H160 (Block Word8)
+    deriving (Eq, Ord, ByteArrayAccess)
+
+-- | Convert any 20 byte array into H160 type, otherwise returns Nothing.
+h160 :: ByteArrayAccess a => a -> Maybe H160
+h160 ba
+  | A.length ba == 20 = Just $ H160 (convert ba)
+  | otherwise = Nothing
+
+instance FromHex H160 where
+    fromHex bs
+      | A.length bs == 20 = Right $ H160 (convert bs)
+      | otherwise = Left ("wrong length: " ++ show (A.length bs))
+
+instance ToHex H160 where
+    toHex = fromBytes
+
+instance Show H160 where
+    show = show . toHex
+
+instance IsString H160 where
+    fromString = either error id . fromHex . fromString
+
+instance Encode H160 where
+    put = putByteString . convert
+
+instance Decode H160 where
+    get = (fromJust . h160) <$> getByteString 20
 
 -- | 32 byte of data.
 newtype H256 = H256 (Block Word8)
