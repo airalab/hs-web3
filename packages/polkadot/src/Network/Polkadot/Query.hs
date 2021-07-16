@@ -18,7 +18,6 @@ import           Data.Text                    (Text)
 import           Network.JsonRpc.TinyClient   (JsonRpc)
 
 import           Network.Polkadot.Metadata    (Metadata (Metadata),
-                                               MetadataVersioned (V12),
                                                metadataTypes, toLatest)
 import           Network.Polkadot.Rpc.State   (getMetadata, getStorage)
 import           Network.Polkadot.Storage     (Storage, fromMetadata,

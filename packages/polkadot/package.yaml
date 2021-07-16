@@ -19,6 +19,7 @@ dependencies:
 - memory               >0.14 && <0.16
 - microlens            >0.4  && <0.5
 - containers           >0.6  && <0.7
+- cryptonite           >0.22 && <0.28
 - bytestring           >0.10 && <0.11
 - animalcase           >0.1  && <0.2
 - generics-sop         >0.3  && <0.6

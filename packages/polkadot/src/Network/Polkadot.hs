@@ -18,9 +18,11 @@ module Network.Polkadot
   -- * Base types and codecs.
   , module Scale
   , module Primitives
+  , module Crypto
   ) where
 
 import           Codec.Scale                  as Scale
+import           Network.Polkadot.Crypto      as Crypto
 import           Network.Polkadot.Primitives  as Primitives
 import           Network.Polkadot.Query       (query)
 import           Network.Polkadot.Storage.Key (Argument (..))

@@ -27,9 +27,10 @@ import           Data.Text.Encoding            (encodeUtf8)
 
 import           Network.Polkadot.Metadata.V11 (DoubleMapType (..),
                                                 MapType (..),
-                                                StorageEntryMetadata (..),
-                                                StorageEntryType (..),
                                                 StorageHasher (..))
+import           Network.Polkadot.Metadata.V13 (NMapType (..),
+                                                StorageEntryMetadata (..),
+                                                StorageEntryType (..))
 
 -- | General type wrapper for SCALE encodable storage index argument.
 data Argument where
@@ -50,11 +51,14 @@ data StorageEntry
     -- ^ Mapping with hashing for arguments.
     | DoubleMapEntry (Argument -> Argument -> ByteString)
     -- ^ Double map with two different hashers.
+    | NMapEntry ([Argument] -> ByteString)
+    -- ^ Map with array of hashers.
 
 instance Show StorageEntry where
     show (PlainEntry _)     = "PlainEntry"
     show (MapEntry _)       = "MapEntry"
     show (DoubleMapEntry _) = "DoubleMapEntry"
+    show (NMapEntry _)      = "NMapEntry"
 
 -- | Create storage key generator from metadata description.
 newEntry :: Text
@@ -67,6 +71,7 @@ newEntry prefix meta = case entryType meta of
     Plain _ -> PlainEntry plainKey
     Map MapType{..} -> MapEntry (mapCodec mapHasher)
     DoubleMap DoubleMapType{..} -> DoubleMapEntry (dMapCodec doubleMapHasher doubleMapKey2Hasher)
+    NMap NMapType{..} -> NMapEntry undefined  -- TODO
   where
     method = entryName meta
     -- To calculate the key for a simple Storage Value,

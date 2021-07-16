@@ -56,6 +56,7 @@ render_box name (Just args)
 
 aliases :: Maybe QSelf -> PathSegment -> Text -> Text
 aliases _ _ "Vec<u8>"            = "Bytes"
+aliases _ _ "BoundedVec"         = "Vec"
 aliases _ _ "Announcement"       = "ProxyAnnouncement"
 aliases _ _ "Status"             = "BalanceStatus"
 aliases (Just (q, _)) _ "Source" = toText q <> "Source"
@@ -79,7 +80,10 @@ toText (Path q xs) = aliases q (last xs) $ render_box name args
 
 -- | Parse metadata type (general Rust type) from text.
 fromText :: Text -> Either ParseError TypeAst
-fromText = parse type' "Metadata Type" . strip . replace "\n" ""
+fromText = parse type' "Metadata Type"
+         . strip
+         . replace "\n" ""
+         . replace "\n " ""
 
 -- | This variant of `fromText` fails when error happens.
 fromTextM :: MonadFail m => Text -> m TypeAst

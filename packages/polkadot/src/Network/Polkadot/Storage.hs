@@ -29,10 +29,10 @@ import           Data.Text                     (Text)
 import qualified Data.Text                     as T (cons, head, tail)
 import           Text.AnimalCase               (toCamelCase)
 
-import           Network.Polkadot.Metadata.V11 (StorageEntryMetadata (..),
+import           Network.Polkadot.Metadata.V13 (Metadata (modules),
+                                                ModuleMetadata (..),
+                                                StorageEntryMetadata (..),
                                                 StorageMetadata (..))
-import           Network.Polkadot.Metadata.V12 (Metadata (modules),
-                                                ModuleMetadata (..))
 import           Network.Polkadot.Storage.Key  (Argument, StorageEntry (..),
                                                 newEntry)
 

@@ -34,6 +34,8 @@ import qualified Network.Polkadot.Metadata.V11            as V11 (Metadata (Meta
                                                                   moduleName)
 import qualified Network.Polkadot.Metadata.V12            as V12 (Metadata (Metadata),
                                                                   moduleName)
+import qualified Network.Polkadot.Metadata.V13            as V13 (Metadata (Metadata),
+                                                                  moduleName)
 import qualified Network.Polkadot.Metadata.V9             as V9 (Metadata (Metadata),
                                                                  moduleName)
 
@@ -47,6 +49,7 @@ data MetadataVersioned
   | V10 V10.Metadata
   | V11 V11.Metadata
   | V12 V12.Metadata
+  | V13 V13.Metadata
   deriving (Eq, Show, Generic, GHC.Generic, Decode, Encode)
 
 $(deriveJSON (defaultOptions { sumEncoding = ObjectWithSingleField }) ''MetadataVersioned)
@@ -75,11 +78,16 @@ isV12 :: Metadata -> Bool
 isV12 (Metadata _ (V12 _)) = True
 isV12 _                    = False
 
-isLatest :: Metadata -> Bool
-isLatest = isV12
+isV13 :: Metadata -> Bool
+isV13 (Metadata _ (V13 _)) = True
+isV13 _                    = False
 
-toLatest :: Metadata -> V12.Metadata
-toLatest (Metadata _ (V12 m)) = m
+isLatest :: Metadata -> Bool
+{-# INLINE isLatest #-}
+isLatest = isV13
+
+toLatest :: Metadata -> V13.Metadata
+toLatest (Metadata _ (V13 m)) = m
 toLatest _                    = undefined
 
 metadataTypes :: Metadata -> (Metadata, Set Type)
@@ -100,5 +108,9 @@ metadataTypes (Metadata _ (V11 (V11.Metadata modules extrinsics))) =
 metadataTypes (Metadata _ (V12 (V12.Metadata modules extrinsics))) =
     let (modules', types) = runDiscovery V12.moduleName modules
     in (Metadata MagicNumber (V12 (V12.Metadata modules' extrinsics)), types)
+
+metadataTypes (Metadata _ (V13 (V13.Metadata modules extrinsics))) =
+    let (modules', types) = runDiscovery V13.moduleName modules
+    in (Metadata MagicNumber (V13 (V13.Metadata modules' extrinsics)), types)
 
 metadataTypes m = (m, mempty)

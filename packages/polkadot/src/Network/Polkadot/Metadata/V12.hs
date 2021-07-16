@@ -34,6 +34,10 @@ type FunctionMetadata = V11.FunctionMetadata
 type EventMetadata = V11.EventMetadata
 type ModuleConstantMetadata = V11.ModuleConstantMetadata
 type ErrorMetadata = V11.ErrorMetadata
+type MapType = V11.MapType
+type DoubleMapType = V11.DoubleMapType
+type StorageHasher = V11.StorageHasher
+type StorageEntryModifier = V11.StorageEntryModifier
 
 data ModuleMetadata = ModuleMetadata
     { moduleName      :: !Text

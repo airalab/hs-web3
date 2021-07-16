@@ -16,10 +16,11 @@
 
 module Network.Polkadot.Test.MetadataSpec where
 
-import           Codec.Scale                           (decode)
+import           Codec.Scale                           (decode, encode)
 import           Data.Aeson                            (eitherDecodeFileStrict,
-                                                        toJSON)
-import           Data.ByteArray.HexString              (HexString, hexFrom)
+                                                        parseJSON, toJSON)
+import           Data.ByteArray.HexString              (HexString)
+import           Data.ByteArray.HexString.TH           (hexFrom)
 import           Test.Hspec
 import           Test.Hspec.Expectations.Json          (shouldBeJson)
 
@@ -43,7 +44,7 @@ spec = parallel $ do
 
         it "fails when version out of scope" $
             let error_str = decode wrong_version :: Either String Metadata
-             in error_str `shouldBe` Left "Failed reading: wrong prefix during enum decoding\nEmpty call stack\n"
+             in error_str `shouldBe` Left "Failed reading: index out of enum constructors count: 241\nEmpty call stack\n"
 
     describe "Metadata V9" $ do
         it "succeeds decode from hex and json" $ do
@@ -64,4 +65,13 @@ spec = parallel $ do
             let (Right hex) = decode [hexFrom|tests/meta/v12.hex|] :: Either String Metadata
                 (meta, _) = metadataTypes hex
             Right json <- eitherDecodeFileStrict "tests/meta/v12.json"
+            toJSON meta `shouldBeJson` json
+
+    describe "Metadata V13" $ do
+        it "succeeds decode from hex and json" $ do
+            let Left e = decode [hexFrom|tests/meta/v13.hex|] :: Either String Metadata
+            putStrLn e
+            let (Right hex) = decode [hexFrom|tests/meta/v13.hex|] :: Either String Metadata
+                (meta, _) = metadataTypes hex
+            Right json <- eitherDecodeFileStrict "tests/meta/v13.json"
             toJSON meta `shouldBeJson` json
