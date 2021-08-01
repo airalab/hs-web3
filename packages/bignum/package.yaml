@@ -14,7 +14,7 @@ dependencies:
 - base                 >4.11 && <4.14
 - memory               >0.14 && <0.16
 - cereal               >0.5  && <0.6
-- basement             >0.0  && <0.1
+- wide-word            >0.1  && <0.2
 - web3-scale           >=1.0 && <1.1
 - web3-hexstring       >=1.0 && <1.1
 

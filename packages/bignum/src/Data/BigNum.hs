@@ -15,12 +15,10 @@
 
 module Data.BigNum (Word256, Word128, H160, h160, H256, h256, H512, h512) where
 
-import           Basement.Block                   (Block)
-import           Basement.Types.Word128           (Word128 (..))
-import           Basement.Types.Word256           (Word256 (..))
 import           Codec.Scale                      ()
 import           Codec.Scale.Class                (Decode (..), Encode (..))
-import           Data.ByteArray                   (ByteArrayAccess, convert)
+import           Data.ByteArray                   (ByteArrayAccess, Bytes,
+                                                   convert)
 import qualified Data.ByteArray                   as A (length)
 import           Data.ByteArray.HexString.Convert (FromHex (..), ToHex (..),
                                                    fromBytes)
@@ -28,7 +26,8 @@ import           Data.Maybe                       (fromJust)
 import           Data.Serialize.Get               (getByteString)
 import           Data.Serialize.Put               (putByteString)
 import           Data.String                      (IsString (..))
-import           Data.Word                        (Word8)
+import           Data.WideWord.Word128            (Word128 (..))
+import           Data.WideWord.Word256            (Word256 (..))
 
 instance Encode Word128 where
     put (Word128 l h)= put h >> put l
@@ -52,7 +51,7 @@ instance Decode Word256 where
         return (Word256 lx hx l h)
 
 -- | 20 byte of data.
-newtype H160 = H160 (Block Word8)
+newtype H160 = H160 Bytes
     deriving (Eq, Ord, ByteArrayAccess)
 
 -- | Convert any 20 byte array into H160 type, otherwise returns Nothing.
@@ -82,7 +81,7 @@ instance Decode H160 where
     get = (fromJust . h160) <$> getByteString 20
 
 -- | 32 byte of data.
-newtype H256 = H256 (Block Word8)
+newtype H256 = H256 Bytes
     deriving (Eq, Ord, ByteArrayAccess)
 
 -- | Convert any 32 byte array into H256 type, otherwise returns Nothing.
@@ -112,7 +111,7 @@ instance Decode H256 where
     get = (fromJust . h256) <$> getByteString 32
 
 -- | 64 byte of data.
-newtype H512 = H512 (Block Word8)
+newtype H512 = H512 Bytes
     deriving (Eq, Ord, ByteArrayAccess)
 
 -- | Convert any 64 byte array into H512 type, otherwise returns Nothing.

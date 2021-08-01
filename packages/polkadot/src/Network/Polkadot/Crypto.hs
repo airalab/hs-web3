@@ -21,7 +21,10 @@ module Network.Polkadot.Crypto
   ) where
 
 import qualified Crypto.Ecdsa.Signature      as Ecdsa (pack, sign)
-import           Crypto.Ecdsa.Utils          (exportPubKey)
+import           Crypto.Ecdsa.Utils          as Ecdsa (derivePubKey,
+                                                       exportPubKeyCompress,
+                                                       importKey)
+import           Crypto.Error                (CryptoFailable (..))
 import qualified Crypto.PubKey.ECC.ECDSA     as Ecdsa (PrivateKey (..),
                                                        PublicKey (..))
 import qualified Crypto.PubKey.ECC.Generate  as Ecdsa (generate)
@@ -29,9 +32,11 @@ import           Crypto.PubKey.ECC.Types     (CurveName (SEC_p256k1),
                                               getCurveByName)
 import qualified Crypto.PubKey.Ed25519       as Ed25519 (PublicKey, SecretKey,
                                                          generateSecretKey,
-                                                         sign, toPublic)
+                                                         secretKey, sign,
+                                                         toPublic)
 import           Data.BigNum                 (H256, H512, h256, h512)
-import           Data.ByteArray              (ByteArrayAccess)
+import           Data.ByteArray              (ByteArrayAccess, uncons)
+import qualified Data.ByteArray              as BA (length)
 import           Data.ByteString             (ByteString)
 import qualified Data.ByteString             as BS (last, take)
 import           Data.Maybe                  (fromJust)
@@ -53,7 +58,7 @@ class Pair a where
     -- | Generate new secure (random) key pair.
     generate :: IO a
     -- | Generate new key pair from the provided `seed`.
-    from_seed :: ByteArrayAccess ba => ba -> a
+    from_seed :: ByteArrayAccess ba => ba -> Either String a
     -- | Generate key pair from given recovery phrase and password.
     from_phrase :: Text -> Maybe Text -> Either String a
     -- | Get a public key.
@@ -102,7 +107,9 @@ instance Pair Ed25519 where
     generate = do
         sec <- Ed25519.generateSecretKey
         return $ Ed25519 (Ed25519.toPublic sec) sec
-    from_seed = undefined
+    from_seed seed = case Ed25519.secretKey seed of
+        CryptoPassed sec -> Right $ Ed25519 (Ed25519.toPublic sec) sec
+        CryptoFailed e   -> Left (show e)
     from_phrase = undefined
     public (Ed25519 pub _) = fromJust $ h256 pub
     sign (Ed25519 pub sec) input = ed25519_sign sec pub input
@@ -115,12 +122,19 @@ instance Show Ecdsa where
     show = ("Ecdsa " ++) . show . public
 
 instance Pair Ecdsa where
-    type PublicKey Ecdsa = H512
+    type PublicKey Ecdsa = (Word8, H256)
     type Signature Ecdsa = (H512, Word8)
     generate = uncurry Ecdsa <$> Ecdsa.generate (getCurveByName SEC_p256k1)
-    from_seed = undefined
+    from_seed seed
+        | BA.length seed == 32 = let sec = Ecdsa.importKey seed
+                                  in Right $ Ecdsa (Ecdsa.derivePubKey sec) sec
+        | otherwise = Left "Seed should be 32 byte length"
     from_phrase = undefined
-    public (Ecdsa pub _) = fromJust $ h512 (exportPubKey pub :: ByteString)
+    public (Ecdsa pub _) = pack $ uncons $ Ecdsa.exportPubKeyCompress pub
+      where
+        pack :: Maybe (Word8, ByteString) -> (Word8, H256)
+        pack (Just (px, key)) = (px, fromJust (h256 key))
+        pack _                = error "impossible branch"
     sign (Ecdsa _ sec) input = ecdsa_sign sec input
 
 ed25519_sign :: ByteArrayAccess a => Ed25519.SecretKey -> Ed25519.PublicKey -> a -> H512
@@ -143,6 +157,6 @@ instance MultiPair Ecdsa where
     type MultiSigner Ecdsa = P.MultiSigner
     type MultiAddress Ecdsa = P.MultiAddress
     type MultiSignature Ecdsa = P.MultiSignature
-    multi_signer = P.EcdsaSigner . public
+    multi_signer = uncurry P.EcdsaSigner . public
     multi_address = P.MaId . into_account . multi_signer
     multi_sign = (uncurry P.EcdsaSignature .) . sign

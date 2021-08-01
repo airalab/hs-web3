@@ -1,7 +1,6 @@
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE OverloadedStrings    #-}
-{-# LANGUAGE TypeFamilies         #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeFamilies      #-}
 
 -- |
 -- Module      :  Network.Polkadot.Account
@@ -15,16 +14,18 @@
 -- Polkadot account types.
 --
 
-module Network.Polkadot.Account where
+module Network.Polkadot.Account (Ss58Codec(..), IdentifyAccount(..)) where
 
 import           Codec.Scale                 (decode, encode)
 import           Control.Monad               ((<=<))
 import           Data.BigNum                 (h256)
 import           Data.Bits                   (bit, shiftL, shiftR, (.&.), (.|.))
-import           Data.ByteArray              (convert)
+import           Data.ByteArray              (cons, convert)
 import           Data.ByteString             (ByteString)
 import qualified Data.ByteString             as BS (drop, length, pack, take)
-import           Data.Digest.Blake2          (blake2_256)
+import           Data.ByteString.Base58      (bitcoinAlphabet, decodeBase58,
+                                              encodeBase58)
+import           Data.Digest.Blake2          (blake2_256, blake2_512)
 import           Data.Maybe                  (fromJust)
 import           Data.Word                   (Word16)
 
@@ -44,7 +45,7 @@ class IdentifyAccount a where
 instance IdentifyAccount MultiSigner where
     type AccountId MultiSigner = P.AccountId
     into_account (Ed25519Signer pub) = fromJust (h256 pub)
-    into_account (EcdsaSigner pub)   = fromJust (h256 $ blake2_256 $ convert pub)
+    into_account (EcdsaSigner px pub)   = fromJust (h256 $ blake2_256 $ cons px $ convert pub)
     into_account Sr25519Signer       = error "Sr25519 has no support yet"
 
 instance Show MultiSigner where
@@ -73,16 +74,16 @@ instance Ss58Codec P.AccountId where
     from_ss58check_with_version v = decode <=< from_ss58check_with_version' v <=< from_base58
     to_ss58check_with_version v = to_base58 . to_ss58check_with_version' v . encode
 
--- | TODO
 to_base58 :: ByteString -> ByteString
-to_base58 = id
+to_base58 = encodeBase58 bitcoinAlphabet
 
--- | TODO
 from_base58 :: ByteString -> Either String ByteString
-from_base58 = return
+from_base58 = maybe (Left "Bad encoding") Right . decodeBase58 bitcoinAlphabet
 
 to_ss58check_with_version' :: Word16 -> ByteString -> ByteString
-to_ss58check_with_version' v input = encodeVersion v <> input <> ss58hash input
+to_ss58check_with_version' v input = out <> ss58hash out
+  where
+    out = encode_version v <> input
 
 from_ss58check_with_version' :: Word16 -> ByteString -> Either String ByteString
 from_ss58check_with_version' v input = versionGuard >> ss58hashGuard
@@ -93,17 +94,18 @@ from_ss58check_with_version' v input = versionGuard >> ss58hashGuard
     inputLen = BS.length input - checksumLen - versionLen
     input' = BS.take inputLen (BS.drop versionLen input)
     versionGuard
-      | encodeVersion v == BS.take versionLen input = return ()
+      | encode_version v == BS.take versionLen input = return ()
       | otherwise = Left "Bad version"
     ss58hashGuard
-      | ss58hash input' == BS.drop (versionLen + inputLen) input = return input'
+      | ss58hash (BS.take (versionLen + inputLen) input)
+        == BS.drop (versionLen + inputLen) input = return input'
       | otherwise = Left "Bad checksum"
 
 ss58hash :: ByteString -> ByteString
-ss58hash = BS.take 2 . blake2_256 . ("SS58PRE" <>)
+ss58hash = BS.take 2 . blake2_512 . ("SS58PRE" <>)
 
-encodeVersion :: Word16 -> ByteString
-encodeVersion v
+encode_version :: Word16 -> ByteString
+encode_version v
   | v < 64 = BS.pack [fromIntegral v]
   | otherwise = let first = bit 6 .|. ((v `shiftR` 2) .&. 63)
                     second = (v `shiftR` 8) .|. ((v .&. 3) `shiftL` 6)

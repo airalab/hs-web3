@@ -21,6 +21,7 @@ dependencies:
 - containers           >0.6  && <0.7
 - cryptonite           >0.22 && <0.28
 - bytestring           >0.10 && <0.11
+- base58-bytestring    >=0.1 && <0.2
 - animalcase           >0.1  && <0.2
 - generics-sop         >0.3  && <0.6
 - microlens-th         >0.4  && <0.5

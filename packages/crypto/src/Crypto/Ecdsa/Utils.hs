@@ -17,7 +17,8 @@ import           Crypto.PubKey.ECC.ECDSA    (PrivateKey (..), PublicKey (..))
 import           Crypto.PubKey.ECC.Generate (generateQ)
 import           Crypto.PubKey.ECC.Types    (CurveName (SEC_p256k1), Point (..),
                                              getCurveByName)
-import           Data.ByteArray             (ByteArray, ByteArrayAccess)
+import           Data.ByteArray             (ByteArray, ByteArrayAccess,
+                                             singleton)
 
 -- | Import ECDSA private key from byte array.
 --
@@ -40,6 +41,13 @@ derivePubKey (PrivateKey curve p) = PublicKey curve (generateQ curve p)
 
 -- | Export public key to byte array (64 byte length).
 exportPubKey :: ByteArray publicKey => PublicKey -> publicKey
-{-# INLINE exportPubKey #-}
-exportPubKey (PublicKey _ (Point x y)) = i2osp x <> i2osp y
 exportPubKey (PublicKey _ PointO)      = mempty
+exportPubKey (PublicKey _ (Point x y)) = i2osp x <> i2osp y
+
+-- | Export compressed public key to byte array (33 byte length).
+exportPubKeyCompress :: ByteArray publicKey => PublicKey -> publicKey
+exportPubKeyCompress (PublicKey _ PointO) = mempty
+exportPubKeyCompress (PublicKey _ (Point x y)) = prefix <> i2osp x
+  where
+    prefix | even y = singleton 0x02
+           | otherwise = singleton 0x03

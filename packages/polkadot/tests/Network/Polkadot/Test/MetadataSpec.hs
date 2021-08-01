@@ -2,7 +2,7 @@
 {-# LANGUAGE QuasiQuotes       #-}
 
 -- |
--- Module      :  Codec.Scale.Test.MetadataSpec
+-- Module      :  Network.Polkadot.Test.MetadataSpec
 -- Copyright   :  Aleksandr Krupenkin 2016-2021
 -- License     :  Apache-2.0
 --
@@ -67,6 +67,7 @@ spec = parallel $ do
             Right json <- eitherDecodeFileStrict "tests/meta/v12.json"
             toJSON meta `shouldBeJson` json
 
+{-
     describe "Metadata V13" $ do
         it "succeeds decode from hex and json" $ do
             let Left e = decode [hexFrom|tests/meta/v13.hex|] :: Either String Metadata
@@ -75,3 +76,4 @@ spec = parallel $ do
                 (meta, _) = metadataTypes hex
             Right json <- eitherDecodeFileStrict "tests/meta/v13.json"
             toJSON meta `shouldBeJson` json
+-}

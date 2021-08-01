@@ -14,12 +14,13 @@
 
 module Network.Polkadot.Extrinsic.Era
     ( Era(..)
+    , mkMortal
     ) where
 
 import           Codec.Scale.Class (Decode (..), Encode (..))
 import           Codec.Scale.Core  ()
 import           Data.Bits         (shiftL, shiftR)
-import           Data.Word         (Word16, Word8)
+import           Data.Word         (Word16, Word8, byteSwap16)
 
 -- | The era for an extrinsic, indicating either a mortal or immortal extrinsic.
 data Era
@@ -34,29 +35,35 @@ data Era
 
 instance Decode Era where
     get = do
-        ix <- get
-        case ix :: Word8 of
+        first <- get
+        case first :: Word8 of
             0 -> return ImmortalEra
-            1 -> getMortal <$> get
-            _ -> fail "wrong extrinsic era enum"
+            _ -> decodeMortal first <$> get
       where
-        getMortal :: Word16 -> Era
-        getMortal encoded = MortalEra period phase
-          where
-            era = fromIntegral (encoded :: Word16)
-            period = 2 `shiftL` (era `rem` 16)
-            quantizeFactor = max (period `shiftR` 12) 1
-            phase = (era `shiftR` 4) * quantizeFactor
+        decodeMortal :: Word8 -> Word8 -> Era
+        decodeMortal first second =
+            let first' = fromIntegral first
+                second' = fromIntegral second
+             in mkMortal (first' + second' `shiftL` 8)
 
 instance Encode Era where
     put ImmortalEra = put (0 :: Word8)
-    put MortalEra{..} = put (1 :: Word8) >> put encoded
+    put MortalEra{..} = put encoded
       where
         encoded :: Word16
         encoded = min 15 (max 1 (getTrailingZeros period - 1)) + ((phase `div` quantizeFactor) `shiftL` 4)
         quantizeFactor = max (period `shiftR` 12) 1
         period = fromIntegral mortalEraPeriod
         phase = fromIntegral mortalEraPhase
+
+mkMortal :: Word16 -> Era
+mkMortal raw = MortalEra period phase
+  where
+    encoded = byteSwap16 raw
+    era = fromIntegral encoded
+    period = 2 `shiftL` (era `rem` 16)
+    quantizeFactor = max (period `shiftR` 12) 1
+    phase = (era `shiftR` 4) * quantizeFactor
 
 getTrailingZeros :: Integral a => a -> a
 getTrailingZeros = foldl zero 0 . takeWhile (> 0) . iterate (`div` 2)

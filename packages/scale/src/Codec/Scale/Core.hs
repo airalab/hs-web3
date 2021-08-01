@@ -40,6 +40,16 @@ import           Codec.Scale.Generic ()
 import           Codec.Scale.TH      (tupleInstances)
 
 --
+-- Empty instance.
+--
+
+instance Encode () where
+    put = return
+
+instance Decode () where
+    get = return ()
+
+--
 -- Boolean instance.
 --
 

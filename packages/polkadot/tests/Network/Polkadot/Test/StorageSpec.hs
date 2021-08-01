@@ -2,7 +2,7 @@
 {-# LANGUAGE QuasiQuotes       #-}
 
 -- |
--- Module      :  Codec.Scale.Test.StorageSpec
+-- Module      :  Network.Polkadot.Test.StorageSpec
 -- Copyright   :  Aleksandr Krupenkin 2016-2021
 -- License     :  Apache-2.0
 --

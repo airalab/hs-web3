@@ -21,8 +21,8 @@ import           Codec.Scale.Compact      (Compact)
 import           Data.BigNum              (H160, H256, H512, Word128)
 import           Data.ByteArray.HexString (HexString)
 import           Data.Word                (Word32, Word64, Word8)
-import           Generics.SOP             (Generic)
 import qualified GHC.Generics             as GHC (Generic)
+import           Generics.SOP             (Generic)
 
 -- | The user account balance, 'u128' type.
 type Balance = Word128
@@ -73,7 +73,7 @@ data MultiSigner
     -- ^ sr25519 crypto has no support yet
     | Ed25519Signer !H256
     -- ^ Ed25519 public key.
-    | EcdsaSigner !H512
+    | EcdsaSigner !Word8 !H256
     -- ^ ECDSA public key.
   deriving (Eq, Ord, GHC.Generic, Generic, Encode, Decode)
 
