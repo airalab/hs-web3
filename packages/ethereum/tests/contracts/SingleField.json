@@ -1,0 +1,25 @@
+{
+    "schemaVersion": "2.0.0",
+    "contractName": "SingleField",
+    "compilerOutput": {
+        "abi": [
+            {
+                "constant": false,
+                "inputs": [
+                    {
+                        "components": [
+                            { "name": "singleField", "type": "uint256" }
+                        ],
+                        "name": "SingleFieldStruct",
+                        "type": "tuple"
+                    }
+                ],
+                "name": "SingleFieldFunction",
+                "outputs": [],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
+        ]
+    }
+}

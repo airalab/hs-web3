@@ -11,9 +11,9 @@ copyright:           "(c) Aleksandr Krupenkin 2016-2021"
 category:            Network
 
 dependencies:
-- base                 >4.11 && <4.14
+- base                 >4.11 && <4.15
 - text                 >1.2  && <1.3
-- aeson                >1.2  && <1.5
+- aeson                >1.2  && <1.6
 - cereal               >0.5  && <0.6
 - memory               >0.14 && <0.16
 - tagged               >0.8  && <0.9
@@ -24,7 +24,7 @@ dependencies:
 - bytestring           >0.10 && <0.11
 - generics-sop         >0.3  && <0.6
 - data-default         >0.7  && <0.8
-- template-haskell     >2.11 && <2.16
+- template-haskell     >2.11 && <2.17
 - web3-crypto          >=1.0 && <1.1
 - web3-hexstring       >=1.0 && <1.1
 
