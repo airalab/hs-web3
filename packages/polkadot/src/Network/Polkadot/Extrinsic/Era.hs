@@ -19,7 +19,7 @@ module Network.Polkadot.Extrinsic.Era
 
 import           Codec.Scale.Class (Decode (..), Encode (..))
 import           Codec.Scale.Core  ()
-import           Data.Bits         (shiftL, shiftR)
+import           Data.Bits         (shiftL, shiftR, (.|.))
 import           Data.Word         (Word16, Word32, Word8, byteSwap16)
 
 -- | The era for an extrinsic, indicating either a mortal or immortal extrinsic.
@@ -55,7 +55,9 @@ instance Encode Era where
     put (MortalEra period' phase') = put encoded
       where
         encoded :: Word16
-        encoded = min 15 (max 1 (trailing_zeros period - 1)) + ((phase `div` quantizeFactor) `shiftL` 4)
+        encoded = first .|. second
+        first = (1 `max` (trailing_zeros period - 1)) `min` 15
+        second = (phase `div` quantizeFactor) `shiftL` 4
         quantizeFactor = max (period `shiftR` 12) 1
         period = fromIntegral period'
         phase = fromIntegral phase'

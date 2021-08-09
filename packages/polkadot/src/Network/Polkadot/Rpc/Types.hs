@@ -28,7 +28,8 @@ import           Data.Char                (toLower)
 import           Data.Text                (Text)
 import           Data.Word                (Word32, Word64, Word8)
 import           GHC.Generics             (Generic)
-import           Lens.Micro               (over, _head)
+import           Lens.Micro               (_head, over)
+import           Numeric                  (readHex, showHex)
 
 -- | The role the node is running as.
 data NodeRole = Full
@@ -225,29 +226,49 @@ data CreatedBlock = CreatedBlock
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = over _head toLower . drop 12 }) ''CreatedBlock)
 
+-- | Generic header digest.
+data Digest = Digest
+    { digestLogs :: ![HexString]
+    -- ^ A list of logs in the digest.
+    }
+    deriving (Eq, Generic, Show)
+
+-- | Hex-encoded block number.
+newtype BlockNumber = BlockNumber { unBlockNumber :: Integer }
+  deriving (Eq, Ord, Show)
+
+instance FromJSON BlockNumber where
+    parseJSON = fmap (BlockNumber . fst . head . readHex . drop 2) . parseJSON
+
+instance ToJSON BlockNumber where
+    toJSON = toJSON . ("0x" <>) . flip showHex "" . unBlockNumber
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = over _head toLower . drop 6 }) ''Digest)
+
 -- | Abstraction over a block header for a substrate chain.
 data Header = Header
     { headerParentHash     :: HexString
     -- ^ The parent hash.
-    , headerNumber         :: Int
+    , headerNumber         :: BlockNumber
     -- ^ The block number.
     , headerStateRoot      :: HexString
     -- ^ The state trie merkle root
     , headerExtrinsicsRoot :: HexString
     -- ^ The merkle root of the extrinsics.
-    , headerDigest         :: HexString
+    , headerDigest         :: Digest
     -- ^ A chain-specific digest of data useful for light clients or referencing auxiliary data.
     }
     deriving (Eq, Generic, Show)
 
 $(deriveJSON (defaultOptions
-    { fieldLabelModifier = over _head toLower . drop 5 }) ''Header)
+    { fieldLabelModifier = over _head toLower . drop 6 }) ''Header)
 
 -- | Abstraction over a substrate block.
 data Block = Block
-    { blockHeader     :: Header
+    { blockHeader     :: !Header
     -- ^ The block header.
-    , blockExtrinsics :: [HexString]
+    , blockExtrinsics :: ![HexString]
     -- ^ The accompanying extrinsics.
     }
     deriving (Eq, Generic, Show)
@@ -257,9 +278,9 @@ $(deriveJSON (defaultOptions
 
 -- | Abstraction over a substrate block and justification.
 data SignedBlock = SignedBlock
-    { signedBlock         :: Block
+    { signedBlock         :: !Block
     -- ^ Full block.
-    , signedJustification :: Maybe HexString
+    , signedJustification :: !(Maybe HexString)
     -- ^ Block justification.
     }
     deriving (Eq, Generic, Show)

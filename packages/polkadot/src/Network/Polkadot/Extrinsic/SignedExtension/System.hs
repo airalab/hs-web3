@@ -29,8 +29,9 @@ import           Network.Polkadot.Primitives                (Hash, Index)
 import           Network.Polkadot.Rpc.Chain                 (getBlockHash,
                                                              getHeader)
 import           Network.Polkadot.Rpc.State                 (getRuntimeVersion)
-import           Network.Polkadot.Rpc.Types                 (Header (headerNumber),
-                                                             RuntimeVersion (..))
+import           Network.Polkadot.Rpc.Types                 (RuntimeVersion (..),
+                                                             headerNumber,
+                                                             unBlockNumber)
 
 -- | Ensure the runtime version registered in the transaction is the same as at present.
 data CheckSpecVersion = CheckSpecVersion
@@ -63,7 +64,7 @@ instance SignedExtension CheckEra where
     type AdditionalSigned CheckEra = Hash
     additional_signed (CheckEra era) = do
         -- chain must have top header, fromJust is safe here
-        current <- (headerNumber . fromJust) <$> getHeader Nothing
+        current <- (unBlockNumber . headerNumber . fromJust) <$> getHeader Nothing
         (fromJust . (h256 =<<)) <$> getBlockHash (Just $ birth era current)
 
 newtype CheckNonce = CheckNonce (Compact Index)

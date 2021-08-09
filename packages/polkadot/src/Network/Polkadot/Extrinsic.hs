@@ -45,7 +45,8 @@ import qualified Network.Polkadot.Primitives                                   a
 import           Network.Polkadot.Rpc.Account                                  (nextIndex)
 import           Network.Polkadot.Rpc.Author                                   (submitExtrinsic)
 import           Network.Polkadot.Rpc.Chain                                    (getHeader)
-import           Network.Polkadot.Rpc.Types                                    (Header (headerNumber))
+import           Network.Polkadot.Rpc.Types                                    (headerNumber,
+                                                                                unBlockNumber)
 
 -- | Default Polkadot compatible extrinsic type.
 type Extrinsic a = UncheckedExtrinsic a P.MultiAddress P.MultiSignature SignedExtra
@@ -100,7 +101,7 @@ new_extra' era nonce tip =
 -- for Polkadot runtimes.
 mortal_max :: JsonRpc m => m Era
 mortal_max = do
-    current <- (headerNumber . fromJust) <$> getHeader Nothing
+    current <- (unBlockNumber . headerNumber . fromJust) <$> getHeader Nothing
     return $ MortalEra 2048 $ fromIntegral (current - 1)
 
 -- | Sign extrinsic and send it using node RPC call.
