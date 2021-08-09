@@ -47,7 +47,7 @@ instance Integral a => Encode (Compact a) where
             let step 0 = Nothing
                 step i = Just (fromIntegral i, i `shiftR` 8)
                 unroll = unfoldr step n
-            putWord8 (fromIntegral (length unroll) `shiftL` 2 .|. 3)
+            putWord8 (fromIntegral (length unroll - 4) `shiftL` 2 .|. 3)
             mapM_ putWord8 unroll
 
 instance Integral a => Decode (Compact a) where
@@ -66,5 +66,5 @@ instance Integral a => Decode (Compact a) where
         bigIntegerMode = do
             let unstep b a = a `shiftL` 8 .|. fromIntegral b
                 roll = fromInteger . foldr unstep 0
-            len <- flip shiftR 2 <$> getWord8
+            len <- ((+4) . flip shiftR 2) <$> getWord8
             roll <$> replicateM (fromIntegral len) getWord8

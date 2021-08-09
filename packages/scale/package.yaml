@@ -1,6 +1,6 @@
 name:                web3-scale
 version:             1.0.0.0
-synopsis:            SCALE codec for Haskell Web3 library.
+synopsis:            SCALE v2.0 codec for Haskell Web3 library.
 description:         Client library for Third Generation of Web.
 github:              "airalab/hs-web3"
 license:             Apache-2.0
