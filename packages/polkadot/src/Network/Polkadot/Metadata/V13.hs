@@ -26,7 +26,7 @@ import           Data.Char                      (toLower)
 import           Data.Text                      (Text)
 import           Data.Word                      (Word8)
 import qualified GHC.Generics                   as GHC (Generic)
-import           Lens.Micro                     (over, _head)
+import           Lens.Micro                     (_head, over)
 
 import           Network.Polkadot.Metadata.Type (Type)
 import qualified Network.Polkadot.Metadata.V12  as V12
@@ -41,8 +41,8 @@ type MapType = V12.MapType
 type DoubleMapType = V12.DoubleMapType
 
 data NMapType = NMapType
-    { nmapHashers :: ![StorageHasher]
-    , nmapKeyVec  :: ![Type]
+    { nmapKeyVec  :: ![Type]
+    , nmapHashers :: ![StorageHasher]
     , nmapValue   :: !Type
     } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
 
