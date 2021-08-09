@@ -14,7 +14,6 @@ module Network.Polkadot.Extrinsic.Payload where
 
 import           Codec.Scale                                (encode)
 import           Codec.Scale.Class                          (Encode (..))
-import           Data.ByteString                            (ByteString)
 import qualified Data.ByteString                            as BS (length)
 import           Data.Digest.Blake2                         (blake2_256)
 import           Network.JsonRpc.TinyClient                 (JsonRpc)
@@ -39,4 +38,4 @@ sign_payload pair (call, extra) = do
     let encoded = encode (call, extra, additional)
         payload | BS.length encoded > 256 = blake2_256 encoded
                 | otherwise = encoded
-    return $ multi_sign pair (encode payload :: ByteString)
+    return $ multi_sign pair payload
