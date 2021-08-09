@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 -- |
 -- Module      :  Network.Polkadot.Extrinsic
 -- Copyright   :  Aleksandr Krupenkin 2016-2021
@@ -13,34 +15,40 @@
 module Network.Polkadot.Extrinsic
   ( Extrinsic
   , SignedExtra
-  , sign_extrinsic
+  , sign_and_send
+  , mortal_max
   , new_extra'
   , new_extra
-  , new_era
   ) where
 
-import           Codec.Scale                                                   (Compact (..))
+import           Codec.Scale                                                   (Compact (..),
+                                                                                Encode,
+                                                                                encode)
+import           Data.ByteArray.HexString                                      (HexString)
 import           Data.Maybe                                                    (fromJust)
 import           Data.Text.Encoding                                            (decodeUtf8)
 import           Network.JsonRpc.TinyClient                                    (JsonRpc)
 
-import           Network.Polkadot.Account                                      (to_ss58check)
+import           Network.Polkadot.Account                                      (AccountId,
+                                                                                IdentifyAccount (..),
+                                                                                Ss58Codec (to_ss58check))
+import           Network.Polkadot.Crypto                                       (MultiPair (..))
 import           Network.Polkadot.Extrinsic.Era                                (Era (..))
 import           Network.Polkadot.Extrinsic.SignedExtension.System
 import           Network.Polkadot.Extrinsic.SignedExtension.TransactionPayment
 import           Network.Polkadot.Extrinsic.Unchecked                          (UncheckedExtrinsic,
                                                                                 sign_extrinsic)
-import           Network.Polkadot.Primitives                                   (AccountId,
-                                                                                Balance,
-                                                                                Index,
-                                                                                MultiAddress,
-                                                                                MultiSignature)
+import           Network.Polkadot.Primitives                                   (Balance,
+                                                                                Index)
+import qualified Network.Polkadot.Primitives                                   as P (MultiAddress,
+                                                                                     MultiSignature)
 import           Network.Polkadot.Rpc.Account                                  (nextIndex)
+import           Network.Polkadot.Rpc.Author                                   (submitExtrinsic)
 import           Network.Polkadot.Rpc.Chain                                    (getHeader)
 import           Network.Polkadot.Rpc.Types                                    (Header (headerNumber))
 
 -- | Default Polkadot compatible extrinsic type.
-type Extrinsic a = UncheckedExtrinsic a MultiAddress MultiSignature SignedExtra
+type Extrinsic a = UncheckedExtrinsic a P.MultiAddress P.MultiSignature SignedExtra
 
 -- | Default Polkadot signed extra.
 type SignedExtra =
@@ -53,8 +61,8 @@ type SignedExtra =
   , ChargeTransactionPayment
   )
 
-new_extra :: JsonRpc m
-          => AccountId
+new_extra :: (Ss58Codec a, JsonRpc m)
+          => a
           -- ^ Transaction sender address.
           -> Balance
           -- ^ Transaction tips, or set zero for no tips.
@@ -62,7 +70,7 @@ new_extra :: JsonRpc m
           -- ^ Returns Polkadot transaction extra.
 new_extra account_id tip = do
     nonce <- fromIntegral <$> nextIndex ss58account
-    era <- new_era
+    era <- mortal_max
     return $ new_extra' era nonce tip
   where
     ss58account = decodeUtf8 $ to_ss58check account_id
@@ -90,7 +98,31 @@ new_extra' era nonce tip =
 --
 -- Note: The assumption is runtime has `BlockHashCount` = 2400. This is common
 -- for Polkadot runtimes.
-new_era :: JsonRpc m => m Era
-new_era = do
-    blockNumber <- (headerNumber . fromJust) <$> getHeader Nothing
-    return $ MortalEra 2048 $ fromIntegral (blockNumber - 1)
+mortal_max :: JsonRpc m => m Era
+mortal_max = do
+    current <- (headerNumber . fromJust) <$> getHeader Nothing
+    return $ MortalEra 2048 $ fromIntegral (current - 1)
+
+-- | Sign extrinsic and send it using node RPC call.
+sign_and_send :: ( MultiPair pair
+                 , IdentifyAccount (MultiSigner pair)
+                 , Ss58Codec (AccountId (MultiSigner pair))
+                 , Encode (MultiAddress pair)
+                 , Encode (MultiSignature pair)
+                 , Encode call
+                 , JsonRpc m
+                 )
+              => pair
+              -- ^ Sender account pair.
+              -> call
+              -- ^ Runtime function to call.
+              -> Balance
+              -- ^ Tips for speedup transaction (set zero for no boost).
+              -> m HexString
+              -- ^ Transaction hash.
+sign_and_send pair call tip = do
+    extra <- new_extra account_id tip
+    xt <- sign_extrinsic pair call extra
+    submitExtrinsic (encode xt)
+  where
+    account_id = into_account (multi_signer pair)
