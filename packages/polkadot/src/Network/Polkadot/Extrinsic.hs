@@ -1,7 +1,3 @@
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE FlexibleInstances   #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-
 -- |
 -- Module      :  Network.Polkadot.Extrinsic
 -- Copyright   :  Aleksandr Krupenkin 2016-2021
@@ -14,85 +10,87 @@
 -- Extrinsic is a piece of data from external world.
 --
 
-module Network.Polkadot.Extrinsic where
+module Network.Polkadot.Extrinsic
+  ( Extrinsic
+  , SignedExtra
+  , sign_extrinsic
+  , new_extra'
+  , new_extra
+  , new_era
+  ) where
 
-import           Codec.Scale                          (encode)
-import           Codec.Scale.Class                    (Decode (..), Encode (..))
-import           Control.Arrow                        ((&&&))
-import           Control.Monad                        (when)
-import           Data.Bits                            (clearBit, setBit,
-                                                       testBit)
-import           Data.ByteArray.HexString             (HexString)
-import           Data.ByteString                      (ByteString)
-import           Data.Word                            (Word8)
+import           Codec.Scale                                                   (Compact (..))
+import           Data.Maybe                                                    (fromJust)
+import           Data.Text.Encoding                                            (decodeUtf8)
+import           Network.JsonRpc.TinyClient                                    (JsonRpc)
 
---import           Network.Polkadot.Extrinsic.Extra     (PolkadotExtra)
-import           Network.Polkadot.Crypto              (MultiPair (..))
-import           Network.Polkadot.Extrinsic.Signature (SignedExtension,
-                                                       SignedPayload (..),
-                                                       sign_payload)
-
--- | Current version of the 'UncheckedExtrinsic' format.
-extrinsic_version :: Word8
-extrinsic_version = 4
+import           Network.Polkadot.Account                                      (to_ss58check)
+import           Network.Polkadot.Extrinsic.Era                                (Era (..))
+import           Network.Polkadot.Extrinsic.SignedExtension.System
+import           Network.Polkadot.Extrinsic.SignedExtension.TransactionPayment
+import           Network.Polkadot.Extrinsic.Unchecked                          (UncheckedExtrinsic,
+                                                                                sign_extrinsic)
+import           Network.Polkadot.Primitives                                   (AccountId,
+                                                                                Balance,
+                                                                                Index,
+                                                                                MultiAddress,
+                                                                                MultiSignature)
+import           Network.Polkadot.Rpc.Account                                  (nextIndex)
+import           Network.Polkadot.Rpc.Chain                                    (getHeader)
+import           Network.Polkadot.Rpc.Types                                    (Header (headerNumber))
 
 -- | Default Polkadot compatible extrinsic type.
---type Extrinsic a = UncheckedExtrinsic a MultiAddress MultiSignature Extra
+type Extrinsic a = UncheckedExtrinsic a MultiAddress MultiSignature SignedExtra
 
--- | A extrinsic right from the external world. This is unchecked and so
--- can contain a signature.
-data UncheckedExtrinsic c a s e
-    = UncheckedExtrinsic
-    { extrinsicSignature :: !(Maybe (a, s, e))
-      -- ^ The signature, address, number of extrinsics have come before from
-      -- the same signer and an era describing the longevity of this transaction,
-      -- if this is a signed extrinsic.
-    , extrinsicFunction  :: !c
-      -- ^ The function that should be called.
-    }
+-- | Default Polkadot signed extra.
+type SignedExtra =
+  ( CheckSpecVersion
+  , CheckTxVersion
+  , CheckGenesis
+  , CheckEra
+  , CheckNonce
+  , CheckWeight
+  , ChargeTransactionPayment
+  )
 
-instance Encode c => Show (UncheckedExtrinsic c a b c) where
-    show (UncheckedExtrinsic _ call) = "UncheckedExtrinsic " ++ show encoded
-      where
-        encoded :: HexString
-        encoded = encode call
-
-instance (Encode c, Encode (a, s, e)) => Encode (UncheckedExtrinsic c a s e) where
-    put xt = put encoded
-      where
-        encoded :: ByteString
-        encoded = case xt of
-            UncheckedExtrinsic Nothing call
-                -> encode extrinsic_version <> encode call
-            UncheckedExtrinsic (Just s) call
-                -> encode (setBit extrinsic_version 7) <> encode s <> encode call
-
-instance (Decode c, Decode (a, s, e)) => Decode (UncheckedExtrinsic c a s e) where
-    get = do
-        (_v :: [()]) <- get
-        (signed, version) <- (flip testBit 7 &&& flip clearBit 7) <$> get
-        when (version /= extrinsic_version) $ fail "bad version"
-        UncheckedExtrinsic
-            <$> (if signed then fmap Just get else return Nothing)
-            <*> get
-
--- | New instance of a signed extrinsic aka "transaction".
-new_signed :: c -> a -> s -> e -> UncheckedExtrinsic c a s e
-new_signed call address sig extra = UncheckedExtrinsic (Just (address, sig, extra)) call
-
--- | New instance of an unsigned extrinsic aka "inherent".
-new_unsigned :: f -> UncheckedExtrinsic f a b c
-new_unsigned = UncheckedExtrinsic Nothing
-
--- | Create and sign extrinsic by account.
-sign_extrinsic :: (MultiPair a, Encode c, SignedExtension e)
-               => a
-               -- ^ Account to sign extrinsic.
-               -> c
-               -- ^ Function to call on runtime.
-               -> e
-               -- ^ Additional data to sign like nonce, blockhash, etc.
-               -> UncheckedExtrinsic c (MultiAddress a) (MultiSignature a) e
-sign_extrinsic a c e = new_signed c (multi_address a) sig e
+new_extra :: JsonRpc m
+          => AccountId
+          -- ^ Transaction sender address.
+          -> Balance
+          -- ^ Transaction tips, or set zero for no tips.
+          -> m SignedExtra
+          -- ^ Returns Polkadot transaction extra.
+new_extra account_id tip = do
+    nonce <- fromIntegral <$> nextIndex ss58account
+    era <- new_era
+    return $ new_extra' era nonce tip
   where
-    sig = sign_payload a $ SignedPayload (c, e)
+    ss58account = decodeUtf8 $ to_ss58check account_id
+
+-- | Create signed extra from general data.
+new_extra' :: Era
+           -- ^ Transaction mortality.
+           -> Index
+           -- ^ Transaction nonce value.
+           -> Balance
+           -- ^ Transaction tips, or set zero for no tips.
+           -> SignedExtra
+           -- ^ Returns Polkadot transaction extra.
+new_extra' era nonce tip =
+    ( CheckSpecVersion
+    , CheckTxVersion
+    , CheckGenesis
+    , CheckEra era
+    , CheckNonce (Compact nonce)
+    , CheckWeight
+    , ChargeTransactionPayment (Compact tip)
+    )
+
+-- | Create a mortal 'Era' with biggest lifetime period.
+--
+-- Note: The assumption is runtime has `BlockHashCount` = 2400. This is common
+-- for Polkadot runtimes.
+new_era :: JsonRpc m => m Era
+new_era = do
+    blockNumber <- (headerNumber . fromJust) <$> getHeader Nothing
+    return $ MortalEra 2048 $ fromIntegral (blockNumber - 1)

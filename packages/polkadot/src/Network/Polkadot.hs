@@ -19,12 +19,15 @@ module Network.Polkadot
   , module Scale
   , module Primitives
   , module Crypto
+  -- * Extrinsic sign & send functions.
+  , module Extrinsic
   ) where
 
 import           Codec.Scale                  as Scale
 import           Network.Polkadot.Crypto      as Crypto hiding (MultiAddress,
                                                          MultiSignature,
                                                          MultiSigner)
+import           Network.Polkadot.Extrinsic   as Extrinsic
 import           Network.Polkadot.Primitives  as Primitives
 import           Network.Polkadot.Query       (query)
 import           Network.Polkadot.Storage.Key (Argument (..))
