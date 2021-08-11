@@ -28,8 +28,19 @@ main = do
         Right account <- query "system" "account" [Argument alice]
         liftIO . putStrLn $ "Alice account: " ++ show (account :: AccountInfo)
 
-        State.getRuntimeVersion best
+        me <- liftIO generate
+        liftIO . putStrLn $ "My account: " ++ show (multi_signer (me :: Ed25519))
+
+        liftIO $ putStrLn "Please send 1000 Unit and press any key"
+        liftIO getLine
+
+        Right account <- query "system" "account" [Argument (into_account $ multi_signer me)]
+        liftIO . putStrLn $ "My account: " ++ show (account :: AccountInfo)
+
+        transfer <- new_call "Balances" "transfer" (MaId alice, Compact 200000000000000)
+        liftIO . putStrLn $ "Sign and send 200 Unit transfer transaction: " ++ show transfer
+        sign_and_send me transfer 0
 
     case result of
       Left err      -> error (show err)
-      Right version -> putStrLn (show version)
+      Right tx_hash -> putStrLn ("Extrinsic sent " ++ show tx_hash)
