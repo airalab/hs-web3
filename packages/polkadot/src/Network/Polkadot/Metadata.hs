@@ -18,12 +18,14 @@ module Network.Polkadot.Metadata where
 
 import           Codec.Scale                              (Decode, Encode,
                                                            Generic)
-import           Data.Aeson                               (Options (sumEncoding),
+import           Data.Aeson                               (Options (constructorTagModifier, sumEncoding),
                                                            SumEncoding (ObjectWithSingleField),
                                                            defaultOptions)
 import           Data.Aeson.TH                            (deriveJSON)
+import           Data.Char                                (toLower)
 import           Data.Set                                 (Set)
 import qualified GHC.Generics                             as GHC (Generic)
+import           Lens.Micro                               (_head, over)
 
 import           Network.Polkadot.Metadata.MagicNumber    (MagicNumber (..))
 import           Network.Polkadot.Metadata.Type           (Type)
@@ -52,7 +54,8 @@ data MetadataVersioned
   | V13 V13.Metadata
   deriving (Eq, Show, Generic, GHC.Generic, Decode, Encode)
 
-$(deriveJSON (defaultOptions { sumEncoding = ObjectWithSingleField }) ''MetadataVersioned)
+$(deriveJSON (defaultOptions
+    { constructorTagModifier = over _head toLower, sumEncoding = ObjectWithSingleField }) ''MetadataVersioned)
 
 -- | The versioned runtime metadata as a decoded structure.
 data Metadata = Metadata

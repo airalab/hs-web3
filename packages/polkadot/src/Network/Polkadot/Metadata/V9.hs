@@ -18,7 +18,7 @@
 module Network.Polkadot.Metadata.V9 where
 
 import           Codec.Scale                    (Decode, Encode, Generic)
-import           Data.Aeson                     (Options (fieldLabelModifier, sumEncoding),
+import           Data.Aeson                     (Options (constructorTagModifier, fieldLabelModifier, sumEncoding),
                                                  SumEncoding (ObjectWithSingleField),
                                                  defaultOptions)
 import           Data.Aeson.TH                  (deriveJSON)
@@ -26,7 +26,7 @@ import           Data.ByteArray.HexString       (HexString)
 import           Data.Char                      (toLower)
 import           Data.Text                      (Text)
 import qualified GHC.Generics                   as GHC (Generic)
-import           Lens.Micro                     (over, _head)
+import           Lens.Micro                     (_head, over)
 
 import           Network.Polkadot.Metadata.Type (Type)
 
@@ -39,36 +39,36 @@ $(deriveJSON (defaultOptions
     { fieldLabelModifier = over _head toLower . drop 8 }) ''FunctionArgumentMetadata)
 
 data FunctionMetadata = FunctionMetadata
-    { functionName          :: !Text
-    , functionArgs          :: ![FunctionArgumentMetadata]
-    , functionDocumentation :: ![Text]
+    { functionName :: !Text
+    , functionArgs :: ![FunctionArgumentMetadata]
+    , functionDocs :: ![Text]
     } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = over _head toLower . drop 8 }) ''FunctionMetadata)
 
 data EventMetadata = EventMetadata
-    { eventName          :: !Text
-    , eventArgs          :: ![Type]
-    , eventDocumentation :: ![Text]
+    { eventName :: !Text
+    , eventArgs :: ![Type]
+    , eventDocs :: ![Text]
     } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = over _head toLower . drop 5 }) ''EventMetadata)
 
 data ModuleConstantMetadata = ModuleConstantMetadata
-    { constantName          :: !Text
-    , constantType          :: !Type
-    , constantValue         :: !HexString
-    , constantDocumentation :: ![Text]
+    { constantName  :: !Text
+    , constantType  :: !Type
+    , constantValue :: !HexString
+    , constantDocs  :: ![Text]
     } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = over _head toLower . drop 8 }) ''ModuleConstantMetadata)
 
 data ErrorMetadata = ErrorMetadata
-    { errorName          :: !Text
-    , errorDocumentation :: ![Text]
+    { errorName :: !Text
+    , errorDocs :: ![Text]
     } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
 
 $(deriveJSON (defaultOptions
@@ -111,7 +111,8 @@ data StorageEntryType
     | DoubleMap !DoubleMapType
     deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
 
-$(deriveJSON (defaultOptions { sumEncoding = ObjectWithSingleField }) ''StorageEntryType)
+$(deriveJSON (defaultOptions
+    { constructorTagModifier = over _head toLower, sumEncoding = ObjectWithSingleField }) ''StorageEntryType)
 
 data StorageEntryModifier = Optional | Default | Required
     deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
@@ -119,11 +120,11 @@ data StorageEntryModifier = Optional | Default | Required
 $(deriveJSON defaultOptions ''StorageEntryModifier)
 
 data StorageEntryMetadata = StorageEntryMetadata
-    { entryName          :: !Text
-    , entryModifier      :: !StorageEntryModifier
-    , entryType          :: !StorageEntryType
-    , entryFallback      :: !HexString
-    , entryDocumentation :: ![Text]
+    { entryName     :: !Text
+    , entryModifier :: !StorageEntryModifier
+    , entryType     :: !StorageEntryType
+    , entryFallback :: !HexString
+    , entryDocs     :: ![Text]
     } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
 
 $(deriveJSON (defaultOptions

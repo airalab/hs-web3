@@ -56,7 +56,6 @@ render_box name (Just args)
 
 aliases :: Maybe QSelf -> PathSegment -> Text -> Text
 aliases _ _ "Vec<u8>"            = "Bytes"
-aliases _ _ "BoundedVec"         = "Vec"
 aliases _ _ "Announcement"       = "ProxyAnnouncement"
 aliases _ _ "Status"             = "BalanceStatus"
 aliases (Just (q, _)) _ "Source" = toText q <> "Source"

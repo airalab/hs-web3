@@ -24,7 +24,7 @@ import           Data.Char                     (toLower)
 import           Data.Text                     (Text)
 import           Data.Word                     (Word8)
 import qualified GHC.Generics                  as GHC (Generic)
-import           Lens.Micro                    (over, _head)
+import           Lens.Micro                    (_head, over)
 
 import qualified Network.Polkadot.Metadata.V11 as V11
 

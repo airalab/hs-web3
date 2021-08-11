@@ -60,6 +60,7 @@ spec = parallel $ do
             Right json <- eitherDecodeFileStrict "tests/meta/v10.json"
             toJSON meta `shouldBeJson` json
 
+{-
     describe "Metadata V12" $ do
         it "succeeds decode from hex and json" $ do
             let (Right hex) = decode [hexFrom|tests/meta/v12.hex|] :: Either String Metadata
@@ -73,3 +74,4 @@ spec = parallel $ do
                 (meta, _) = metadataTypes hex
             Right json <- eitherDecodeFileStrict "tests/meta/v13.json"
             toJSON meta `shouldBeJson` json
+-}

@@ -17,7 +17,7 @@
 module Network.Polkadot.Metadata.V10 where
 
 import           Codec.Scale                    (Decode, Encode, Generic)
-import           Data.Aeson                     (Options (fieldLabelModifier, sumEncoding),
+import           Data.Aeson                     (Options (constructorTagModifier, fieldLabelModifier, sumEncoding),
                                                  SumEncoding (ObjectWithSingleField),
                                                  defaultOptions)
 import           Data.Aeson.TH                  (deriveJSON)
@@ -25,7 +25,7 @@ import           Data.ByteArray.HexString       (HexString)
 import           Data.Char                      (toLower)
 import           Data.Text                      (Text)
 import qualified GHC.Generics                   as GHC (Generic)
-import           Lens.Micro                     (over, _head)
+import           Lens.Micro                     (_head, over)
 
 import           Network.Polkadot.Metadata.Type (Type)
 import qualified Network.Polkadot.Metadata.V9   as V9
@@ -74,14 +74,15 @@ data StorageEntryType
     | DoubleMap !DoubleMapType
     deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
 
-$(deriveJSON (defaultOptions { sumEncoding = ObjectWithSingleField }) ''StorageEntryType)
+$(deriveJSON (defaultOptions
+    { constructorTagModifier = over _head toLower, sumEncoding = ObjectWithSingleField }) ''StorageEntryType)
 
 data StorageEntryMetadata = StorageEntryMetadata
-    { entryName          :: !Text
-    , entryModifier      :: !StorageEntryModifier
-    , entryType          :: !StorageEntryType
-    , entryFallback      :: !HexString
-    , entryDocumentation :: ![Text]
+    { entryName     :: !Text
+    , entryModifier :: !StorageEntryModifier
+    , entryType     :: !StorageEntryType
+    , entryFallback :: !HexString
+    , entryDocs     :: ![Text]
     } deriving (Eq, Show, Generic, GHC.Generic, Encode, Decode)
 
 $(deriveJSON (defaultOptions

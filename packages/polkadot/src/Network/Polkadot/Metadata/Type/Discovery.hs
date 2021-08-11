@@ -77,14 +77,29 @@ instance {-# OVERLAPPING #-} Discovery Text where
 
 -- | Register 'Type' when found.
 instance {-# OVERLAPPING #-} Discovery Type where
-    discovery t = update . go =<< use prefix
+    discovery t = update . maybe t Type . flip typeOverlap t =<< use prefix
       where
         update x = types %= insert x >> return x
-        -- type overlapping hacks
-        go px | isOverlap || isCtxOverlap px = Type (px <> unType t)
-              | otherwise = t
-        isOverlap = unType t `elem` [ "Judgement", "EquivocationProof" ]
-        isCtxOverlap a = (unType t, a) `elem` [ ("Proposal", "Treasury"), ("Vote", "Society") ]
+
+-- | Type overlapping hacks
+typeOverlap :: Text
+            -- ^ Module name
+            -> Type
+            -- ^ Module type
+            -> Maybe Text
+            -- ^ New type name
+typeOverlap "Society" (Type "Vote")            = Just "SocietyVote"
+typeOverlap "Treasury" (Type "Proposal")       = Just "TreasuryProposal"
+typeOverlap "Assets" (Type "Balance")          = Just "TAssetBalance"
+typeOverlap "Assets" (Type "Compact<Balance>") = Just "Compact<TAssetBalance>"
+typeOverlap "Assets" (Type "Approval")         = Just "AssetApproval"
+typeOverlap "Assets" (Type "ApprovalKey")      = Just "AssetApprovalKey"
+typeOverlap "Assets" (Type "DestroyWitness")   = Just "AssetDestroyWitness"
+typeOverlap "Identity" (Type "Judgement")      = Just "IdentityJudgement"
+typeOverlap "ElectionProviderMultiPhase" (Type "Phase") = Just "ElectionPhase"
+typeOverlap a (Type "Judgement")               = Just (a <> "Judgement")
+typeOverlap a (Type "EquivocationProof")       = Just (a <> "EquivocationProof")
+typeOverlap _ _                                = Nothing
 
 
 -- | If input type is generic structure, let's go deep using generics.

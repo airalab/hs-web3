@@ -55,9 +55,11 @@ data AccountData = AccountData
 
 -- | General account information.
 data AccountInfo = AccountInfo
-  { accountNonce    :: !Index
-  , accountRefcount :: !Word32
-  , accountData     :: !AccountData
+  { accountNonce       :: !Index
+  , accountConsumers   :: !Word32
+  , accountProviders   :: !Word32
+  , accountSufficients :: !Word32
+  , accountData        :: !AccountData
   } deriving (Eq, Ord, Show, GHC.Generic, Generic, Encode, Decode)
 
 -- | Multiple signatures support type.
