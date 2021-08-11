@@ -10,6 +10,7 @@ Haskell Web3 Documentation
    ethereum_node_api
    polkadot_node_api
    polkadot_storage
+   polkadot_extrinsic
    ethereum_accounts
    smart_contracts
    ipfs_client_api
