@@ -22,6 +22,7 @@ module Network.Web3.Provider where
 import           Control.Concurrent.Async   (Async, async)
 import           Control.Exception          (Exception, try)
 import           Control.Monad.Catch        (MonadThrow)
+import           Control.Monad.Fail         (MonadFail)
 import           Control.Monad.IO.Class     (MonadIO (..))
 import           Control.Monad.State        (MonadState (..))
 import           Control.Monad.Trans.State  (StateT, evalStateT, withStateT)

@@ -15,6 +15,7 @@
 module Network.Polkadot.Call where
 
 import           Codec.Scale                   (Decode, Encode, Generic, decode)
+import           Control.Monad.Fail            (MonadFail)
 import           Data.List                     (findIndex)
 import           Data.Text                     (Text)
 import           Data.Word                     (Word8)

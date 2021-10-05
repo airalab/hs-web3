@@ -20,7 +20,8 @@ module Network.Polkadot.Metadata.Type.Parser
   , sanitize
   , sanitizeM
   ) where
-
+  
+import           Control.Monad.Fail                               (MonadFail)
 import           Data.Text                                        (Text,
                                                                    intercalate,
                                                                    pack,
