@@ -18,9 +18,9 @@ module Network.Ethereum.Api.Eth where
 import           Data.ByteArray.HexString   (HexString)
 import           Data.Solidity.Prim.Address (Address)
 import           Data.Text                  (Text)
-import           Network.Ethereum.Api.Types (Block, Call, Change, DefaultBlock,
-                                             Filter, Quantity, SyncingState,
-                                             Transaction, TxReceipt)
+import           Network.Ethereum.Api.Types (Block, BlockT, Call, Change,
+                                             DefaultBlock, Filter, Quantity,
+                                             SyncingState, Transaction, TxReceipt)
 import           Network.JsonRpc.TinyClient (JsonRpc (..))
 
 -- | Returns the current ethereum protocol version.
@@ -145,13 +145,23 @@ estimateGas :: JsonRpc m => Call -> m Quantity
 {-# INLINE estimateGas #-}
 estimateGas = remote "eth_estimateGas"
 
+-- | Returns information about a block by hash with only hashes of the transactions in it.
+getBlockByHashLite :: JsonRpc m => HexString -> m (Maybe (BlockT HexString))
+{-# INLINE getBlockByHashLite #-}
+getBlockByHashLite = flip (remote "eth_getBlockByHash") False
+
+-- | Returns information about a block by block number with only hashes of the transactions in it.
+getBlockByNumberLite :: JsonRpc m => Quantity -> m (Maybe (BlockT HexString))
+{-# INLINE getBlockByNumberLite #-}
+getBlockByNumberLite = flip (remote "eth_getBlockByNumber") False
+
 -- | Returns information about a block by hash.
-getBlockByHash :: JsonRpc m => HexString -> m Block
+getBlockByHash :: JsonRpc m => HexString -> m (Maybe Block)
 {-# INLINE getBlockByHash #-}
 getBlockByHash = flip (remote "eth_getBlockByHash") True
 
 -- | Returns information about a block by block number.
-getBlockByNumber :: JsonRpc m => Quantity -> m Block
+getBlockByNumber :: JsonRpc m => Quantity -> m (Maybe Block)
 {-# INLINE getBlockByNumber #-}
 getBlockByNumber = flip (remote "eth_getBlockByNumber") True
 
