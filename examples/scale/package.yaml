@@ -10,9 +10,9 @@ category:            Network
 
 dependencies:
 - base
+- scale
 - generics-sop
-- web3-scale
-- web3-hexstring
+- memory-hexstring
 
 executables:
   example-scale:

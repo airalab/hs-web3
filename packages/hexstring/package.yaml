@@ -1,4 +1,4 @@
-name:                web3-hexstring
+name:                memory-hexstring
 version:             1.0.0.0
 synopsis:            Hex-string type for Haskell Web3 library.
 description:         Client library for Third Generation of Web.
@@ -17,7 +17,7 @@ dependencies:
 - memory               >0.14 && <0.16
 - bytestring           >0.10 && <0.11
 - template-haskell     >2.11 && <2.17
-- web3-scale           >=1.0 && <1.1
+- scale                >=1.0 && <1.1
 
 ghc-options:
 - -funbox-strict-fields

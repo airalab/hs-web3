@@ -24,7 +24,7 @@ dependencies:
 - uuid-types           >1.0  && <1.1
 - cryptonite           >0.22 && <0.30
 - bytestring           >0.10 && <0.11
-- web3-hexstring       >=1.0 && <1.1
+- memory-hexstring     >=1.0 && <1.1
 
 ghc-options:
 - -funbox-strict-fields

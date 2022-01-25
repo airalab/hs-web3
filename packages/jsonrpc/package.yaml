@@ -1,7 +1,6 @@
-name:                web3-jsonrpc
+name:                jsonrpc-tinyclient
 version:             1.0.0.0
 synopsis:            Tiny JSON-RPC client for Haskell Web3 library.
-description:         Client library for Third Generation of Web.
 github:              "airalab/hs-web3"
 license:             Apache-2.0
 license-file:        LICENSE

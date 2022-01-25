@@ -12,11 +12,11 @@
 
 module Data.BigNum.Test.BigNumSpec where
 
-import           Basement.Types.Word128   (Word128)
-import           Basement.Types.Word256   (Word256)
 import           Codec.Scale              (decode, encode)
 import           Control.Monad            (forM_)
 import           Data.ByteArray.HexString (HexString)
+import           Data.WideWord.Word128    (Word128)
+import           Data.WideWord.Word256    (Word256)
 import           Test.Hspec
 
 import           Data.BigNum              (H160, H256, H512)

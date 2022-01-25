@@ -21,7 +21,7 @@ dependencies:
 - http-client          >0.5  && <0.7
 - data-default         >0.7  && <0.8
 - transformers         >0.5  && <0.6
-- web3-jsonrpc         >=1.0 && <1.1
+- jsonrpc-tinyclient   >=1.0 && <1.1
 
 ghc-options:
 - -funbox-strict-fields

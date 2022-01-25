@@ -30,9 +30,9 @@ dependencies:
 - template-haskell     >2.11 && <2.17
 - mtl                  >2.2  && <2.3
 - web3-crypto          >=1.0 && <1.1
-- web3-jsonrpc         >=1.0 && <1.1
 - web3-solidity        >=1.0 && <1.1
-- web3-hexstring       >=1.0 && <1.1
+- memory-hexstring     >=1.0 && <1.1
+- jsonrpc-tinyclient   >=1.0 && <1.1
 
 ghc-options:
 - -funbox-strict-fields

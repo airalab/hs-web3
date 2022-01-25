@@ -52,6 +52,7 @@ render_box :: Text -> Maybe [TypeAst] -> Text
 render_box name Nothing = name
 render_box name (Just args)
   | any (== name) allowed_boxes = name <> "<" <> intercalate "," (toText <$> args) <> ">"
+  | name == "BoundedVec" = "Vec<" <> intercalate "," (toText <$> args) <> ">"
   | name == "Box" = toText (head args)
   | otherwise = name
 
