@@ -1,7 +1,7 @@
 name:                web3-solidity
 version:             1.0.0.0
 synopsis:            Solidity language for Haskell Web3 library.
-description:         Client library for Third Generation of Web.
+description:         This package contains Solidity parsec-based parser and primitive types.
 github:              "airalab/hs-web3"
 license:             Apache-2.0
 license-file:        LICENSE

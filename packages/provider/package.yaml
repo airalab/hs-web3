@@ -1,7 +1,7 @@
 name:                web3-provider
 version:             1.0.0.0
 synopsis:            Node connection provider for Haskell Web3 library.
-description:         Client library for Third Generation of Web.
+description:         This package contains general Web3 node adapters and connection helpers.
 github:              "airalab/hs-web3"
 license:             Apache-2.0
 license-file:        LICENSE

@@ -1,7 +1,7 @@
 name:                web3-crypto
 version:             1.0.0.0
 synopsis:            Cryptograhical primitives for Haskell Web3 library.
-description:         Client library for Third Generation of Web.
+description:         This package implements Web3 specific cryptography and helper functions.
 github:              "airalab/hs-web3"
 license:             Apache-2.0
 license-file:        LICENSE

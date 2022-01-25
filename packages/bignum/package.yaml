@@ -1,7 +1,7 @@
 name:                web3-bignum
 version:             1.0.0.0
 synopsis:            Fixed size big integers for Haskell Web3 library.
-description:         Client library for Third Generation of Web.
+description:         This package implements codec instances and other helper functions.
 github:              "airalab/hs-web3"
 license:             Apache-2.0
 license-file:        LICENSE
