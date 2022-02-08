@@ -70,12 +70,12 @@ instance Account Personal PersonalAccount where
                     gasLimit <- Eth.estimateGas params
                     return $ params { callGas = Just gasLimit }
 
-            getReceipt =<< Personal.sendTransaction params' (personalPassphrase _account)
+            getReceipt _timeout =<< Personal.sendTransaction params' (personalPassphrase _account)
 
     call (args :: a) = do
         s <- get
         case s of
-            CallParam _ _ _ _ block (Personal address _) -> do
+            CallParam _ _ _ _ block (Personal address _) _ -> do
                 c <- getCall
                 let dat = selector (Proxy :: Proxy a) <> encode args
                     params = c { callFrom = Just address, callData = Just $ BA.convert dat }

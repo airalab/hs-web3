@@ -18,6 +18,7 @@
 module Network.Ethereum.Account.Internal where
 
 import           Control.Concurrent             (threadDelay)
+import           Control.Exception              (throw)
 import           Control.Monad.IO.Class         (liftIO)
 import           Control.Monad.State.Strict     (MonadState (..), StateT (..),
                                                  withStateT)
@@ -32,7 +33,8 @@ import           Network.Ethereum.Account.Class (Account)
 import qualified Network.Ethereum.Api.Eth       as Eth (getTransactionReceipt)
 import           Network.Ethereum.Api.Types     (Call (..),
                                                  DefaultBlock (Latest),
-                                                 TxReceipt (receiptTransactionHash))
+                                                 TxReceipt (receiptTransactionHash),
+                                                 TransactionTimeout (..))
 import           Network.Ethereum.Unit          (Unit (..))
 import           Network.JsonRpc.TinyClient     (JsonRpc)
 
@@ -52,6 +54,8 @@ data CallParam p = CallParam
     -- ^ Call block number
     , _account  :: p
     -- ^ Account params to sign transaction
+    , _timeout  :: Maybe Int
+    -- ^ Transaction timeout in microseconds
     } deriving Eq
 
 -- | Transaction recipient lens
@@ -77,6 +81,10 @@ block = lens _block $ \a b -> a { _block = b }
 -- | EOA params lens
 account :: Lens' (CallParam p) p
 account = lens _account $ \a b -> a { _account = b }
+
+-- | Transaction timeout lens
+timeout :: Lens' (CallParam p) (Maybe Int)
+timeout = lens _timeout $ \a b -> a { _timeout = b }
 
 -- | Monad transformer for sending parametrized transactions from account
 newtype AccountT p m a = AccountT
@@ -104,7 +112,7 @@ withParam f m = AccountT $ withStateT f $ runAccountT m
 
 defaultCallParam :: a -> CallParam a
 {-# INLINE defaultCallParam #-}
-defaultCallParam = CallParam def 0 Nothing Nothing Latest
+defaultCallParam acc = CallParam def 0 Nothing Nothing Latest acc Nothing
 
 getCall :: MonadState (CallParam p) m => m Call
 getCall = do
@@ -115,16 +123,25 @@ getCall = do
                  , callGasPrice = fromInteger <$> _gasPrice
                  }
 
-getReceipt :: JsonRpc m => HexString -> m TxReceipt
-getReceipt tx = do
+getTimeout :: MonadState (CallParam p) m => m (Maybe Int)
+getTimeout = _timeout <$> get
+
+getReceipt :: JsonRpc m => Maybe Int -> HexString -> m TxReceipt
+getReceipt mbtimeout tx = do
     mbreceipt <- Eth.getTransactionReceipt tx
     case mbreceipt of
         Just receipt -> return receipt
-        Nothing -> do
+        Nothing -> case mbtimeout of
+            Just us
+                | us > 0 -> retry $ Just $ us - 100000
+                | otherwise -> throw $ TransactionTimeout tx
+            Nothing -> retry Nothing
+    where
+        retry mbtimeout' = do
             liftIO $ threadDelay 100000
-            -- TODO: avoid inifinite loop
-            getReceipt tx
+            getReceipt mbtimeout' tx
 
 updateReceipt :: JsonRpc m => TxReceipt -> m TxReceipt
 {-# INLINE updateReceipt #-}
-updateReceipt = getReceipt . receiptTransactionHash
+-- No timeout, because we update the receipt of an already processed transaction.
+updateReceipt = getReceipt Nothing . receiptTransactionHash
