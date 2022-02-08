@@ -123,9 +123,6 @@ getCall = do
                  , callGasPrice = fromInteger <$> _gasPrice
                  }
 
-getTimeout :: MonadState (CallParam p) m => m (Maybe Int)
-getTimeout = _timeout <$> get
-
 getReceipt :: JsonRpc m => Maybe Int -> HexString -> m TxReceipt
 getReceipt mbtimeout tx = do
     mbreceipt <- Eth.getTransactionReceipt tx
