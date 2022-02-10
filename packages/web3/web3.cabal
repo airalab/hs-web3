@@ -1,0 +1,38 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.6.
+--
+-- see: https://github.com/sol/hpack
+
+name:           web3
+version:        1.0.0.0
+synopsis:       Haskell Web3 library.
+description:    Client library for Third Generation of Web.
+category:       Network
+homepage:       https://github.com/airalab/hs-web3#readme
+bug-reports:    https://github.com/airalab/hs-web3/issues
+author:         Aleksandr Krupenkin
+maintainer:     mail@akru.me
+copyright:      (c) Aleksandr Krupenkin 2016-2021
+license:        Apache-2.0
+license-file:   LICENSE
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/airalab/hs-web3
+
+library
+  exposed-modules:
+      Network.Web3
+  other-modules:
+      Paths_web3
+  hs-source-dirs:
+      src
+  ghc-options: -funbox-strict-fields -Wduplicate-exports -Whi-shadowing -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-monadfail-instances -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs
+  build-depends:
+      base >4.11 && <4.15
+    , web3-ethereum ==1.0.*
+    , web3-polkadot ==1.0.*
+    , web3-provider ==1.0.*
+  default-language: Haskell2010
