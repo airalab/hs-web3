@@ -1,0 +1,45 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.6.
+--
+-- see: https://github.com/sol/hpack
+
+name:           web3-provider
+version:        1.0.0.0
+synopsis:       Node connection provider for Haskell Web3 library.
+description:    This package contains general Web3 node adapters and connection helpers.
+category:       Network
+homepage:       https://github.com/airalab/hs-web3#readme
+bug-reports:    https://github.com/airalab/hs-web3/issues
+author:         Aleksandr Krupenkin
+maintainer:     mail@akru.me
+copyright:      (c) Aleksandr Krupenkin 2016-2021
+license:        Apache-2.0
+license-file:   LICENSE
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/airalab/hs-web3
+
+library
+  exposed-modules:
+      Network.Web3.Provider
+  other-modules:
+      Paths_web3_provider
+  hs-source-dirs:
+      src
+  ghc-options: -funbox-strict-fields -Wduplicate-exports -Whi-shadowing -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-monadfail-instances -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs
+  build-depends:
+      async >2.1 && <2.3
+    , base >4.11 && <4.15
+    , data-default >0.7 && <0.8
+    , exceptions >0.8 && <0.11
+    , http-client >0.5 && <0.7
+    , jsonrpc-tinyclient ==1.0.*
+    , mtl >2.2 && <2.3
+    , network >2.5 && <3.2
+    , text >1.2 && <1.3
+    , transformers >0.5 && <0.6
+    , websockets >0.10 && <0.13
+  default-language: Haskell2010

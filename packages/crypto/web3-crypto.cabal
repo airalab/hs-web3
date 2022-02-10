@@ -1,0 +1,105 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.6.
+--
+-- see: https://github.com/sol/hpack
+
+name:           web3-crypto
+version:        1.0.0.0
+synopsis:       Cryptograhical primitives for Haskell Web3 library.
+description:    This package implements Web3 specific cryptography and helper functions.
+category:       Network
+homepage:       https://github.com/airalab/hs-web3#readme
+bug-reports:    https://github.com/airalab/hs-web3/issues
+author:         Aleksandr Krupenkin
+maintainer:     mail@akru.me
+copyright:      (c) Aleksandr Krupenkin 2016-2021
+license:        Apache-2.0
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    src/cbits/xxhash.h
+    src/cbits/xxhash.c
+
+source-repository head
+  type: git
+  location: https://github.com/airalab/hs-web3
+
+library
+  exposed-modules:
+      Crypto.Bip39
+      Crypto.Ecdsa.Signature
+      Crypto.Ecdsa.Utils
+      Crypto.Ethereum
+      Crypto.Ethereum.Keyfile
+      Crypto.Ethereum.Signature
+      Crypto.Ethereum.Utils
+      Crypto.Random.HmacDrbg
+      Data.Digest.Blake2
+      Data.Digest.XXHash
+  other-modules:
+      Paths_web3_crypto
+  hs-source-dirs:
+      src
+  ghc-options: -funbox-strict-fields -Wduplicate-exports -Whi-shadowing -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-monadfail-instances -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs
+  include-dirs:
+      src/cbits
+  c-sources:
+      src/cbits/xxhash.c
+  build-depends:
+      aeson >1.2 && <1.6
+    , base >4.11 && <4.15
+    , bytestring >0.10 && <0.11
+    , containers >0.6 && <0.7
+    , cryptonite >0.22 && <0.30
+    , memory >0.14 && <0.16
+    , memory-hexstring ==1.0.*
+    , text >1.2 && <1.3
+    , uuid-types >1.0 && <1.1
+    , vector >0.12 && <0.13
+  default-language: Haskell2010
+
+test-suite tests
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Crypto.Ethereum.Test.KeyfileSpec
+      Crypto.Ethereum.Test.SignatureSpec
+      Crypto.Random.Test.HmacDrbgSpec
+      Data.Digest.Test.Blake2Spec
+      Data.Digest.Test.XXHashSpec
+      Crypto.Bip39
+      Crypto.Ecdsa.Signature
+      Crypto.Ecdsa.Utils
+      Crypto.Ethereum
+      Crypto.Ethereum.Keyfile
+      Crypto.Ethereum.Signature
+      Crypto.Ethereum.Utils
+      Crypto.Random.HmacDrbg
+      Data.Digest.Blake2
+      Data.Digest.XXHash
+      Paths_web3_crypto
+  hs-source-dirs:
+      tests
+      src
+  ghc-options: -funbox-strict-fields -Wduplicate-exports -Whi-shadowing -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-monadfail-instances -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs -threaded -rtsopts -with-rtsopts=-N
+  include-dirs:
+      src/cbits
+  c-sources:
+      src/cbits/xxhash.c
+  build-depends:
+      aeson >1.2 && <1.6
+    , base >4.11 && <4.15
+    , bytestring >0.10 && <0.11
+    , containers >0.6 && <0.7
+    , cryptonite >0.22 && <0.30
+    , hspec >=2.4.4 && <2.8
+    , hspec-contrib >=0.4.0 && <0.6
+    , hspec-discover >=2.4.4 && <2.8
+    , hspec-expectations >=0.8.2 && <0.9
+    , memory >0.14 && <0.16
+    , memory-hexstring ==1.0.*
+    , text >1.2 && <1.3
+    , uuid-types >1.0 && <1.1
+    , vector >0.12 && <0.13
+  default-language: Haskell2010

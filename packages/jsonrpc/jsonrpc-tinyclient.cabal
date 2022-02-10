@@ -1,0 +1,44 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.6.
+--
+-- see: https://github.com/sol/hpack
+
+name:           jsonrpc-tinyclient
+version:        1.0.0.0
+synopsis:       Tiny JSON-RPC client for Haskell Web3 library.
+description:    Minimalistic JSON-RPC client, inspired by haxr library.
+category:       Network
+homepage:       https://github.com/airalab/hs-web3#readme
+bug-reports:    https://github.com/airalab/hs-web3/issues
+author:         Aleksandr Krupenkin
+maintainer:     mail@akru.me
+copyright:      (c) Aleksandr Krupenkin 2016-2021
+license:        Apache-2.0
+license-file:   LICENSE
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/airalab/hs-web3
+
+library
+  exposed-modules:
+      Network.JsonRpc.TinyClient
+  other-modules:
+      Paths_jsonrpc_tinyclient
+  hs-source-dirs:
+      src
+  ghc-options: -funbox-strict-fields -Wduplicate-exports -Whi-shadowing -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-monadfail-instances -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs
+  build-depends:
+      aeson >1.2 && <1.6
+    , base >4.11 && <4.15
+    , bytestring >0.10 && <0.11
+    , exceptions >0.8 && <0.11
+    , http-client >0.5 && <0.7
+    , http-client-tls >0.3 && <0.4
+    , mtl >2.2 && <2.3
+    , random >1.0 && <1.3
+    , text >1.2 && <1.3
+    , websockets >0.10 && <0.13
+  default-language: Haskell2010
