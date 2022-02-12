@@ -47,6 +47,7 @@ import           Control.Applicative              ((<|>))
 import           Control.Monad                    (replicateM, (<=<))
 import qualified Data.Aeson                       as Aeson (encode)
 import           Data.ByteArray                   (convert)
+import           Data.ByteArray.HexString         (HexString)
 import           Data.Char                        (toLower, toUpper)
 import qualified Data.Char                        as Char
 import           Data.Default                     (Default (..))
@@ -175,11 +176,12 @@ funWrapper c name dname args result = do
             Just [x] -> [t|$t $m $(typeFuncQ x)|]
             Just xs  -> let outs = fmap typeFuncQ xs
                          in  [t|$t $m $(foldl appT (tupleT (length xs)) outs)|]
+        receiptT = [t|$t $m (Either HexString TxReceipt)|]
 
     sequence [
         sigD name $ [t|
             (JsonRpc $m, Account $a $t, Functor ($t $m)) =>
-                $(arrowing $ inputT ++ [if c then outputT else [t|$t $m TxReceipt|]])
+                $(arrowing $ inputT ++ [if c then outputT else receiptT])
             |]
       , if c
             then funD' name (varP <$> vars) $ case result of

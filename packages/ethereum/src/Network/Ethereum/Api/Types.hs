@@ -18,7 +18,6 @@
 
 module Network.Ethereum.Api.Types where
 
-import           Control.Exception          (Exception)
 import           Data.Aeson                 (FromJSON (..), Options (fieldLabelModifier, omitNothingFields),
                                              ToJSON (..), Value (Bool, String),
                                              defaultOptions, object, (.=))
@@ -300,11 +299,3 @@ data BlockT tx = Block
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = over _head toLower . drop 5 }) ''BlockT)
-
--- | Timeout exception.
--- Thrown when a transaction is pending for longer than the timeout.
--- Contains the transaction that timed out.
-data TransactionTimeout = TransactionTimeout HexString
-    deriving (Show, Eq)
-
-instance Exception TransactionTimeout

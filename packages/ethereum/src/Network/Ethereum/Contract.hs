@@ -43,6 +43,12 @@ class Contract a where
 new :: (Account p t, JsonRpc m, Method a, Monad (t m))
     => a
     -- ^ Contract constructor
-    -> t m (Maybe Address)
-    -- ^ Address of deployed contract when transaction success
-new = fmap receiptContractAddress . safeSend safeConfirmations
+    -> t m (Either HexString (Maybe Address))
+    -- ^ Address of deployed contract when transaction success;
+    -- transaction hash in case of a timeout
+new = fmap (mapRight receiptContractAddress) . safeSend safeConfirmations
+  where
+    mapRight f either =
+        case either of
+            Left x -> Left x
+            Right y -> Right $ f y

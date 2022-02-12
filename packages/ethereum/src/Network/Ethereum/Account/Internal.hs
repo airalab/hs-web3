@@ -18,12 +18,12 @@
 module Network.Ethereum.Account.Internal where
 
 import           Control.Concurrent             (threadDelay)
-import           Control.Exception              (throw)
 import           Control.Monad.IO.Class         (liftIO)
 import           Control.Monad.State.Strict     (MonadState (..), StateT (..),
                                                  withStateT)
 import           Control.Monad.Trans            (MonadTrans (..))
 import           Data.Default                   (Default (..))
+import           Data.Either                    (fromRight)
 import           Data.Maybe                     (fromMaybe)
 import           Lens.Micro                     (Lens', lens)
 
@@ -33,8 +33,7 @@ import           Network.Ethereum.Account.Class (Account)
 import qualified Network.Ethereum.Api.Eth       as Eth (getTransactionReceipt)
 import           Network.Ethereum.Api.Types     (Call (..),
                                                  DefaultBlock (Latest),
-                                                 TxReceipt (receiptTransactionHash),
-                                                 TransactionTimeout (..))
+                                                 TxReceipt (receiptTransactionHash))
 import           Network.Ethereum.Unit          (Unit (..))
 import           Network.JsonRpc.TinyClient     (JsonRpc)
 
@@ -123,22 +122,25 @@ getCall = do
                  , callGasPrice = fromInteger <$> _gasPrice
                  }
 
-getReceipt :: JsonRpc m => Maybe Int -> HexString -> m TxReceipt
+getReceipt :: JsonRpc m => Maybe Int -> HexString -> m (Either HexString TxReceipt)
 getReceipt mbtimeout tx = do
     mbreceipt <- Eth.getTransactionReceipt tx
     case mbreceipt of
-        Just receipt -> return receipt
+        Just receipt -> return $ Right receipt
         Nothing -> case mbtimeout of
             Just us
                 | us > 0 -> retry $ Just $ us - 100000
-                | otherwise -> throw $ TransactionTimeout tx
+                | otherwise -> return $ Left tx
             Nothing -> retry Nothing
     where
         retry mbtimeout' = do
             liftIO $ threadDelay 100000
             getReceipt mbtimeout' tx
 
+getReceipt' :: JsonRpc m => HexString -> m TxReceipt
+getReceipt' = fmap (fromRight undefined) . getReceipt Nothing
+
 updateReceipt :: JsonRpc m => TxReceipt -> m TxReceipt
 {-# INLINE updateReceipt #-}
 -- No timeout, because we update the receipt of an already processed transaction.
-updateReceipt = getReceipt Nothing . receiptTransactionHash
+updateReceipt = getReceipt' . receiptTransactionHash

@@ -17,6 +17,7 @@ module Network.Ethereum.Account.Class where
 
 import           Control.Monad.Trans              (MonadTrans)
 
+import           Data.ByteArray.HexString         (HexString)
 import           Data.Solidity.Abi                (AbiGet)
 import           Network.Ethereum.Api.Types       (TxReceipt)
 import           Network.Ethereum.Contract.Method (Method)
@@ -43,8 +44,8 @@ class MonadTrans t => Account a t | t -> a where
     send :: (JsonRpc m, Method args)
          => args
          -- ^ Contract method arguments
-         -> t m TxReceipt
-         -- ^ Receipt of sended transaction
+         -> t m (Either HexString TxReceipt)
+         -- ^ Receipt of the sent transaction, or transaction hash in case of a timeout
 
     -- | Call constant method of contract, like a 'read' command
     call :: (JsonRpc m, Method args, AbiGet result)
