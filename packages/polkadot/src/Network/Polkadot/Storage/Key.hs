@@ -35,7 +35,7 @@ import           Network.Polkadot.Metadata.V13 (NMapType (..),
 -- | General type wrapper for SCALE encodable storage index argument.
 data Argument where
     Argument :: Encode a => a -> Argument
-    -- ^ Wrapped type should be encodable.
+        -- ^ Wrapped type should be encodable.
 
 instance Encode Argument where
     put arg = case arg of Argument a -> put a
