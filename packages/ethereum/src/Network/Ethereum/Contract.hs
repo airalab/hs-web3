@@ -48,7 +48,7 @@ new :: (Account p t, JsonRpc m, Method a, Monad (t m))
     -- transaction hash in case of a timeout
 new = fmap (mapRight receiptContractAddress) . safeSend safeConfirmations
   where
-    mapRight f either =
-        case either of
+    mapRight f e =
+        case e of
             Left x -> Left x
             Right y -> Right $ f y
