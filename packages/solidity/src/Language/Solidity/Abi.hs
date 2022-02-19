@@ -346,6 +346,7 @@ parseSolidityFunctionArgType (FunctionArg _ typ mcmps) = case mcmps of
     case typ of
         "tuple"   -> return tpl
         "tuple[]" -> return $ SolidityArray tpl
+        _         -> error $ "Unexpected type " ++ T.unpack typ ++ " - expected tuple or tuple[]"
 
 parseSolidityEventArgType :: EventArg -> Either ParseError SolidityType
 parseSolidityEventArgType (EventArg _ typ _) = parse solidityTypeParser "Solidity" typ
