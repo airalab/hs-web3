@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts     #-}
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
 
 -- |
 -- Module      :  Data.Solidity.Prim.List
@@ -23,7 +24,13 @@ module Data.Solidity.Prim.List
 import           Basement.Nat           (NatWithinBound)
 import           Basement.Sized.List    (ListN, toListN_, unListN)
 import qualified Basement.Sized.List    as SL (mapM_, replicateM)
-import           Control.Monad          (replicateM)
+import           Basement.Types.Word256 (Word256)
+import           Control.Monad          (replicateM, mapM_, forM)
+import qualified Data.ByteString        as B
+import           Data.List              (init, scanl')
+import           Data.Proxy             (Proxy (..))
+import           Data.Serialize.Put     (runPut, putByteString)
+import           Data.Serialize.Get     (skip, lookAhead)
 import           GHC.Exts               (IsList (..))
 import           GHC.TypeLits           (KnownNat)
 
@@ -35,11 +42,25 @@ instance AbiType [a] where
 
 instance AbiPut a => AbiPut [a] where
     abiPut l = do putWord256 $ fromIntegral (length l)
-                  foldMap abiPut l
+                  if isDynamic (Proxy :: Proxy a) then do
+                      let encs = map (runPut . abiPut) l
+                          lengths = map ((fromIntegral :: Int -> Word256) . B.length) encs
+                          offsets = init $ scanl' (+) (fromIntegral (0x20 * length l)) lengths
+                      mapM_ putWord256 offsets
+                      mapM_ putByteString encs
+                    else
+                      foldMap abiPut l
 
 instance AbiGet a => AbiGet [a] where
     abiGet = do len <- fromIntegral <$> getWord256
-                replicateM len abiGet
+                if isDynamic (Proxy :: Proxy a) then do
+                    offsets <- replicateM len getWord256
+                    let currentOffset = 0x20 * len
+                    forM offsets $ \dataOffset -> lookAhead $ do
+                        skip (fromIntegral dataOffset - currentOffset)
+                        abiGet
+                  else
+                    replicateM len abiGet
 
 instance AbiType (ListN n a) where
     isDynamic _ = False

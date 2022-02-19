@@ -109,6 +109,11 @@ data Declaration = DConstructor
     , eveAnonymous :: Bool
     -- ^ Event
     }
+    | DError
+    { errName      :: Text
+    , errInputs    :: [FunctionArg]
+    -- ^ Error
+    }
     | DFallback
     { falPayable :: Bool
     -- ^ Fallback function
@@ -119,6 +124,7 @@ instance Eq Declaration where
     (DConstructor a) == (DConstructor b) = length a == length b
     (DFunction a _ _ _) == (DFunction b _ _ _) = a == b
     (DEvent a _ _) == (DEvent b _ _) = a == b
+    (DError a _) == (DError b _) = a == b
     (DFallback _) == (DFallback _) = True
     (==) _ _ = False
 
@@ -126,23 +132,33 @@ instance Ord Declaration where
     compare (DConstructor a) (DConstructor b) = compare (length a) (length b)
     compare (DFunction a _ _ _) (DFunction b _ _ _) = compare a b
     compare (DEvent a _ _) (DEvent b _ _) = compare a b
+    compare (DError a _) (DError b _) = compare a b
     compare (DFallback _) (DFallback _) = EQ
 
     compare DConstructor {} DFunction {} = LT
     compare DConstructor {} DEvent {} = LT
+    compare DConstructor {} DError {} = LT
     compare DConstructor {} DFallback {} = LT
 
     compare DFunction {} DConstructor {} = GT
     compare DFunction {} DEvent {} = LT
+    compare DFunction {} DError {} = LT
     compare DFunction {} DFallback {} = LT
 
     compare DEvent {} DConstructor {} = GT
     compare DEvent {} DFunction {} = GT
+    compare DEvent {} DError {} = LT
     compare DEvent {} DFallback {} = LT
+
+    compare DError {} DConstructor {} = GT
+    compare DError {} DFunction {} = GT
+    compare DError {} DEvent {} = GT
+    compare DError {} DFallback {} = LT
 
     compare DFallback {} DConstructor {} = GT
     compare DFallback {} DFunction {} = GT
     compare DFallback {} DEvent {} = GT
+    compare DFallback {} DError {} = GT
 
 instance FromJSON Declaration where
   parseJSON = withObject "Declaration" $ \o -> do
@@ -151,6 +167,7 @@ instance FromJSON Declaration where
       "fallback" -> DFallback <$> o .: "payable"
       "constructor" -> DConstructor <$> o .: "inputs"
       "event" -> DEvent <$> o .: "name" <*> o .: "inputs" <*> o .: "anonymous"
+      "error" -> DError <$> o .: "name" <*> o .: "inputs"
       "function" -> DFunction <$> o .: "name" <*> parseSm o <*> o .: "inputs" <*> o .:? "outputs"
       _ -> fail "value of 'type' not recognized"
       where
@@ -207,28 +224,23 @@ showMethod x = case x of
         ["\t\t" <> methodId x <> " " <> signature x]
     _ -> []
 
+funArgs :: [FunctionArg] -> Text
+funArgs [] = ""
+funArgs [x] = funArgType x
+funArgs (x:xs) = case funArgComponents x of
+  Nothing   -> funArgType x <> "," <> funArgs xs
+  Just cmps -> case funArgType x of
+      "tuple" -> "(" <> funArgs cmps <> ")," <> funArgs xs
+      "tuple[]" -> "[(" <> funArgs cmps <> ")]," <> funArgs xs
+      typ       -> error $ "Unexpected type " ++ T.unpack typ ++ " - expected tuple or tuple[]"
+
 -- | Take a signature by given decl, e.g. foo(uint,string)
 signature :: Declaration -> Text
 
-signature (DConstructor inputs) = "(" <> args inputs <> ")"
-  where
-    args [] = ""
-    args [x] = funArgType x
-    args (x:xs) = case funArgComponents x of
-      Nothing   -> funArgType x <> "," <> args xs
-      Just cmps -> "(" <> args cmps <> ")," <> args xs
-
+signature (DConstructor inputs) = "(" <> funArgs inputs <> ")"
 signature (DFallback _) = "()"
-
-signature (DFunction name _ inputs _) = name <> "(" <> args inputs <> ")"
-  where
-    args :: [FunctionArg] -> Text
-    args [] = ""
-    args [x] = funArgType x
-    args (x:xs) = case funArgComponents x of
-      Nothing   -> funArgType x <> "," <> args xs
-      Just cmps -> "(" <> args cmps <> ")," <> args xs
-
+signature (DFunction name _ inputs _) = name <> "(" <> funArgs inputs <> ")"
+signature (DError name inputs) = name <> "(" <> funArgs inputs <> ")"
 signature (DEvent name inputs _) = name <> "(" <> args inputs <> ")"
   where
     args :: [EventArg] -> Text
@@ -329,8 +341,11 @@ solidityTypeParser =
 parseSolidityFunctionArgType :: FunctionArg -> Either ParseError SolidityType
 parseSolidityFunctionArgType (FunctionArg _ typ mcmps) = case mcmps of
   Nothing -> parse solidityTypeParser "Solidity" typ
-  Just cmps -> SolidityTuple <$> mapM parseSolidityFunctionArgType cmps
-
+  Just cmps -> do
+    tpl <- SolidityTuple <$> mapM parseSolidityFunctionArgType cmps
+    case typ of
+        "tuple"   -> return tpl
+        "tuple[]" -> return $ SolidityArray tpl
 
 parseSolidityEventArgType :: EventArg -> Either ParseError SolidityType
 parseSolidityEventArgType (EventArg _ typ _) = parse solidityTypeParser "Solidity" typ
