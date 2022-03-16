@@ -45,7 +45,7 @@ newtype Web3 a = Web3 { unWeb3 :: StateT JsonRpcClient IO a }
 
 instance JsonRpc Web3
 
--- | Some peace of error response
+-- | Some piece of error response
 data Web3Error = JsonRpcFail !String
     | ParserFail !String
     | UserFail !String
