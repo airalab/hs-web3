@@ -37,44 +37,68 @@ import           Data.Solidity.Abi      (AbiGet (..), AbiPut (..), AbiType (..),
 import           Data.Solidity.Prim.Int (getWord256, putWord256)
 
 data EncodedValue = EncodedValue
-    { order    :: Int64
-    , offset   :: Maybe Int64
-    , encoding :: Put
+    { evOrder                 :: Int64
+    , evIsDynamic             :: Bool
+    , evEncoding              :: Put
+    , evEncodingLengthInBytes :: Int64 -- cache
     }
 
 instance Eq EncodedValue where
-  ev1 == ev2 = order ev1 == order ev2
+  ev1 == ev2 = evOrder ev1 == evOrder ev2
 
 instance Ord EncodedValue where
-  compare ev1 ev2 = order ev1 `compare` order ev2
+  compare ev1 ev2 = evOrder ev1 `compare` evOrder ev2
 
+-- from https://docs.soliditylang.org/en/v0.8.12/abi-spec.html#examples
+--
+-- if Ti is static:
+--   head(X(i)) = enc(X(i)) and tail(X(i)) = "" (the empty string)
+-- otherwise, i.e. if Ti is dynamic:
+--   head(X(i)) = enc(len( head(X(1)) ... head(X(k)) tail(X(1)) ... tail(X(i-1)) )) tail(X(i)) = enc(X(i))
 combineEncodedValues :: [EncodedValue] -> Put
 combineEncodedValues encodings =
-  let sortedEs = adjust headsOffset $ L.sort encodings
-      encodings' = addTailOffsets headsOffset [] sortedEs
-  in let heads = foldl (\acc EncodedValue{..} -> case offset of
-                          Nothing -> acc <> encoding
-                          Just o  -> acc <> putWord256 (fromIntegral o)
-                      ) mempty encodings'
-         tails = foldl (\acc EncodedValue{..} -> case offset of
-                          Nothing -> acc
-                          Just _  -> acc <> encoding
-                      ) mempty encodings'
+  let sortedEncodings = L.sort encodings
+
+      wordLengthInBytes :: Int64
+      wordLengthInBytes = 32
+
+      headsOffsetInBytes :: Int64
+      headsOffsetInBytes = foldl (+) 0 $ map (\EncodedValue{..} -> if evIsDynamic then wordLengthInBytes else evEncodingLengthInBytes) encodings
+
+      heads = fst $ foldl
+        (\(accumulator, lengthOfPreviousDynamicValues) EncodedValue{..} -> if evIsDynamic
+            then ( accumulator <> putWord256 (fromIntegral $ headsOffsetInBytes + lengthOfPreviousDynamicValues)
+                 , lengthOfPreviousDynamicValues + evEncodingLengthInBytes
+                 )
+            else ( accumulator <> evEncoding
+                 , lengthOfPreviousDynamicValues
+                 )
+        )
+        (mempty, 0)
+        sortedEncodings
+      tails = foldMap
+        (\EncodedValue{..} -> if evIsDynamic
+            then evEncoding
+            else mempty
+        )
+        sortedEncodings
       in heads <> tails
   where
-    adjust :: Int64 -> [EncodedValue] -> [EncodedValue]
-    adjust n = map (\ev -> ev {offset = (+) n <$> offset ev})
-    addTailOffsets :: Int64 -> [EncodedValue] -> [EncodedValue] -> [EncodedValue]
-    addTailOffsets init' acc es = case es of
-      [] -> reverse acc
-      (e : tail') -> case offset e of
-        Nothing -> addTailOffsets init' (e : acc) tail'
-        Just _  -> addTailOffsets init' (e : acc) (adjust (LBS.length . runPutLazy . encoding $ e) tail')
-    headsOffset :: Int64
-    headsOffset = foldl (\acc e -> case offset e of
-                                Nothing -> acc + (LBS.length . runPutLazy . encoding $ e)
-                                Just _ -> acc + 32
-                            ) 0 encodings
+
+-- aIsDynamic is a variable because of https://github.com/airalab/hs-web3/pull/129#issuecomment-1074045478
+-- TODO: call the `isDynamic` function in the `mkEncodedValue` function
+mkEncodedValue :: (AbiType a, AbiPut a) => [EncodedValue] -> a -> Bool -> EncodedValue
+mkEncodedValue otherEncodedArray a aIsDynamic =
+  let encoding = abiPut a
+  in EncodedValue
+  { evEncoding              = encoding
+  , evOrder                 = fromInteger . toInteger . L.length $ otherEncodedArray
+  , evIsDynamic             = aIsDynamic
+  , evEncodingLengthInBytes = lengthInBytes encoding
+  }
+  where
+  lengthInBytes :: Put -> Int64
+  lengthInBytes e = LBS.length . runPutLazy $ e
 
 class AbiData a where
     _serialize :: [EncodedValue] -> a -> [EncodedValue]
@@ -82,20 +106,8 @@ class AbiData a where
 instance AbiData (NP f '[]) where
     _serialize encoded _ = encoded
 
-instance (AbiType b, AbiPut b, AbiData (NP I as)) => AbiData (NP I (b :as)) where
-    _serialize encoded (I b :* a) =
-        if isDynamic (Proxy :: Proxy b)
-        then _serialize (dynEncoding  : encoded) a
-        else _serialize (staticEncoding : encoded) a
-      where
-        staticEncoding = EncodedValue { encoding = abiPut b
-                                      , offset = Nothing
-                                      , order = 1 + (fromInteger . toInteger . L.length $ encoded)
-                                      }
-        dynEncoding = EncodedValue { encoding = abiPut b
-                                   , offset = Just 0
-                                   , order = 1 + (fromInteger . toInteger . L.length $ encoded)
-                                   }
+instance (AbiType b, AbiPut b, AbiData (NP I as)) => AbiData (NP I (b : as)) where
+    _serialize encoded (I b :* a) = _serialize (mkEncodedValue encoded b (isDynamic (Proxy :: Proxy b)) : encoded) a
 
 instance AbiData (NP f as) => GenericAbiPut (SOP f '[as]) where
     gAbiPut (SOP (Z a)) = combineEncodedValues $ _serialize [] a
