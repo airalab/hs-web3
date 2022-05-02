@@ -40,13 +40,14 @@ module Network.Ethereum.Account
     , gasPrice
     , block
     , account
+    , timeout
 
     ) where
 
 import           Network.Ethereum.Account.Class    (Account (..))
 import           Network.Ethereum.Account.Default  (DefaultAccount)
 import           Network.Ethereum.Account.Internal (account, block, gasLimit,
-                                                    gasPrice, to, value,
+                                                    gasPrice, timeout, to, value,
                                                     withParam)
 import           Network.Ethereum.Account.LocalKey (LocalKey (..),
                                                     LocalKeyAccount)

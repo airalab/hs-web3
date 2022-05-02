@@ -82,7 +82,7 @@ instance Account LocalKey LocalKeyAccount where
 
         let packer = encodeTransaction params' (localKeyChainId _account)
             signed = signTransaction packer (localKeyPrivate _account)
-        lift $ getReceipt =<< Eth.sendRawTransaction signed
+        lift $ getReceipt _timeout =<< Eth.sendRawTransaction signed
 
     call (args :: a) = do
         CallParam{..} <- get

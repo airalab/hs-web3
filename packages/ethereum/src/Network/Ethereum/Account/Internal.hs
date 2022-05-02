@@ -23,6 +23,7 @@ import           Control.Monad.State.Strict     (MonadState (..), StateT (..),
                                                  withStateT)
 import           Control.Monad.Trans            (MonadTrans (..))
 import           Data.Default                   (Default (..))
+import           Data.Either                    (fromRight)
 import           Data.Maybe                     (fromMaybe)
 import           Lens.Micro                     (Lens', lens)
 
@@ -52,6 +53,8 @@ data CallParam p = CallParam
     -- ^ Call block number
     , _account  :: p
     -- ^ Account params to sign transaction
+    , _timeout  :: Maybe Int
+    -- ^ Transaction timeout in microseconds
     } deriving Eq
 
 -- | Transaction recipient lens
@@ -77,6 +80,10 @@ block = lens _block $ \a b -> a { _block = b }
 -- | EOA params lens
 account :: Lens' (CallParam p) p
 account = lens _account $ \a b -> a { _account = b }
+
+-- | Transaction timeout lens
+timeout :: Lens' (CallParam p) (Maybe Int)
+timeout = lens _timeout $ \a b -> a { _timeout = b }
 
 -- | Monad transformer for sending parametrized transactions from account
 newtype AccountT p m a = AccountT
@@ -104,7 +111,7 @@ withParam f m = AccountT $ withStateT f $ runAccountT m
 
 defaultCallParam :: a -> CallParam a
 {-# INLINE defaultCallParam #-}
-defaultCallParam = CallParam def 0 Nothing Nothing Latest
+defaultCallParam acc = CallParam def 0 Nothing Nothing Latest acc Nothing
 
 getCall :: MonadState (CallParam p) m => m Call
 getCall = do
@@ -115,16 +122,25 @@ getCall = do
                  , callGasPrice = fromInteger <$> _gasPrice
                  }
 
-getReceipt :: JsonRpc m => HexString -> m TxReceipt
-getReceipt tx = do
+getReceipt :: JsonRpc m => Maybe Int -> HexString -> m (Either HexString TxReceipt)
+getReceipt mbtimeout tx = do
     mbreceipt <- Eth.getTransactionReceipt tx
     case mbreceipt of
-        Just receipt -> return receipt
-        Nothing -> do
+        Just receipt -> return $ Right receipt
+        Nothing -> case mbtimeout of
+            Just us
+                | us > 0 -> retry $ Just $ us - 100000
+                | otherwise -> return $ Left tx
+            Nothing -> retry Nothing
+    where
+        retry mbtimeout' = do
             liftIO $ threadDelay 100000
-            -- TODO: avoid inifinite loop
-            getReceipt tx
+            getReceipt mbtimeout' tx
+
+getReceipt' :: JsonRpc m => HexString -> m TxReceipt
+getReceipt' = fmap (fromRight undefined) . getReceipt Nothing
 
 updateReceipt :: JsonRpc m => TxReceipt -> m TxReceipt
 {-# INLINE updateReceipt #-}
-updateReceipt = getReceipt . receiptTransactionHash
+-- No timeout, because we update the receipt of an already processed transaction.
+updateReceipt = getReceipt' . receiptTransactionHash

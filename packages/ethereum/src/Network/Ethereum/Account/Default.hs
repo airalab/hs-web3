@@ -45,6 +45,7 @@ instance Account () DefaultAccount where
 
     send (args :: a) = do
         c <- getCall
+        timeout <- _timeout <$> get
         lift $ do
             accounts <- Eth.accounts
             let dat = selector (Proxy :: Proxy a) <> encode args
@@ -57,7 +58,7 @@ instance Account () DefaultAccount where
                     gasLimit <- Eth.estimateGas params
                     return $ params { callGas = Just gasLimit }
 
-            getReceipt =<< Eth.sendTransaction params'
+            getReceipt timeout =<< Eth.sendTransaction params'
 
     call (args :: a) = do
         c <- getCall

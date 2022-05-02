@@ -17,6 +17,7 @@ module Network.Ethereum.Account.Safe where
 import           Control.Concurrent                (threadDelay)
 import           Control.Monad.IO.Class            (liftIO)
 import           Control.Monad.Trans               (lift)
+import           Data.ByteArray.HexString          (HexString)
 
 import           Network.Ethereum.Account.Class    (Account (send))
 import           Network.Ethereum.Account.Internal (updateReceipt)
@@ -32,10 +33,15 @@ safeSend :: (Account p t, JsonRpc m, Method args, Monad (t m))
          -- ^ Confirmation in blocks
          -> args
          -- ^ Contract method arguments
-         -> t m TxReceipt
-         -- ^ Receipt of sended transaction
-safeSend b a = lift . waiting =<< send a
+         -> t m (Either HexString TxReceipt)
+         -- ^ Receipt of the sent transaction, or transaction data in case of a timeout
+safeSend b a = lift . withReceipt waiting =<< send a
   where
+    withReceipt f receiptOrTx =
+        case receiptOrTx of
+            Left tx -> return $ Left tx
+            Right receipt -> Right <$> f receipt
+
     waiting receipt =
         case receiptBlockNumber receipt of
             Nothing -> do
