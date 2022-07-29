@@ -231,7 +231,7 @@ funArgs (x:xs) = case funArgComponents x of
   Nothing   -> funArgType x <> "," <> funArgs xs
   Just cmps -> case funArgType x of
       "tuple" -> "(" <> funArgs cmps <> ")," <> funArgs xs
-      "tuple[]" -> "[(" <> funArgs cmps <> ")]," <> funArgs xs
+      "tuple[]" -> "(" <> funArgs cmps <> ")[]," <> funArgs xs
       typ       -> error $ "Unexpected type " ++ T.unpack typ ++ " - expected tuple or tuple[]"
 
 -- | Take a signature by given decl, e.g. foo(uint,string)
