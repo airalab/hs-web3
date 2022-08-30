@@ -31,9 +31,9 @@ library
       src
   ghc-options: -funbox-strict-fields -Wduplicate-exports -Whi-shadowing -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-monadfail-instances -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs
   build-depends:
-      base >4.11 && <4.15
+      base >4.11 && <4.16
     , cereal >0.5 && <0.6
-    , memory >0.14 && <0.16
+    , memory >0.14 && <0.17
     , memory-hexstring ==1.0.*
     , scale ==1.0.*
     , wide-word >0.1 && <0.2
@@ -51,13 +51,13 @@ test-suite tests
       src
   ghc-options: -funbox-strict-fields -Wduplicate-exports -Whi-shadowing -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-monadfail-instances -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >4.11 && <4.15
+      base >4.11 && <4.16
     , cereal >0.5 && <0.6
     , hspec >=2.4.4 && <2.8
     , hspec-contrib >=0.4.0 && <0.6
     , hspec-discover >=2.4.4 && <2.8
     , hspec-expectations >=0.8.2 && <0.9
-    , memory >0.14 && <0.16
+    , memory >0.14 && <0.17
     , memory-hexstring ==1.0.*
     , scale ==1.0.*
     , wide-word >0.1 && <0.2

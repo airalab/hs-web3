@@ -31,11 +31,11 @@ library
       src
   ghc-options: -funbox-strict-fields -Wduplicate-exports -Whi-shadowing -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-monadfail-instances -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs
   build-depends:
-      aeson >1.2 && <1.6
-    , base >4.11 && <4.15
+      aeson >1.2 && <2.1
+    , base >4.11 && <4.16
     , bytestring >0.10 && <0.11
     , exceptions >0.8 && <0.11
-    , http-client >0.5 && <0.7
+    , http-client >0.5 && <0.8
     , http-client-tls >0.3 && <0.4
     , mtl >2.2 && <2.3
     , random >1.0 && <1.3

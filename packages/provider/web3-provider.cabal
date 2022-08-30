@@ -32,10 +32,10 @@ library
   ghc-options: -funbox-strict-fields -Wduplicate-exports -Whi-shadowing -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-monadfail-instances -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs
   build-depends:
       async >2.1 && <2.3
-    , base >4.11 && <4.15
+    , base >4.11 && <4.16
     , data-default >0.7 && <0.8
     , exceptions >0.8 && <0.11
-    , http-client >0.5 && <0.7
+    , http-client >0.5 && <0.8
     , jsonrpc-tinyclient ==1.0.*
     , mtl >2.2 && <2.3
     , network >2.5 && <3.2

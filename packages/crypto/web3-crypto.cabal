@@ -47,12 +47,12 @@ library
   c-sources:
       src/cbits/xxhash.c
   build-depends:
-      aeson >1.2 && <1.6
-    , base >4.11 && <4.15
+      aeson >1.2 && <2.1
+    , base >4.11 && <4.16
     , bytestring >0.10 && <0.11
     , containers >0.6 && <0.7
     , cryptonite >0.22 && <0.30
-    , memory >0.14 && <0.16
+    , memory >0.14 && <0.17
     , memory-hexstring ==1.0.*
     , text >1.2 && <1.3
     , uuid-types >1.0 && <1.1
@@ -88,8 +88,8 @@ test-suite tests
   c-sources:
       src/cbits/xxhash.c
   build-depends:
-      aeson >1.2 && <1.6
-    , base >4.11 && <4.15
+      aeson >1.2 && <2.1
+    , base >4.11 && <4.16
     , bytestring >0.10 && <0.11
     , containers >0.6 && <0.7
     , cryptonite >0.22 && <0.30
@@ -97,7 +97,7 @@ test-suite tests
     , hspec-contrib >=0.4.0 && <0.6
     , hspec-discover >=2.4.4 && <2.8
     , hspec-expectations >=0.8.2 && <0.9
-    , memory >0.14 && <0.16
+    , memory >0.14 && <0.17
     , memory-hexstring ==1.0.*
     , text >1.2 && <1.3
     , uuid-types >1.0 && <1.1
