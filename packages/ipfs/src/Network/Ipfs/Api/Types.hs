@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -21,9 +22,14 @@ module Network.Ipfs.Api.Types where
 import           Control.Arrow              (left)
 import           Control.Monad
 import           Data.Aeson
+#if __GLASGOW_HASKELL__ >= 900
+import qualified Data.Aeson.KeyMap          as H
+#endif
 import           Data.ByteString.Lazy       (toStrict)
 import qualified Data.ByteString.Lazy.Char8 ()
+#if __GLASGOW_HASKELL__ < 900
 import qualified Data.HashMap.Strict        as H
+#endif
 import           Data.Int
 import           Data.Text                  (Text)
 import qualified Data.Text.Encoding         as TextS
