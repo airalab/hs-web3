@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           memory-hexstring
-version:        1.0.0.0
+version:        1.0.0.1
 synopsis:       Hex-string type for Haskell Web3 library.
 description:    Client library for Third Generation of Web.
 category:       Network

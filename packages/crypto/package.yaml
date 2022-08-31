@@ -1,5 +1,5 @@
 name:                web3-crypto
-version:             1.0.0.0
+version:             1.0.0.1
 synopsis:            Cryptograhical primitives for Haskell Web3 library.
 description:         This package implements Web3 specific cryptography and helper functions.
 github:              "airalab/hs-web3"

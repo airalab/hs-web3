@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           web3-solidity
-version:        1.0.0.0
+version:        1.0.0.1
 synopsis:       Solidity language for Haskell Web3 library.
 description:    This package contains Solidity parsec-based parser and primitive types.
 category:       Network

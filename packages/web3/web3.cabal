@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           web3
-version:        1.0.0.0
+version:        1.0.0.1
 synopsis:       Haskell Web3 library.
 description:    Client library for Third Generation of Web.
 category:       Network

@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           scale
-version:        1.0.0.0
+version:        1.0.0.1
 synopsis:       SCALE v2.0 codec for Haskell Web3 library.
 description:    Client library for Third Generation of Web.
 category:       Network
