@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE BangPatterns      #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
 {-# LANGUAGE TemplateHaskell   #-}
@@ -45,7 +46,8 @@ module Network.Ethereum.Contract.TH
 
 import           Control.Applicative              ((<|>))
 import           Control.Monad                    (replicateM, (<=<))
-import qualified Data.Aeson                       as Aeson (encode)
+import qualified Data.Aeson                       as Aeson
+import           Data.Aeson.Casing                (aesonDrop, camelCase)
 import           Data.ByteArray                   (convert)
 import           Data.ByteArray.HexString         (HexString)
 import           Data.Char                        (toLower, toUpper)
@@ -207,6 +209,7 @@ mkDecl ev@(DEvent uncheckedName inputs anonymous) = sequence
     , instanceD' nonIndexedName (conT ''AbiGet) []
     , dataD' allName (recC allName (map (\(n, a) -> (\(b,t) -> return (n,b,t)) <=< toBang <=< typeEventQ $ a) allArgs)) derivingD
     , instanceD' allName (conT ''Generic) []
+    , instanceD' allName (conT ''Aeson.ToJSON) [funD' 'Aeson.toJSON [] [| Aeson.genericToJSON $ aesonDrop nameL (init' . camelCase) |] ]
     , instanceD (cxt [])
         (pure $ ConT ''IndexedEvent `AppT` ConT indexedName `AppT` ConT nonIndexedName `AppT` ConT allName)
         [funD' 'isAnonymous [] [|const anonymous|]]
@@ -216,6 +219,7 @@ mkDecl ev@(DEvent uncheckedName inputs anonymous) = sequence
     ]
   where
     name = if toLower (T.head uncheckedName) == Char.toUpper (T.head uncheckedName) then "EvT" <> uncheckedName else uncheckedName
+    !nameL = length (T.unpack name)
     topics    = [Just (T.unpack $ eventId ev)] <> replicate (length indexedArgs) Nothing
     toBang ty = bangType (bang sourceNoUnpack sourceStrict) (return ty)
     tag (n, ty) = AppT (AppT (ConT ''Tagged) (LitT $ NumTyLit n)) <$> typeEventQ ty
@@ -250,6 +254,11 @@ mkDecl fun@(DFunction name constant inputs outputs) = (++)
         derivingD = [''Show, ''Eq, ''Ord, ''GHC.Generic]
 
 mkDecl _ = return []
+
+-- | Best-effort name recovery from ADT to original 'eveArgName' on inputs.
+init' :: String -> String
+init' [] = []
+init' xs = if Char.isDigit (last xs) then xs else init xs
 
 mkContractDecl :: Text -> Text -> Text -> Declaration -> DecsQ
 mkContractDecl name a b (DConstructor inputs) = sequence
