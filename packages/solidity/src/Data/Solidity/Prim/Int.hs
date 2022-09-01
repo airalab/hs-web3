@@ -34,6 +34,7 @@ module Data.Solidity.Prim.Int
 import qualified Basement.Numerical.Number as Basement (toInteger)
 import           Basement.Types.Word256    (Word256 (Word256))
 import qualified Basement.Types.Word256    as Basement (quot, rem)
+import           Data.Aeson                (ToJSON(..))
 import           Data.Bits                 (Bits (testBit), (.&.))
 import           Data.Proxy                (Proxy (..))
 import           Data.Serialize            (Get, Putter, Serialize (get, put))
@@ -90,6 +91,9 @@ instance (n <= 256) => AbiGet (UIntN n) where
 instance (n <= 256) => AbiPut (UIntN n) where
     abiPut = putWord256 . unUIntN
 
+instance (KnownNat n, n <= 256) => ToJSON (UIntN n) where
+  toJSON = toJSON . toInteger
+
 -- | Signed integer with fixed length in bits.
 newtype IntN (n :: Nat) = IntN { unIntN :: Word256 }
     deriving (Eq, Ord, Enum, Bits, Generic)
@@ -129,6 +133,9 @@ instance (n <= 256) => AbiGet (IntN n) where
 
 instance (n <= 256) => AbiPut (IntN n) where
     abiPut = putWord256 . unIntN
+
+instance (KnownNat n, n <= 256) => ToJSON (IntN n) where
+  toJSON = toJSON . toInteger
 
 -- | Serialize 256 bit unsigned integer.
 putWord256 :: Putter Word256
