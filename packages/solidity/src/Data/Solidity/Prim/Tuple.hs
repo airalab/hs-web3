@@ -28,7 +28,8 @@ import           Data.Solidity.Abi           (AbiGet, AbiPut, AbiType (..))
 import           Data.Solidity.Abi.Generic   ()
 import           Data.Solidity.Prim.Tuple.TH (tupleDecs)
 
-#if __GLASGOW_HASKELL__ < 900
+#if MIN_VERSION_base(4,15,0)
+#else
 deriving instance GHC.Generic (OneTuple a)
 #endif
 instance Generic (OneTuple a)
