@@ -8,7 +8,7 @@ module Data.Solidity.Test.EncodingSpec where
 
 import           Control.Exception          (evaluate)
 import           Data.Text                  (Text)
-import           Data.Tuple.OneTuple        (OneTuple (..))
+import           Data.Tuple.OneTuple
 import           Generics.SOP               (Generic, Rep)
 import           Test.Hspec
 

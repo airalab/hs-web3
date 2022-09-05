@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -23,7 +24,11 @@ import           Control.Monad
 import           Data.Aeson
 import           Data.ByteString.Lazy       (toStrict)
 import qualified Data.ByteString.Lazy.Char8 ()
+#if MIN_VERSION_aeson(2,0,0)
+import qualified Data.Aeson.KeyMap          as H
+#else
 import qualified Data.HashMap.Strict        as H
+#endif
 import           Data.Int
 import           Data.Text                  (Text)
 import qualified Data.Text.Encoding         as TextS

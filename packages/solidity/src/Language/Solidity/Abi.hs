@@ -91,6 +91,11 @@ data StateMutability
   | SMNonPayable
   deriving (Eq, Ord, Show)
 
+$(deriveJSON (defaultOptions {
+    sumEncoding = TaggedObject "stateMutability" "contents"
+  , constructorTagModifier = fmap toLower . drop 2 })
+    ''StateMutability)
+
 -- | Elementary contract interface item
 data Declaration = DConstructor
     { conInputs :: [FunctionArg]
@@ -182,12 +187,6 @@ $(deriveToJSON
        , constructorTagModifier = over _head toLower . drop 1
        , fieldLabelModifier = over _head toLower . drop 3 })
    ''Declaration)
-
-$(deriveJSON (defaultOptions {
-    sumEncoding = TaggedObject "stateMutability" "contents"
-  , constructorTagModifier = fmap toLower . drop 2 })
-    ''StateMutability)
-
 
 -- | Contract Abi is a list of method / event declarations
 newtype ContractAbi = ContractAbi { unAbi :: [Declaration] }

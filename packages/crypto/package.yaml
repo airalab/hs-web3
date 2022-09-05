@@ -1,5 +1,5 @@
 name:                web3-crypto
-version:             1.0.0.0
+version:             1.0.0.1
 synopsis:            Cryptograhical primitives for Haskell Web3 library.
 description:         This package implements Web3 specific cryptography and helper functions.
 github:              "airalab/hs-web3"
@@ -15,10 +15,10 @@ extra-source-files:
 - src/cbits/xxhash.c
 
 dependencies:
-- base                 >4.11 && <4.15
+- base                 >4.11 && <4.16
 - text                 >1.2  && <1.3
-- aeson                >1.2  && <1.6
-- memory               >0.14 && <0.16
+- aeson                >1.2  && <2.1
+- memory               >0.14 && <0.17
 - vector               >0.12 && <0.13
 - containers           >0.6  && <0.7
 - uuid-types           >1.0  && <1.1
@@ -67,9 +67,9 @@ tests:
     c-sources:    src/cbits/xxhash.c
     dependencies:
     - hspec-expectations   >=0.8.2  && <0.9
-    - hspec-discover       >=2.4.4  && <2.8
+    - hspec-discover       >=2.4.4  && <2.9
     - hspec-contrib        >=0.4.0  && <0.6
-    - hspec                >=2.4.4  && <2.8
+    - hspec                >=2.4.4  && <2.9
     ghc-options:
     - -threaded
     - -rtsopts

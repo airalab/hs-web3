@@ -38,14 +38,14 @@ library
       src
   ghc-options: -funbox-strict-fields -Wduplicate-exports -Whi-shadowing -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-monadfail-instances -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs
   build-depends:
-      base >4.11 && <4.15
+      base >4.11 && <4.16
     , bitvec >1.0 && <2.0
     , bytestring >0.10 && <0.11
     , cereal >0.5 && <0.6
     , data-default >0.7 && <0.8
     , generics-sop >0.3 && <0.6
-    , memory >0.14 && <0.16
-    , template-haskell >2.11 && <2.17
+    , memory >0.14 && <0.17
+    , template-haskell >2.11 && <2.18
     , text >1.2 && <1.3
     , vector >0.12 && <0.13
   default-language: Haskell2010
@@ -71,18 +71,18 @@ test-suite tests
       src
   ghc-options: -funbox-strict-fields -Wduplicate-exports -Whi-shadowing -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-monadfail-instances -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >4.11 && <4.15
+      base >4.11 && <4.16
     , bitvec >1.0 && <2.0
     , bytestring >0.10 && <0.11
     , cereal >0.5 && <0.6
     , data-default >0.7 && <0.8
     , generics-sop >0.3 && <0.6
-    , hspec >=2.4.4 && <2.8
+    , hspec >=2.4.4 && <2.9
     , hspec-contrib >=0.4.0 && <0.6
-    , hspec-discover >=2.4.4 && <2.8
+    , hspec-discover >=2.4.4 && <2.9
     , hspec-expectations >=0.8.2 && <0.9
-    , memory >0.14 && <0.16
-    , template-haskell >2.11 && <2.17
+    , memory >0.14 && <0.17
+    , template-haskell >2.11 && <2.18
     , text >1.2 && <1.3
     , vector >0.12 && <0.13
   default-language: Haskell2010
