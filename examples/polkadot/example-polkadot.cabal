@@ -1,0 +1,34 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.4.
+--
+-- see: https://github.com/sol/hpack
+
+name:           example-polkadot
+version:        0.0.0.0
+synopsis:       Polkadot API example.
+category:       Network
+homepage:       https://github.com/airalab/hs-web3#readme
+bug-reports:    https://github.com/airalab/hs-web3/issues
+author:         Aleksandr Krupenkin
+maintainer:     mail@akru.me
+copyright:      (c) Aleksandr Krupenkin 2016-2021
+license:        Apache-2.0
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/airalab/hs-web3
+
+executable example-polkadot
+  main-is: Main.hs
+  other-modules:
+      Paths_example_polkadot
+  hs-source-dirs:
+      ./
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base
+    , web3-polkadot
+    , web3-provider
+  default-language: Haskell2010

@@ -1,11 +1,11 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.6.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
 
 name:           web3-crypto
-version:        1.0.0.0
+version:        1.0.0.1
 synopsis:       Cryptograhical primitives for Haskell Web3 library.
 description:    This package implements Web3 specific cryptography and helper functions.
 category:       Network
@@ -47,7 +47,7 @@ library
   c-sources:
       src/cbits/xxhash.c
   build-depends:
-      aeson >1.2 && <2.1
+      aeson >1.2 && <2.2
     , base >4.11 && <4.16
     , bytestring >0.10 && <0.11
     , containers >0.6 && <0.7
@@ -88,7 +88,7 @@ test-suite tests
   c-sources:
       src/cbits/xxhash.c
   build-depends:
-      aeson >1.2 && <2.1
+      aeson >1.2 && <2.2
     , base >4.11 && <4.16
     , bytestring >0.10 && <0.11
     , containers >0.6 && <0.7

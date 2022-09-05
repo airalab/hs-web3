@@ -1,11 +1,11 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.6.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
 
 name:           web3-polkadot
-version:        1.0.0.0
+version:        1.0.0.1
 synopsis:       Polkadot support for Haskell Web3 library.
 description:    Client library for Third Generation of Web.
 category:       Network

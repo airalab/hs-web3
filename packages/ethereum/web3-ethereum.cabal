@@ -1,11 +1,11 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.6.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
 
 name:           web3-ethereum
-version:        1.0.0.0
+version:        1.0.0.1
 synopsis:       Ethereum support for Haskell Web3 library.
 description:    Client library for Third Generation of Web.
 category:       Network
@@ -57,7 +57,7 @@ library
   ghc-options: -funbox-strict-fields -Wduplicate-exports -Whi-shadowing -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-monadfail-instances -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs
   build-depends:
       OneTuple >0.2 && <0.4
-    , aeson >1.2 && <2.1
+    , aeson >1.2 && <2.2
     , base >4.11 && <4.16
     , bytestring >0.10 && <0.11
     , data-default >0.7 && <0.8
@@ -121,7 +121,7 @@ test-suite tests
   ghc-options: -funbox-strict-fields -Wduplicate-exports -Whi-shadowing -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-monadfail-instances -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       OneTuple >0.2 && <0.4
-    , aeson >1.2 && <2.1
+    , aeson >1.2 && <2.2
     , base >4.11 && <4.16
     , bytestring >0.10 && <0.11
     , data-default >0.7 && <0.8
