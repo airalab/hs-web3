@@ -1,7 +1,9 @@
-{-# LANGUAGE DeriveGeneric       #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE StandaloneDeriving  #-}
-{-# LANGUAGE TemplateHaskell     #-}
+{-# LANGUAGE CPP                  #-}
+{-# LANGUAGE DeriveGeneric        #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
+{-# LANGUAGE StandaloneDeriving   #-}
+{-# LANGUAGE TemplateHaskell      #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 -- |
 -- Module      :  Data.Solidity.Prim.Tuple
@@ -26,7 +28,10 @@ import           Data.Solidity.Abi           (AbiGet, AbiPut, AbiType (..))
 import           Data.Solidity.Abi.Generic   ()
 import           Data.Solidity.Prim.Tuple.TH (tupleDecs)
 
+#if MIN_VERSION_base(4,15,0)
+#else
 deriving instance GHC.Generic (OneTuple a)
+#endif
 instance Generic (OneTuple a)
 
 instance AbiType a => AbiType (OneTuple a) where

@@ -1,5 +1,5 @@
 name:                web3
-version:             1.0.0.0
+version:             1.0.0.1
 synopsis:            Haskell Web3 library.
 description:         Client library for Third Generation of Web.
 github:              "airalab/hs-web3"
@@ -11,7 +11,7 @@ copyright:           "(c) Aleksandr Krupenkin 2016-2021"
 category:            Network
 
 dependencies:
-- base                 >4.11 && <4.15
+- base                 >4.11 && <4.16
 - web3-provider        >=1.0 && <1.1
 - web3-ethereum        >=1.0 && <1.1
 - web3-polkadot        >=1.0 && <1.1

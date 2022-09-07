@@ -6,7 +6,7 @@
 {-# LANGUAGE QuasiQuotes           #-}
 module Network.Ethereum.Test.THSpec where
 
-import           Data.Tuple.OneTuple (OneTuple(..))
+import           Data.Tuple.OneTuple
 import           Network.Ethereum.Contract.TH
 import           Test.Hspec
 
