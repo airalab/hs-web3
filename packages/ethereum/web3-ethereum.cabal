@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.34.7.
 --
 -- see: https://github.com/sol/hpack
 
@@ -58,6 +58,7 @@ library
   build-depends:
       OneTuple >0.2 && <0.4
     , aeson >1.2 && <2.2
+    , aeson-casing ==0.2.*
     , base >4.11 && <4.16
     , bytestring >0.10 && <0.11
     , data-default >0.7 && <0.8
@@ -122,6 +123,7 @@ test-suite tests
   build-depends:
       OneTuple >0.2 && <0.4
     , aeson >1.2 && <2.2
+    , aeson-casing ==0.2.*
     , base >4.11 && <4.16
     , bytestring >0.10 && <0.11
     , data-default >0.7 && <0.8
