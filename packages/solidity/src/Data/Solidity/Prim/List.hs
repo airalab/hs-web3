@@ -71,7 +71,7 @@ instance (AbiPut a, KnownNat n, 1 <= n+1) => AbiPut (ListN n a) where
     abiPut l = if isDynamic (Proxy :: Proxy a) then do
                    let encs = SL.map (runPut . abiPut) l
                        lengths = SL.map ((fromIntegral :: Int -> Word256) . B.length) encs
-                       len = fromInteger (natVal (Proxy :: Proxy n))
+                       len = natVal (Proxy :: Proxy n)
                        offsets = SL.init $ SL.scanl' (+) (fromIntegral (0x20 * len)) lengths
                    SL.mapM_ putWord256 offsets
                    SL.mapM_ putByteString encs
