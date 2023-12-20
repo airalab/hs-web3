@@ -1,5 +1,5 @@
 # Resolver to choose a 'specific' stackage snapshot or a compiler version.
-resolver: lts-19.21
+resolver: lts-22.0
 
 # User packages to be built.
 packages:
@@ -18,10 +18,15 @@ packages:
 - 'examples/scale'
 - 'examples/polkadot'
 
+allow-newer: true
+
+allow-newer-deps:
+- animalcase
+
 # Extra package dependencies
 extra-deps:
 - animalcase-0.1.0.2@sha256:d7b80c3130c68d7ce8ddd9782588b2c4dd7da86461f302c54cc4acddf0902b51
-- relapse-1.0.0.1
+
 
 # Dependencies bounds
 pvp-bounds: both

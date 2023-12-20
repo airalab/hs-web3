@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -48,15 +48,15 @@ library
       src/cbits/xxhash.c
   build-depends:
       aeson >1.2 && <2.2
-    , base >4.11 && <4.16
-    , bytestring >0.10 && <0.11
+    , base >4.11 && <4.19
+    , bytestring >0.10 && <0.12
     , containers >0.6 && <0.7
-    , cryptonite >0.22 && <0.30
-    , memory >0.14 && <0.17
+    , cryptonite >0.22 && <0.31
+    , memory >0.14 && <0.19
     , memory-hexstring ==1.0.*
-    , text >1.2 && <1.3
+    , text >1.2 && <2.1
     , uuid-types >1.0 && <1.1
-    , vector >0.12 && <0.13
+    , vector >0.12 && <0.14
   default-language: Haskell2010
 
 test-suite tests
@@ -89,17 +89,17 @@ test-suite tests
       src/cbits/xxhash.c
   build-depends:
       aeson >1.2 && <2.2
-    , base >4.11 && <4.16
-    , bytestring >0.10 && <0.11
+    , base >4.11 && <4.19
+    , bytestring >0.10 && <0.12
     , containers >0.6 && <0.7
-    , cryptonite >0.22 && <0.30
-    , hspec >=2.4.4 && <2.9
+    , cryptonite >0.22 && <0.31
+    , hspec >=2.4.4 && <2.12
     , hspec-contrib >=0.4.0 && <0.6
-    , hspec-discover >=2.4.4 && <2.9
+    , hspec-discover >=2.4.4 && <2.12
     , hspec-expectations >=0.8.2 && <0.9
-    , memory >0.14 && <0.17
+    , memory >0.14 && <0.19
     , memory-hexstring ==1.0.*
-    , text >1.2 && <1.3
+    , text >1.2 && <2.1
     , uuid-types >1.0 && <1.1
-    , vector >0.12 && <0.13
+    , vector >0.12 && <0.14
   default-language: Haskell2010
