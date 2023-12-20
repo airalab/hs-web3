@@ -11,7 +11,7 @@ copyright:           "(c) Aleksandr Krupenkin 2016-2021"
 category:            Network
 
 dependencies:
-- base                 >4.11 && <4.16
+- base                 >4.11 && <4.19
 - web3-provider        >=1.0 && <1.1
 - web3-ethereum        >=1.0 && <1.1
 - web3-polkadot        >=1.0 && <1.1
