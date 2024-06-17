@@ -1,5 +1,5 @@
 # Resolver to choose a 'specific' stackage snapshot or a compiler version.
-resolver: lts-22.0
+resolver: lts-22.26
 
 # User packages to be built.
 packages:
