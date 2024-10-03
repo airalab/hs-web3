@@ -51,7 +51,7 @@ library
     , base >4.11 && <4.18
     , bytestring >0.10 && <0.12
     , containers >0.6 && <0.7
-    , cryptonite >0.22 && <0.31
+    , crypton >0.30 && <1.0
     , memory >0.14 && <0.19
     , memory-hexstring ==1.0.*
     , text >1.2 && <2.1
@@ -92,7 +92,7 @@ test-suite tests
     , base >4.11 && <4.18
     , bytestring >0.10 && <0.12
     , containers >0.6 && <0.7
-    , cryptonite >0.22 && <0.31
+    , crypton >0.30 && <1.0
     , hspec >=2.4.4 && <2.11
     , hspec-contrib >=0.4.0 && <0.6
     , hspec-discover >=2.4.4 && <2.11

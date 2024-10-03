@@ -22,7 +22,7 @@ dependencies:
 - vector               >0.12 && <0.14
 - containers           >0.6  && <0.7
 - uuid-types           >1.0  && <1.1
-- cryptonite           >0.22 && <0.31
+- crypton              >0.30 && <1.0
 - bytestring           >0.10 && <0.12
 - memory-hexstring     >=1.0 && <1.1
 
