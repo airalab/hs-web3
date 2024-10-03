@@ -3,7 +3,7 @@
 
 -- |
 -- Module      :  Network.Ethereum.Api.Web3
--- Copyright   :  Aleksandr Krupenkin 2016-2021
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
 -- License     :  Apache-2.0
 --
 -- Maintainer  :  mail@akru.me

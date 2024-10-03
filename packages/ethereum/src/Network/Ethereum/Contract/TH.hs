@@ -1,13 +1,13 @@
+{-# LANGUAGE BangPatterns      #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE BangPatterns      #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
 -- |
 -- Module      :  Network.Ethereum.Contract.TH
--- Copyright   :  Aleksandr Krupenkin 2016-2021
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
 -- License     :  Apache-2.0
 --
 -- Maintainer  :  mail@akru.me
@@ -64,8 +64,8 @@ import           Generics.SOP                     (Generic)
 import qualified GHC.Generics                     as GHC (Generic)
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Quote
-import           Lens.Micro                       (over, (^?), _head)
-import           Lens.Micro.Aeson                 (key, _JSON, _String)
+import           Lens.Micro                       (_head, over, (^?))
+import           Lens.Micro.Aeson                 (_JSON, _String, key)
 
 import           Data.Solidity.Abi                (AbiGet, AbiPut, AbiType (..))
 import           Data.Solidity.Event              (IndexedEvent (..))
@@ -75,8 +75,7 @@ import           Language.Solidity.Abi            (ContractAbi (..),
                                                    Declaration (..),
                                                    EventArg (..),
                                                    FunctionArg (..),
-                                                   SolidityType (..),
-                                                   eventId,
+                                                   SolidityType (..), eventId,
                                                    methodId,
                                                    parseSolidityEventArgType,
                                                    parseSolidityFunctionArgType)
@@ -350,7 +349,7 @@ quoteAbiDec str =
         Just (ContractAbi decs) -> do
             funEvDecs <- concat <$> mapM mkDecl (escape decs)
             case constructorSpec str of
-                Nothing -> return funEvDecs
+                Nothing           -> return funEvDecs
                 Just (a, b, c, d) -> (funEvDecs ++) <$> mkContractDecl a b c d
 
 -- | Abi information string

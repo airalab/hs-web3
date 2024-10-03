@@ -11,7 +11,7 @@
 
 -- |
 -- Module      :  Network.JsonRpc.TinyClient
--- Copyright   :  Aleksandr Krupenkin 2016-2018
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
 -- License     :  Apache-2.0
 --
 -- Maintainer  :  mail@akru.me
@@ -106,7 +106,7 @@ defaultSettings srv = liftIO $ JsonRpcHttpClient
 
 instance Show JsonRpcClient where
     show JsonRpcHttpClient{..} = "<JSON-RPC HTTP Client>"
-    show JsonRpcWsClient{..} = "<JSON-RPC WebSocket Client>"
+    show JsonRpcWsClient{..}   = "<JSON-RPC WebSocket Client>"
 
 -- | JSON-RPC request.
 data Request = Request

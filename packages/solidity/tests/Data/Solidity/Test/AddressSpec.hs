@@ -1,4 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
+
+-- |
+-- Module      :  Data.Solidity.Test.AddressSpec
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
+-- License     :  Apache-2.0
+--
+-- Maintainer  :  mail@akru.me
+-- Stability   :  experimental
+-- Portability :  unportable
+--
+
 module Data.Solidity.Test.AddressSpec where
 
 import           Data.ByteString            (ByteString)

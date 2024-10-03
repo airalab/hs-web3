@@ -1,4 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
+
+-- |
+-- Module      :  Crypto.Ethereum.Test.SignatureSpec
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
+-- License     :  Apache-2.0
+--
+-- Maintainer  :  mail@akru.me
+-- Stability   :  experimental
+-- Portability :  unportable
+--
+
 module Crypto.Ethereum.Test.SignatureSpec where
 
 import           Crypto.Ecdsa.Utils        (importKey)

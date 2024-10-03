@@ -1,14 +1,15 @@
-{-# LANGUAGE DataKinds           #-}
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE FlexibleInstances   #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeFamilies        #-}
-{-# LANGUAGE TypeOperators       #-}
+{-# LANGUAGE DataKinds            #-}
+{-# LANGUAGE FlexibleContexts     #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE OverloadedStrings    #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
+{-# LANGUAGE TypeFamilies         #-}
+{-# LANGUAGE TypeOperators        #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- |
 -- Module      :  Data.Solidity.Prim.Bytes
--- Copyright   :  Aleksandr Krupenkin 2016-2021
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
 -- License     :  Apache-2.0
 --
 -- Maintainer  :  mail@akru.me
@@ -85,7 +86,7 @@ instance ToJSON Bytes where
 -- | Sized byte array with fixed length in bytes
 type BytesN n = SizedByteArray n Bytes
 
-instance (n <= 32) => AbiType (BytesN n) where
+instance KnownNat n => AbiType (BytesN n) where
     isDynamic _ = False
 
 instance (KnownNat n, n <= 32) => AbiGet (BytesN n) where
@@ -93,21 +94,21 @@ instance (KnownNat n, n <= 32) => AbiGet (BytesN n) where
         ba <- unsafeFromByteArrayAccess <$> getBytes 32
         return $ S.take (ba :: BytesN 32)
 
-instance (KnownNat n, n <= 32) => AbiPut (BytesN n) where
+instance KnownNat n => AbiPut (BytesN n) where
     abiPut ba = putByteString $ convert ba <> zero (32 - len)
       where len = fromIntegral $ natVal (Proxy :: Proxy n)
 
-instance (KnownNat n, n <= 32) => IsString (BytesN n) where
+instance KnownNat n => IsString (BytesN n) where
     fromString s = unsafeFromByteArrayAccess padded
       where bytes = fromString s :: Bytes
             len = fromIntegral $ natVal (Proxy :: Proxy n)
             padded = bytes <> zero (len - length bytes)
 
-instance (KnownNat n, n <= 32) => FromJSON (BytesN n) where
+instance KnownNat n => FromJSON (BytesN n) where
     parseJSON v = do ba <- parseJSON v
                      return $ unsafeFromByteArrayAccess (ba :: Bytes)
 
-instance (KnownNat n, n <= 32) => ToJSON (BytesN n) where
+instance KnownNat n => ToJSON (BytesN n) where
     toJSON ba = toJSON (unSizedByteArray ba :: Bytes)
 
 abiGetByteString :: Get ByteString

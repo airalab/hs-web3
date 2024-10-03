@@ -7,7 +7,7 @@
 
 -- |
 -- Module      :  Data.Solidity.Prim.Tuple
--- Copyright   :  Aleksandr Krupenkin 2016-2021
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
 -- License     :  Apache-2.0
 --
 -- Maintainer  :  mail@akru.me
@@ -26,7 +26,10 @@ import           Data.Tuple.Solo             (Solo (..))
 import           Data.Tuple.OneTuple         (OneTuple (..))
 #endif
 import           Generics.SOP                (Generic)
+#if MIN_VERSION_base(4,15,0)
+#else
 import qualified GHC.Generics                as GHC (Generic)
+#endif
 
 import           Data.Solidity.Abi           (AbiGet, AbiPut, AbiType (..))
 import           Data.Solidity.Abi.Generic   ()

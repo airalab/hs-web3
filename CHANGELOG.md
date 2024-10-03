@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.0.1.0] 2024-10-03
+### Changed
+- Update dependencies, switch to LTS-21.25
+
+### Removed
+- IPFS library as outdated
+
 ## [1.0.0.0] 2020-10-00
 ### Changed
 - Library splitted for multiple independent packages

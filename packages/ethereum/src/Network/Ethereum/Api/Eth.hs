@@ -3,7 +3,7 @@
 
 -- |
 -- Module      :  Network.Ethereum.Web3.Eth
--- Copyright   :  Aleksandr Krupenkin 2016-2021
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
 -- License     :  Apache-2.0
 --
 -- Maintainer  :  mail@akru.me
@@ -20,7 +20,8 @@ import           Data.Solidity.Prim.Address (Address)
 import           Data.Text                  (Text)
 import           Network.Ethereum.Api.Types (Block, BlockT, Call, Change,
                                              DefaultBlock, Filter, Quantity,
-                                             SyncingState, Transaction, TxReceipt)
+                                             SyncingState, Transaction,
+                                             TxReceipt)
 import           Network.JsonRpc.TinyClient (JsonRpc (..))
 
 -- | Returns the current ethereum protocol version.

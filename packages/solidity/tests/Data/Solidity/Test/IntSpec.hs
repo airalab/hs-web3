@@ -1,4 +1,15 @@
 {-# LANGUAGE DataKinds #-}
+
+-- |
+-- Module      :  Data.Solidity.Test.IntSpec
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
+-- License     :  Apache-2.0
+--
+-- Maintainer  :  mail@akru.me
+-- Stability   :  experimental
+-- Portability :  unportable
+--
+
 module Data.Solidity.Test.IntSpec where
 
 import           Test.Hspec

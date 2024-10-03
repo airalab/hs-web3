@@ -1,6 +1,6 @@
 -- |
 -- Module      :  Network.Ethereum.Account
--- Copyright   :  Aleksandr Krupenkin 2016-2021
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
 -- License     :  Apache-2.0
 --
 -- Maintainer  :  mail@akru.me
@@ -8,7 +8,8 @@
 -- Portability :  unportable
 --
 -- In Etereun there are two types of accounts:
--- * Externally owned account (EOAs): an account controlled by a private key, and if you own the private key associated with the EOA you have the ability to send ether and messages from it.
+-- * Externally owned account (EOAs): an account controlled by a private key, and if you own
+-- the private key associated with the EOA you have the ability to send ether and messages from it.
 -- * Contract: an account that has its own code, and is controlled by code.
 --
 -- This module exports different kinds of EOAs: default, node managed and local. Node managed accounts
@@ -47,8 +48,8 @@ module Network.Ethereum.Account
 import           Network.Ethereum.Account.Class    (Account (..))
 import           Network.Ethereum.Account.Default  (DefaultAccount)
 import           Network.Ethereum.Account.Internal (account, block, gasLimit,
-                                                    gasPrice, timeout, to, value,
-                                                    withParam)
+                                                    gasPrice, timeout, to,
+                                                    value, withParam)
 import           Network.Ethereum.Account.LocalKey (LocalKey (..),
                                                     LocalKeyAccount)
 import           Network.Ethereum.Account.Personal (Personal (..),

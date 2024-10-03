@@ -1,13 +1,13 @@
 {-# LANGUAGE DataKinds            #-}
 {-# LANGUAGE FlexibleContexts     #-}
-{-# LANGUAGE TypeFamilies         #-}
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
+{-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE TypeOperators        #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- |
 -- Module      :  Data.Solidity.Prim.List
--- Copyright   :  Aleksandr Krupenkin 2016-2021
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
 -- License     :  Apache-2.0
 --
 -- Maintainer  :  mail@akru.me
@@ -25,14 +25,15 @@ module Data.Solidity.Prim.List
 
 import           Basement.Nat           (NatWithinBound)
 import           Basement.Sized.List    (ListN, toListN_, unListN)
-import qualified Basement.Sized.List    as SL (init, map, mapM, mapM_, replicateM, scanl')
+import qualified Basement.Sized.List    as SL (init, map, mapM, mapM_,
+                                               replicateM, scanl')
 import           Basement.Types.Word256 (Word256)
-import           Control.Monad          (replicateM, forM)
+import           Control.Monad          (forM, replicateM)
 import qualified Data.ByteString        as B
 import           Data.List              (scanl')
 import           Data.Proxy             (Proxy (..))
-import           Data.Serialize.Put     (runPut, putByteString)
-import           Data.Serialize.Get     (skip, lookAhead)
+import           Data.Serialize.Get     (lookAhead, skip)
+import           Data.Serialize.Put     (putByteString, runPut)
 import           GHC.Exts               (IsList (..))
 import           GHC.TypeLits           (KnownNat, natVal, type (+), type (<=))
 

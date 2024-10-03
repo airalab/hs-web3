@@ -5,7 +5,7 @@
 
 -- |
 -- Module      :  Network.Ethereum.Contract
--- Copyright   :  Aleksandr Krupenkin 2016-2021
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
 -- License     :  Apache-2.0
 --
 -- Maintainer  :  mail@akru.me
@@ -50,5 +50,5 @@ new = fmap (mapRight receiptContractAddress) . safeSend safeConfirmations
   where
     mapRight f e =
         case e of
-            Left x -> Left x
+            Left x  -> Left x
             Right y -> Right $ f y

@@ -2,7 +2,7 @@
 
 -- |
 -- Module      :  Network.Ethereum.Account.Safe
--- Copyright   :  Aleksandr Krupenkin 2016-2021
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
 -- License     :  Apache-2.0
 --
 -- Maintainer  :  mail@akru.me
@@ -39,7 +39,7 @@ safeSend b a = lift . withReceipt waiting =<< send a
   where
     withReceipt f receiptOrTx =
         case receiptOrTx of
-            Left tx -> return $ Left tx
+            Left tx       -> return $ Left tx
             Right receipt -> Right <$> f receipt
 
     waiting receipt =

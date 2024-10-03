@@ -1,11 +1,11 @@
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE TemplateHaskell     #-}
 
 -- |
 -- Module      :  Data.Solidity.Abi.Json
--- Copyright   :  Aleksandr Krupenkin 2016-2021
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
 -- License     :  Apache-2.0
 --
 -- Maintainer  :  mail@akru.me
@@ -37,9 +37,11 @@ module Language.Solidity.Abi
 
 import           Control.Monad            (void)
 import           Crypto.Ethereum.Utils    (keccak256)
-import           Data.Aeson               (FromJSON (parseJSON), Options (constructorTagModifier, fieldLabelModifier, sumEncoding),
+import           Data.Aeson               (FromJSON (parseJSON),
+                                           Options (constructorTagModifier, fieldLabelModifier, sumEncoding),
                                            SumEncoding (TaggedObject),
-                                           ToJSON (toJSON), defaultOptions, withObject, (.:), (.:?))
+                                           ToJSON (toJSON), defaultOptions,
+                                           withObject, (.:), (.:?))
 import           Data.Aeson.TH            (deriveJSON, deriveToJSON)
 import qualified Data.ByteArray           as A (take)
 import           Data.ByteArray.HexString (toText)
@@ -47,7 +49,7 @@ import           Data.Char                (toLower)
 import           Data.Text                (Text)
 import qualified Data.Text                as T (dropEnd, unlines, unpack)
 import           Data.Text.Encoding       (encodeUtf8)
-import           Lens.Micro               (over, _head)
+import           Lens.Micro               (_head, over)
 import           Text.Parsec              (ParseError, char, choice, digit, eof,
                                            lookAhead, many1, manyTill,
                                            optionMaybe, parse, string, try,
@@ -115,8 +117,8 @@ data Declaration = DConstructor
     -- ^ Event
     }
     | DError
-    { errName      :: Text
-    , errInputs    :: [FunctionArg]
+    { errName   :: Text
+    , errInputs :: [FunctionArg]
     -- ^ Error
     }
     | DFallback
@@ -126,12 +128,12 @@ data Declaration = DConstructor
     deriving Show
 
 instance Eq Declaration where
-    (DConstructor a) == (DConstructor b) = length a == length b
+    (DConstructor a) == (DConstructor b)       = length a == length b
     (DFunction a _ _ _) == (DFunction b _ _ _) = a == b
-    (DEvent a _ _) == (DEvent b _ _) = a == b
-    (DError a _) == (DError b _) = a == b
-    (DFallback _) == (DFallback _) = True
-    (==) _ _ = False
+    (DEvent a _ _) == (DEvent b _ _)           = a == b
+    (DError a _) == (DError b _)               = a == b
+    (DFallback _) == (DFallback _)             = True
+    (==) _ _                                   = False
 
 instance Ord Declaration where
     compare (DConstructor a) (DConstructor b) = compare (length a) (length b)

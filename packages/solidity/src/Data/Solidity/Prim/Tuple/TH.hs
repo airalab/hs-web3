@@ -2,7 +2,7 @@
 
 -- |
 -- Module      :  Data.Solidity.Prim.Tuple.TH
--- Copyright   :  Aleksandr Krupenkin 2016-2021
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
 -- License     :  Apache-2.0
 --
 -- Maintainer  :  mail@akru.me
@@ -19,8 +19,8 @@ module Data.Solidity.Prim.Tuple.TH (tupleDecs) where
 import           Control.Monad       (replicateM)
 import           Data.Proxy
 import           Language.Haskell.TH (DecsQ, Type (VarT), appT, clause, conT,
-                                      cxt, funD, instanceD, listE, newName, normalB,
-                                      tupleT)
+                                      cxt, funD, instanceD, listE, newName,
+                                      normalB, tupleT)
 
 import           Data.Solidity.Abi   (AbiGet, AbiPut, AbiType (..))
 

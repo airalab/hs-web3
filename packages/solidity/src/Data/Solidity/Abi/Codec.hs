@@ -1,8 +1,9 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies  #-}
+{-# LANGUAGE TypeOperators #-}
 
 -- |
 -- Module      :  Data.Solidity.Abi.Codec
--- Copyright   :  Aleksandr Krupenkin 2016-2021
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
 -- License     :  Apache-2.0
 --
 -- Maintainer  :  mail@akru.me

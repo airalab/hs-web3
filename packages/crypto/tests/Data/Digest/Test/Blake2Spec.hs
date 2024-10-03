@@ -1,4 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
+
+-- |
+-- Module      :  Data.Digest.Test.Blake2Spec
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
+-- License     :  Apache-2.0
+--
+-- Maintainer  :  mail@akru.me
+-- Stability   :  experimental
+-- Portability :  unportable
+--
+
 module Data.Digest.Test.Blake2Spec where
 
 import           Data.ByteArray           (convert)

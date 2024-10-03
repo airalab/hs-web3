@@ -2,7 +2,7 @@
 
 -- |
 -- Module      :  Network.Polkadot.Metadata.Type.Parser
--- Copyright   :  Aleksandr Krupenkin 2016-2021
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
 -- License     :  Apache-2.0
 --
 -- Maintainer  :  mail@akru.me
@@ -20,7 +20,7 @@ module Network.Polkadot.Metadata.Type.Parser
   , sanitize
   , sanitizeM
   ) where
-  
+
 import           Control.Monad.Fail                               (MonadFail)
 import           Data.Text                                        (Text,
                                                                    intercalate,

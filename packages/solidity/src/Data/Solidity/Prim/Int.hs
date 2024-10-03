@@ -8,7 +8,7 @@
 
 -- |
 -- Module      :  Data.Solidity.Prim.Int
--- Copyright   :  Aleksandr Krupenkin 2016-2021
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
 -- License     :  Apache-2.0
 --
 -- Maintainer  :  mail@akru.me
@@ -34,7 +34,7 @@ module Data.Solidity.Prim.Int
 import qualified Basement.Numerical.Number as Basement (toInteger)
 import           Basement.Types.Word256    (Word256 (Word256))
 import qualified Basement.Types.Word256    as Basement (quot, rem)
-import           Data.Aeson                (ToJSON(..))
+import           Data.Aeson                (ToJSON (..))
 import           Data.Bits                 (Bits (testBit), (.&.))
 import           Data.Proxy                (Proxy (..))
 import           Data.Serialize            (Get, Putter, Serialize (get, put))
@@ -55,7 +55,7 @@ instance Integral Word256 where
 newtype UIntN (n :: Nat) = UIntN { unUIntN :: Word256 }
     deriving (Eq, Ord, Enum, Bits, Generic)
 
-instance (KnownNat n, n <= 256) => Num (UIntN n) where
+instance KnownNat n => Num (UIntN n) where
     a + b  = fromInteger (toInteger a + toInteger b)
     a - b  = fromInteger (toInteger a - toInteger b)
     a * b  = fromInteger (toInteger a * toInteger b)
@@ -68,44 +68,44 @@ instance (KnownNat n, n <= 256) => Num (UIntN n) where
       where
         mask = (maxBound .&.) :: UIntN n -> UIntN n
 
-instance (KnownNat n, n <= 256) => Show (UIntN n) where
+instance KnownNat n => Show (UIntN n) where
     show = show . unUIntN
 
-instance (KnownNat n, n <= 256) => Bounded (UIntN n) where
+instance KnownNat n => Bounded (UIntN n) where
     minBound = UIntN 0
     maxBound = UIntN $ 2 ^ natVal (Proxy :: Proxy n) - 1
 
-instance (KnownNat n, n <= 256) => Real (UIntN n) where
+instance KnownNat n => Real (UIntN n) where
     toRational = toRational . toInteger
 
-instance (KnownNat n, n <= 256) => Integral (UIntN n) where
+instance KnownNat n => Integral (UIntN n) where
     toInteger = toInteger . unUIntN
     quotRem (UIntN a) (UIntN b) = (UIntN $ quot a b, UIntN $ rem a b)
 
-instance (n <= 256) => AbiType (UIntN n) where
+instance KnownNat n => AbiType (UIntN n) where
     isDynamic _ = False
 
-instance (n <= 256) => AbiGet (UIntN n) where
+instance KnownNat n => AbiGet (UIntN n) where
     abiGet = UIntN <$> getWord256
 
-instance (n <= 256) => AbiPut (UIntN n) where
+instance KnownNat n => AbiPut (UIntN n) where
     abiPut = putWord256 . unUIntN
 
-instance (KnownNat n, n <= 256) => ToJSON (UIntN n) where
+instance KnownNat n => ToJSON (UIntN n) where
   toJSON = toJSON . toInteger
 
 -- | Signed integer with fixed length in bits.
 newtype IntN (n :: Nat) = IntN { unIntN :: Word256 }
     deriving (Eq, Ord, Enum, Bits, Generic)
 
-instance (KnownNat n, n <= 256) => Show (IntN n) where
+instance KnownNat n => Show (IntN n) where
     show = show . toInteger
 
-instance (KnownNat n, n <= 256) => Bounded (IntN n) where
+instance KnownNat n => Bounded (IntN n) where
     minBound = IntN $ negate $ 2 ^ (natVal (Proxy :: Proxy (n :: Nat)) - 1)
     maxBound = IntN $ 2 ^ (natVal (Proxy :: Proxy (n :: Nat)) - 1) - 1
 
-instance (KnownNat n, n <= 256) => Num (IntN n) where
+instance KnownNat n => Num (IntN n) where
     a + b  = fromInteger (toInteger a + toInteger b)
     a - b  = fromInteger (toInteger a - toInteger b)
     a * b  = fromInteger (toInteger a * toInteger b)
@@ -116,25 +116,25 @@ instance (KnownNat n, n <= 256) => Num (IntN n) where
       | x >= 0 = IntN (fromInteger x)
       | otherwise = IntN (fromInteger $ 2 ^ 256 + x)
 
-instance (KnownNat n, n <= 256) => Real (IntN n) where
+instance KnownNat n => Real (IntN n) where
     toRational = toRational . toInteger
 
-instance (KnownNat n, n <= 256) => Integral (IntN n) where
+instance KnownNat n => Integral (IntN n) where
     quotRem (IntN a) (IntN b) = (IntN $ quot a b, IntN $ rem a b)
     toInteger x
       | testBit x 255 = toInteger (unIntN x) - 2 ^ 256
       | otherwise = toInteger $ unIntN x
 
-instance (n <= 256) => AbiType (IntN n) where
+instance KnownNat n => AbiType (IntN n) where
     isDynamic _ = False
 
-instance (n <= 256) => AbiGet (IntN n) where
+instance KnownNat n => AbiGet (IntN n) where
     abiGet = IntN <$> getWord256
 
-instance (n <= 256) => AbiPut (IntN n) where
+instance KnownNat n => AbiPut (IntN n) where
     abiPut = putWord256 . unIntN
 
-instance (KnownNat n, n <= 256) => ToJSON (IntN n) where
+instance KnownNat n => ToJSON (IntN n) where
   toJSON = toJSON . toInteger
 
 -- | Serialize 256 bit unsigned integer.

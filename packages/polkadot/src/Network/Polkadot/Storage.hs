@@ -2,7 +2,7 @@
 
 -- |
 -- Module      :  Network.Polkadot.Storage
--- Copyright   :  Aleksandr Krupenkin 2016-2021
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
 -- License     :  Apache-2.0
 --
 -- Maintainer  :  mail@akru.me
@@ -18,6 +18,7 @@
 
 module Network.Polkadot.Storage where
 
+import           Cases                         (camelize)
 import           Control.Arrow                 ((&&&))
 import           Data.ByteArray                (convert)
 import           Data.ByteArray.HexString      (HexString)
@@ -27,7 +28,6 @@ import qualified Data.Map.Strict               as Map (fromList, lookup)
 import           Data.Maybe                    (mapMaybe)
 import           Data.Text                     (Text)
 import qualified Data.Text                     as T (cons, head, tail)
-import           Text.AnimalCase               (toCamelCase)
 
 import           Network.Polkadot.Metadata.V13 (Metadata (modules),
                                                 ModuleMetadata (..),
@@ -52,7 +52,7 @@ fromMetadata = Map.fromList . mapMaybe go . modules
     toLowerFirst = uncurry T.cons . (toLower . T.head &&& T.tail)
     go ModuleMetadata{..} = do
         StorageMetadata prefix items <- moduleStorage
-        let section = toCamelCase moduleName
+        let section = camelize moduleName
             toEntry meta@StorageEntryMetadata{..} =
                 (toLowerFirst entryName, newEntry prefix meta)
         return (toLowerFirst section, Map.fromList $ fmap toEntry items)

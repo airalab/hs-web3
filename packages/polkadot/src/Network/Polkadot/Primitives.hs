@@ -4,7 +4,7 @@
 
 -- |
 -- Module      :  Network.Polkadot.Primitives
--- Copyright   :  Aleksandr Krupenkin 2016-2021
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
 -- License     :  Apache-2.0
 --
 -- Maintainer  :  mail@akru.me
@@ -21,8 +21,8 @@ import           Codec.Scale.Compact      (Compact)
 import           Data.BigNum              (H160, H256, H512, Word128)
 import           Data.ByteArray.HexString (HexString)
 import           Data.Word                (Word32, Word64, Word8)
-import qualified GHC.Generics             as GHC (Generic)
 import           Generics.SOP             (Generic)
+import qualified GHC.Generics             as GHC (Generic)
 
 -- | The user account balance, 'u128' type.
 type Balance = Word128

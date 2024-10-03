@@ -3,7 +3,7 @@
 
 -- |
 -- Module      :  Network.Ethereum.Transaction
--- Copyright   :  Aleksandr Krupenkin 2016-2021
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
 --                Roy Blankman 2018
 -- License     :  Apache-2.0
 --

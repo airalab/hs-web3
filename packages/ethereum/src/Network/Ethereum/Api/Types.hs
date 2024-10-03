@@ -6,7 +6,7 @@
 
 -- |
 -- Module      :  Network.Ethereum.Api.Types
--- Copyright   :  Aleksandr Krupenkin 2016-2021
+-- Copyright   :  Aleksandr Krupenkin 2016-2024
 -- License     :  Apache-2.0
 --
 -- Maintainer  :  mail@akru.me
@@ -18,7 +18,8 @@
 
 module Network.Ethereum.Api.Types where
 
-import           Data.Aeson                 (FromJSON (..), Options (fieldLabelModifier, omitNothingFields),
+import           Data.Aeson                 (FromJSON (..),
+                                             Options (fieldLabelModifier, omitNothingFields),
                                              ToJSON (..), Value (Bool, String),
                                              defaultOptions, object, (.=))
 import           Data.Aeson.TH              (deriveJSON)
@@ -32,7 +33,7 @@ import qualified Data.Text.Lazy.Builder     as B (toLazyText)
 import qualified Data.Text.Lazy.Builder.Int as B (hexadecimal)
 import qualified Data.Text.Read             as R (decimal, hexadecimal)
 import           GHC.Generics               (Generic)
-import           Lens.Micro                 (over, _head)
+import           Lens.Micro                 (_head, over)
 
 -- | Should be viewed as type to representing QUANTITY in Web3 JSON RPC docs
 --

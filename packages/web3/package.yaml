@@ -1,5 +1,5 @@
 name:                web3
-version:             1.0.0.1
+version:             1.0.1.0
 synopsis:            Haskell Web3 library.
 description:         Client library for Third Generation of Web.
 github:              "airalab/hs-web3"
@@ -7,11 +7,11 @@ license:             Apache-2.0
 license-file:        LICENSE
 author:              Aleksandr Krupenkin
 maintainer:          mail@akru.me
-copyright:           "(c) Aleksandr Krupenkin 2016-2021"
+copyright:           "(c) Aleksandr Krupenkin 2016-2024"
 category:            Network
 
 dependencies:
-- base                 >4.11 && <4.16
+- base                 >4.11 && <4.18
 - web3-provider        >=1.0 && <1.1
 - web3-ethereum        >=1.0 && <1.1
 - web3-polkadot        >=1.0 && <1.1
@@ -19,7 +19,6 @@ dependencies:
 ghc-options:
 - -funbox-strict-fields
 - -Wduplicate-exports
-- -Whi-shadowing
 - -Widentities
 - -Woverlapping-patterns
 - -Wpartial-type-signatures
@@ -30,7 +29,6 @@ ghc-options:
 - -Wmissing-fields
 - -Wmissing-methods
 - -Wmissing-exported-signatures
-- -Wmissing-monadfail-instances
 - -Wmissing-signatures
 - -Wname-shadowing
 - -Wunused-binds
