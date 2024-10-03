@@ -11,7 +11,7 @@ copyright:           "(c) Aleksandr Krupenkin 2016-2024"
 category:            Network
 
 dependencies:
-- base                 >4.11 && <4.18
+- base                 >4.11 && <4.19
 - scale                >=1.0 && <1.1
 - memory               >0.14 && <0.19
 - memory-hexstring     >=1.0 && <1.1
@@ -54,9 +54,9 @@ tests:
     dependencies:
     - memory-hexstring     >=1.0 && <1.1 
     - hspec-expectations   >=0.8.2  && <0.9
-    - hspec-discover       >=2.4.4  && <2.11
+    - hspec-discover       >=2.4.4  && <2.12
     - hspec-contrib        >=0.4.0  && <0.6
-    - hspec                >=2.4.4  && <2.11
+    - hspec                >=2.4.4  && <2.12
     ghc-options:
     - -threaded
     - -rtsopts

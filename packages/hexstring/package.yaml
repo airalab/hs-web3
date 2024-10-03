@@ -11,12 +11,12 @@ copyright:           "(c) Aleksandr Krupenkin 2016-2024"
 category:            Network
 
 dependencies:
-- base                 >4.11 && <4.18
+- base                 >4.11 && <4.19
 - text                 >1.2  && <2.1
 - aeson                >1.2  && <2.2
 - memory               >0.14 && <0.19
 - bytestring           >0.10 && <0.12
-- template-haskell     >2.11 && <2.20
+- template-haskell     >2.11 && <2.21
 - scale                >=1.0 && <1.1
 
 ghc-options:

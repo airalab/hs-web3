@@ -7,7 +7,7 @@ This library implements Haskell API client for popular Web3 platforms.
 [![CI](https://github.com/airalab/hs-web3/workflows/CI/badge.svg)](https://github.com/airalab/hs-web3/actions)
 [![Hackage Matrix](https://matrix.hackage.haskell.org/api/v2/packages/web3/badge)](https://matrix.hackage.haskell.org/package/web3)
 [![Hackage](https://img.shields.io/hackage/v/web3.svg)](http://hackage.haskell.org/package/web3)
-[![LTS-14](http://stackage.org/package/web3/badge/lts-14)](http://stackage.org/lts-14/package/web3)
+[![LTS-22](http://stackage.org/package/web3/badge/lts-22)](http://stackage.org/lts-22/package/web3)
 [![nightly](http://stackage.org/package/web3/badge/nightly)](http://stackage.org/nightly/package/web3)
 [![Code Triagers](https://www.codetriage.com/airalab/hs-web3/badges/users.svg)](https://www.codetriage.com/airalab/hs-web3)
 

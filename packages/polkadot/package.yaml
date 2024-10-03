@@ -11,8 +11,8 @@ copyright:           "(c) Aleksandr Krupenkin 2016-2021"
 category:            Network
 
 dependencies:
-- mtl                  >2.2  && <2.3
-- base                 >4.11 && <4.18
+- mtl                  >2.2  && <2.4
+- base                 >4.11 && <4.19
 - text                 >1.2  && <2.1
 - aeson                >1.2  && <2.2
 - scale                >=1.0 && <1.1
@@ -68,9 +68,9 @@ tests:
     dependencies:
     - hspec-expectations-json >=1.0.0  && <1.1
     - hspec-expectations      >=0.8.2  && <0.9
-    - hspec-discover          >=2.4.4  && <2.11
+    - hspec-discover          >=2.4.4  && <2.12
     - hspec-contrib           >=0.4.0  && <0.6
-    - hspec                   >=2.4.4  && <2.11
+    - hspec                   >=2.4.4  && <2.12
     ghc-options:
     - -threaded
     - -rtsopts

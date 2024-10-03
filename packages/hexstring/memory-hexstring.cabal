@@ -35,10 +35,10 @@ library
   ghc-options: -funbox-strict-fields -Wduplicate-exports -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs
   build-depends:
       aeson >1.2 && <2.2
-    , base >4.11 && <4.18
+    , base >4.11 && <4.19
     , bytestring >0.10 && <0.12
     , memory >0.14 && <0.19
     , scale ==1.0.*
-    , template-haskell >2.11 && <2.20
+    , template-haskell >2.11 && <2.21
     , text >1.2 && <2.1
   default-language: Haskell2010

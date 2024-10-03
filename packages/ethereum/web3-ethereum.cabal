@@ -59,7 +59,7 @@ library
       OneTuple >0.2 && <0.5
     , aeson >1.2 && <2.2
     , aeson-casing ==0.2.*
-    , base >4.11 && <4.18
+    , base >4.11 && <4.19
     , bytestring >0.10 && <0.12
     , data-default >0.7 && <0.8
     , exceptions >0.8 && <0.11
@@ -70,12 +70,12 @@ library
     , memory-hexstring ==1.0.*
     , microlens >0.4 && <0.5
     , microlens-aeson >2.2 && <2.6
-    , mtl >2.2 && <2.3
+    , mtl >2.2 && <2.4
     , relapse >=1.0 && <2.0
     , tagged >0.8 && <0.9
-    , template-haskell >2.11 && <2.20
+    , template-haskell >2.11 && <2.21
     , text >1.2 && <2.1
-    , transformers >0.5 && <0.6
+    , transformers >0.5 && <0.7
     , vinyl >0.5 && <0.15
     , web3-crypto ==1.0.*
     , web3-solidity ==1.0.*
@@ -124,14 +124,14 @@ test-suite tests
       OneTuple >0.2 && <0.5
     , aeson >1.2 && <2.2
     , aeson-casing ==0.2.*
-    , base >4.11 && <4.18
+    , base >4.11 && <4.19
     , bytestring >0.10 && <0.12
     , data-default >0.7 && <0.8
     , exceptions >0.8 && <0.11
     , generics-sop >0.3 && <0.6
-    , hspec >=2.4.4 && <2.11
+    , hspec >=2.4.4 && <2.12
     , hspec-contrib >=0.4.0 && <0.6
-    , hspec-discover >=2.4.4 && <2.11
+    , hspec-discover >=2.4.4 && <2.12
     , hspec-expectations >=0.8.2 && <0.9
     , jsonrpc-tinyclient ==1.0.*
     , machines >0.6 && <0.8
@@ -139,12 +139,12 @@ test-suite tests
     , memory-hexstring ==1.0.*
     , microlens >0.4 && <0.5
     , microlens-aeson >2.2 && <2.6
-    , mtl >2.2 && <2.3
+    , mtl >2.2 && <2.4
     , relapse >=1.0 && <2.0
     , tagged >0.8 && <0.9
-    , template-haskell >2.11 && <2.20
+    , template-haskell >2.11 && <2.21
     , text >1.2 && <2.1
-    , transformers >0.5 && <0.6
+    , transformers >0.5 && <0.7
     , vinyl >0.5 && <0.15
     , web3-crypto ==1.0.*
     , web3-solidity ==1.0.*
