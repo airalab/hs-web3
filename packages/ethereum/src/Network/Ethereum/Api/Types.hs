@@ -279,7 +279,7 @@ data BlockT tx = Block
     -- ^ DATA, 20 Bytes - the address of the beneficiary to whom the mining rewards were given.
     , blockDifficulty       :: !Quantity
     -- ^ QUANTITY - integer of the difficulty for this block.
-    , blockTotalDifficulty  :: !Quantity
+    , blockTotalDifficulty  :: !(Maybe Quantity)
     -- ^ QUANTITY - integer of the total difficulty of the chain until this block.
     , blockExtraData        :: !HexString
     -- ^ DATA - the "extra data" field of this block.
