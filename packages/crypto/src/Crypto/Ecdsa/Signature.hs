@@ -34,7 +34,7 @@ import           Data.Bits                   (xor, (.|.))
 import           Data.ByteArray              (ByteArray, ByteArrayAccess, Bytes,
                                               convert, singleton, takeView,
                                               view)
-import qualified Data.ByteArray              as BA (unpack)
+import qualified Data.ByteArray              as BA (length, replicate, unpack)
 import           Data.Word                   (Word8)
 
 import           Crypto.Ecdsa.Utils          (exportKey)
@@ -93,4 +93,11 @@ unpack vrs = (r, s, v)
 
 -- | Pack recoverable signature as byte array (65 byte length).
 pack :: ByteArray rsv => (Integer, Integer, Word8) -> rsv
-pack (r, s, v) = i2osp r <> i2osp s <> singleton v
+pack (r, s, v) = leftPad 32 (i2osp r) <> leftPad 32 (i2osp s) <> singleton v
+  where
+    leftPad :: (ByteArray b) => Int -> b -> b
+    leftPad targetLen bs
+      | BA.length bs >= targetLen = bs
+      | otherwise = BA.replicate paddingLen 0 <> bs
+      where
+          paddingLen = targetLen - BA.length bs
