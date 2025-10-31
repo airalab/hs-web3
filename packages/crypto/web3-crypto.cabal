@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.37.0.
+-- This file has been generated from package.yaml by hpack version 0.38.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -31,6 +31,7 @@ library
       Crypto.Ecdsa.Signature
       Crypto.Ecdsa.Utils
       Crypto.Ethereum
+      Crypto.Ethereum.Eip712Signature
       Crypto.Ethereum.Keyfile
       Crypto.Ethereum.Signature
       Crypto.Ethereum.Utils
@@ -49,11 +50,13 @@ library
   build-depends:
       aeson >1.2 && <2.2
     , base >4.11 && <4.19
+    , basement >=0.0.16 && <0.1
     , bytestring >0.10 && <0.12
     , containers >0.6 && <0.7
     , crypton >0.30 && <1.0
     , memory >0.14 && <0.19
     , memory-hexstring ==1.0.*
+    , scientific >=0.3.7 && <0.4
     , text >1.2 && <2.1
     , uuid-types >1.0 && <1.1
     , vector >0.12 && <0.14
@@ -63,6 +66,7 @@ test-suite tests
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Crypto.Ethereum.Test.EIP712SignatureSpec
       Crypto.Ethereum.Test.KeyfileSpec
       Crypto.Ethereum.Test.SignatureSpec
       Crypto.Random.Test.HmacDrbgSpec
@@ -72,6 +76,7 @@ test-suite tests
       Crypto.Ecdsa.Signature
       Crypto.Ecdsa.Utils
       Crypto.Ethereum
+      Crypto.Ethereum.Eip712Signature
       Crypto.Ethereum.Keyfile
       Crypto.Ethereum.Signature
       Crypto.Ethereum.Utils
@@ -90,6 +95,7 @@ test-suite tests
   build-depends:
       aeson >1.2 && <2.2
     , base >4.11 && <4.19
+    , basement >=0.0.16 && <0.1
     , bytestring >0.10 && <0.12
     , containers >0.6 && <0.7
     , crypton >0.30 && <1.0
@@ -99,6 +105,7 @@ test-suite tests
     , hspec-expectations >=0.8.2 && <0.9
     , memory >0.14 && <0.19
     , memory-hexstring ==1.0.*
+    , scientific >=0.3.7 && <0.4
     , text >1.2 && <2.1
     , uuid-types >1.0 && <1.1
     , vector >0.12 && <0.14
