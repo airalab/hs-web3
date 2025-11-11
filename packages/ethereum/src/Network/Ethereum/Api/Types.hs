@@ -277,10 +277,8 @@ data BlockT tx = Block
     -- ^ DATA, 32 Bytes - the root of the receipts trie of the block.
     , blockMiner            :: !Address
     -- ^ DATA, 20 Bytes - the address of the beneficiary to whom the mining rewards were given.
-    , blockDifficulty       :: !Quantity
+    , blockDifficulty       :: !(Maybe Quantity)
     -- ^ QUANTITY - integer of the difficulty for this block.
-    , blockTotalDifficulty  :: !(Maybe Quantity)
-    -- ^ QUANTITY - integer of the total difficulty of the chain until this block.
     , blockExtraData        :: !HexString
     -- ^ DATA - the "extra data" field of this block.
     , blockSize             :: !Quantity
