@@ -32,6 +32,7 @@ import qualified Data.Text                  as T (pack)
 import qualified Data.Text.Lazy.Builder     as B (toLazyText)
 import qualified Data.Text.Lazy.Builder.Int as B (hexadecimal)
 import qualified Data.Text.Read             as R (decimal, hexadecimal)
+import           Data.Word                  (Word8)
 import           GHC.Generics               (Generic)
 import           Lens.Micro                 (_head, over)
 
@@ -73,6 +74,43 @@ instance FromJSON Quantity where
             Right (x, "") -> return (Quantity x)
             _             -> fail $ "Quantity " ++ show v <> " is not valid hex"
     parseJSON _ = fail "Quantity should be a JSON String"
+
+-- | Type representing a Byte in Web3 JSON RPC docs ("#/components/schemas/byte")
+--
+-- The encoding is similar to Quantity, encoding as hex string.
+newtype Byte = Byte { unByte :: Word8 }
+    deriving (Num, Real, Integral, Enum, Eq, Ord, Generic)
+
+instance Show Byte where
+    show = show . unByte
+
+instance IsString Byte where
+    fromString ('0' : 'x' : hex) =
+       case R.hexadecimal (T.pack hex) of
+            Right (x, "")
+                | toInteger (minBound :: Word8) <= x && x <= toInteger (maxBound :: Word8) -> Byte (fromInteger x)
+                | otherwise -> error ("Byte " ++ show hex ++ "is not within bounds")
+            _               -> error ("Byte " ++ show hex ++ " is not valid hex")
+
+    fromString num =
+        case R.decimal (T.pack num) of
+            Right (x, "")
+                | toInteger (minBound :: Word8) <= x && x <= toInteger (maxBound :: Word8) -> Byte (fromInteger x)
+                | otherwise -> error ("Byte " ++ show num ++ "is not within bounds")
+            _             -> error ("Byte " ++ show num ++ " is not valid decimal")
+
+instance ToJSON Byte where
+    toJSON (Byte x) =
+        let hexValue = B.toLazyText (B.hexadecimal x)
+        in  toJSON ("0x" <> hexValue)
+
+instance FromJSON Byte where
+    parseJSON (String v) =
+        case R.hexadecimal v of
+            Right (x, "") -> return (Byte x)
+            _             -> fail $ "Byte " ++ show v <> " is not valid hex"
+    parseJSON _ = fail "Byte should be a JSON String"
+
 
 -- | An object with sync status data.
 data SyncActive = SyncActive
@@ -194,26 +232,40 @@ instance Ord DefaultBlock where
 
 -- | The Receipt of a Transaction
 data TxReceipt = TxReceipt
-    { receiptTransactionHash   :: !HexString
+    { receiptType :: !(Maybe Byte)
+    -- ^ BYTE - type of the transaction 0x00 for legacy transactions, 0x01 EIP-2930, 0x02 EIP-1559
+    , receiptTransactionHash   :: !HexString
     -- ^ DATA, 32 Bytes - hash of the transaction.
     , receiptTransactionIndex  :: !Quantity
     -- ^ QUANTITY - index of the transaction.
-    , receiptBlockHash         :: !(Maybe HexString)
-    -- ^ DATA, 32 Bytes - hash of the block where this transaction was in. null when its pending.
-    , receiptBlockNumber       :: !(Maybe Quantity)
-    -- ^ QUANTITY - block number where this transaction was in. null when its pending.
+    , receiptBlockHash         :: !HexString
+    -- ^ DATA, 32 Bytes - hash of the block where this transaction was in. 
+    , receiptBlockNumber       :: !Quantity
+    -- ^ QUANTITY - block number where this transaction was in.
+    , receiptFrom              :: !Address
+    -- ^ DATA, 20 Bytes - the address of the sender
+    , receiptTo                :: !(Maybe Address)
+    -- ^ DATA, 20 Bytes - The address of the receiver. null when the transaction is a contract creation transaction.
     , receiptCumulativeGasUsed :: !Quantity
     -- ^ QUANTITY - The total amount of gas used when this transaction was executed in the block.
     , receiptGasUsed           :: !Quantity
     -- ^ QUANTITY - The amount of gas used by this specific transaction alone.
+    , receiptBlobGasUsed       :: !(Maybe Quantity)
+    -- ^ QUANTITY - The amount of blob gas used for this specific transaction. Only specified for blob transactions as defined by EIP-4844.
     , receiptContractAddress   :: !(Maybe Address)
     -- ^ DATA, 20 Bytes - The contract address created, if the transaction was a contract creation, otherwise null.
     , receiptLogs              :: ![Change]
     -- ^ Array - Array of log objects, which this transaction generated.
     , receiptLogsBloom         :: !HexString
     -- ^ DATA, 256 Bytes - Bloom filter for light clients to quickly retrieve related logs.
+    , receiptRoot              :: !(Maybe HexString)
+    -- ^ DATA, 32 Bytes - The post-transaction state root. Only specified for transactions included before the Byzantium upgrade.
     , receiptStatus            :: !(Maybe Quantity)
     -- ^ QUANTITY either 1 (success) or 0 (failure)
+    , receiptEffectiveGasPrice :: !Quantity
+    -- ^ QUANTITY - The actual value per gas deducted from the sender's account. Before EIP-1559, this is equal to the transaction's gas price. After, it is equal to baseFeePerGas + min(maxFeePerGas - baseFeePerGas, maxPriorityFeePerGas).
+    , blobGasPrice             :: !(Maybe Quantity)
+    -- ^ QUANTITY - The actual value per gas deducted from the sender's account for blob gas. Only specified for blob transactions as defined by EIP-4844.
     }
     deriving (Show, Generic)
 
