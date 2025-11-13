@@ -257,3 +257,8 @@ submitWork = remote "eth_submitWork"
 submitHashrate :: JsonRpc m => HexString -> HexString -> m Bool
 {-# INLINE submitHashrate #-}
 submitHashrate = remote "eth_submitHashrate"
+
+-- | Returns the chain ID of the current network.
+chainId :: JsonRpc m => m Quantity
+{-# INLINE chainId #-}
+chainId = remote "eth_chainId"
