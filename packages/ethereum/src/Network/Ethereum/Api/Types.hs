@@ -300,3 +300,23 @@ data BlockT tx = Block
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = over _head toLower . drop 5 }) ''BlockT)
+
+--| Fee History information
+data FeeHistory
+  = FeeHistory
+  { feeHistoryBaseFeePerBlobGas :: [Quantity]
+  -- ^ array of block base fees per blob gas.
+  , feeHistoryBaseFeePerGas :: [Quantity]
+  -- ^ Array of block base fees per gas.
+  , feeHistoryBlobGasUsedRatio :: [Rational]
+  -- ^ Array of block base fees per blob gas.
+  , feeHistoryGasUsedRatio :: [Rational]
+  -- ^ Array of block gas used ratios.
+  , feeHistoryOldestBlock :: Quantity
+  -- ^ QUANTITY - lowest number block of returned range.
+  , feeHistoryReward :: [[Quantity]]
+  -- ^ Two-dimensional array of effective priority fees per gas at the requested block percentiles.
+  }
+  deriving (Generic, Show)
+
+$(deriveJSON defaultOptions{fieldLabelModifier = over _head toLower . drop 10} ''FeeHistory)
