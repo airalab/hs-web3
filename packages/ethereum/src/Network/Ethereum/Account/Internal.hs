@@ -33,7 +33,7 @@ import           Network.Ethereum.Account.Class (Account)
 import qualified Network.Ethereum.Api.Eth       as Eth (getTransactionReceipt)
 import           Network.Ethereum.Api.Types     (Call (..),
                                                  DefaultBlock (Latest),
-                                                 TxReceipt (receiptTransactionHash))
+                                                 TxReceipt)
 import           Network.Ethereum.Unit          (Unit (..))
 import           Network.JsonRpc.TinyClient     (JsonRpc)
 
@@ -139,8 +139,3 @@ getReceipt mbtimeout tx = do
 
 getReceipt' :: JsonRpc m => HexString -> m TxReceipt
 getReceipt' = fmap (fromRight undefined) . getReceipt Nothing
-
-updateReceipt :: JsonRpc m => TxReceipt -> m TxReceipt
-{-# INLINE updateReceipt #-}
--- No timeout, because we update the receipt of an already processed transaction.
-updateReceipt = getReceipt' . receiptTransactionHash

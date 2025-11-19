@@ -20,7 +20,6 @@ import           Control.Monad.Trans               (lift)
 import           Data.ByteArray.HexString          (HexString)
 
 import           Network.Ethereum.Account.Class    (Account (send))
-import           Network.Ethereum.Account.Internal (updateReceipt)
 import qualified Network.Ethereum.Api.Eth          as Eth
 import           Network.Ethereum.Api.Types        (TxReceipt (receiptBlockNumber))
 import           Network.Ethereum.Contract.Method  (Method)
@@ -42,17 +41,12 @@ safeSend b a = lift . withReceipt waiting =<< send a
             Left tx       -> return $ Left tx
             Right receipt -> Right <$> f receipt
 
-    waiting receipt =
-        case receiptBlockNumber receipt of
-            Nothing -> do
-                liftIO $ threadDelay 1000000
-                waiting =<< updateReceipt receipt
-            Just bn -> do
-                current <- Eth.blockNumber
-                if current - bn >= fromInteger b
-                    then return receipt
-                    else do liftIO $ threadDelay 1000000
-                            waiting receipt
+    waiting receipt = do
+        current <- Eth.blockNumber
+        if current - receiptBlockNumber receipt >= fromInteger b
+            then return receipt
+            else do liftIO $ threadDelay 1000000
+                    waiting receipt
 
 -- | Count block confirmation to keep secure
 -- According to Vitalik post
