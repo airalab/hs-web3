@@ -269,7 +269,7 @@ encodeData types typeName obj = do
     encodeValue :: EIP712FieldType -> Aeson.Value -> Either String BA.Bytes
     encodeValue (FieldTypeBytesN s) v = do
       encodedBytes <- extractString v >>= hexString . encodeUtf8
-      when (BA.length encodedBytes /= bytesOf s) $ Left $ "expected" <> show (bytesOf s) <>  "bytes, got " <> show (BA.length encodedBytes)
+      when (BA.length encodedBytes /= bytesOf s) $ Left $ "expected " <> show (bytesOf s) <>  "bytes, got " <> show (BA.length encodedBytes)
       return $ BA.convert encodedBytes <> zero (32 - bytesOf s)
     encodeValue (FieldTypeUInt _) v = do
       value <- extractNumber v >>= scientificToWord256
