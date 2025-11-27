@@ -2,6 +2,16 @@
 {-# LANGUAGE OverloadedStrings  #-}
 {-# LANGUAGE TypeApplications   #-}
 
+-- |
+-- Module      :  Crypto.Ethereum.Test.EIP712SignatureSpec
+-- Copyright   :  Jin Chui 2025
+-- License     :  Apache-2.0
+--
+-- Maintainer  :  mail@akru.me jinchui@pm.me
+-- Stability   :  experimental
+-- Portability :  unportable
+--
+
 module Crypto.Ethereum.Test.EIP712SignatureSpec (spec) where
 
 import           Crypto.Ethereum.Eip712Signature

@@ -4,6 +4,19 @@
 {-# LANGUAGE RecordWildCards    #-}
 {-# LANGUAGE TypeApplications   #-}
 
+-- |
+-- Module      :  Crypto.Ethereum.Eip712Signature
+-- Copyright   :  Jin Chui 2025
+-- License     :  Apache-2.0
+--
+-- Maintainer  :  mail@akru.me jinchui@pm.me
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- Ethereum EIP712 Singature implementation.
+-- Spec https://eips.ethereum.org/EIPS/eip-712.
+--
+
 module Crypto.Ethereum.Eip712Signature
   ( EIP712Name
   , BitWidth (..)
@@ -200,7 +213,7 @@ instance Aeson.ToJSON EIP712TypedData where
 -- Custom EIP712 encoding
 
 class EIP712Encoded a where
-  encode :: (ByteArray bout) => a -> bout -- TODO Check if using ByteArray is better
+  encode :: (ByteArray bout) => a -> bout
 
 instance EIP712Encoded EIP712FieldType where
   encode = \case
