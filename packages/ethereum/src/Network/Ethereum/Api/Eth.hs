@@ -24,6 +24,7 @@ import           Network.Ethereum.Api.Types
     , Call
     , Change
     , DefaultBlock
+    , FeeHistory
     , Filter
     , Quantity
     , SyncingState
