@@ -29,3 +29,8 @@ nix:
     - haskellPackages.stylish-haskell
     - haskellPackages.hlint
     - zlib
+
+flags:
+  # bitvec C FFI causes unkown symbol error in windows build, disabling it
+  bitvec:
+    simd: false
