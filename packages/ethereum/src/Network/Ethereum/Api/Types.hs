@@ -351,7 +351,7 @@ data BlockT tx = Block
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = over _head toLower . drop 5 }) ''BlockT)
 
---| Fee History information
+-- | Fee History information
 data FeeHistory
   = FeeHistory
   { feeHistoryBaseFeePerBlobGas :: [Quantity]
