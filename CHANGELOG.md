@@ -1,6 +1,20 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.1.0.0] 2026-02-09
+### Added
+- Implement EIP712Signature module (#145)
+- Add `chainId` call (#150)
+- Add `eth_feeHistory` method to Eth API (#146)
+
+### Changed
+- Update dependencies, switch to LTS-24.30
+- Fix build problems and CI workflow (#151)
+- Update TxReceipt API according to the RPC ethereum documentation (#148)
+- Fix block struct according to the spec (#147)
+- Fix signature encoding for shorter integer values of r, s (#144)
+- Update Types.hs (#142)
+
 ## [1.0.1.0] 2024-10-03
 ### Changed
 - Update dependencies, switch to LTS-21.25
