@@ -1,5 +1,5 @@
 name:                web3-ethereum
-version:             1.0.1.0
+version:             1.1.0.0
 synopsis:            Ethereum support for Haskell Web3 library.
 description:         Client library for Third Generation of Web.
 github:              "airalab/hs-web3"
@@ -11,10 +11,10 @@ copyright:           "(c) Aleksandr Krupenkin 2016-2024"
 category:            Network
 
 dependencies:
-- base                 >4.11 && <4.19
-- text                 >1.2  && <2.1
+- base                 >4.11 && <4.21
+- text                 >1.2  && <2.2
 - vinyl                >0.5  && <0.15
-- aeson                >1.2  && <2.2
+- aeson                >1.2  && <2.3
 - aeson-casing         >=0.2 && <0.3
 - tagged               >0.8  && <0.9
 - memory               >0.14 && <0.19
@@ -22,18 +22,18 @@ dependencies:
 - OneTuple             >0.2  && <0.5
 - machines             >0.6  && <0.8
 - microlens            >0.4  && <0.5
-- bytestring           >0.10 && <0.12
+- bytestring           >0.10 && <0.13
 - exceptions           >0.8  && <0.11
 - generics-sop         >0.3  && <0.6
-- data-default         >0.7  && <0.8
+- data-default         >0.7  && <0.9
 - transformers         >0.5  && <0.7
 - microlens-aeson      >2.2  && <2.6
-- template-haskell     >2.11 && <2.21
+- template-haskell     >2.11 && <2.23
 - mtl                  >2.2  && <2.4
-- web3-crypto          >=1.0 && <1.1
-- web3-solidity        >=1.0 && <1.1
-- memory-hexstring     >=1.0 && <1.1
-- jsonrpc-tinyclient   >=1.0 && <1.1
+- web3-crypto          >=1.0 && <1.2
+- web3-solidity        >=1.0 && <1.2
+- memory-hexstring     >=1.0 && <1.2
+- jsonrpc-tinyclient   >=1.0 && <1.2
 
 ghc-options:
 - -funbox-strict-fields

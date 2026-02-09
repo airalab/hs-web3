@@ -1,5 +1,5 @@
 name:                web3-provider
-version:             1.0.1.0
+version:             1.1.0.0
 synopsis:            Node connection provider for Haskell Web3 library.
 description:         This package contains general Web3 node adapters and connection helpers.
 github:              "airalab/hs-web3"
@@ -11,17 +11,17 @@ copyright:           "(c) Aleksandr Krupenkin 2016-2024"
 category:            Network
 
 dependencies:
-- base                 >4.11 && <4.19
+- base                 >4.11 && <4.21
 - mtl                  >2.2  && <2.4
-- text                 >1.2  && <2.1
+- text                 >1.2  && <2.2
 - async                >2.1  && <2.3
-- network              >2.5  && <3.2
-- websockets           >0.10 && <0.13
+- network              >2.5  && <3.3
+- websockets           >0.10 && <0.14
 - exceptions           >0.8  && <0.11
 - http-client          >0.5  && <0.8
-- data-default         >0.7  && <0.8
+- data-default         >0.7  && <0.9
 - transformers         >0.5  && <0.7
-- jsonrpc-tinyclient   >=1.0 && <1.1
+- jsonrpc-tinyclient   >=1.0 && <1.2
 
 ghc-options:
 - -funbox-strict-fields

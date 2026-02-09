@@ -1,5 +1,5 @@
 name:                memory-hexstring
-version:             1.0.1.0
+version:             1.1.0.0
 synopsis:            Hex-string type for Haskell Web3 library.
 description:         Client library for Third Generation of Web.
 github:              "airalab/hs-web3"
@@ -11,13 +11,13 @@ copyright:           "(c) Aleksandr Krupenkin 2016-2024"
 category:            Network
 
 dependencies:
-- base                 >4.11 && <4.19
-- text                 >1.2  && <2.1
-- aeson                >1.2  && <2.2
+- base                 >4.11 && <4.21
+- text                 >1.2  && <2.2
+- aeson                >1.2  && <2.3
 - memory               >0.14 && <0.19
-- bytestring           >0.10 && <0.12
-- template-haskell     >2.11 && <2.21
-- scale                >=1.0 && <1.1
+- bytestring           >0.10 && <0.13
+- template-haskell     >2.11 && <2.23
+- scale                >=1.0 && <1.2
 
 ghc-options:
 - -funbox-strict-fields

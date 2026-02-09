@@ -1,0 +1,600 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.37.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 8629eacf81afc4f67aa79d16d9f4fc8c77d49100c617c8237e7154357c699d6e
+
+name:           web3
+version:        0.9.1.0
+synopsis:       Web3 API for Haskell.
+description:    Client library for Third Generation of Web.
+category:       Network
+homepage:       https://github.com/airalab/hs-web3#readme
+bug-reports:    https://github.com/airalab/hs-web3/issues
+author:         Alexander Krupenkin
+maintainer:     mail@akru.me
+copyright:      (c) Alexander Krupenkin 2016
+license:        BSD-3-Clause
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+    stack.yaml
+    examples/token/ERC20.hs
+    examples/token/ERC20.json
+    examples/token/Main.hs
+    examples/token/stack.yaml
+    examples/token/package.yaml
+    examples/polkadot/Main.hs
+    examples/polkadot/stack.yaml
+    examples/polkadot/package.yaml
+    examples/scale/Main.hs
+    examples/scale/stack.yaml
+    examples/scale/package.yaml
+    test/contracts/Registry.json
+    test/contracts/SimpleStorage.json
+    test/contracts/ComplexStorage.json
+    test/contracts/Linearization.json
+
+source-repository head
+  type: git
+  location: https://github.com/airalab/hs-web3
+
+flag compiler
+  description: Enable Solidity compiler
+  manual: True
+  default: False
+
+flag debug
+  description: Enable debug compiler options
+  manual: True
+  default: False
+
+library
+  exposed-modules:
+      Codec.Scale
+      Codec.Scale.Class
+      Codec.Scale.Compact
+      Codec.Scale.Core
+      Codec.Scale.Generic
+      Codec.Scale.SingletonEnum
+      Codec.Scale.Skip
+      Codec.Scale.TH
+      Crypto.Ecdsa.Signature
+      Crypto.Ecdsa.Utils
+      Crypto.Ethereum
+      Crypto.Ethereum.Keyfile
+      Crypto.Ethereum.Signature
+      Crypto.Ethereum.Utils
+      Crypto.Random.HmacDrbg
+      Data.ByteArray.HexString
+      Data.Solidity.Abi
+      Data.Solidity.Abi.Codec
+      Data.Solidity.Abi.Generic
+      Data.Solidity.Event
+      Data.Solidity.Event.Internal
+      Data.Solidity.Prim
+      Data.Solidity.Prim.Address
+      Data.Solidity.Prim.Bool
+      Data.Solidity.Prim.Bytes
+      Data.Solidity.Prim.Int
+      Data.Solidity.Prim.List
+      Data.Solidity.Prim.String
+      Data.Solidity.Prim.Tagged
+      Data.Solidity.Prim.Tuple
+      Data.Solidity.Prim.Tuple.TH
+      Data.String.Extra
+      Language.Solidity.Abi
+      Network.Ethereum
+      Network.Ethereum.Account
+      Network.Ethereum.Account.Class
+      Network.Ethereum.Account.Default
+      Network.Ethereum.Account.Internal
+      Network.Ethereum.Account.LocalKey
+      Network.Ethereum.Account.Personal
+      Network.Ethereum.Account.Safe
+      Network.Ethereum.Api.Eth
+      Network.Ethereum.Api.Net
+      Network.Ethereum.Api.Personal
+      Network.Ethereum.Api.Types
+      Network.Ethereum.Api.Web3
+      Network.Ethereum.Chain
+      Network.Ethereum.Contract
+      Network.Ethereum.Contract.Event
+      Network.Ethereum.Contract.Event.Common
+      Network.Ethereum.Contract.Event.MultiFilter
+      Network.Ethereum.Contract.Event.SingleFilter
+      Network.Ethereum.Contract.Method
+      Network.Ethereum.Contract.TH
+      Network.Ethereum.Ens
+      Network.Ethereum.Ens.PublicResolver
+      Network.Ethereum.Ens.Registry
+      Network.Ethereum.Transaction
+      Network.Ethereum.Unit
+      Network.Ipfs.Api.Bitswap
+      Network.Ipfs.Api.Block
+      Network.Ipfs.Api.Bootstrap
+      Network.Ipfs.Api.Cid
+      Network.Ipfs.Api.Config
+      Network.Ipfs.Api.Core
+      Network.Ipfs.Api.Dag
+      Network.Ipfs.Api.Dht
+      Network.Ipfs.Api.Files
+      Network.Ipfs.Api.Internal
+      Network.Ipfs.Api.Internal.Call
+      Network.Ipfs.Api.Internal.Stream
+      Network.Ipfs.Api.Key
+      Network.Ipfs.Api.Log
+      Network.Ipfs.Api.Object
+      Network.Ipfs.Api.Pin
+      Network.Ipfs.Api.Pubsub
+      Network.Ipfs.Api.Repo
+      Network.Ipfs.Api.Stats
+      Network.Ipfs.Api.Swarm
+      Network.Ipfs.Api.Types
+      Network.Ipfs.Api.Types.Stream
+      Network.Ipfs.Client
+      Network.JsonRpc.TinyClient
+      Network.Polkadot.Api.Account
+      Network.Polkadot.Api.Author
+      Network.Polkadot.Api.Babe
+      Network.Polkadot.Api.Chain
+      Network.Polkadot.Api.Childstate
+      Network.Polkadot.Api.Contracts
+      Network.Polkadot.Api.Engine
+      Network.Polkadot.Api.Grandpa
+      Network.Polkadot.Api.Offchain
+      Network.Polkadot.Api.Payment
+      Network.Polkadot.Api.Rpc
+      Network.Polkadot.Api.State
+      Network.Polkadot.Api.System
+      Network.Polkadot.Api.Types
+      Network.Web3
+      Network.Web3.Provider
+  other-modules:
+      Paths_web3
+  autogen-modules:
+      Paths_web3
+  hs-source-dirs:
+      src
+  ghc-options: -funbox-strict-fields -Wduplicate-exports -Whi-shadowing -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-monadfail-instances -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs
+  build-depends:
+      OneTuple >=0.2.1 && <0.5
+    , aeson >=1.2.2.0 && <2.2
+    , async >=2.1.1.1 && <2.3
+    , attoparsec >=0.13.2.1 && <0.15
+    , base >4.11 && <4.18
+    , base58string >=0.10.0 && <0.11
+    , basement >=0.0.4 && <0.1
+    , bitvec >=1.0.0 && <2.0
+    , bytestring >=0.10.8.1 && <0.12
+    , cereal >=0.5.4.0 && <0.6
+    , cryptonite >=0.23 && <0.31
+    , data-default >=0.7.1.1 && <0.8
+    , errors >=2.2 && <2.4
+    , exceptions >=0.8.3 && <0.11
+    , generics-sop >=0.3.1.0 && <0.6
+    , hspec >=2.4 && <2.11
+    , http-client >=0.5.7.1 && <0.8
+    , http-client-tls >=0.3.5.1 && <0.4
+    , http-media >=0.7 && <0.8.2
+    , http-types >=0.12 && <0.14
+    , machines >=0.6.3 && <0.8
+    , memory >=0.14.11 && <0.19
+    , microlens >=0.4.8.1 && <0.5
+    , microlens-aeson >=2.2.0.2 && <2.6
+    , microlens-mtl >=0.1.11.0 && <0.3
+    , microlens-th >=0.4.1.1 && <0.5
+    , mtl >=2.2.1 && <2.3
+    , network >=2.6 && <3.2
+    , parsec >=3.1.11 && <3.2
+    , relapse >=1.0.0.0 && <2.0
+    , servant >=0.13 && <0.20
+    , servant-client >=0.13 && <0.20
+    , tagged >=0.8.5 && <0.9
+    , tar ==0.5.*
+    , template-haskell >=2.12 && <2.20
+    , text >=1.2.2.2 && <2.1
+    , transformers >=0.5.2.0 && <0.6
+    , unordered-containers ==0.2.*
+    , uuid-types >=1.0.3 && <1.1
+    , vector >=0.12 && <0.14
+    , vinyl >=0.5.3 && <0.15
+    , websockets >=0.11 && <0.13
+  default-language: Haskell2010
+  if flag(debug)
+    ghc-options: -ddump-splices
+  if flag(compiler)
+    other-modules:
+        Language.Solidity.Compiler
+        Language.Solidity.Compiler.Foreign
+    hs-source-dirs:
+        compiler
+    cpp-options: -DSOLIDITY_COMPILER
+    include-dirs:
+        ./compiler/cbits
+    c-sources:
+        ./compiler/cbits/solidity_lite.cpp
+    extra-libraries:
+        solidity
+    build-depends:
+        containers
+
+test-suite live
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Network.Ethereum.Test.ComplexStorageSpec
+      Network.Ethereum.Test.ERC20Spec
+      Network.Ethereum.Test.LinearizationSpec
+      Network.Ethereum.Test.LocalAccountSpec
+      Network.Ethereum.Test.RegistrySpec
+      Network.Ethereum.Test.SimpleStorageSpec
+      Network.Ethereum.Test.Utils
+      Network.Ipfs.Api.Test.Key
+      Codec.Scale
+      Codec.Scale.Class
+      Codec.Scale.Compact
+      Codec.Scale.Core
+      Codec.Scale.Generic
+      Codec.Scale.SingletonEnum
+      Codec.Scale.Skip
+      Codec.Scale.TH
+      Crypto.Ecdsa.Signature
+      Crypto.Ecdsa.Utils
+      Crypto.Ethereum
+      Crypto.Ethereum.Keyfile
+      Crypto.Ethereum.Signature
+      Crypto.Ethereum.Utils
+      Crypto.Random.HmacDrbg
+      Data.ByteArray.HexString
+      Data.Solidity.Abi
+      Data.Solidity.Abi.Codec
+      Data.Solidity.Abi.Generic
+      Data.Solidity.Event
+      Data.Solidity.Event.Internal
+      Data.Solidity.Prim
+      Data.Solidity.Prim.Address
+      Data.Solidity.Prim.Bool
+      Data.Solidity.Prim.Bytes
+      Data.Solidity.Prim.Int
+      Data.Solidity.Prim.List
+      Data.Solidity.Prim.String
+      Data.Solidity.Prim.Tagged
+      Data.Solidity.Prim.Tuple
+      Data.Solidity.Prim.Tuple.TH
+      Data.String.Extra
+      Language.Solidity.Abi
+      Network.Ethereum
+      Network.Ethereum.Account
+      Network.Ethereum.Account.Class
+      Network.Ethereum.Account.Default
+      Network.Ethereum.Account.Internal
+      Network.Ethereum.Account.LocalKey
+      Network.Ethereum.Account.Personal
+      Network.Ethereum.Account.Safe
+      Network.Ethereum.Api.Eth
+      Network.Ethereum.Api.Net
+      Network.Ethereum.Api.Personal
+      Network.Ethereum.Api.Types
+      Network.Ethereum.Api.Web3
+      Network.Ethereum.Chain
+      Network.Ethereum.Contract
+      Network.Ethereum.Contract.Event
+      Network.Ethereum.Contract.Event.Common
+      Network.Ethereum.Contract.Event.MultiFilter
+      Network.Ethereum.Contract.Event.SingleFilter
+      Network.Ethereum.Contract.Method
+      Network.Ethereum.Contract.TH
+      Network.Ethereum.Ens
+      Network.Ethereum.Ens.PublicResolver
+      Network.Ethereum.Ens.Registry
+      Network.Ethereum.Transaction
+      Network.Ethereum.Unit
+      Network.Ipfs.Api.Bitswap
+      Network.Ipfs.Api.Block
+      Network.Ipfs.Api.Bootstrap
+      Network.Ipfs.Api.Cid
+      Network.Ipfs.Api.Config
+      Network.Ipfs.Api.Core
+      Network.Ipfs.Api.Dag
+      Network.Ipfs.Api.Dht
+      Network.Ipfs.Api.Files
+      Network.Ipfs.Api.Internal
+      Network.Ipfs.Api.Internal.Call
+      Network.Ipfs.Api.Internal.Stream
+      Network.Ipfs.Api.Key
+      Network.Ipfs.Api.Log
+      Network.Ipfs.Api.Object
+      Network.Ipfs.Api.Pin
+      Network.Ipfs.Api.Pubsub
+      Network.Ipfs.Api.Repo
+      Network.Ipfs.Api.Stats
+      Network.Ipfs.Api.Swarm
+      Network.Ipfs.Api.Types
+      Network.Ipfs.Api.Types.Stream
+      Network.Ipfs.Client
+      Network.JsonRpc.TinyClient
+      Network.Polkadot.Api.Account
+      Network.Polkadot.Api.Author
+      Network.Polkadot.Api.Babe
+      Network.Polkadot.Api.Chain
+      Network.Polkadot.Api.Childstate
+      Network.Polkadot.Api.Contracts
+      Network.Polkadot.Api.Engine
+      Network.Polkadot.Api.Grandpa
+      Network.Polkadot.Api.Offchain
+      Network.Polkadot.Api.Payment
+      Network.Polkadot.Api.Rpc
+      Network.Polkadot.Api.State
+      Network.Polkadot.Api.System
+      Network.Polkadot.Api.Types
+      Network.Web3
+      Network.Web3.Provider
+      Paths_web3
+  autogen-modules:
+      Paths_web3
+  hs-source-dirs:
+      test
+      src
+  ghc-options: -funbox-strict-fields -Wduplicate-exports -Whi-shadowing -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-monadfail-instances -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      OneTuple >=0.2.1 && <0.5
+    , aeson >=1.2.2.0 && <2.2
+    , async >=2.1.1.1 && <2.3
+    , attoparsec >=0.13.2.1 && <0.15
+    , base >4.11 && <4.18
+    , base58string >=0.10.0 && <0.11
+    , basement >=0.0.4 && <0.1
+    , bitvec >=1.0.0 && <2.0
+    , bytestring >=0.10.8.1 && <0.12
+    , cereal >=0.5.4.0 && <0.6
+    , cryptonite >=0.23 && <0.31
+    , data-default >=0.7.1.1 && <0.8
+    , errors >=2.2 && <2.4
+    , exceptions >=0.8.3 && <0.11
+    , generics-sop >=0.3.1.0 && <0.6
+    , hspec >=2.4.4 && <2.8
+    , hspec-contrib >=0.4.0 && <0.6
+    , hspec-discover >=2.4.4 && <2.8
+    , hspec-expectations >=0.8.2 && <0.9
+    , http-client >=0.5.7.1 && <0.8
+    , http-client-tls >=0.3.5.1 && <0.4
+    , http-media >=0.7 && <0.8.2
+    , http-types >=0.12 && <0.14
+    , machines >=0.6.3 && <0.8
+    , memory >=0.14.11 && <0.19
+    , microlens >=0.4.8.1 && <0.5
+    , microlens-aeson >=2.2.0.2 && <2.6
+    , microlens-mtl >=0.1.11.0 && <0.3
+    , microlens-th >=0.4.1.1 && <0.5
+    , mtl >=2.2.1 && <2.3
+    , network >=2.6 && <3.2
+    , parsec >=3.1.11 && <3.2
+    , random ==1.1.*
+    , relapse >=1.0.0.0 && <2.0
+    , servant >=0.13 && <0.20
+    , servant-client >=0.13 && <0.20
+    , split >=0.2.3 && <0.3
+    , stm >=2.4.4 && <2.6
+    , tagged >=0.8.5 && <0.9
+    , tar ==0.5.*
+    , template-haskell >=2.12 && <2.20
+    , text >=1.2.2.2 && <2.1
+    , time >=1.6.0 && <1.11
+    , transformers >=0.5.2.0 && <0.6
+    , unordered-containers ==0.2.*
+    , uuid-types >=1.0.3 && <1.1
+    , vector >=0.12 && <0.14
+    , vinyl >=0.5.3 && <0.15
+    , websockets >=0.11 && <0.13
+  default-language: Haskell2010
+  if flag(debug)
+    ghc-options: -ddump-splices
+  if flag(compiler)
+    other-modules:
+        Language.Solidity.Compiler
+        Language.Solidity.Compiler.Foreign
+    hs-source-dirs:
+        compiler
+    cpp-options: -DSOLIDITY_COMPILER
+    include-dirs:
+        ./compiler/cbits
+    c-sources:
+        ./compiler/cbits/solidity_lite.cpp
+    extra-libraries:
+        solidity
+    build-depends:
+        containers
+
+test-suite unit
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Codec.Scale.Test.CoreSpec
+      Codec.Scale.Test.SingleFieldStructSpec
+      Codec.Scale.Test.SkipSpec
+      Crypto.Ethereum.Test.KeyfileSpec
+      Crypto.Ethereum.Test.SignatureSpec
+      Crypto.Random.Test.HmacDrbgSpec
+      Data.Solidity.Test.AddressSpec
+      Data.Solidity.Test.EncodingSpec
+      Data.Solidity.Test.IntSpec
+      Language.Solidity.Test.AbiSpec
+      Language.Solidity.Test.CompilerSpec
+      Network.Ethereum.Contract.Test.THSpec
+      Network.Ethereum.Web3.Test.EventSpec
+      Network.Ethereum.Web3.Test.MethodDumpSpec
+      Codec.Scale
+      Codec.Scale.Class
+      Codec.Scale.Compact
+      Codec.Scale.Core
+      Codec.Scale.Generic
+      Codec.Scale.SingletonEnum
+      Codec.Scale.Skip
+      Codec.Scale.TH
+      Crypto.Ecdsa.Signature
+      Crypto.Ecdsa.Utils
+      Crypto.Ethereum
+      Crypto.Ethereum.Keyfile
+      Crypto.Ethereum.Signature
+      Crypto.Ethereum.Utils
+      Crypto.Random.HmacDrbg
+      Data.ByteArray.HexString
+      Data.Solidity.Abi
+      Data.Solidity.Abi.Codec
+      Data.Solidity.Abi.Generic
+      Data.Solidity.Event
+      Data.Solidity.Event.Internal
+      Data.Solidity.Prim
+      Data.Solidity.Prim.Address
+      Data.Solidity.Prim.Bool
+      Data.Solidity.Prim.Bytes
+      Data.Solidity.Prim.Int
+      Data.Solidity.Prim.List
+      Data.Solidity.Prim.String
+      Data.Solidity.Prim.Tagged
+      Data.Solidity.Prim.Tuple
+      Data.Solidity.Prim.Tuple.TH
+      Data.String.Extra
+      Language.Solidity.Abi
+      Network.Ethereum
+      Network.Ethereum.Account
+      Network.Ethereum.Account.Class
+      Network.Ethereum.Account.Default
+      Network.Ethereum.Account.Internal
+      Network.Ethereum.Account.LocalKey
+      Network.Ethereum.Account.Personal
+      Network.Ethereum.Account.Safe
+      Network.Ethereum.Api.Eth
+      Network.Ethereum.Api.Net
+      Network.Ethereum.Api.Personal
+      Network.Ethereum.Api.Types
+      Network.Ethereum.Api.Web3
+      Network.Ethereum.Chain
+      Network.Ethereum.Contract
+      Network.Ethereum.Contract.Event
+      Network.Ethereum.Contract.Event.Common
+      Network.Ethereum.Contract.Event.MultiFilter
+      Network.Ethereum.Contract.Event.SingleFilter
+      Network.Ethereum.Contract.Method
+      Network.Ethereum.Contract.TH
+      Network.Ethereum.Ens
+      Network.Ethereum.Ens.PublicResolver
+      Network.Ethereum.Ens.Registry
+      Network.Ethereum.Transaction
+      Network.Ethereum.Unit
+      Network.Ipfs.Api.Bitswap
+      Network.Ipfs.Api.Block
+      Network.Ipfs.Api.Bootstrap
+      Network.Ipfs.Api.Cid
+      Network.Ipfs.Api.Config
+      Network.Ipfs.Api.Core
+      Network.Ipfs.Api.Dag
+      Network.Ipfs.Api.Dht
+      Network.Ipfs.Api.Files
+      Network.Ipfs.Api.Internal
+      Network.Ipfs.Api.Internal.Call
+      Network.Ipfs.Api.Internal.Stream
+      Network.Ipfs.Api.Key
+      Network.Ipfs.Api.Log
+      Network.Ipfs.Api.Object
+      Network.Ipfs.Api.Pin
+      Network.Ipfs.Api.Pubsub
+      Network.Ipfs.Api.Repo
+      Network.Ipfs.Api.Stats
+      Network.Ipfs.Api.Swarm
+      Network.Ipfs.Api.Types
+      Network.Ipfs.Api.Types.Stream
+      Network.Ipfs.Client
+      Network.JsonRpc.TinyClient
+      Network.Polkadot.Api.Account
+      Network.Polkadot.Api.Author
+      Network.Polkadot.Api.Babe
+      Network.Polkadot.Api.Chain
+      Network.Polkadot.Api.Childstate
+      Network.Polkadot.Api.Contracts
+      Network.Polkadot.Api.Engine
+      Network.Polkadot.Api.Grandpa
+      Network.Polkadot.Api.Offchain
+      Network.Polkadot.Api.Payment
+      Network.Polkadot.Api.Rpc
+      Network.Polkadot.Api.State
+      Network.Polkadot.Api.System
+      Network.Polkadot.Api.Types
+      Network.Web3
+      Network.Web3.Provider
+      Paths_web3
+  autogen-modules:
+      Paths_web3
+  hs-source-dirs:
+      unit
+      src
+  ghc-options: -funbox-strict-fields -Wduplicate-exports -Whi-shadowing -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-monadfail-instances -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      OneTuple >=0.2.1 && <0.5
+    , aeson >=1.2.2.0 && <2.2
+    , async >=2.1.1.1 && <2.3
+    , attoparsec >=0.13.2.1 && <0.15
+    , base >4.11 && <4.18
+    , base58string >=0.10.0 && <0.11
+    , basement >=0.0.4 && <0.1
+    , bitvec >=1.0.0 && <2.0
+    , bytestring >=0.10.8.1 && <0.12
+    , cereal >=0.5.4.0 && <0.6
+    , cryptonite >=0.23 && <0.31
+    , data-default >=0.7.1.1 && <0.8
+    , errors >=2.2 && <2.4
+    , exceptions >=0.8.3 && <0.11
+    , generics-sop >=0.3.1.0 && <0.6
+    , hspec >=2.4.4 && <2.8
+    , hspec-contrib >=0.4.0 && <0.6
+    , hspec-discover >=2.4.4 && <2.8
+    , hspec-expectations >=0.8.2 && <0.9
+    , http-client >=0.5.7.1 && <0.8
+    , http-client-tls >=0.3.5.1 && <0.4
+    , http-media >=0.7 && <0.8.2
+    , http-types >=0.12 && <0.14
+    , machines >=0.6.3 && <0.8
+    , memory >=0.14.11 && <0.19
+    , microlens >=0.4.8.1 && <0.5
+    , microlens-aeson >=2.2.0.2 && <2.6
+    , microlens-mtl >=0.1.11.0 && <0.3
+    , microlens-th >=0.4.1.1 && <0.5
+    , mtl >=2.2.1 && <2.3
+    , network >=2.6 && <3.2
+    , parsec >=3.1.11 && <3.2
+    , relapse >=1.0.0.0 && <2.0
+    , servant >=0.13 && <0.20
+    , servant-client >=0.13 && <0.20
+    , tagged >=0.8.5 && <0.9
+    , tar ==0.5.*
+    , template-haskell >=2.12 && <2.20
+    , text >=1.2.2.2 && <2.1
+    , transformers >=0.5.2.0 && <0.6
+    , unordered-containers ==0.2.*
+    , uuid-types >=1.0.3 && <1.1
+    , vector >=0.12 && <0.14
+    , vinyl >=0.5.3 && <0.15
+    , websockets >=0.11 && <0.13
+  default-language: Haskell2010
+  if flag(debug)
+    ghc-options: -ddump-splices
+  if flag(compiler)
+    other-modules:
+        Language.Solidity.Compiler
+        Language.Solidity.Compiler.Foreign
+    hs-source-dirs:
+        compiler
+    cpp-options: -DSOLIDITY_COMPILER
+    include-dirs:
+        ./compiler/cbits
+    c-sources:
+        ./compiler/cbits/solidity_lite.cpp
+    extra-libraries:
+        solidity
+    build-depends:
+        containers

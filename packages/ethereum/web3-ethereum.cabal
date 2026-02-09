@@ -1,11 +1,11 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.37.0.
+-- This file has been generated from package.yaml by hpack version 0.39.1.
 --
 -- see: https://github.com/sol/hpack
 
 name:           web3-ethereum
-version:        1.0.1.0
+version:        1.1.0.0
 synopsis:       Ethereum support for Haskell Web3 library.
 description:    Client library for Third Generation of Web.
 category:       Network
@@ -57,28 +57,28 @@ library
   ghc-options: -funbox-strict-fields -Wduplicate-exports -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs
   build-depends:
       OneTuple >0.2 && <0.5
-    , aeson >1.2 && <2.2
+    , aeson >1.2 && <2.3
     , aeson-casing ==0.2.*
-    , base >4.11 && <4.19
-    , bytestring >0.10 && <0.12
-    , data-default >0.7 && <0.8
+    , base >4.11 && <4.21
+    , bytestring >0.10 && <0.13
+    , data-default >0.7 && <0.9
     , exceptions >0.8 && <0.11
     , generics-sop >0.3 && <0.6
-    , jsonrpc-tinyclient ==1.0.*
+    , jsonrpc-tinyclient >=1.0 && <1.2
     , machines >0.6 && <0.8
     , memory >0.14 && <0.19
-    , memory-hexstring ==1.0.*
+    , memory-hexstring >=1.0 && <1.2
     , microlens >0.4 && <0.5
     , microlens-aeson >2.2 && <2.6
     , mtl >2.2 && <2.4
     , relapse >=1.0 && <2.0
     , tagged >0.8 && <0.9
-    , template-haskell >2.11 && <2.21
-    , text >1.2 && <2.1
+    , template-haskell >2.11 && <2.23
+    , text >1.2 && <2.2
     , transformers >0.5 && <0.7
     , vinyl >0.5 && <0.15
-    , web3-crypto ==1.0.*
-    , web3-solidity ==1.0.*
+    , web3-crypto >=1.0 && <1.2
+    , web3-solidity >=1.0 && <1.2
   default-language: Haskell2010
 
 test-suite tests
@@ -122,30 +122,30 @@ test-suite tests
   ghc-options: -funbox-strict-fields -Wduplicate-exports -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       OneTuple >0.2 && <0.5
-    , aeson >1.2 && <2.2
+    , aeson >1.2 && <2.3
     , aeson-casing ==0.2.*
-    , base >4.11 && <4.19
-    , bytestring >0.10 && <0.12
-    , data-default >0.7 && <0.8
+    , base >4.11 && <4.21
+    , bytestring >0.10 && <0.13
+    , data-default >0.7 && <0.9
     , exceptions >0.8 && <0.11
     , generics-sop >0.3 && <0.6
     , hspec >=2.4.4 && <2.12
     , hspec-contrib >=0.4.0 && <0.6
     , hspec-discover >=2.4.4 && <2.12
     , hspec-expectations >=0.8.2 && <0.9
-    , jsonrpc-tinyclient ==1.0.*
+    , jsonrpc-tinyclient >=1.0 && <1.2
     , machines >0.6 && <0.8
     , memory >0.14 && <0.19
-    , memory-hexstring ==1.0.*
+    , memory-hexstring >=1.0 && <1.2
     , microlens >0.4 && <0.5
     , microlens-aeson >2.2 && <2.6
     , mtl >2.2 && <2.4
     , relapse >=1.0 && <2.0
     , tagged >0.8 && <0.9
-    , template-haskell >2.11 && <2.21
-    , text >1.2 && <2.1
+    , template-haskell >2.11 && <2.23
+    , text >1.2 && <2.2
     , transformers >0.5 && <0.7
     , vinyl >0.5 && <0.15
-    , web3-crypto ==1.0.*
-    , web3-solidity ==1.0.*
+    , web3-crypto >=1.0 && <1.2
+    , web3-solidity >=1.0 && <1.2
   default-language: Haskell2010

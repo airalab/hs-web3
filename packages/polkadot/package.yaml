@@ -1,5 +1,5 @@
 name:                web3-polkadot
-version:             1.0.1.0
+version:             1.1.0.0
 synopsis:            Polkadot support for Haskell Web3 library.
 description:         Client library for Third Generation of Web.
 github:              "airalab/hs-web3"
@@ -12,25 +12,25 @@ category:            Network
 
 dependencies:
 - mtl                  >2.2  && <2.4
-- base                 >4.11 && <4.19
-- text                 >1.2  && <2.1
-- aeson                >1.2  && <2.2
-- scale                >=1.0 && <1.1
+- base                 >4.11 && <4.21
+- text                 >1.2  && <2.2
+- aeson                >1.2  && <2.3
+- scale                >=1.0 && <1.2
 - parsec               >3.0  && <3.2
 - memory               >0.14 && <0.19
 - microlens            >0.4  && <0.5
-- containers           >0.6  && <0.7
-- crypton              >0.30 && <1.0
-- bytestring           >0.10 && <0.12
+- containers           >0.6  && <0.8
+- crypton              >0.30 && <1.1
+- bytestring           >0.10 && <0.13
 - base58-bytestring    >=0.1 && <0.2
 - cases                >0.1  && <0.2
 - generics-sop         >0.3  && <0.6
 - microlens-th         >0.4  && <0.5
 - microlens-mtl        >0.2  && <0.3
-- web3-crypto          >=1.0 && <1.1
-- web3-bignum          >=1.0 && <1.1
-- jsonrpc-tinyclient   >=1.0 && <1.1
-- memory-hexstring     >=1.0 && <1.1
+- web3-crypto          >=1.0 && <1.2
+- web3-bignum          >=1.0 && <1.2
+- jsonrpc-tinyclient   >=1.0 && <1.2
+- memory-hexstring     >=1.0 && <1.2
 
 ghc-options:
 - -funbox-strict-fields

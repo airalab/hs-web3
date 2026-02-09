@@ -1,11 +1,11 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.38.1.
+-- This file has been generated from package.yaml by hpack version 0.39.1.
 --
 -- see: https://github.com/sol/hpack
 
 name:           web3-crypto
-version:        1.0.1.0
+version:        1.1.0.0
 synopsis:       Cryptograhical primitives for Haskell Web3 library.
 description:    This package implements Web3 specific cryptography and helper functions.
 category:       Network
@@ -48,16 +48,16 @@ library
   c-sources:
       src/cbits/xxhash.c
   build-depends:
-      aeson >1.2 && <2.2
-    , base >4.11 && <4.19
+      aeson >1.2 && <2.3
+    , base >4.11 && <4.21
     , basement >=0.0.16 && <0.1
-    , bytestring >0.10 && <0.12
-    , containers >0.6 && <0.7
-    , crypton >0.30 && <1.0
+    , bytestring >0.10 && <0.13
+    , containers >0.6 && <0.8
+    , crypton >0.30 && <1.1
     , memory >0.14 && <0.19
-    , memory-hexstring ==1.0.*
+    , memory-hexstring >=1.0 && <1.2
     , scientific >=0.3.7 && <0.4
-    , text >1.2 && <2.1
+    , text >1.2 && <2.2
     , uuid-types >1.0 && <1.1
     , vector >0.12 && <0.14
   default-language: Haskell2010
@@ -93,20 +93,20 @@ test-suite tests
   c-sources:
       src/cbits/xxhash.c
   build-depends:
-      aeson >1.2 && <2.2
-    , base >4.11 && <4.19
+      aeson >1.2 && <2.3
+    , base >4.11 && <4.21
     , basement >=0.0.16 && <0.1
-    , bytestring >0.10 && <0.12
-    , containers >0.6 && <0.7
-    , crypton >0.30 && <1.0
+    , bytestring >0.10 && <0.13
+    , containers >0.6 && <0.8
+    , crypton >0.30 && <1.1
     , hspec >=2.4.4 && <2.12
     , hspec-contrib >=0.4.0 && <0.6
     , hspec-discover >=2.4.4 && <2.12
     , hspec-expectations >=0.8.2 && <0.9
     , memory >0.14 && <0.19
-    , memory-hexstring ==1.0.*
+    , memory-hexstring >=1.0 && <1.2
     , scientific >=0.3.7 && <0.4
-    , text >1.2 && <2.1
+    , text >1.2 && <2.2
     , uuid-types >1.0 && <1.1
     , vector >0.12 && <0.14
   default-language: Haskell2010

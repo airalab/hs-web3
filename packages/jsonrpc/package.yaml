@@ -1,5 +1,5 @@
 name:                jsonrpc-tinyclient
-version:             1.0.1.0
+version:             1.1.0.0
 synopsis:            Tiny JSON-RPC client for Haskell Web3 library.
 description:         Minimalistic JSON-RPC client, inspired by haxr library.
 github:              "airalab/hs-web3"
@@ -11,13 +11,13 @@ copyright:           "(c) Aleksandr Krupenkin 2016-2024"
 category:            Network
 
 dependencies:
-- base                 >4.11 && <4.19
-- text                 >1.2  && <2.1
-- aeson                >1.2  && <2.2
+- base                 >4.11 && <4.21
+- text                 >1.2  && <2.2
+- aeson                >1.2  && <2.3
 - random               >1.0  && <1.3
-- bytestring           >0.10 && <0.12
+- bytestring           >0.10 && <0.13
 - exceptions           >0.8  && <0.11
-- websockets           >0.10 && <0.13
+- websockets           >0.10 && <0.14
 - http-client          >0.5  && <0.8
 - http-client-tls      >0.3  && <0.4
 - mtl                  >2.2  && <2.4
