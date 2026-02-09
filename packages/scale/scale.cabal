@@ -39,7 +39,7 @@ library
   ghc-options: -funbox-strict-fields -Wduplicate-exports -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs
   build-depends:
       base >=4.11 && <4.21
-    , bitvec >=1.0 && <2.0
+    , bitvec >=1.0 && <1.2
     , bytestring >=0.10 && <0.13
     , cereal ==0.5.*
     , data-default >=0.7 && <0.9
@@ -72,7 +72,7 @@ test-suite tests
   ghc-options: -funbox-strict-fields -Wduplicate-exports -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.11 && <4.21
-    , bitvec >=1.0 && <2.0
+    , bitvec >=1.0 && <1.2
     , bytestring >=0.10 && <0.13
     , cereal ==0.5.*
     , data-default >=0.7 && <0.9

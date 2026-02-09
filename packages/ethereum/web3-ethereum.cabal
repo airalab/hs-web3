@@ -71,7 +71,7 @@ library
     , microlens ==0.4.*
     , microlens-aeson >=2.2 && <2.6
     , mtl >=2.2 && <2.4
-    , relapse >=1.0 && <2.0
+    , relapse ==1.0.*
     , tagged ==0.8.*
     , template-haskell >=2.11 && <2.23
     , text >=1.2 && <2.2
@@ -140,7 +140,7 @@ test-suite tests
     , microlens ==0.4.*
     , microlens-aeson >=2.2 && <2.6
     , mtl >=2.2 && <2.4
-    , relapse >=1.0 && <2.0
+    , relapse ==1.0.*
     , tagged ==0.8.*
     , template-haskell >=2.11 && <2.23
     , text >=1.2 && <2.2
