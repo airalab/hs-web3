@@ -13,7 +13,7 @@ homepage:       https://github.com/airalab/hs-web3#readme
 bug-reports:    https://github.com/airalab/hs-web3/issues
 author:         Aleksandr Krupenkin
 maintainer:     mail@akru.me
-copyright:      (c) Aleksandr Krupenkin 2016-2024
+copyright:      (c) Aleksandr Krupenkin 2016-2026
 license:        Apache-2.0
 license-file:   LICENSE
 build-type:     Simple
@@ -34,11 +34,11 @@ library
       src
   ghc-options: -funbox-strict-fields -Wduplicate-exports -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs
   build-depends:
-      aeson >1.2 && <2.3
-    , base >4.11 && <4.21
-    , bytestring >0.10 && <0.13
-    , memory >0.14 && <0.19
+      aeson >=1.2 && <2.3
+    , base >=4.11 && <4.21
+    , bytestring >=0.10 && <0.13
+    , memory >=0.14 && <0.19
     , scale >=1.0 && <1.2
-    , template-haskell >2.11 && <2.23
-    , text >1.2 && <2.2
+    , template-haskell >=2.11 && <2.23
+    , text >=1.2 && <2.2
   default-language: Haskell2010

@@ -7,21 +7,21 @@ license:             Apache-2.0
 license-file:        LICENSE
 author:              Aleksandr Krupenkin
 maintainer:          mail@akru.me
-copyright:           "(c) Aleksandr Krupenkin 2016-2024"
+copyright:           "(c) Aleksandr Krupenkin 2016-2026"
 category:            Network
 
 dependencies:
-- base                 >4.11 && <4.21
-- mtl                  >2.2  && <2.4
-- text                 >1.2  && <2.2
-- async                >2.1  && <2.3
-- network              >2.5  && <3.3
-- websockets           >0.10 && <0.14
-- exceptions           >0.8  && <0.11
-- http-client          >0.5  && <0.8
-- data-default         >0.7  && <0.9
-- transformers         >0.5  && <0.7
-- jsonrpc-tinyclient   >=1.0 && <1.2
+- base                 >=4.11 && <4.21
+- mtl                  >=2.2  && <2.4
+- text                 >=1.2  && <2.2
+- async                >=2.1  && <2.3
+- network              >=2.5  && <3.3
+- websockets           >=0.10 && <0.14
+- exceptions           >=0.8  && <0.11
+- http-client          >=0.5  && <0.8
+- data-default         >=0.7  && <0.9
+- transformers         >=0.5  && <0.7
+- jsonrpc-tinyclient   >=1.0  && <1.2
 
 ghc-options:
 - -funbox-strict-fields

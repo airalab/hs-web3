@@ -7,14 +7,14 @@ license:             Apache-2.0
 license-file:        LICENSE
 author:              Aleksandr Krupenkin
 maintainer:          mail@akru.me
-copyright:           "(c) Aleksandr Krupenkin 2016-2024"
+copyright:           "(c) Aleksandr Krupenkin 2016-2026"
 category:            Network
 
 dependencies:
-- base                 >4.11 && <4.21
-- web3-provider        >=1.0 && <1.2
-- web3-ethereum        >=1.0 && <1.2
-- web3-polkadot        >=1.0 && <1.2
+- base                 >=4.11 && <4.21
+- web3-provider        >=1.0  && <1.2
+- web3-ethereum        >=1.0  && <1.2
+- web3-polkadot        >=1.0  && <1.2
 
 ghc-options:
 - -funbox-strict-fields

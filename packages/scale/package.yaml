@@ -7,20 +7,20 @@ license:             Apache-2.0
 license-file:        LICENSE
 author:              Aleksandr Krupenkin
 maintainer:          mail@akru.me
-copyright:           "(c) Aleksandr Krupenkin 2016-2024"
+copyright:           "(c) Aleksandr Krupenkin 2016-2026"
 category:            Network
 
 dependencies:
-- base                 >4.11 && <4.21
-- text                 >1.2  && <2.2
-- cereal               >0.5  && <0.6
-- bitvec               >1.0  && <2.0
-- vector               >0.12 && <0.14
-- memory               >0.14 && <0.19
-- bytestring           >0.10 && <0.13
-- generics-sop         >0.3  && <0.6
-- data-default         >0.7  && <0.9
-- template-haskell     >2.11 && <2.23
+- base                 >=4.11 && <4.21
+- text                 >=1.2  && <2.2
+- cereal               >=0.5  && <0.6
+- bitvec               >=1.0  && <2.0
+- vector               >=0.12 && <0.14
+- memory               >=0.14 && <0.19
+- bytestring           >=0.10 && <0.13
+- generics-sop         >=0.3  && <0.6
+- data-default         >=0.7  && <0.9
+- template-haskell     >=2.11 && <2.23
 
 ghc-options:
 - -funbox-strict-fields

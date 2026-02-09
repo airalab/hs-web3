@@ -13,7 +13,7 @@ homepage:       https://github.com/airalab/hs-web3#readme
 bug-reports:    https://github.com/airalab/hs-web3/issues
 author:         Aleksandr Krupenkin
 maintainer:     mail@akru.me
-copyright:      (c) Aleksandr Krupenkin 2016-2024
+copyright:      (c) Aleksandr Krupenkin 2016-2026
 license:        Apache-2.0
 license-file:   LICENSE
 build-type:     Simple
@@ -31,7 +31,7 @@ library
       src
   ghc-options: -funbox-strict-fields -Wduplicate-exports -Widentities -Woverlapping-patterns -Wpartial-type-signatures -Wunrecognised-pragmas -Wtyped-holes -Wincomplete-patterns -Wincomplete-uni-patterns -Wmissing-fields -Wmissing-methods -Wmissing-exported-signatures -Wmissing-signatures -Wname-shadowing -Wunused-binds -Wunused-top-binds -Wunused-local-binds -Wunused-pattern-binds -Wunused-imports -Wunused-matches -Wunused-foralls -Wtabs
   build-depends:
-      base >4.11 && <4.21
+      base >=4.11 && <4.21
     , web3-ethereum >=1.0 && <1.2
     , web3-polkadot >=1.0 && <1.2
     , web3-provider >=1.0 && <1.2

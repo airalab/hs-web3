@@ -7,30 +7,30 @@ license:             Apache-2.0
 license-file:        LICENSE
 author:              Aleksandr Krupenkin
 maintainer:          mail@akru.me
-copyright:           "(c) Aleksandr Krupenkin 2016-2021"
+copyright:           "(c) Aleksandr Krupenkin 2016-2026"
 category:            Network
 
 dependencies:
-- mtl                  >2.2  && <2.4
-- base                 >4.11 && <4.21
-- text                 >1.2  && <2.2
-- aeson                >1.2  && <2.3
-- scale                >=1.0 && <1.2
-- parsec               >3.0  && <3.2
-- memory               >0.14 && <0.19
-- microlens            >0.4  && <0.5
-- containers           >0.6  && <0.8
-- crypton              >0.30 && <1.1
-- bytestring           >0.10 && <0.13
-- base58-bytestring    >=0.1 && <0.2
-- cases                >0.1  && <0.2
-- generics-sop         >0.3  && <0.6
-- microlens-th         >0.4  && <0.5
-- microlens-mtl        >0.2  && <0.3
-- web3-crypto          >=1.0 && <1.2
-- web3-bignum          >=1.0 && <1.2
-- jsonrpc-tinyclient   >=1.0 && <1.2
-- memory-hexstring     >=1.0 && <1.2
+- mtl                  >=2.2  && <2.4
+- base                 >=4.11 && <4.21
+- text                 >=1.2  && <2.2
+- aeson                >=1.2  && <2.3
+- scale                >=1.0  && <1.2
+- parsec               >=3.0  && <3.2
+- memory               >=0.14 && <0.19
+- microlens            >=0.4  && <0.5
+- containers           >=0.6  && <0.8
+- crypton              >=0.30 && <1.1
+- bytestring           >=0.10 && <0.13
+- base58-bytestring    >=0.1  && <0.2
+- cases                >=0.1  && <0.2
+- generics-sop         >=0.3  && <0.6
+- microlens-th         >=0.4  && <0.5
+- microlens-mtl        >=0.2  && <0.3
+- web3-crypto          >=1.0  && <1.2
+- web3-bignum          >=1.0  && <1.2
+- jsonrpc-tinyclient   >=1.0  && <1.2
+- memory-hexstring     >=1.0  && <1.2
 
 ghc-options:
 - -funbox-strict-fields

@@ -7,7 +7,7 @@ license:             Apache-2.0
 license-file:        LICENSE
 author:              Aleksandr Krupenkin
 maintainer:          mail@akru.me
-copyright:           "(c) Aleksandr Krupenkin 2016-2024"
+copyright:           "(c) Aleksandr Krupenkin 2016-2026"
 category:            Network
 
 extra-source-files:
@@ -15,18 +15,18 @@ extra-source-files:
 - src/cbits/xxhash.c
 
 dependencies:
-- base                 >4.11 && <4.21
-- text                 >1.2  && <2.2
-- aeson                >1.2  && <2.3
-- memory               >0.14 && <0.19
-- vector               >0.12 && <0.14
-- containers           >0.6  && <0.8
-- uuid-types           >1.0  && <1.1
-- crypton              >0.30 && <1.1
-- bytestring           >0.10 && <0.13
-- memory-hexstring     >=1.0 && <1.2
+- base                 >=4.11   && <4.21
+- text                 >=1.2    && <2.2
+- aeson                >=1.2    && <2.3
+- memory               >=0.14   && <0.19
+- vector               >=0.12   && <0.14
+- containers           >=0.6    && <0.8
+- uuid-types           >=1.0    && <1.1
+- crypton              >=0.30   && <1.1
+- bytestring           >=0.10   && <0.13
+- memory-hexstring     >=1.0    && <1.2
 - basement             >=0.0.16 && < 0.1
-- scientific           >=0.3.7 && < 0.4
+- scientific           >=0.3.7  && < 0.4
 
 ghc-options:
 - -funbox-strict-fields

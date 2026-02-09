@@ -7,16 +7,16 @@ license:             Apache-2.0
 license-file:        LICENSE
 author:              Aleksandr Krupenkin
 maintainer:          mail@akru.me
-copyright:           "(c) Aleksandr Krupenkin 2016-2024"
+copyright:           "(c) Aleksandr Krupenkin 2016-2026"
 category:            Network
 
 dependencies:
-- base                 >4.11 && <4.21
-- scale                >=1.0 && <1.2
-- memory               >0.14 && <0.19
-- memory-hexstring     >=1.0 && <1.2
-- cereal               >0.5  && <0.6
-- wide-word            >0.1  && <0.2
+- base                 >=4.11 && <4.21
+- scale                >=1.0  && <1.2
+- memory               >=0.14 && <0.19
+- memory-hexstring     >=1.0  && <1.2
+- cereal               >=0.5  && <0.6
+- wide-word            >=0.1  && <0.2
 
 ghc-options:
 - -funbox-strict-fields
