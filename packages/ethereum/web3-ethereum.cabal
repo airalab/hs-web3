@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           web3-ethereum
-version:        1.1.0.0
+version:        1.1.0.1
 synopsis:       Ethereum support for Haskell Web3 library.
 description:    Client library for Third Generation of Web.
 category:       Network
@@ -17,6 +17,10 @@ copyright:      (c) Aleksandr Krupenkin 2016-2026
 license:        Apache-2.0
 license-file:   LICENSE
 build-type:     Simple
+data-files:
+    tests/contracts/ERC20.json
+    tests/contracts/Exchange.json
+    tests/contracts/SingleField.json
 
 source-repository head
   type: git

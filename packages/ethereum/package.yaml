@@ -1,5 +1,5 @@
 name:                web3-ethereum
-version:             1.1.0.0
+version:             1.1.0.1
 synopsis:            Ethereum support for Haskell Web3 library.
 description:         Client library for Third Generation of Web.
 github:              "airalab/hs-web3"
@@ -61,6 +61,9 @@ ghc-options:
 
 library:
   source-dirs: src
+
+data-files:
+- tests/contracts/*.json
 
 tests:
   tests:
