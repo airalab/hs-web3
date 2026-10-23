@@ -81,4 +81,4 @@ Read more in the [documentation on ReadTheDocs](https://hs-web3.readthedocs.io).
 License
 -------
 
-* Licensed under [Apache 2.0](https://github.com/airalab/hs-web3/blob/master/LICENSE-APACHE2)
+* Licensed under [Apache 2.0](https://github.com/airalab/hs-web3/blob/master/LICENSE)
